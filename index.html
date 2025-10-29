@@ -1,0 +1,289 @@
+<!DOCTYPE html>
+<html lang="he" dir="rtl">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>ארון ציוד ידידים</title>
+  <style>
+    :root {
+      --blue: #2563eb;
+      --light-blue: #dbeafe;
+      --orange: #fb923c;
+      --bg: #f8fafc;
+      --text: #1e293b;
+    }
+    body {
+      font-family: "Segoe UI", sans-serif;
+      margin: 0;
+      padding: 0;
+      background: var(--bg);
+      color: var(--text);
+    }
+    header {
+      background: var(--blue);
+      color: white;
+      text-align: center;
+      padding: 1rem;
+      position: sticky;
+      top: 0;
+      z-index: 50;
+    }
+    .lang-btn {
+      position: absolute;
+      top: 10px;
+      left: 10px;
+      background: var(--orange);
+      border: none;
+      color: white;
+      border-radius: 6px;
+      padding: 0.5rem 0.75rem;
+      cursor: pointer;
+      font-weight: bold;
+    }
+    .container {
+      max-width: 1100px;
+      margin: 0 auto;
+      padding: 1rem;
+    }
+    h2 {
+      color: var(--blue);
+      border-bottom: 2px solid var(--light-blue);
+      padding-bottom: 0.5rem;
+    }
+    input, select, button {
+      width: 100%;
+      padding: 0.75rem;
+      border-radius: 6px;
+      border: 1px solid #ccc;
+      margin-bottom: 0.75rem;
+      font-size: 15px;
+    }
+    button {
+      background: var(--blue);
+      color: white;
+      font-weight: bold;
+      cursor: pointer;
+      border: none;
+    }
+    button:hover { background: var(--orange); }
+    .section {
+      background: white;
+      border-radius: 8px;
+      padding: 1rem;
+      box-shadow: 0 2px 6px rgba(0,0,0,0.1);
+      margin-bottom: 1rem;
+    }
+    .hidden { display: none; }
+    @media(max-width:600px){
+      h2 { font-size: 18px; }
+      input, select, button { font-size: 14px; }
+    }
+  </style>
+</head>
+<body>
+  <header>
+    <button class="lang-btn" onclick="toggleLanguage()">EN</button>
+    <h1 id="pageTitle">ארון ציוד ידידים</h1>
+  </header>
+
+  <div class="container">
+    <div class="section" id="loginSection">
+      <h2 id="loginTitle">כניסת מנהל</h2>
+      <input type="password" id="adminCode" placeholder="קוד גישה">
+      <button onclick="loginAdmin()" id="loginBtn">כניסה</button>
+    </div>
+
+    <div class="section hidden" id="userSection">
+      <h2 id="borrowTitle">📦 לקיחת ציוד</h2>
+      <input id="borrowName" placeholder="שם">
+      <input id="borrowPhone" placeholder="טלפון">
+      <select id="borrowItem"></select>
+      <button onclick="borrowItem()">קח ציוד</button>
+    </div>
+
+    <div class="section hidden" id="returnSection">
+      <h2 id="returnTitle">🔄 החזרת ציוד</h2>
+      <input id="returnName" placeholder="שם">
+      <input id="returnPhone" placeholder="טלפון">
+      <button onclick="searchReturn()">חפש פריטים</button>
+      <div id="returnList"></div>
+    </div>
+
+    <div class="section hidden" id="adminPanel">
+      <h2>📊 ניהול ציוד</h2>
+      <div id="inventoryList"></div>
+      <h3>➕ הוסף פריט</h3>
+      <input id="newItemName" placeholder="שם פריט">
+      <input id="newItemQuantity" type="number" placeholder="כמות">
+      <button onclick="addNewItem()">הוסף</button>
+      <h3>⚙️ שנה סיסמה</h3>
+      <input id="currentCode" type="password" placeholder="סיסמה נוכחית">
+      <input id="newCode" type="password" placeholder="סיסמה חדשה">
+      <button onclick="updatePassword()">עדכן סיסמה</button>
+      <button style="background:#ef4444" onclick="logout()">התנתק</button>
+    </div>
+  </div>
+
+  <script type="module">
+    import { initializeApp } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-app.js";
+    import { getDatabase, ref, get, set, push, update, onValue } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-database.js";
+
+    const firebaseConfig = {
+      apiKey: "AIzaSyCfZImZVSxkozGdQiwZLFOpChdEDjM2Tz8",
+      authDomain: "aronyedidim.firebaseapp.com",
+      databaseURL: "https://aronyedidim-default-rtdb.firebaseio.com",
+      projectId: "aronyedidim",
+      storageBucket: "aronyedidim.firebasestorage.app",
+      messagingSenderId: "473887573965",
+      appId: "1:473887573965:web:3f5fbed40fa4fc01b66684"
+    };
+
+    const app = initializeApp(firebaseConfig);
+    const db = getDatabase(app);
+
+    let ADMIN_CODE = "";
+    let lang = "he";
+
+    const refs = {
+      equipment: ref(db, "equipment"),
+      history: ref(db, "borrowHistory"),
+      settings: ref(db, "settings/adminCode")
+    };
+
+    // טען סיסמת מנהל
+    get(refs.settings).then(snap => ADMIN_CODE = snap.val() || "1234");
+
+    // טען ציוד
+    onValue(refs.equipment, (snap)=>{
+      const data = snap.val() || {};
+      const select = document.getElementById("borrowItem");
+      select.innerHTML = "";
+      for(const key in data){
+        const item = data[key];
+        const opt = document.createElement("option");
+        opt.value = key;
+        opt.textContent = `${item.name} (${item.quantity})`;
+        opt.disabled = item.quantity===0;
+        select.appendChild(opt);
+      }
+      renderInventory(data);
+    });
+
+    function loginAdmin(){
+      const code = document.getElementById("adminCode").value.trim();
+      if(code===ADMIN_CODE){
+        document.getElementById("loginSection").classList.add("hidden");
+        document.getElementById("adminPanel").classList.remove("hidden");
+        document.getElementById("userSection").classList.remove("hidden");
+        document.getElementById("returnSection").classList.remove("hidden");
+      } else alert("קוד שגוי");
+    }
+
+    function logout(){
+      document.getElementById("loginSection").classList.remove("hidden");
+      document.getElementById("adminPanel").classList.add("hidden");
+      document.getElementById("userSection").classList.add("hidden");
+      document.getElementById("returnSection").classList.add("hidden");
+    }
+
+    function borrowItem(){
+      const name=document.getElementById("borrowName").value.trim();
+      const phone=document.getElementById("borrowPhone").value.trim();
+      const itemId=document.getElementById("borrowItem").value;
+      if(!name||!phone||!itemId){alert("מלא את כל השדות");return;}
+      get(ref(db,"equipment/"+itemId)).then(s=>{
+        const item=s.val();
+        if(item.quantity>0){
+          const newRec=push(refs.history));
+          set(newRec,{
+            name,phone,
+            itemName:item.name,
+            date:new Date().toLocaleString('he-IL'),
+            status:"borrowed"
+          });
+          update(ref(db,"equipment/"+itemId),{quantity:item.quantity-1});
+          alert("✅ הציוד נלקח בהצלחה");
+        }else alert("אין מלאי");
+      });
+    }
+
+    function searchReturn(){
+      const name=document.getElementById("returnName").value.trim();
+      const phone=document.getElementById("returnPhone").value.trim();
+      if(!name||!phone){alert("מלא את השדות");return;}
+      get(refs.history).then(snap=>{
+        const data=snap.val()||{};
+        const results=Object.entries(data).filter(([id,v])=>v.name===name&&v.phone===phone&&v.status==="borrowed");
+        const list=document.getElementById("returnList");
+        list.innerHTML="";
+        results.forEach(([id,v])=>{
+          const div=document.createElement("div");
+          div.innerHTML=`${v.itemName} <button onclick="returnItem('${id}','${v.itemName}')">החזר</button>`;
+          list.appendChild(div);
+        });
+      });
+    }
+
+    window.returnItem=function(id,itemName){
+      update(ref(db,"borrowHistory/"+id),{status:"returned"});
+      onValue(refs.equipment,(snap)=>{
+        const data=snap.val();
+        for(const key in data){
+          if(data[key].name===itemName){
+            update(ref(db,"equipment/"+key),{quantity:data[key].quantity+1});
+          }
+        }
+      });
+      alert("✅ הוחזר בהצלחה");
+    };
+
+    function addNewItem(){
+      const name=document.getElementById("newItemName").value.trim();
+      const quantity=parseInt(document.getElementById("newItemQuantity").value);
+      if(!name||quantity<=0){alert("הזן פרטים תקינים");return;}
+      const newRef=push(refs.equipment);
+      set(newRef,{name,quantity});
+      alert("✅ נוסף בהצלחה");
+    }
+
+    function updatePassword(){
+      const curr=document.getElementById("currentCode").value.trim();
+      const newCode=document.getElementById("newCode").value.trim();
+      if(curr!==ADMIN_CODE){alert("סיסמה נוכחית שגויה");return;}
+      if(!newCode){alert("הזן סיסמה חדשה");return;}
+      set(refs.settings,newCode);
+      ADMIN_CODE=newCode;
+      alert("✅ סיסמה עודכנה");
+    }
+
+    function renderInventory(data){
+      const cont=document.getElementById("inventoryList");
+      cont.innerHTML="";
+      for(const id in data){
+        const item=data[id];
+        const div=document.createElement("div");
+        div.innerHTML=`${item.name} (${item.quantity})
+        <button onclick="deleteItem('${id}')">🗑️</button>`;
+        cont.appendChild(div);
+      }
+    }
+
+    window.deleteItem=function(id){
+      if(confirm("למחוק פריט זה?")){
+        set(ref(db,"equipment/"+id),null);
+        alert("✅ נמחק בהצלחה");
+      }
+    };
+
+    // שינוי שפה
+    function toggleLanguage(){
+      lang=(lang==="he")?"en":"he";
+      document.body.dir=(lang==="he")?"rtl":"ltr";
+      document.getElementById("pageTitle").textContent=(lang==="he")?"ארון ציוד ידידים":"Friends Equipment Locker";
+      document.getElementById("loginTitle").textContent=(lang==="he")?"כניסת מנהל":"Admin Login";
+      document.getElementById("loginBtn").textContent=(lang==="he")?"כניסה":"Login";
+      document.querySelector(".lang-btn").textContent=(lang==="he")?"EN":"HE";
+    }
+  </script>
+</body>
+</html>
