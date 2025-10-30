@@ -1,567 +1,820 @@
-<!DOCTYPE html>
-<html lang="he" dir="rtl">
-<head>
-  <meta charset="UTF-8" />
-  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
-  <title>ארון ציוד ידידים</title>
-  <style>
-    :root{
-      --blue:#1e63e9; --blue-700:#184fb7; --light:#e9f3ff;
-      --orange:#fb923c; --green:#16a34a; --red:#ef4444;
-      --bg:#f5f7fb; --text:#0b2d5b; --muted:#6b7280; --border:#e5e7eb;
-    }
-    *{box-sizing:border-box}
-    body{margin:0;font-family:"Segoe UI","Rubik",Arial,sans-serif;background:var(--bg);color:var(--text)}
-    header{background:var(--blue);color:#fff;padding:12px 16px;position:sticky;top:0;z-index:20;box-shadow:0 2px 8px rgba(0,0,0,.08)}
-    header h1{margin:0;text-align:center;font-size:20px}
-    #adminLoginBtn{position:absolute;left:12px;top:10px;background:var(--orange);border:none;color:#fff;padding:6px 10px;border-radius:8px;font-weight:700;cursor:pointer;font-size:.9rem}
-    main{max-width:1100px;margin:18px auto;padding:0 12px}
-    .card{background:#fff;border:1px solid var(--border);border-radius:12px;box-shadow:0 2px 10px rgba(0,0,0,.05);padding:16px;margin-bottom:14px}
-    .row{display:flex;gap:10px;flex-wrap:wrap;align-items:center}
-    .btn{background:var(--blue);color:#fff;border:none;border-radius:10px;padding:10px 16px;font-weight:700;cursor:pointer;transition:.2s}
-    .btn:hover{background:var(--blue-700)}
-    .btn-outline{background:#fff;color:var(--blue);border:2px solid var(--blue)}
-    .btn-green{background:var(--green)} .btn-orange{background:var(--orange)} .btn-red{background:var(--red)}
-    .toolbar{display:flex;gap:10px;justify-content:center;margin-bottom:10px}
-    input,select{width:100%;padding:12px;border:1px solid var(--border);border-radius:10px;background:#fff;font-size:15px}
-    label{font-size:.9rem;color:var(--muted);margin-bottom:6px;display:block}
-    .grid2{display:grid;grid-template-columns:1fr 1fr;gap:12px}
-    @media(max-width:720px){.grid2{grid-template-columns:1fr}}
-    table{width:100%;border-collapse:collapse;margin-top:8px}
-    th,td{border-bottom:1px solid var(--border);padding:12px;text-align:center}
-    th{background:var(--light);color:var(--text)}
-    .muted{color:var(--muted)} .hidden{display:none}
-    .pill{padding:4px 8px;border-radius:999px;font-size:.85rem;font-weight:700}
-    .pill-ok{background:#dcfce7;color:#166534} .pill-out{background:#fee2e2;color:#991b1b}
-    .section-title{font-size:18px;margin:0 0 12px} .divider{height:1px;background:var(--border);margin:14px 0}
-    .table-actions{display:flex;gap:8px;justify-content:center;flex-wrap:wrap}
-  </style>
-</head>
-<body>
-  <header>
-    <button id="adminLoginBtn" onclick="toggleAdminLogin()">כניסת מנהל</button>
-    <h1>ארון ציוד ידידים</h1>
-  </header>
-
-  <main>
-    <!-- משתמש: כרטיס פעולות -->
-    <section class="card">
-      <div class="toolbar">
-        <button class="btn btn-green" id="btnBorrowTab" onclick="setTab('borrow')">לקיחת ציוד 📦</button>
-        <button class="btn btn-outline" id="btnReturnTab" onclick="setTab('return')">החזרת ציוד 🔁</button>
-      </div>
-
-      <!-- אזור השאלה -->
-      <div id="borrowBar" class="grid2">
-        <div>
-          <label>שם</label>
-          <input id="uName" placeholder="הזן את שמך" oninput="renderEquipment()">
-        </div>
-        <div>
-          <label>טלפון</label>
-          <input id="uPhone" placeholder="הזן מספר טלפון" oninput="renderEquipment()">
-        </div>
-      </div>
-
-      <!-- אזור החזרה לפי טלפון -->
-      <div id="returnBar" class="grid2 hidden">
-        <div>
-          <label>טלפון</label>
-          <input id="rPhone" placeholder="הזן מספר טלפון">
-        </div>
-        <div style="align-self:end">
-          <button class="btn" onclick="loadUserBorrows()">בדוק השאלות</button>
-        </div>
-      </div>
-
-      <div class="divider"></div>
-
-      <div class="row" style="justify-content:space-between;gap:8px;">
-        <input id="searchEq" style="max-width:360px" placeholder="חפש פריט לפי שם..." oninput="renderEquipment()">
-        <span class="muted" style="font-size:.9rem">פריטים ללא מלאי מופיעים אך אינם ניתנים להשאלה</span>
-      </div>
-
-      <table>
-        <thead>
-          <tr>
-            <th>שם פריט</th>
-            <th>כמות זמינה</th>
-            <th>סטטוס</th>
-            <th>פעולה</th>
-          </tr>
-        </thead>
-        <tbody id="eqBody"></tbody>
-      </table>
-    </section>
-
-    <!-- כניסת מנהל -->
-    <section id="adminLoginCard" class="card hidden" style="max-width:520px;margin-inline:auto">
-      <h3 class="section-title">כניסת מנהל</h3>
-      <div class="grid2">
-        <div style="grid-column:1/-1">
-          <label>סיסמת מנהל</label>
-          <input id="adminPass" type="password" placeholder="ברירת מחדל 1234 (אם לא הוגדר בענן)">
-        </div>
-      </div>
-      <div class="row" style="justify-content:flex-end;margin-top:10px">
-        <button class="btn btn-orange" onclick="loginAdmin()">כניסה</button>
-      </div>
-    </section>
-
-    <!-- פאנל מנהל -->
-    <section id="adminPanel" class="card hidden">
-      <div class="row" style="justify-content:space-between;align-items:center">
-        <h3 class="section-title">פאנל ניהול</h3>
-        <div class="row" style="gap:8px">
-          <button class="btn btn-outline" onclick="exportHistoryCSV()">ייצוא לאקסל (CSV)</button>
-          <button class="btn btn-outline" onclick="printHistory()">הדפס היסטוריה</button>
-          <button class="btn btn-red" onclick="logoutAdmin()">התנתק</button>
-        </div>
-      </div>
-
-      <div class="divider"></div>
-
-      <h4 class="section-title">מלאי ציוד</h4>
-      <div class="grid2">
-        <div><label>שם פריט</label><input id="newName" placeholder="למשל: ג'ק עגלה"></div>
-        <div><label>כמות</label><input id="newQty" type="number" min="0" placeholder="1"></div>
-      </div>
-      <div class="row" style="justify-content:flex-end;margin-top:10px">
-        <button class="btn btn-green" onclick="adminAddItem()">הוסף לרשימה</button>
-      </div>
-
-      <table>
-        <thead>
-          <tr>
-            <th>פריט</th>
-            <th>כמות</th>
-            <th>שואל נוכחי</th>
-            <th>פעולות</th>
-          </tr>
-        </thead>
-        <tbody id="adminEqBody"></tbody>
-      </table>
-
-      <div class="divider"></div>
-
-      <h4 class="section-title">הוספה ידנית של השאלה / החזרה</h4>
-      <div class="grid2">
-        <div><label>שם</label><input id="mName" placeholder="שם מלא"></div>
-        <div><label>טלפון</label><input id="mPhone" placeholder="מספר טלפון"></div>
-        <div><label>פריט</label><select id="mItem"></select></div>
-        <div><label>פעולה</label>
-          <select id="mAction">
-            <option value="borrow">השאלה</option>
-            <option value="return">החזרה</option>
-          </select>
-        </div>
-      </div>
-      <div class="row" style="justify-content:flex-end;margin-top:10px">
-        <button class="btn" onclick="manualAction()">בצע</button>
-      </div>
-
-      <div class="divider"></div>
-
-      <h4 class="section-title">היסטוריית השאלות/החזרות</h4>
-      <div class="row" style="gap:8px;margin-bottom:8px">
-        <input id="hSearch" placeholder="חיפוש (שם/טלפון/פריט/סטטוס)" oninput="renderHistory()">
-        <select id="hStatus" onchange="renderHistory()">
-          <option value="">הכל</option>
-          <option value="borrowed">borrowed</option>
-          <option value="returned">returned</option>
-        </select>
-      </div>
-      <table>
-        <thead>
-          <tr>
-            <th>תאריך</th>
-            <th>שם</th>
-            <th>טלפון</th>
-            <th>פריט</th>
-            <th>סטטוס</th>
-            <th>פעולות</th>
-          </tr>
-        </thead>
-        <tbody id="historyBody"></tbody>
-      </table>
-
-      <div class="divider"></div>
-
-      <h4 class="section-title">סיסמת מנהל</h4>
-      <div class="grid2">
-        <div><label>סיסמה נוכחית</label><input type="password" id="curAdmin" placeholder="נוכחית"></div>
-        <div><label>סיסמה חדשה</label><input type="password" id="newAdmin" placeholder="חדשה"></div>
-      </div>
-      <div class="row" style="justify-content:flex-end;margin-top:10px">
-        <button class="btn btn-orange" onclick="updateAdminPassword()">עדכן סיסמה</button>
-      </div>
-    </section>
-  </main>
-
-  <!-- Firebase compat (ללא מודולים — תואם GitHub Pages) -->
-  <script src="https://www.gstatic.com/firebasejs/10.7.1/firebase-app-compat.js"></script>
-  <script src="https://www.gstatic.com/firebasejs/10.7.1/firebase-database-compat.js"></script>
-
-  <script>
-    /* ------------------ Firebase Init ------------------ */
-    const firebaseConfig = {
-      apiKey: "AIzaSyCfZImZVSxkozGdQiwZLFOpChdEDjM2Tz8",
-      authDomain: "aronyedidim.firebaseapp.com",
-      databaseURL: "https://aronyedidim-default-rtdb.firebaseio.com/",
-      projectId: "aronyedidim",
-      storageBucket: "aronyedidim.firebasestorage.app",
-      messagingSenderId: "473887573965",
-      appId: "1:473887573965:web:3f5fbed40fa4fc01b66684"
-    };
-    firebase.initializeApp(firebaseConfig);
-    const db = firebase.database();
-
-    /* ------------------ State ------------------ */
-    let TAB = "borrow";                 // borrow | return
-    let adminLogged = false;
-    let ADMIN_CODE = "1234";            // ברירת מחדל — ייטען מ-/settings/adminCode אם קיים
-    let equipment = {};                 // {id:{name,quantity,borrowerName?}}
-    let historyMap = {};                // {key:record}
-
-    /* ------------------ UI Helpers ------------------ */
-    function setTab(t){
-      TAB = t;
-      document.getElementById('btnBorrowTab').classList.toggle('btn-outline', t!=='borrow');
-      document.getElementById('btnReturnTab').classList.toggle('btn-outline', t!=='return');
-      document.getElementById('borrowBar').classList.toggle('hidden', t!=='borrow');
-      document.getElementById('returnBar').classList.toggle('hidden', t!=='return');
-      // רענון טבלה
-      renderEquipment();
-      if (t==='return') { // מנקה רשימת תוצאות החזרה עד לחיפוש
-        renderReturnList([]);
-      }
-    }
-    function toggleAdminLogin(){
-      document.getElementById('adminLoginCard').classList.toggle('hidden');
-    }
-
-    /* ------------------ Load initial data ------------------ */
-    // סיסמת מנהל מהענן (אם קיימת)
-    db.ref("settings/adminCode").once("value").then(snap=>{
-      if(snap.exists()){ ADMIN_CODE = String(snap.val()); }
-    });
-
-    // ציוד (חי)
-    db.ref("equipment").on("value", snap=>{
-      equipment = snap.val() || {};
-      renderEquipment();
-      if(adminLogged) renderAdminTables();
-      fillManualItems();
-    });
-
-    // היסטוריה (חי)
-    db.ref("borrowHistory").on("value", snap=>{
-      historyMap = snap.val() || {};
-      if(adminLogged) renderHistory();
-    });
-
-    /* ------------------ Render equipment for users ------------------ */
-    function renderEquipment(){
-      const body = document.getElementById('eqBody');
-      const query = (document.getElementById('searchEq').value||"").trim().toLowerCase();
-      body.innerHTML = "";
-
-      const name  = (document.getElementById('uName').value||"").trim();
-      const phone = (document.getElementById('uPhone').value||"").trim();
-      const allowBorrow = !!(name && phone);
-
-      Object.entries(equipment).forEach(([id,item])=>{
-        const itemName = String(item.name||"");
-        if(query && !itemName.toLowerCase().includes(query)) return;
-        const qty = Number(item.quantity||0);
-        const out = qty <= 0;
-
-        const tr = document.createElement('tr');
-        tr.innerHTML = `
-          <td>${itemName}</td>
-          <td>${qty}</td>
-          <td>${out ? '<span class="pill pill-out">לא במלאי</span>' : '<span class="pill pill-ok">זמין</span>'}</td>
-          <td>
-            ${TAB==='borrow'
-              ? `<button class="btn btn-green" ${out||!allowBorrow?'disabled':''} onclick="borrowItem('${id}')">קח ציוד</button>`
-              : `<button class="btn" onclick="loadUserBorrows()">בדיקת החזרה</button>`
-            }
-          </td>`;
-        body.appendChild(tr);
-      });
-    }
-
-    /* ------------------ Borrow (user) ------------------ */
-    function borrowItem(itemId){
-      const name  = (document.getElementById('uName').value||"").trim();
-      const phone = (document.getElementById('uPhone').value||"").trim();
-      if(!name || !phone) return alert("אנא מלא שם וטלפון");
-
-      const item = equipment[itemId];
-      if(!item) return alert("פריט לא נמצא");
-      const qty = Number(item.quantity||0);
-      if(qty<=0) return alert("אין מלאי לפריט זה");
-
-      const newQty = qty-1;
-      const rec = {
-        name, phone, itemId, itemName:item.name,
-        date: new Date().toISOString(), status: "borrowed"
-      };
-      const key = db.ref("borrowHistory").push().key;
-
-      const updates = {};
-      updates[`/equipment/${itemId}/quantity`]     = newQty;
-      updates[`/equipment/${itemId}/borrowerName`] = name;      // מי מחזיק עכשיו
-      updates[`/borrowHistory/${key}`]             = rec;
-
-      db.ref().update(updates)
-        .then(()=> alert("✅ ההשאלה נרשמה בהצלחה"))
-        .catch(err=> alert("שגיאה: "+err.message));
-    }
-
-    /* ------------------ Return by phone (user) ------------------ */
-    function loadUserBorrows(){
-      const phone = (document.getElementById('rPhone').value||"").trim();
-      if(!phone){ renderReturnList([]); return; }
-
-      const list = Object.entries(historyMap)
-        .filter(([k,v]) => v.phone===phone && v.status==="borrowed")
-        .map(([k,v]) => ({key:k, ...v}));
-      renderReturnList(list);
-    }
-    function renderReturnList(items){
-      // מציג את תוצאות ההחזרה מתחת לטבלת הציוד — מוסיף שורות “מיוחדות” אחרי ציוד
-      const body = document.getElementById('eqBody');
-      if(TAB!=="return") return;
-      // קודם מרעננים את טבלת הציוד עצמה
-      const keepQuery = (document.getElementById('searchEq').value||"");
-      document.getElementById('searchEq').value = ""; // מציג את כל הרשימה
-      renderEquipment();
-      document.getElementById('searchEq').value = keepQuery;
-
-      if(items.length){
-        const sep = document.createElement('tr');
-        sep.innerHTML = `<td colspan="4" class="muted">פריטים שנמצאים אצל הטלפון הזה:</td>`;
-        body.appendChild(sep);
-      }
-      items.forEach(rec=>{
-        const tr = document.createElement('tr');
-        tr.innerHTML = `
-          <td>${rec.itemName}</td>
-          <td>-</td>
-          <td><span class="pill pill-out">אצל המשתמש</span></td>
-          <td><button class="btn" onclick="returnByKey('${rec.key}','${rec.itemId}')">החזר</button></td>`;
-        body.appendChild(tr);
-      });
-    }
-    function returnByKey(histKey, itemId){
-      if(!itemId || !equipment[itemId]) return alert("לא נמצא פריט להחזרה");
-      const curQty = Number(equipment[itemId]?.quantity||0);
-
-      const updates = {};
-      updates[`/borrowHistory/${histKey}/status`] = "returned";
-      updates[`/equipment/${itemId}/quantity`]    = curQty+1;
-      updates[`/equipment/${itemId}/borrowerName`] = ""; // התפנה
-
-      db.ref().update(updates)
-        .then(()=>{
-          alert("🔁 ההחזרה בוצעה");
-          loadUserBorrows();
-        })
-        .catch(err=> alert("שגיאה: "+err.message));
-    }
-
-    /* ------------------ Admin auth ------------------ */
-    function loginAdmin(){
-      const pass = (document.getElementById('adminPass').value||"").trim();
-      if(!pass) return alert("הכנס סיסמה");
-      if(pass !== ADMIN_CODE) return alert("סיסמה שגויה");
-      adminLogged = true;
-      document.getElementById('adminLoginCard').classList.add('hidden');
-      document.getElementById('adminPanel').classList.remove('hidden');
-      renderAdminTables(); fillManualItems(); renderHistory();
-    }
-    function logoutAdmin(){
-      adminLogged = false;
-      document.getElementById('adminPanel').classList.add('hidden');
-      document.getElementById('adminLoginCard').classList.add('hidden');
-    }
-
-    /* ------------------ Admin: inventory ------------------ */
-    function renderAdminTables(){
-      const body = document.getElementById('adminEqBody');
-      body.innerHTML = "";
-      Object.entries(equipment).forEach(([id,item])=>{
-        const tr = document.createElement('tr');
-        tr.innerHTML = `
-          <td>${item.name}</td>
-          <td><input type="number" min="0" value="${Number(item.quantity)||0}" style="width:110px" id="q_${id}"></td>
-          <td>${item.borrowerName||'-'}</td>
-          <td class="table-actions">
-            <button class="btn" onclick="saveQty('${id}')">שמור</button>
-            <button class="btn btn-red" onclick="delItem('${id}')">מחק</button>
-          </td>`;
-        body.appendChild(tr);
-      });
-    }
-    function saveQty(id){
-      const val = Number(document.getElementById(`q_${id}`).value||0);
-      db.ref(`equipment/${id}/quantity`).set(val);
-    }
-    function delItem(id){
-      if(!confirm("למחוק פריט זה?")) return;
-      db.ref(`equipment/${id}`).set(null);
-    }
-    function adminAddItem(){
-      const name = (document.getElementById('newName').value||"").trim();
-      const qty  = Number(document.getElementById('newQty').value||0);
-      if(!name || qty<0) return alert("מלא שם וכמות תקינים");
-      const ref = db.ref("equipment").push();
-      ref.set({name, quantity:qty, borrowerName:""}).then(()=>{
-        document.getElementById('newName').value="";
-        document.getElementById('newQty').value="";
-      });
-    }
-
-    /* ------------------ Admin: manual action ------------------ */
-    function fillManualItems(){
-      const sel = document.getElementById('mItem');
-      if(!sel) return;
-      sel.innerHTML = "";
-      Object.entries(equipment).forEach(([id,item])=>{
-        const o = document.createElement('option');
-        o.value = id; o.textContent = `${item.name} (${item.quantity})`;
-        sel.appendChild(o);
-      });
-    }
-    function manualAction(){
-      const name  = (document.getElementById('mName').value||"").trim();
-      const phone = (document.getElementById('mPhone').value||"").trim();
-      const itemId= document.getElementById('mItem').value;
-      const action= document.getElementById('mAction').value; // borrow | return
-      if(!name || !phone || !itemId) return alert("מלא את כל השדות");
-
-      if(action==="borrow"){
-        const item = equipment[itemId];
-        if(!item || Number(item.quantity)<=0) return alert("אין מלאי");
-        const key = db.ref("borrowHistory").push().key;
-        const rec = {name, phone, itemId, itemName:item.name, date:new Date().toISOString(), status:"borrowed"};
-        const updates = {};
-        updates[`/equipment/${itemId}/quantity`]     = Number(item.quantity)-1;
-        updates[`/equipment/${itemId}/borrowerName`] = name;
-        updates[`/borrowHistory/${key}`]             = rec;
-        db.ref().update(updates);
-      } else {
-        // החזרה ידנית: מוצא Borrow פעיל אחרון לאותו טלפון ופריט
-        const found = Object.entries(historyMap)
-          .reverse()
-          .find(([k,v])=> v.phone===phone && v.itemId===itemId && v.status==="borrowed");
-        if(!found) return alert("לא נמצאה השאלה פעילה לפריט זה");
-        const [hk] = found;
-        const cur = Number(equipment[itemId]?.quantity||0);
-        const updates = {};
-        updates[`/borrowHistory/${hk}/status`] = "returned";
-        updates[`/equipment/${itemId}/quantity`] = cur+1;
-        updates[`/equipment/${itemId}/borrowerName`] = "";
-        db.ref().update(updates);
-      }
-      document.getElementById('mName').value="";
-      document.getElementById('mPhone').value="";
-    }
-
-    /* ------------------ Admin: history ------------------ */
-    function renderHistory(){
-      const body = document.getElementById('historyBody');
-      const q  = (document.getElementById('hSearch').value||"").toLowerCase().trim();
-      const st = (document.getElementById('hStatus').value||"").trim();
-      body.innerHTML="";
-
-      const rows = Object.entries(historyMap).map(([k,v])=>({key:k,...v}))
-        .sort((a,b)=> String(b.date).localeCompare(String(a.date)));
-
-      rows.forEach(rec=>{
-        if(st && rec.status!==st) return;
-        const txt = `${rec.name} ${rec.phone} ${rec.itemName} ${rec.status}`.toLowerCase();
-        if(q && !txt.includes(q)) return;
-
-        const tr = document.createElement('tr');
-        tr.innerHTML = `
-          <td>${new Date(rec.date).toLocaleString('he-IL')}</td>
-          <td><input value="${rec.name||''}" onchange="editHist('${rec.key}','name',this.value)"></td>
-          <td><input value="${rec.phone||''}" onchange="editHist('${rec.key}','phone',this.value)"></td>
-          <td><input value="${rec.itemName||''}" onchange="editHist('${rec.key}','itemName',this.value)"></td>
-          <td>
-            <select onchange="editHist('${rec.key}','status',this.value)">
-              <option ${rec.status==='borrowed'?'selected':''}>borrowed</option>
-              <option ${rec.status==='returned'?'selected':''}>returned</option>
-            </select>
-          </td>
-          <td class="table-actions">
-            <button class="btn btn-red" onclick="delHist('${rec.key}')">מחק</button>
-          </td>`;
-        body.appendChild(tr);
-      });
-    }
-    function editHist(key, field, val){ db.ref(`borrowHistory/${key}/${field}`).set(val); }
-    function delHist(key){ if(confirm("למחוק רשומה זו?")) db.ref(`borrowHistory/${key}`).set(null); }
-
-    /* ------------------ Export / Print ------------------ */
-    function exportHistoryCSV(){
-      const rows = Object.entries(historyMap).map(([k,v])=>({id:k,...v}));
-      let csv = "data:text/csv;charset=utf-8," +
-        ["id,date,name,phone,itemName,status"].join(",") + "\n" +
-        rows.map(r=>[
-          r.id,
-          `"${r.date}"`,
-          `"${(r.name||"").replace(/"/g,'""')}"`,
-          `"${r.phone||""}"`,
-          `"${(r.itemName||"").replace(/"/g,'""')}"`,
-          r.status
-        ].join(",")).join("\n");
-      const a = document.createElement('a');
-      a.href = encodeURI(csv);
-      a.download = `history_${new Date().toISOString().slice(0,10)}.csv`;
-      a.click();
-    }
-    function printHistory(){
-      const rows = Object.entries(historyMap).map(([k,v])=>({id:k,...v}))
-        .sort((a,b)=> String(b.date).localeCompare(String(a.date)));
-      const w = window.open("","_blank");
-      w.document.write(`
-        <html dir="rtl"><head><meta charset="utf-8"><title>היסטוריה - ארון ציוד ידידים</title>
-        <style>table{width:100%;border-collapse:collapse}td,th{border:1px solid #ddd;padding:8px;text-align:center}th{background:#eef}</style>
-        </head><body>
-        <h2 style="text-align:center">היסטוריית השאלות/החזרות</h2>
-        <table><thead><tr>
-          <th>תאריך</th><th>שם</th><th>טלפון</th><th>פריט</th><th>סטטוס</th>
-        </tr></thead><tbody>
-        ${rows.map(r=>`<tr>
-          <td>${new Date(r.date).toLocaleString('he-IL')}</td>
-          <td>${r.name||''}</td><td>${r.phone||''}</td>
-          <td>${r.itemName||''}</td><td>${r.status}</td>
-        </tr>`).join("")}
-        </tbody></table>
-        <script>window.onload=()=>window.print()</script>
-        </body></html>`);
-      w.document.close();
-    }
-
-    /* ------------------ Admin password update ------------------ */
-    function updateAdminPassword(){
-      const cur = (document.getElementById('curAdmin').value||"").trim();
-      const neu = (document.getElementById('newAdmin').value||"").trim();
-      if(!cur || !neu) return alert("מלא סיסמה נוכחית וחדשה");
-      if(cur !== ADMIN_CODE) return alert("סיסמה נוכחית שגויה");
-      db.ref("settings/adminCode").set(neu).then(()=>{
-        ADMIN_CODE = neu;
-        document.getElementById('curAdmin').value="";
-        document.getElementById('newAdmin').value="";
-        alert("✅ סיסמה עודכנה בענן");
-      });
-    }
-
-    /* ------------------ Init ------------------ */
-    setTab('borrow'); // ברירת מחדל
-  </script>
-</body>
-</html>
+diff --git a/index.html b/index.html
+index f3f88811a8448fa4aa020d7e26f70e0f1c988f45..8a2bdbce40fbfc5a997aecb191fd61757d2effce 100644
+--- a/index.html
++++ b/index.html
+@@ -1,68 +1,77 @@
+ <!DOCTYPE html>
+ <html lang="he" dir="rtl">
+ <head>
+   <meta charset="UTF-8" />
+   <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+   <title>ארון ציוד ידידים</title>
+   <style>
+     :root{
+       --blue:#1e63e9; --blue-700:#184fb7; --light:#e9f3ff;
+       --orange:#fb923c; --green:#16a34a; --red:#ef4444;
+       --bg:#f5f7fb; --text:#0b2d5b; --muted:#6b7280; --border:#e5e7eb;
+     }
+     *{box-sizing:border-box}
+     body{margin:0;font-family:"Segoe UI","Rubik",Arial,sans-serif;background:var(--bg);color:var(--text)}
+-    header{background:var(--blue);color:#fff;padding:12px 16px;position:sticky;top:0;z-index:20;box-shadow:0 2px 8px rgba(0,0,0,.08)}
++    header{background:var(--blue);color:#fff;padding:12px 16px 18px;position:sticky;top:0;z-index:20;box-shadow:0 2px 8px rgba(0,0,0,.08)}
+     header h1{margin:0;text-align:center;font-size:20px}
+     #adminLoginBtn{position:absolute;left:12px;top:10px;background:var(--orange);border:none;color:#fff;padding:6px 10px;border-radius:8px;font-weight:700;cursor:pointer;font-size:.9rem}
++    .cloud-status{position:absolute;right:12px;top:12px;padding:4px 10px;border-radius:999px;background:rgba(255,255,255,.2);font-weight:600;font-size:.8rem;white-space:nowrap;box-shadow:0 1px 4px rgba(0,0,0,.15)}
++    .cloud-status[data-state="online"]{background:rgba(34,197,94,.85)}
++    .cloud-status[data-state="offline"]{background:rgba(239,68,68,.85)}
++    .cloud-status[data-state="pending"]{background:rgba(251,146,60,.85)}
+     main{max-width:1100px;margin:18px auto;padding:0 12px}
+     .card{background:#fff;border:1px solid var(--border);border-radius:12px;box-shadow:0 2px 10px rgba(0,0,0,.05);padding:16px;margin-bottom:14px}
+     .row{display:flex;gap:10px;flex-wrap:wrap;align-items:center}
+     .btn{background:var(--blue);color:#fff;border:none;border-radius:10px;padding:10px 16px;font-weight:700;cursor:pointer;transition:.2s}
+     .btn:hover{background:var(--blue-700)}
+     .btn-outline{background:#fff;color:var(--blue);border:2px solid var(--blue)}
+     .btn-green{background:var(--green)} .btn-orange{background:var(--orange)} .btn-red{background:var(--red)}
+     .toolbar{display:flex;gap:10px;justify-content:center;margin-bottom:10px}
+     input,select{width:100%;padding:12px;border:1px solid var(--border);border-radius:10px;background:#fff;font-size:15px}
+     label{font-size:.9rem;color:var(--muted);margin-bottom:6px;display:block}
+     .grid2{display:grid;grid-template-columns:1fr 1fr;gap:12px}
+     @media(max-width:720px){.grid2{grid-template-columns:1fr}}
++    @media(max-width:640px){
++      header{padding-bottom:46px}
++      .cloud-status{right:50%;transform:translateX(50%);top:auto;bottom:10px}
++    }
+     table{width:100%;border-collapse:collapse;margin-top:8px}
+     th,td{border-bottom:1px solid var(--border);padding:12px;text-align:center}
+     th{background:var(--light);color:var(--text)}
+     .muted{color:var(--muted)} .hidden{display:none}
+     .pill{padding:4px 8px;border-radius:999px;font-size:.85rem;font-weight:700}
+     .pill-ok{background:#dcfce7;color:#166534} .pill-out{background:#fee2e2;color:#991b1b}
+     .section-title{font-size:18px;margin:0 0 12px} .divider{height:1px;background:var(--border);margin:14px 0}
+     .table-actions{display:flex;gap:8px;justify-content:center;flex-wrap:wrap}
+   </style>
+ </head>
+ <body>
+   <header>
+     <button id="adminLoginBtn" onclick="toggleAdminLogin()">כניסת מנהל</button>
+     <h1>ארון ציוד ידידים</h1>
++    <span id="cloudStatus" class="cloud-status">מתחבר לענן…</span>
+   </header>
+ 
+   <main>
+     <!-- משתמש: כרטיס פעולות -->
+     <section class="card">
+       <div class="toolbar">
+         <button class="btn btn-green" id="btnBorrowTab" onclick="setTab('borrow')">לקיחת ציוד 📦</button>
+         <button class="btn btn-outline" id="btnReturnTab" onclick="setTab('return')">החזרת ציוד 🔁</button>
+       </div>
+ 
+       <!-- אזור השאלה -->
+       <div id="borrowBar" class="grid2">
+         <div>
+           <label>שם</label>
+           <input id="uName" placeholder="הזן את שמך" oninput="renderEquipment()">
+         </div>
+         <div>
+           <label>טלפון</label>
+           <input id="uPhone" placeholder="הזן מספר טלפון" oninput="renderEquipment()">
+         </div>
+       </div>
+ 
+       <!-- אזור החזרה לפי טלפון -->
+       <div id="returnBar" class="grid2 hidden">
+         <div>
+@@ -200,368 +209,693 @@
+ 
+   <!-- Firebase compat (ללא מודולים — תואם GitHub Pages) -->
+   <script src="https://www.gstatic.com/firebasejs/10.7.1/firebase-app-compat.js"></script>
+   <script src="https://www.gstatic.com/firebasejs/10.7.1/firebase-database-compat.js"></script>
+ 
+   <script>
+     /* ------------------ Firebase Init ------------------ */
+     const firebaseConfig = {
+       apiKey: "AIzaSyCfZImZVSxkozGdQiwZLFOpChdEDjM2Tz8",
+       authDomain: "aronyedidim.firebaseapp.com",
+       databaseURL: "https://aronyedidim-default-rtdb.firebaseio.com/",
+       projectId: "aronyedidim",
+       storageBucket: "aronyedidim.firebasestorage.app",
+       messagingSenderId: "473887573965",
+       appId: "1:473887573965:web:3f5fbed40fa4fc01b66684"
+     };
+     firebase.initializeApp(firebaseConfig);
+     const db = firebase.database();
+ 
+     /* ------------------ State ------------------ */
+     let TAB = "borrow";                 // borrow | return
+     let adminLogged = false;
+     let ADMIN_CODE = "1234";            // ברירת מחדל — ייטען מ-/settings/adminCode אם קיים
+     let equipment = {};                 // {id:{name,quantity,borrowerName?}}
+     let historyMap = {};                // {key:record}
++    const statusBadge = document.getElementById('cloudStatus');
++    const LOCAL_KEYS = {
++      equipment: 'yedidim_equipment_cache',
++      history: 'yedidim_history_cache',
++      admin: 'yedidim_admin_code_cache'
++    };
++    let offlineMode = false;
++
++    function setCloudStatus(text, state){
++      if(!statusBadge) return;
++      statusBadge.textContent = text;
++      statusBadge.dataset.state = state;
++    }
++    setCloudStatus('מתחבר לענן…','pending');
++
++    function loadLocal(key, fallback){
++      try{
++        const raw = localStorage.getItem(key);
++        if(!raw) return fallback;
++        const parsed = JSON.parse(raw);
++        return parsed ?? fallback;
++      }catch(err){
++        console.warn('localStorage load failed', err);
++        return fallback;
++      }
++    }
++    function saveLocal(key, value){
++      try{
++        localStorage.setItem(key, JSON.stringify(value));
++      }catch(err){
++        console.warn('localStorage save failed', err);
++      }
++    }
++    function persistLocalState(){
++      saveLocal(LOCAL_KEYS.equipment, equipment || {});
++      saveLocal(LOCAL_KEYS.history, historyMap || {});
++      saveLocal(LOCAL_KEYS.admin, ADMIN_CODE || '1234');
++    }
++    function refreshAll(){
++      renderEquipment();
++      fillManualItems();
++      if(adminLogged){
++        renderAdminTables();
++        renderHistory();
++      }
++    }
++    function createLocalKey(prefix){
++      return `${prefix}_${Date.now()}_${Math.random().toString(16).slice(2,8)}`;
++    }
++    function enableOfflineMode(err){
++      if(offlineMode) return;
++      offlineMode = true;
++      equipment = loadLocal(LOCAL_KEYS.equipment, {});
++      historyMap = loadLocal(LOCAL_KEYS.history, {});
++      ADMIN_CODE = loadLocal(LOCAL_KEYS.admin, ADMIN_CODE);
++      setCloudStatus('עובד במצב לא מקוון', 'offline');
++      if(err){
++        console.error('Firebase error', err);
++        alert('⚠️ לא ניתן להתחבר לענן. הנתונים נשמרים כעת מקומית בדפדפן.');
++      }
++      refreshAll();
++    }
++    function recordBorrowLocal(rec, itemId, newQty){
++      const key = createLocalKey('hist');
++      historyMap[key] = {...rec};
++      const prev = equipment[itemId] || {name:rec.itemName, quantity:0, borrowerName:''};
++      equipment[itemId] = {...prev, quantity:newQty, borrowerName:rec.name};
++      persistLocalState();
++      refreshAll();
++      return key;
++    }
++    function recordReturnLocal(histKey, itemId){
++      if(historyMap[histKey]) historyMap[histKey].status = 'returned';
++      if(equipment[itemId]){
++        const qty = Number(equipment[itemId].quantity||0)+1;
++        equipment[itemId] = {...equipment[itemId], quantity:qty, borrowerName:''};
++      }
++      persistLocalState();
++      refreshAll();
++    }
++    function addItemLocal(name, qty){
++      const id = createLocalKey('item');
++      equipment[id] = {name, quantity:qty, borrowerName:''};
++      persistLocalState();
++      refreshAll();
++      return id;
++    }
++    function deleteItemLocal(id){
++      delete equipment[id];
++      persistLocalState();
++      refreshAll();
++    }
++    function updateQtyLocal(id, qty){
++      if(!equipment[id]) return false;
++      equipment[id] = {...equipment[id], quantity:qty};
++      persistLocalState();
++      refreshAll();
++      return true;
++    }
++    function updateAdminCodeLocal(code){
++      ADMIN_CODE = code;
++      persistLocalState();
++    }
+ 
+     /* ------------------ UI Helpers ------------------ */
+     function setTab(t){
+       TAB = t;
+       document.getElementById('btnBorrowTab').classList.toggle('btn-outline', t!=='borrow');
+       document.getElementById('btnReturnTab').classList.toggle('btn-outline', t!=='return');
+       document.getElementById('borrowBar').classList.toggle('hidden', t!=='borrow');
+       document.getElementById('returnBar').classList.toggle('hidden', t!=='return');
+       // רענון טבלה
+       renderEquipment();
+       if (t==='return') { // מנקה רשימת תוצאות החזרה עד לחיפוש
+         renderReturnList([]);
+       }
+     }
+     function toggleAdminLogin(){
+       document.getElementById('adminLoginCard').classList.toggle('hidden');
+     }
+ 
+     /* ------------------ Load initial data ------------------ */
+     // סיסמת מנהל מהענן (אם קיימת)
+     db.ref("settings/adminCode").once("value").then(snap=>{
+-      if(snap.exists()){ ADMIN_CODE = String(snap.val()); }
++      if(snap.exists()){
++        ADMIN_CODE = String(snap.val());
++        persistLocalState();
++      }
++      if(!offlineMode) setCloudStatus('מחובר לענן', 'online');
++    }).catch(err=>{
++      enableOfflineMode(err);
+     });
+ 
+     // ציוד (חי)
+     db.ref("equipment").on("value", snap=>{
+       equipment = snap.val() || {};
++      if(!offlineMode) setCloudStatus('מחובר לענן', 'online');
++      persistLocalState();
+       renderEquipment();
+       if(adminLogged) renderAdminTables();
+       fillManualItems();
++    }, err=>{
++      enableOfflineMode(err);
+     });
+ 
+     // היסטוריה (חי)
+     db.ref("borrowHistory").on("value", snap=>{
+       historyMap = snap.val() || {};
++      if(!offlineMode) setCloudStatus('מחובר לענן', 'online');
++      persistLocalState();
+       if(adminLogged) renderHistory();
++    }, err=>{
++      enableOfflineMode(err);
+     });
+ 
+     /* ------------------ Render equipment for users ------------------ */
+     function renderEquipment(){
+       const body = document.getElementById('eqBody');
+       const query = (document.getElementById('searchEq').value||"").trim().toLowerCase();
+       body.innerHTML = "";
+ 
+       const name  = (document.getElementById('uName').value||"").trim();
+       const phone = (document.getElementById('uPhone').value||"").trim();
+       const allowBorrow = !!(name && phone);
+ 
+-      Object.entries(equipment).forEach(([id,item])=>{
++      const rows = Object.entries(equipment||{}).filter(([,item])=>!!item);
++      if(!rows.length){
++        const tr = document.createElement('tr');
++        tr.innerHTML = `<td colspan="4" class="muted">לא נמצאו פריטים במערכת${offlineMode?' (שמירה מקומית)' : ' — הוסף דרך פאנל הניהול'}</td>`;
++        body.appendChild(tr);
++        return;
++      }
++
++      let appended = 0;
++      rows.forEach(([id,item])=>{
+         const itemName = String(item.name||"");
+         if(query && !itemName.toLowerCase().includes(query)) return;
+         const qty = Number(item.quantity||0);
+         const out = qty <= 0;
+ 
+         const tr = document.createElement('tr');
+         tr.innerHTML = `
+           <td>${itemName}</td>
+           <td>${qty}</td>
+           <td>${out ? '<span class="pill pill-out">לא במלאי</span>' : '<span class="pill pill-ok">זמין</span>'}</td>
+           <td>
+             ${TAB==='borrow'
+               ? `<button class="btn btn-green" ${out||!allowBorrow?'disabled':''} onclick="borrowItem('${id}')">קח ציוד</button>`
+               : `<button class="btn" onclick="loadUserBorrows()">בדיקת החזרה</button>`
+             }
+           </td>`;
+         body.appendChild(tr);
++        appended++;
+       });
++
++      if(!appended){
++        const tr = document.createElement('tr');
++        tr.innerHTML = `<td colspan="4" class="muted">אין תוצאות התואמות לחיפוש הנוכחי</td>`;
++        body.appendChild(tr);
++      }
+     }
+ 
+     /* ------------------ Borrow (user) ------------------ */
+     function borrowItem(itemId){
+       const name  = (document.getElementById('uName').value||"").trim();
+       const phone = (document.getElementById('uPhone').value||"").trim();
+       if(!name || !phone) return alert("אנא מלא שם וטלפון");
+ 
+       const item = equipment[itemId];
+       if(!item) return alert("פריט לא נמצא");
+       const qty = Number(item.quantity||0);
+       if(qty<=0) return alert("אין מלאי לפריט זה");
+ 
+       const newQty = qty-1;
+       const rec = {
+         name, phone, itemId, itemName:item.name,
+         date: new Date().toISOString(), status: "borrowed"
+       };
+-      const key = db.ref("borrowHistory").push().key;
+ 
++      if(offlineMode){
++        recordBorrowLocal(rec, itemId, newQty);
++        alert("✅ ההשאלה נרשמה (שמירה מקומית)");
++        return;
++      }
++
++      const key = db.ref("borrowHistory").push().key;
+       const updates = {};
+       updates[`/equipment/${itemId}/quantity`]     = newQty;
+       updates[`/equipment/${itemId}/borrowerName`] = name;      // מי מחזיק עכשיו
+       updates[`/borrowHistory/${key}`]             = rec;
+ 
+       db.ref().update(updates)
+         .then(()=> alert("✅ ההשאלה נרשמה בהצלחה"))
+-        .catch(err=> alert("שגיאה: "+err.message));
++        .catch(err=>{
++          enableOfflineMode(err);
++          if(offlineMode){
++            recordBorrowLocal(rec, itemId, newQty);
++            alert("✅ ההשאלה נרשמה (שמירה מקומית)");
++          } else {
++            alert("שגיאה: "+err.message);
++          }
++        });
+     }
+ 
+     /* ------------------ Return by phone (user) ------------------ */
+     function loadUserBorrows(){
+       const phone = (document.getElementById('rPhone').value||"").trim();
+       if(!phone){ renderReturnList([]); return; }
+ 
+-      const list = Object.entries(historyMap)
+-        .filter(([k,v]) => v.phone===phone && v.status==="borrowed")
++      const list = Object.entries(historyMap||{})
++        .filter(([k,v]) => v && v.phone===phone && v.status==="borrowed")
+         .map(([k,v]) => ({key:k, ...v}));
+       renderReturnList(list);
+     }
+     function renderReturnList(items){
+       // מציג את תוצאות ההחזרה מתחת לטבלת הציוד — מוסיף שורות “מיוחדות” אחרי ציוד
+       const body = document.getElementById('eqBody');
+       if(TAB!=="return") return;
+       // קודם מרעננים את טבלת הציוד עצמה
+       const keepQuery = (document.getElementById('searchEq').value||"");
+       document.getElementById('searchEq').value = ""; // מציג את כל הרשימה
+       renderEquipment();
+       document.getElementById('searchEq').value = keepQuery;
+ 
+       if(items.length){
+         const sep = document.createElement('tr');
+         sep.innerHTML = `<td colspan="4" class="muted">פריטים שנמצאים אצל הטלפון הזה:</td>`;
+         body.appendChild(sep);
+       }
+       items.forEach(rec=>{
+         const tr = document.createElement('tr');
+         tr.innerHTML = `
+           <td>${rec.itemName}</td>
+           <td>-</td>
+           <td><span class="pill pill-out">אצל המשתמש</span></td>
+           <td><button class="btn" onclick="returnByKey('${rec.key}','${rec.itemId}')">החזר</button></td>`;
+         body.appendChild(tr);
+       });
+     }
+     function returnByKey(histKey, itemId){
+-      if(!itemId || !equipment[itemId]) return alert("לא נמצא פריט להחזרה");
+-      const curQty = Number(equipment[itemId]?.quantity||0);
++      const item = equipment[itemId];
++      if(!item && !offlineMode) return alert("לא נמצא פריט להחזרה");
++      const curQty = Number(item?.quantity||0);
++
++      if(offlineMode){
++        recordReturnLocal(histKey, itemId);
++        loadUserBorrows();
++        alert("🔁 ההחזרה נשמרה (שמירה מקומית)");
++        return;
++      }
+ 
+       const updates = {};
+       updates[`/borrowHistory/${histKey}/status`] = "returned";
+-      updates[`/equipment/${itemId}/quantity`]    = curQty+1;
+-      updates[`/equipment/${itemId}/borrowerName`] = ""; // התפנה
++      if(item){
++        updates[`/equipment/${itemId}/quantity`]    = curQty+1;
++        updates[`/equipment/${itemId}/borrowerName`] = ""; // התפנה
++      }
+ 
+       db.ref().update(updates)
+         .then(()=>{
+           alert("🔁 ההחזרה בוצעה");
+           loadUserBorrows();
+         })
+-        .catch(err=> alert("שגיאה: "+err.message));
++        .catch(err=>{
++          enableOfflineMode(err);
++          if(offlineMode){
++            recordReturnLocal(histKey, itemId);
++            loadUserBorrows();
++            alert("🔁 ההחזרה נשמרה (שמירה מקומית)");
++          } else {
++            alert("שגיאה: "+err.message);
++          }
++        });
+     }
+ 
+     /* ------------------ Admin auth ------------------ */
+     function loginAdmin(){
+       const pass = (document.getElementById('adminPass').value||"").trim();
+       if(!pass) return alert("הכנס סיסמה");
+       if(pass !== ADMIN_CODE) return alert("סיסמה שגויה");
+       adminLogged = true;
+       document.getElementById('adminLoginCard').classList.add('hidden');
+       document.getElementById('adminPanel').classList.remove('hidden');
+       renderAdminTables(); fillManualItems(); renderHistory();
+     }
+     function logoutAdmin(){
+       adminLogged = false;
+       document.getElementById('adminPanel').classList.add('hidden');
+       document.getElementById('adminLoginCard').classList.add('hidden');
+     }
+ 
+     /* ------------------ Admin: inventory ------------------ */
+     function renderAdminTables(){
+       const body = document.getElementById('adminEqBody');
+       body.innerHTML = "";
+-      Object.entries(equipment).forEach(([id,item])=>{
++      const rows = Object.entries(equipment||{}).filter(([,item])=>!!item);
++      if(!rows.length){
++        body.innerHTML = '<tr><td colspan="4" class="muted">אין פריטים להצגה</td></tr>';
++        return;
++      }
++      rows.forEach(([id,item])=>{
+         const tr = document.createElement('tr');
+         tr.innerHTML = `
+           <td>${item.name}</td>
+           <td><input type="number" min="0" value="${Number(item.quantity)||0}" style="width:110px" id="q_${id}"></td>
+           <td>${item.borrowerName||'-'}</td>
+           <td class="table-actions">
+             <button class="btn" onclick="saveQty('${id}')">שמור</button>
+             <button class="btn btn-red" onclick="delItem('${id}')">מחק</button>
+           </td>`;
+         body.appendChild(tr);
+       });
+     }
+     function saveQty(id){
+       const val = Number(document.getElementById(`q_${id}`).value||0);
+-      db.ref(`equipment/${id}/quantity`).set(val);
++      if(offlineMode){
++        const updated = updateQtyLocal(id, val);
++        alert(updated ? "✅ הכמות נשמרה (שמירה מקומית)" : "פריט לא נמצא");
++        return;
++      }
++      db.ref(`equipment/${id}/quantity`).set(val).catch(err=>{
++        enableOfflineMode(err);
++        if(offlineMode){
++          const updated = updateQtyLocal(id, val);
++          alert(updated ? "✅ הכמות נשמרה (שמירה מקומית)" : "פריט לא נמצא");
++        } else {
++          alert("שגיאה: "+err.message);
++        }
++      });
+     }
+     function delItem(id){
+       if(!confirm("למחוק פריט זה?")) return;
+-      db.ref(`equipment/${id}`).set(null);
++      if(offlineMode){
++        if(!equipment[id]){ alert("פריט לא נמצא"); return; }
++        deleteItemLocal(id);
++        alert("🗑️ הפריט הוסר (שמירה מקומית)");
++        return;
++      }
++      db.ref(`equipment/${id}`).set(null).catch(err=>{
++        enableOfflineMode(err);
++        if(offlineMode){
++          if(!equipment[id]){ alert("פריט לא נמצא"); return; }
++          deleteItemLocal(id);
++          alert("🗑️ הפריט הוסר (שמירה מקומית)");
++        } else {
++          alert("שגיאה: "+err.message);
++        }
++      });
+     }
+     function adminAddItem(){
+       const name = (document.getElementById('newName').value||"").trim();
+       const qty  = Number(document.getElementById('newQty').value||0);
+       if(!name || qty<0) return alert("מלא שם וכמות תקינים");
+-      const ref = db.ref("equipment").push();
+-      ref.set({name, quantity:qty, borrowerName:""}).then(()=>{
++      const resetInputs = ()=>{
+         document.getElementById('newName').value="";
+         document.getElementById('newQty').value="";
+-      });
++      };
++      if(offlineMode){
++        addItemLocal(name, qty);
++        resetInputs();
++        alert("✅ הפריט נוסף (שמירה מקומית)");
++        return;
++      }
++      const ref = db.ref("equipment").push();
++      ref.set({name, quantity:qty, borrowerName:""})
++        .then(resetInputs)
++        .catch(err=>{
++          enableOfflineMode(err);
++          if(offlineMode){
++            addItemLocal(name, qty);
++            resetInputs();
++            alert("✅ הפריט נוסף (שמירה מקומית)");
++          } else {
++            alert("שגיאה: "+err.message);
++          }
++        });
+     }
+ 
+     /* ------------------ Admin: manual action ------------------ */
+     function fillManualItems(){
+       const sel = document.getElementById('mItem');
+       if(!sel) return;
+       sel.innerHTML = "";
+-      Object.entries(equipment).forEach(([id,item])=>{
++      const rows = Object.entries(equipment||{}).filter(([,item])=>!!item);
++      if(!rows.length){
++        const opt = document.createElement('option');
++        opt.value = "";
++        opt.textContent = "אין פריטים זמינים";
++        sel.appendChild(opt);
++        sel.disabled = true;
++        return;
++      }
++      sel.disabled = false;
++      rows.forEach(([id,item])=>{
+         const o = document.createElement('option');
+         o.value = id; o.textContent = `${item.name} (${item.quantity})`;
+         sel.appendChild(o);
+       });
+     }
+     function manualAction(){
+       const name  = (document.getElementById('mName').value||"").trim();
+       const phone = (document.getElementById('mPhone').value||"").trim();
+       const itemId= document.getElementById('mItem').value;
+       const action= document.getElementById('mAction').value; // borrow | return
+       if(!name || !phone || !itemId) return alert("מלא את כל השדות");
+ 
+       if(action==="borrow"){
+         const item = equipment[itemId];
+         if(!item || Number(item.quantity)<=0) return alert("אין מלאי");
+-        const key = db.ref("borrowHistory").push().key;
++        const newQty = Number(item.quantity)-1;
+         const rec = {name, phone, itemId, itemName:item.name, date:new Date().toISOString(), status:"borrowed"};
+-        const updates = {};
+-        updates[`/equipment/${itemId}/quantity`]     = Number(item.quantity)-1;
+-        updates[`/equipment/${itemId}/borrowerName`] = name;
+-        updates[`/borrowHistory/${key}`]             = rec;
+-        db.ref().update(updates);
++        if(offlineMode){
++          recordBorrowLocal(rec, itemId, newQty);
++          alert("✅ ההשאלה נשמרה (שמירה מקומית)");
++        } else {
++          const key = db.ref("borrowHistory").push().key;
++          const updates = {};
++          updates[`/equipment/${itemId}/quantity`]     = newQty;
++          updates[`/equipment/${itemId}/borrowerName`] = name;
++          updates[`/borrowHistory/${key}`]             = rec;
++          db.ref().update(updates).catch(err=>{
++            enableOfflineMode(err);
++            if(offlineMode){
++              recordBorrowLocal(rec, itemId, newQty);
++              alert("✅ ההשאלה נשמרה (שמירה מקומית)");
++            } else {
++              alert("שגיאה: "+err.message);
++            }
++          });
++        }
+       } else {
+         // החזרה ידנית: מוצא Borrow פעיל אחרון לאותו טלפון ופריט
+-        const found = Object.entries(historyMap)
++        const found = Object.entries(historyMap||{})
++          .filter(([,v])=>!!v)
+           .reverse()
+           .find(([k,v])=> v.phone===phone && v.itemId===itemId && v.status==="borrowed");
+         if(!found) return alert("לא נמצאה השאלה פעילה לפריט זה");
+         const [hk] = found;
+         const cur = Number(equipment[itemId]?.quantity||0);
+-        const updates = {};
+-        updates[`/borrowHistory/${hk}/status`] = "returned";
+-        updates[`/equipment/${itemId}/quantity`] = cur+1;
+-        updates[`/equipment/${itemId}/borrowerName`] = "";
+-        db.ref().update(updates);
++        if(offlineMode){
++          recordReturnLocal(hk, itemId);
++          alert("🔁 ההחזרה נשמרה (שמירה מקומית)");
++        } else {
++          const updates = {};
++          updates[`/borrowHistory/${hk}/status`] = "returned";
++          updates[`/equipment/${itemId}/quantity`] = cur+1;
++          updates[`/equipment/${itemId}/borrowerName`] = "";
++          db.ref().update(updates).catch(err=>{
++            enableOfflineMode(err);
++            if(offlineMode){
++              recordReturnLocal(hk, itemId);
++              alert("🔁 ההחזרה נשמרה (שמירה מקומית)");
++            } else {
++              alert("שגיאה: "+err.message);
++            }
++          });
++        }
+       }
+       document.getElementById('mName').value="";
+       document.getElementById('mPhone').value="";
+     }
+ 
+     /* ------------------ Admin: history ------------------ */
+     function renderHistory(){
+       const body = document.getElementById('historyBody');
+       const q  = (document.getElementById('hSearch').value||"").toLowerCase().trim();
+       const st = (document.getElementById('hStatus').value||"").trim();
+       body.innerHTML="";
+ 
+-      const rows = Object.entries(historyMap).map(([k,v])=>({key:k,...v}))
++      const entries = Object.entries(historyMap||{}).filter(([,v])=>!!v);
++      if(!entries.length){
++        body.innerHTML = '<tr><td colspan="6" class="muted">אין היסטוריה להצגה</td></tr>';
++        return;
++      }
++
++      const rows = entries.map(([k,v])=>({key:k,...v}))
+         .sort((a,b)=> String(b.date).localeCompare(String(a.date)));
+ 
+       rows.forEach(rec=>{
+         if(st && rec.status!==st) return;
+-        const txt = `${rec.name} ${rec.phone} ${rec.itemName} ${rec.status}`.toLowerCase();
++        const txt = `${rec.name||''} ${rec.phone||''} ${rec.itemName||''} ${rec.status||''}`.toLowerCase();
+         if(q && !txt.includes(q)) return;
+ 
+         const tr = document.createElement('tr');
+         tr.innerHTML = `
+-          <td>${new Date(rec.date).toLocaleString('he-IL')}</td>
++          <td>${new Date(rec.date||Date.now()).toLocaleString('he-IL')}</td>
+           <td><input value="${rec.name||''}" onchange="editHist('${rec.key}','name',this.value)"></td>
+           <td><input value="${rec.phone||''}" onchange="editHist('${rec.key}','phone',this.value)"></td>
+           <td><input value="${rec.itemName||''}" onchange="editHist('${rec.key}','itemName',this.value)"></td>
+           <td>
+             <select onchange="editHist('${rec.key}','status',this.value)">
+               <option ${rec.status==='borrowed'?'selected':''}>borrowed</option>
+               <option ${rec.status==='returned'?'selected':''}>returned</option>
+             </select>
+           </td>
+           <td class="table-actions">
+             <button class="btn btn-red" onclick="delHist('${rec.key}')">מחק</button>
+           </td>`;
+         body.appendChild(tr);
+       });
++      if(!body.children.length){
++        body.innerHTML = '<tr><td colspan="6" class="muted">אין רשומות התואמות לסינון</td></tr>';
++      }
++    }
++    function editHist(key, field, val){
++      if(offlineMode){
++        if(!historyMap[key]) return;
++        historyMap[key][field] = val;
++        persistLocalState();
++        if(adminLogged) renderHistory();
++        return;
++      }
++      db.ref(`borrowHistory/${key}/${field}`).set(val).catch(err=>{
++        enableOfflineMode(err);
++        if(offlineMode && historyMap[key]){
++          historyMap[key][field] = val;
++          persistLocalState();
++          if(adminLogged) renderHistory();
++        } else if(!offlineMode) {
++          alert("שגיאה: "+err.message);
++        }
++      });
++    }
++    function delHist(key){
++      if(!confirm("למחוק רשומה זו?")) return;
++      if(offlineMode){
++        delete historyMap[key];
++        persistLocalState();
++        if(adminLogged) renderHistory();
++        alert("🗑️ הרשומה הוסרה (שמירה מקומית)");
++        return;
++      }
++      db.ref(`borrowHistory/${key}`).set(null).catch(err=>{
++        enableOfflineMode(err);
++        if(offlineMode){
++          delete historyMap[key];
++          persistLocalState();
++          if(adminLogged) renderHistory();
++          alert("🗑️ הרשומה הוסרה (שמירה מקומית)");
++        } else {
++          alert("שגיאה: "+err.message);
++        }
++      });
+     }
+-    function editHist(key, field, val){ db.ref(`borrowHistory/${key}/${field}`).set(val); }
+-    function delHist(key){ if(confirm("למחוק רשומה זו?")) db.ref(`borrowHistory/${key}`).set(null); }
+ 
+     /* ------------------ Export / Print ------------------ */
+     function exportHistoryCSV(){
+-      const rows = Object.entries(historyMap).map(([k,v])=>({id:k,...v}));
++      const rows = Object.entries(historyMap||{})
++        .filter(([,v])=>!!v)
++        .map(([k,v])=>({id:k,...v}));
+       let csv = "data:text/csv;charset=utf-8," +
+         ["id,date,name,phone,itemName,status"].join(",") + "\n" +
+         rows.map(r=>[
+           r.id,
+-          `"${r.date}"`,
++          `"${r.date||''}"`,
+           `"${(r.name||"").replace(/"/g,'""')}"`,
+           `"${r.phone||""}"`,
+           `"${(r.itemName||"").replace(/"/g,'""')}"`,
+-          r.status
++          r.status||''
+         ].join(",")).join("\n");
+       const a = document.createElement('a');
+       a.href = encodeURI(csv);
+       a.download = `history_${new Date().toISOString().slice(0,10)}.csv`;
+       a.click();
+     }
+     function printHistory(){
+-      const rows = Object.entries(historyMap).map(([k,v])=>({id:k,...v}))
++      const rows = Object.entries(historyMap||{})
++        .filter(([,v])=>!!v)
++        .map(([k,v])=>({id:k,...v}))
+         .sort((a,b)=> String(b.date).localeCompare(String(a.date)));
+       const w = window.open("","_blank");
+       w.document.write(`
+         <html dir="rtl"><head><meta charset="utf-8"><title>היסטוריה - ארון ציוד ידידים</title>
+         <style>table{width:100%;border-collapse:collapse}td,th{border:1px solid #ddd;padding:8px;text-align:center}th{background:#eef}</style>
+         </head><body>
+         <h2 style="text-align:center">היסטוריית השאלות/החזרות</h2>
+         <table><thead><tr>
+           <th>תאריך</th><th>שם</th><th>טלפון</th><th>פריט</th><th>סטטוס</th>
+         </tr></thead><tbody>
+         ${rows.map(r=>`<tr>
+-          <td>${new Date(r.date).toLocaleString('he-IL')}</td>
++          <td>${new Date(r.date||Date.now()).toLocaleString('he-IL')}</td>
+           <td>${r.name||''}</td><td>${r.phone||''}</td>
+-          <td>${r.itemName||''}</td><td>${r.status}</td>
++          <td>${r.itemName||''}</td><td>${r.status||''}</td>
+         </tr>`).join("")}
+         </tbody></table>
+         <script>window.onload=()=>window.print()</script>
+         </body></html>`);
+       w.document.close();
+     }
+ 
+     /* ------------------ Admin password update ------------------ */
+     function updateAdminPassword(){
+       const cur = (document.getElementById('curAdmin').value||"").trim();
+       const neu = (document.getElementById('newAdmin').value||"").trim();
+       if(!cur || !neu) return alert("מלא סיסמה נוכחית וחדשה");
+       if(cur !== ADMIN_CODE) return alert("סיסמה נוכחית שגויה");
+-      db.ref("settings/adminCode").set(neu).then(()=>{
+-        ADMIN_CODE = neu;
++      const reset = ()=>{
+         document.getElementById('curAdmin').value="";
+         document.getElementById('newAdmin').value="";
++      };
++      if(offlineMode){
++        updateAdminCodeLocal(neu);
++        reset();
++        alert("✅ סיסמה עודכנה (שמירה מקומית)");
++        return;
++      }
++      db.ref("settings/adminCode").set(neu).then(()=>{
++        ADMIN_CODE = neu;
++        persistLocalState();
++        reset();
+         alert("✅ סיסמה עודכנה בענן");
++      }).catch(err=>{
++        enableOfflineMode(err);
++        if(offlineMode){
++          updateAdminCodeLocal(neu);
++          reset();
++          alert("✅ סיסמה עודכנה (שמירה מקומית)");
++        } else {
++          alert("שגיאה: "+err.message);
++        }
+       });
+     }
+ 
+     /* ------------------ Init ------------------ */
+     setTab('borrow'); // ברירת מחדל
+   </script>
+ </body>
+ </html>
