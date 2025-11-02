@@ -315,8 +315,80 @@ export default function AdminPage() {
               <CardHeader className="bg-gradient-to-r from-blue-50 to-indigo-50 pb-6">
                 <CardTitle className="text-2xl font-bold text-gray-800">📋 רשימת ציוד</CardTitle>
               </CardHeader>
-              <CardContent className="p-6">
-                <div className="overflow-x-auto">
+              <CardContent className="p-3 md:p-6">
+                {/* Mobile View */}
+                <div className="block md:hidden space-y-4">
+                  {equipment.map(item => (
+                    <div key={item.id} className="bg-gradient-to-r from-blue-50 to-indigo-50 rounded-xl p-4 border-2 border-blue-200">
+                      {editingEquipment?.id === item.id ? (
+                        <div className="space-y-3">
+                          <div>
+                            <label className="block text-xs font-semibold text-gray-600 mb-1">🎯 שם הציוד</label>
+                            <Input
+                              value={editingEquipment.name}
+                              onChange={(e) => setEditingEquipment({ ...editingEquipment, name: e.target.value })}
+                              className="w-full h-12 border-2 border-blue-300 rounded-lg text-base"
+                            />
+                          </div>
+                          <div>
+                            <label className="block text-xs font-semibold text-gray-600 mb-1">🔢 כמות</label>
+                            <Input
+                              type="number"
+                              value={editingEquipment.quantity}
+                              onChange={(e) => setEditingEquipment({ ...editingEquipment, quantity: parseInt(e.target.value) || 0 })}
+                              className="w-full h-12 border-2 border-blue-300 rounded-lg text-base"
+                            />
+                          </div>
+                          <div className="flex gap-2">
+                            <Button
+                              onClick={() => handleUpdateEquipment(item.id, editingEquipment.name, editingEquipment.quantity)}
+                              disabled={loading}
+                              className="flex-1 h-12 bg-gradient-to-r from-green-500 to-emerald-500 hover:from-green-600 hover:to-emerald-600 text-white rounded-lg"
+                            >
+                              ✅ שמור
+                            </Button>
+                            <Button
+                              variant="outline"
+                              onClick={() => setEditingEquipment(null)}
+                              className="flex-1 h-12 border-2 border-gray-400 rounded-lg"
+                            >
+                              ❌ ביטול
+                            </Button>
+                          </div>
+                        </div>
+                      ) : (
+                        <div>
+                          <div className="flex justify-between items-start mb-3">
+                            <div>
+                              <p className="font-bold text-lg text-gray-800">{item.name}</p>
+                              <p className={`text-2xl font-bold mt-1 ${item.quantity > 0 ? 'text-green-600' : 'text-red-600'}`}>
+                                {item.quantity} יחידות
+                              </p>
+                            </div>
+                          </div>
+                          <div className="flex gap-2">
+                            <Button
+                              onClick={() => setEditingEquipment({ id: item.id, name: item.name, quantity: item.quantity })}
+                              className="flex-1 h-11 border-2 border-blue-500 text-blue-600 hover:bg-blue-50 bg-white rounded-lg"
+                            >
+                              ✏️ ערוך
+                            </Button>
+                            <Button
+                              onClick={() => handleDeleteEquipment(item.id)}
+                              disabled={loading}
+                              className="flex-1 h-11 bg-gradient-to-r from-red-500 to-rose-500 hover:from-red-600 hover:to-rose-600 text-white rounded-lg"
+                            >
+                              🗑️ מחק
+                            </Button>
+                          </div>
+                        </div>
+                      )}
+                    </div>
+                  ))}
+                </div>
+
+                {/* Desktop View */}
+                <div className="hidden md:block overflow-x-auto">
                   <table className="w-full border-collapse">
                     <thead>
                       <tr className="bg-gradient-to-r from-blue-100 to-indigo-100 border-b-2 border-blue-200">
@@ -412,8 +484,67 @@ export default function AdminPage() {
             <CardHeader className="bg-gradient-to-r from-blue-50 to-indigo-50 pb-6">
               <CardTitle className="text-2xl font-bold text-gray-800">📊 היסטוריית השאלות</CardTitle>
             </CardHeader>
-            <CardContent className="p-6">
-              <div className="overflow-x-auto">
+            <CardContent className="p-3 md:p-6">
+              {/* Mobile View */}
+              <div className="block md:hidden space-y-4">
+                {borrowHistory.map(record => (
+                  <div key={record.id} className="bg-gradient-to-r from-blue-50 to-indigo-50 rounded-xl p-4 border-2 border-blue-200">
+                    <div className="space-y-2 mb-3">
+                      <div className="flex justify-between items-start">
+                        <div>
+                          <p className="text-xs text-gray-600 font-semibold">🎯 ציוד</p>
+                          <p className="font-bold text-lg text-gray-800">{record.equipment_name}</p>
+                        </div>
+                        <select
+                          value={record.status}
+                          onChange={(e) => handleUpdateHistoryStatus(record.id, e.target.value as 'borrowed' | 'returned')}
+                          className={`px-3 py-1.5 rounded-lg font-bold text-xs border-2 transition-colors ${
+                            record.status === 'borrowed'
+                              ? 'bg-orange-50 border-orange-300 text-orange-700'
+                              : 'bg-green-50 border-green-300 text-green-700'
+                          }`}
+                          disabled={loading}
+                        >
+                          <option value="borrowed">🟠 הושאל</option>
+                          <option value="returned">🟢 הוחזר</option>
+                        </select>
+                      </div>
+                      <div className="grid grid-cols-2 gap-2 pt-2 border-t border-gray-200">
+                        <div>
+                          <p className="text-xs text-gray-600">👤 שם</p>
+                          <p className="font-medium text-gray-800">{record.name}</p>
+                        </div>
+                        <div>
+                          <p className="text-xs text-gray-600">📱 טלפון</p>
+                          <p className="font-medium text-gray-800 text-sm">{record.phone}</p>
+                        </div>
+                      </div>
+                      <div className="grid grid-cols-2 gap-2">
+                        <div>
+                          <p className="text-xs text-gray-600">📅 הושאל</p>
+                          <p className="font-medium text-gray-800 text-sm">{new Date(record.borrow_date).toLocaleDateString('he-IL')}</p>
+                        </div>
+                        <div>
+                          <p className="text-xs text-gray-600">📅 הוחזר</p>
+                          <p className="font-medium text-gray-800 text-sm">
+                            {record.return_date ? new Date(record.return_date).toLocaleDateString('he-IL') : '➖'}
+                          </p>
+                        </div>
+                      </div>
+                    </div>
+                    <Button
+                      onClick={() => handleDeleteHistory(record.id)}
+                      disabled={loading}
+                      className="w-full h-11 bg-gradient-to-r from-red-500 to-rose-500 hover:from-red-600 hover:to-rose-600 text-white rounded-lg"
+                    >
+                      🗑️ מחק רשומה
+                    </Button>
+                  </div>
+                ))}
+              </div>
+
+              {/* Desktop View */}
+              <div className="hidden md:block overflow-x-auto">
                 <table className="w-full border-collapse">
                   <thead>
                     <tr className="bg-gradient-to-r from-blue-100 to-indigo-100 border-b-2 border-blue-200">
@@ -438,8 +569,8 @@ export default function AdminPage() {
                             value={record.status}
                             onChange={(e) => handleUpdateHistoryStatus(record.id, e.target.value as 'borrowed' | 'returned')}
                             className={`px-4 py-2 rounded-xl font-bold text-sm border-2 transition-colors ${
-                              record.status === 'borrowed' 
-                                ? 'bg-orange-50 border-orange-300 text-orange-700 hover:bg-orange-100' 
+                              record.status === 'borrowed'
+                                ? 'bg-orange-50 border-orange-300 text-orange-700 hover:bg-orange-100'
                                 : 'bg-green-50 border-green-300 text-green-700 hover:bg-green-100'
                             }`}
                             disabled={loading}

@@ -16,9 +16,23 @@ export default function Home() {
   const [returnForm, setReturnForm] = useState<ReturnForm>({ phone: '' })
   const [userBorrows, setUserBorrows] = useState<BorrowHistory[]>([])
   const [loading, setLoading] = useState(false)
+  const [equipmentSearch, setEquipmentSearch] = useState('')
+  const [showEquipmentDropdown, setShowEquipmentDropdown] = useState(false)
 
   useEffect(() => {
     fetchEquipment()
+  }, [])
+
+  useEffect(() => {
+    const handleClickOutside = (event: MouseEvent) => {
+      const target = event.target as HTMLElement
+      if (!target.closest('.equipment-search-container')) {
+        setShowEquipmentDropdown(false)
+      }
+    }
+
+    document.addEventListener('mousedown', handleClickOutside)
+    return () => document.removeEventListener('mousedown', handleClickOutside)
   }, [])
 
   const fetchEquipment = async () => {
@@ -76,6 +90,7 @@ export default function Home() {
 
       alert('הציוד הושאל בהצלחה!')
       setBorrowForm({ name: '', phone: '', equipment_id: '' })
+      setEquipmentSearch('')
       fetchEquipment()
     } catch (error) {
       console.error('Error borrowing equipment:', error)
@@ -225,21 +240,51 @@ export default function Home() {
                       ⚠️ אין ציוד זמין כרגע. אנא נסה שוב מאוחר יותר.
                     </div>
                   ) : (
-                    <select
-                      value={borrowForm.equipment_id}
-                      onChange={(e) => setBorrowForm({ ...borrowForm, equipment_id: e.target.value })}
-                      className="w-full h-12 px-4 border-2 border-gray-200 rounded-xl focus:border-blue-500 focus:outline-none bg-white transition-colors"
-                      required
-                    >
-                      <option value="">בחר ציוד מהרשימה</option>
-                      {equipment
-                        .filter(item => item.quantity > 0)
-                        .map(item => (
-                          <option key={item.id} value={item.id}>
-                            {item.name} (זמין: {item.quantity})
-                          </option>
-                        ))}
-                    </select>
+                    <div className="relative equipment-search-container">
+                      <Input
+                        value={equipmentSearch}
+                        onChange={(e) => {
+                          setEquipmentSearch(e.target.value)
+                          setShowEquipmentDropdown(true)
+                        }}
+                        onFocus={() => setShowEquipmentDropdown(true)}
+                        placeholder="חפש או בחר ציוד..."
+                        className="h-12 border-2 border-gray-200 rounded-xl focus:border-blue-500 transition-colors"
+                      />
+                      {showEquipmentDropdown && (
+                        <div className="absolute z-50 w-full mt-1 max-h-60 overflow-y-auto bg-white border-2 border-gray-200 rounded-xl shadow-lg">
+                          {equipment
+                            .filter(item =>
+                              item.quantity > 0 &&
+                              item.name.toLowerCase().includes(equipmentSearch.toLowerCase())
+                            )
+                            .map(item => (
+                              <div
+                                key={item.id}
+                                onClick={() => {
+                                  setBorrowForm({ ...borrowForm, equipment_id: item.id })
+                                  setEquipmentSearch(item.name)
+                                  setShowEquipmentDropdown(false)
+                                }}
+                                className="px-4 py-3 hover:bg-blue-50 cursor-pointer transition-colors border-b border-gray-100 last:border-0"
+                              >
+                                <div className="flex justify-between items-center">
+                                  <span className="font-medium text-gray-800">{item.name}</span>
+                                  <span className="text-sm text-green-600 font-semibold">זמין: {item.quantity}</span>
+                                </div>
+                              </div>
+                            ))}
+                          {equipment.filter(item =>
+                            item.quantity > 0 &&
+                            item.name.toLowerCase().includes(equipmentSearch.toLowerCase())
+                          ).length === 0 && (
+                            <div className="px-4 py-3 text-center text-gray-500">
+                              לא נמצאו תוצאות
+                            </div>
+                          )}
+                        </div>
+                      )}
+                    </div>
                   )}
                 </div>
                 <Button 
@@ -316,42 +361,30 @@ export default function Home() {
           </Card>
         )}
 
-        {/* Equipment Inventory */}
+        {/* Equipment Inventory - Compact List */}
         <Card className="mt-8 border-0 shadow-2xl rounded-2xl overflow-hidden bg-white/90 backdrop-blur-sm">
           <CardHeader className="bg-gradient-to-r from-blue-50 to-indigo-50 pb-6">
-            <CardTitle className="text-2xl font-bold text-gray-800">📊 מלאי ציוד זמין</CardTitle>
-            <CardDescription className="text-gray-600">כל הציוד הזמין במערכת</CardDescription>
+            <CardTitle className="text-2xl font-bold text-gray-800">📊 מלאי ציוד</CardTitle>
+            <CardDescription className="text-gray-600">סטטוס זמינות ציוד במערכת</CardDescription>
           </CardHeader>
           <CardContent className="p-6">
-            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+            <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-3">
               {equipment.map(item => (
-                <div 
-                  key={item.id} 
-                  className={`group p-5 rounded-xl border-2 transition-all duration-300 hover:shadow-xl hover:scale-105 ${
-                    item.quantity > 0 
-                      ? 'bg-gradient-to-br from-green-50 to-emerald-50 border-green-200 hover:border-green-400' 
-                      : 'bg-gradient-to-br from-gray-50 to-slate-50 border-gray-200 hover:border-gray-300'
+                <div
+                  key={item.id}
+                  className={`flex items-center justify-between p-4 rounded-xl border-2 transition-all duration-200 ${
+                    item.quantity > 0
+                      ? 'bg-gradient-to-l from-green-50 to-white border-green-200 hover:border-green-400 hover:shadow-md'
+                      : 'bg-gradient-to-l from-gray-50 to-white border-gray-200 hover:border-gray-300'
                   }`}
                 >
-                  <div className="flex items-start justify-between mb-3">
-                    <h3 className="font-bold text-lg text-gray-800 group-hover:text-blue-600 transition-colors">{item.name}</h3>
+                  <div className="flex items-center gap-3">
                     <span className="text-2xl">{item.quantity > 0 ? '✅' : '❌'}</span>
-                  </div>
-                  <div className="space-y-2">
-                    <div className="flex items-center justify-between">
-                      <span className="text-sm text-gray-600">כמות זמינה:</span>
-                      <span className={`font-bold text-lg ${
-                        item.quantity > 0 ? 'text-green-600' : 'text-red-600'
-                      }`}>
-                        {item.quantity}
-                      </span>
-                    </div>
-                    <div className={`inline-block px-3 py-1 rounded-full text-xs font-bold ${
-                      item.quantity > 0 
-                        ? 'bg-green-100 text-green-700' 
-                        : 'bg-red-100 text-red-700'
-                    }`}>
-                      {item.quantity > 0 ? '🟢 זמין' : '🔴 אזל מהמלאי'}
+                    <div>
+                      <p className="font-semibold text-gray-800">{item.name}</p>
+                      {item.quantity === 0 && (
+                        <p className="text-xs text-red-600 font-medium">חסר זמנית</p>
+                      )}
                     </div>
                   </div>
                 </div>
