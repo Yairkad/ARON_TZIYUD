@@ -28,3 +28,11 @@ export interface BorrowForm {
 export interface ReturnForm {
   phone: string
 }
+
+export interface Setting {
+  id: string
+  key: string
+  value: string
+  created_at: string
+  updated_at: string
+}

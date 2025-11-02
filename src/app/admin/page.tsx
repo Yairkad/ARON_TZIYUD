@@ -6,7 +6,7 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/com
 import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
 import { supabase } from '@/lib/supabase'
-import { Equipment, BorrowHistory } from '@/types'
+import { Equipment, BorrowHistory, Setting } from '@/types'
 import { ArrowRight } from 'lucide-react'
 
 export default function AdminPage() {
@@ -15,17 +15,43 @@ export default function AdminPage() {
   const [isAuthenticated, setIsAuthenticated] = useState(false)
   const [password, setPassword] = useState('')
   const [loading, setLoading] = useState(false)
-  const [activeTab, setActiveTab] = useState<'equipment' | 'history'>('equipment')
+  const [activeTab, setActiveTab] = useState<'equipment' | 'history' | 'settings'>('equipment')
   const [newEquipment, setNewEquipment] = useState({ name: '', quantity: 0 })
   const [editingEquipment, setEditingEquipment] = useState<{ id: string; name: string; quantity: number } | null>(null)
+  const [adminPassword, setAdminPassword] = useState<string>('')
+  const [changePasswordForm, setChangePasswordForm] = useState({ currentPassword: '', newPassword: '', confirmPassword: '' })
+  const [showChangePassword, setShowChangePassword] = useState(false)
 
-  const ADMIN_PASSWORD = process.env.NEXT_PUBLIC_ADMIN_PASSWORD || '1234'
+  useEffect(() => {
+    fetchAdminPassword()
+  }, [])
 
   useEffect(() => {
     if (isAuthenticated) {
       fetchData()
     }
   }, [isAuthenticated])
+
+  const fetchAdminPassword = async () => {
+    try {
+      const { data, error } = await supabase
+        .from('settings')
+        .select('value')
+        .eq('key', 'admin_password')
+        .single()
+
+      if (error) {
+        console.error('Error fetching admin password:', error)
+        // Fallback to env variable
+        setAdminPassword(process.env.NEXT_PUBLIC_ADMIN_PASSWORD || '1234')
+      } else {
+        setAdminPassword(data?.value || '1234')
+      }
+    } catch (error) {
+      console.error('Error fetching admin password:', error)
+      setAdminPassword(process.env.NEXT_PUBLIC_ADMIN_PASSWORD || '1234')
+    }
+  }
 
   const fetchData = async () => {
     await Promise.all([fetchEquipment(), fetchHistory()])
@@ -59,11 +85,50 @@ export default function AdminPage() {
 
   const handleLogin = (e: React.FormEvent) => {
     e.preventDefault()
-    if (password === ADMIN_PASSWORD) {
+    if (password === adminPassword) {
       setIsAuthenticated(true)
       setPassword('')
     } else {
       alert('סיסמה שגויה')
+    }
+  }
+
+  const handleChangePassword = async (e: React.FormEvent) => {
+    e.preventDefault()
+
+    if (changePasswordForm.currentPassword !== adminPassword) {
+      alert('הסיסמה הנוכחית שגויה')
+      return
+    }
+
+    if (changePasswordForm.newPassword !== changePasswordForm.confirmPassword) {
+      alert('הסיסמאות החדשות אינן תואמות')
+      return
+    }
+
+    if (changePasswordForm.newPassword.length < 4) {
+      alert('הסיסמה החדשה חייבת להכיל לפחות 4 תווים')
+      return
+    }
+
+    setLoading(true)
+    try {
+      const { error } = await supabase
+        .from('settings')
+        .update({ value: changePasswordForm.newPassword })
+        .eq('key', 'admin_password')
+
+      if (error) throw error
+
+      alert('הסיסמה שונתה בהצלחה!')
+      setAdminPassword(changePasswordForm.newPassword)
+      setChangePasswordForm({ currentPassword: '', newPassword: '', confirmPassword: '' })
+      setShowChangePassword(false)
+    } catch (error) {
+      console.error('Error changing password:', error)
+      alert('אירעה שגיאה בשינוי הסיסמה')
+    } finally {
+      setLoading(false)
     }
   }
 
@@ -256,10 +321,10 @@ export default function AdminPage() {
           </div>
         </header>
 
-        <div className="flex gap-3 mb-8">
+        <div className="grid grid-cols-1 md:grid-cols-3 gap-3 mb-8">
           <Button
             onClick={() => setActiveTab('equipment')}
-            className={`flex-1 py-6 rounded-xl font-semibold text-lg transition-all duration-300 ${
+            className={`py-6 rounded-xl font-semibold text-lg transition-all duration-300 ${
               activeTab === 'equipment'
                 ? 'bg-gradient-to-r from-blue-600 to-indigo-600 text-white shadow-lg shadow-blue-500/50 scale-105'
                 : 'bg-white text-gray-600 border-2 border-gray-200 hover:border-blue-300 hover:bg-blue-50'
@@ -269,13 +334,23 @@ export default function AdminPage() {
           </Button>
           <Button
             onClick={() => setActiveTab('history')}
-            className={`flex-1 py-6 rounded-xl font-semibold text-lg transition-all duration-300 ${
+            className={`py-6 rounded-xl font-semibold text-lg transition-all duration-300 ${
               activeTab === 'history'
                 ? 'bg-gradient-to-r from-blue-600 to-indigo-600 text-white shadow-lg shadow-blue-500/50 scale-105'
                 : 'bg-white text-gray-600 border-2 border-gray-200 hover:border-blue-300 hover:bg-blue-50'
             }`}
           >
             <span className="text-2xl ml-2">📊</span> היסטוריית השאלות
+          </Button>
+          <Button
+            onClick={() => setActiveTab('settings')}
+            className={`py-6 rounded-xl font-semibold text-lg transition-all duration-300 ${
+              activeTab === 'settings'
+                ? 'bg-gradient-to-r from-blue-600 to-indigo-600 text-white shadow-lg shadow-blue-500/50 scale-105'
+                : 'bg-white text-gray-600 border-2 border-gray-200 hover:border-blue-300 hover:bg-blue-50'
+            }`}
+          >
+            <span className="text-2xl ml-2">⚙️</span> הגדרות
           </Button>
         </div>
 
@@ -597,6 +672,113 @@ export default function AdminPage() {
                     ))}
                   </tbody>
                 </table>
+              </div>
+            </CardContent>
+          </Card>
+        )}
+
+        {activeTab === 'settings' && (
+          <Card className="border-0 shadow-2xl rounded-2xl overflow-hidden bg-white/90 backdrop-blur-sm">
+            <CardHeader className="bg-gradient-to-r from-blue-50 to-indigo-50 pb-6">
+              <CardTitle className="text-2xl font-bold text-gray-800">⚙️ הגדרות מערכת</CardTitle>
+              <CardDescription className="text-gray-600">ניהול הגדרות אבטחה ומערכת</CardDescription>
+            </CardHeader>
+            <CardContent className="p-6">
+              <div className="space-y-6">
+                {!showChangePassword ? (
+                  <div className="bg-gradient-to-r from-blue-50 to-indigo-50 rounded-xl p-6 border-2 border-blue-200">
+                    <div className="flex justify-between items-center">
+                      <div>
+                        <h3 className="text-lg font-bold text-gray-800 mb-1">🔐 סיסמת מנהל</h3>
+                        <p className="text-sm text-gray-600">שנה את סיסמת הכניסה לפאנל הניהול</p>
+                      </div>
+                      <Button
+                        onClick={() => setShowChangePassword(true)}
+                        className="bg-gradient-to-r from-blue-600 to-indigo-600 hover:from-blue-700 hover:to-indigo-700 text-white font-semibold px-6 py-3 rounded-xl transition-all duration-200 hover:scale-105"
+                      >
+                        שנה סיסמה
+                      </Button>
+                    </div>
+                  </div>
+                ) : (
+                  <Card className="border-2 border-blue-200 bg-gradient-to-r from-blue-50 to-indigo-50">
+                    <CardHeader>
+                      <CardTitle className="text-xl font-bold text-gray-800">שינוי סיסמת מנהל</CardTitle>
+                      <CardDescription>הזן את הסיסמה הנוכחית והסיסמה החדשה</CardDescription>
+                    </CardHeader>
+                    <CardContent>
+                      <form onSubmit={handleChangePassword} className="space-y-4">
+                        <div className="space-y-2">
+                          <label className="block text-sm font-semibold text-gray-700">🔑 סיסמה נוכחית</label>
+                          <Input
+                            type="password"
+                            value={changePasswordForm.currentPassword}
+                            onChange={(e) => setChangePasswordForm({ ...changePasswordForm, currentPassword: e.target.value })}
+                            placeholder="הזן סיסמה נוכחית"
+                            className="h-12 border-2 border-gray-200 rounded-xl focus:border-blue-500 transition-colors"
+                            required
+                          />
+                        </div>
+                        <div className="space-y-2">
+                          <label className="block text-sm font-semibold text-gray-700">🆕 סיסמה חדשה</label>
+                          <Input
+                            type="password"
+                            value={changePasswordForm.newPassword}
+                            onChange={(e) => setChangePasswordForm({ ...changePasswordForm, newPassword: e.target.value })}
+                            placeholder="הזן סיסמה חדשה"
+                            className="h-12 border-2 border-gray-200 rounded-xl focus:border-blue-500 transition-colors"
+                            required
+                          />
+                        </div>
+                        <div className="space-y-2">
+                          <label className="block text-sm font-semibold text-gray-700">✅ אימות סיסמה חדשה</label>
+                          <Input
+                            type="password"
+                            value={changePasswordForm.confirmPassword}
+                            onChange={(e) => setChangePasswordForm({ ...changePasswordForm, confirmPassword: e.target.value })}
+                            placeholder="הזן שוב את הסיסמה החדשה"
+                            className="h-12 border-2 border-gray-200 rounded-xl focus:border-blue-500 transition-colors"
+                            required
+                          />
+                        </div>
+                        <div className="flex gap-3 pt-2">
+                          <Button
+                            type="submit"
+                            disabled={loading}
+                            className="flex-1 h-12 bg-gradient-to-r from-green-500 to-emerald-500 hover:from-green-600 hover:to-emerald-600 text-white font-bold rounded-xl shadow-md hover:shadow-lg transition-all"
+                          >
+                            {loading ? '⏳ משנה...' : '✅ שמור סיסמה חדשה'}
+                          </Button>
+                          <Button
+                            type="button"
+                            onClick={() => {
+                              setShowChangePassword(false)
+                              setChangePasswordForm({ currentPassword: '', newPassword: '', confirmPassword: '' })
+                            }}
+                            className="flex-1 h-12 bg-white border-2 border-gray-400 text-gray-700 hover:bg-gray-50 font-semibold rounded-xl transition-all"
+                          >
+                            ❌ ביטול
+                          </Button>
+                        </div>
+                      </form>
+                    </CardContent>
+                  </Card>
+                )}
+
+                <div className="bg-gradient-to-r from-yellow-50 to-amber-50 rounded-xl p-6 border-2 border-yellow-200">
+                  <div className="flex items-start gap-3">
+                    <span className="text-2xl">⚠️</span>
+                    <div>
+                      <h3 className="font-bold text-gray-800 mb-2">הערות אבטחה חשובות</h3>
+                      <ul className="text-sm text-gray-700 space-y-1">
+                        <li>• הסיסמה נשמרת במסד הנתונים Supabase</li>
+                        <li>• ודא שהסיסמה מכילה לפחות 4 תווים</li>
+                        <li>• שמור את הסיסמה במקום בטוח</li>
+                        <li>• שנה סיסמה באופן קבוע לאבטחה מירבית</li>
+                      </ul>
+                    </div>
+                  </div>
+                </div>
               </div>
             </CardContent>
           </Card>
