@@ -127,7 +127,7 @@ export default function HomePage() {
                           </div>
                           <div className="flex gap-1">
                             <Button
-                              onClick={() => handleCall(city.manager2_phone)}
+                              onClick={() => handleCall(city.manager2_phone!)}
                               size="icon"
                               className="h-8 w-8 bg-green-500 hover:bg-green-600 rounded-full"
                               title="חייג"
@@ -135,7 +135,7 @@ export default function HomePage() {
                               <Phone className="h-4 w-4" />
                             </Button>
                             <Button
-                              onClick={() => handleWhatsApp(city.manager2_phone)}
+                              onClick={() => handleWhatsApp(city.manager2_phone!)}
                               size="icon"
                               className="h-8 w-8 bg-blue-500 hover:bg-blue-600 rounded-full"
                               title="WhatsApp"
