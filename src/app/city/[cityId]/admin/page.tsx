@@ -26,6 +26,13 @@ export default function CityAdminPage() {
   const [editingEquipment, setEditingEquipment] = useState<{ id: string; name: string; quantity: number } | null>(null)
   const [changePasswordForm, setChangePasswordForm] = useState({ currentPassword: '', newPassword: '', confirmPassword: '' })
   const [showChangePassword, setShowChangePassword] = useState(false)
+  const [editCityForm, setEditCityForm] = useState({
+    manager1_name: '',
+    manager1_phone: '',
+    manager2_name: '',
+    manager2_phone: '',
+    location_url: ''
+  })
 
   useEffect(() => {
     if (cityId) {
@@ -52,6 +59,14 @@ export default function CityAdminPage() {
         console.error('Error fetching city:', error)
       } else {
         setCity(data)
+        // Initialize edit form with current city data
+        setEditCityForm({
+          manager1_name: data.manager1_name || '',
+          manager1_phone: data.manager1_phone || '',
+          manager2_name: data.manager2_name || '',
+          manager2_phone: data.manager2_phone || '',
+          location_url: data.location_url || ''
+        })
       }
     } catch (error) {
       console.error('Error fetching city:', error)
@@ -313,6 +328,78 @@ export default function CityAdminPage() {
     } catch (error) {
       console.error('Error deleting history:', error)
       alert('אירעה שגיאה במחיקת הרשומה')
+    } finally {
+      setLoading(false)
+    }
+  }
+
+  const handleUpdateCityDetails = async (e: React.FormEvent) => {
+    e.preventDefault()
+    if (!city) return
+
+    // Validation
+    if (!editCityForm.manager1_name.trim() || !editCityForm.manager1_phone.trim()) {
+      alert('שם וטלפון מנהל ראשון הם שדות חובה')
+      return
+    }
+
+    if (editCityForm.manager1_phone.length !== 10 || !/^05\d{8}$/.test(editCityForm.manager1_phone)) {
+      alert('מספר טלפון מנהל ראשון חייב להיות בן 10 ספרות ולהתחיל ב-05')
+      return
+    }
+
+    if (editCityForm.manager2_phone && (editCityForm.manager2_phone.length !== 10 || !/^05\d{8}$/.test(editCityForm.manager2_phone))) {
+      alert('מספר טלפון מנהל שני חייב להיות בן 10 ספרות ולהתחיל ב-05')
+      return
+    }
+
+    setLoading(true)
+    try {
+      // Prepare update data
+      const updateData = {
+        manager1_name: editCityForm.manager1_name.trim(),
+        manager1_phone: editCityForm.manager1_phone.trim(),
+        manager2_name: editCityForm.manager2_name.trim() || null,
+        manager2_phone: editCityForm.manager2_phone.trim() || null,
+        location_url: editCityForm.location_url.trim() || null
+      }
+
+      // Update city
+      const { error: updateError } = await supabase
+        .from('cities')
+        .update(updateData)
+        .eq('id', cityId)
+
+      if (updateError) throw updateError
+
+      // Create notification for super admin
+      const changedFields = []
+      if (city.manager1_name !== updateData.manager1_name) changedFields.push('שם מנהל ראשון')
+      if (city.manager1_phone !== updateData.manager1_phone) changedFields.push('טלפון מנהל ראשון')
+      if (city.manager2_name !== updateData.manager2_name) changedFields.push('שם מנהל שני')
+      if (city.manager2_phone !== updateData.manager2_phone) changedFields.push('טלפון מנהל שני')
+      if (city.location_url !== updateData.location_url) changedFields.push('כתובת ארון')
+
+      if (changedFields.length > 0) {
+        const { error: notificationError } = await supabase
+          .from('admin_notifications')
+          .insert({
+            city_id: cityId,
+            city_name: city.name,
+            message: `עודכנו פרטי העיר: ${changedFields.join(', ')}`,
+            is_read: false
+          })
+
+        if (notificationError) {
+          console.error('Error creating notification:', notificationError)
+        }
+      }
+
+      alert('הפרטים עודכנו בהצלחה!')
+      fetchCity()
+    } catch (error) {
+      console.error('Error updating city details:', error)
+      alert('אירעה שגיאה בעדכון הפרטים')
     } finally {
       setLoading(false)
     }
@@ -798,6 +885,92 @@ export default function CityAdminPage() {
             </CardHeader>
             <CardContent className="p-6">
               <div className="space-y-6">
+                {/* City Details Edit Form */}
+                <Card className="border-2 border-indigo-200 bg-gradient-to-r from-indigo-50 to-blue-50">
+                  <CardHeader>
+                    <CardTitle className="text-xl font-bold text-gray-800">📋 פרטי העיר</CardTitle>
+                    <CardDescription>עדכן פרטי קשר וכתובת הארון</CardDescription>
+                  </CardHeader>
+                  <CardContent>
+                    <form onSubmit={handleUpdateCityDetails} className="space-y-4">
+                      <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                        {/* Manager 1 */}
+                        <div className="space-y-2">
+                          <label className="block text-sm font-semibold text-gray-700">👤 שם מנהל ראשון *</label>
+                          <Input
+                            type="text"
+                            value={editCityForm.manager1_name}
+                            onChange={(e) => setEditCityForm({ ...editCityForm, manager1_name: e.target.value })}
+                            placeholder="שם מלא"
+                            className="h-12 border-2 border-gray-200 rounded-xl focus:border-indigo-500 transition-colors"
+                            required
+                          />
+                        </div>
+                        <div className="space-y-2">
+                          <label className="block text-sm font-semibold text-gray-700">📞 טלפון מנהל ראשון *</label>
+                          <Input
+                            type="tel"
+                            value={editCityForm.manager1_phone}
+                            onChange={(e) => setEditCityForm({ ...editCityForm, manager1_phone: e.target.value })}
+                            placeholder="0501234567"
+                            className="h-12 border-2 border-gray-200 rounded-xl focus:border-indigo-500 transition-colors"
+                            required
+                          />
+                        </div>
+
+                        {/* Manager 2 */}
+                        <div className="space-y-2">
+                          <label className="block text-sm font-semibold text-gray-700">👤 שם מנהל שני (אופציונלי)</label>
+                          <Input
+                            type="text"
+                            value={editCityForm.manager2_name}
+                            onChange={(e) => setEditCityForm({ ...editCityForm, manager2_name: e.target.value })}
+                            placeholder="שם מלא"
+                            className="h-12 border-2 border-gray-200 rounded-xl focus:border-indigo-500 transition-colors"
+                          />
+                        </div>
+                        <div className="space-y-2">
+                          <label className="block text-sm font-semibold text-gray-700">📞 טלפון מנהל שני (אופציונלי)</label>
+                          <Input
+                            type="tel"
+                            value={editCityForm.manager2_phone}
+                            onChange={(e) => setEditCityForm({ ...editCityForm, manager2_phone: e.target.value })}
+                            placeholder="0501234567"
+                            className="h-12 border-2 border-gray-200 rounded-xl focus:border-indigo-500 transition-colors"
+                          />
+                        </div>
+                      </div>
+
+                      {/* Location URL */}
+                      <div className="space-y-2">
+                        <label className="block text-sm font-semibold text-gray-700">📍 כתובת ארון (קישור Google Maps)</label>
+                        <Input
+                          type="url"
+                          value={editCityForm.location_url}
+                          onChange={(e) => setEditCityForm({ ...editCityForm, location_url: e.target.value })}
+                          placeholder="https://maps.google.com/?q=..."
+                          className="h-12 border-2 border-gray-200 rounded-xl focus:border-indigo-500 transition-colors"
+                        />
+                        <p className="text-xs text-gray-500">הדבק קישור ממפות Google (אופציונלי)</p>
+                      </div>
+
+                      <Button
+                        type="submit"
+                        disabled={loading}
+                        className="w-full h-12 bg-gradient-to-r from-indigo-600 to-blue-600 hover:from-indigo-700 hover:to-blue-700 text-white font-bold rounded-xl shadow-md hover:shadow-lg transition-all"
+                      >
+                        {loading ? '⏳ שומר...' : '💾 שמור שינויים'}
+                      </Button>
+
+                      <div className="bg-blue-50 rounded-lg p-3 border border-blue-200">
+                        <p className="text-xs text-blue-800">
+                          ℹ️ <strong>שים לב:</strong> שינוי פרטים ישלח התראה למנהל הראשי
+                        </p>
+                      </div>
+                    </form>
+                  </CardContent>
+                </Card>
+
                 {!showChangePassword ? (
                   <div className="bg-gradient-to-r from-blue-50 to-indigo-50 rounded-xl p-6 border-2 border-blue-200">
                     <div className="flex justify-between items-center">

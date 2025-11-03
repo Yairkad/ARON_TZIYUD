@@ -62,3 +62,12 @@ export interface CityForm {
   location_url?: string
   password: string
 }
+
+export interface AdminNotification {
+  id: string
+  city_id: string
+  city_name: string
+  message: string
+  is_read: boolean
+  created_at: string
+}
