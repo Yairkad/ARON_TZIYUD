@@ -16,7 +16,7 @@ export default function SuperAdminPage() {
   const [superAdminPassword, setSuperAdminPassword] = useState<string>('')
   const [activeTab, setActiveTab] = useState<'cities' | 'settings'>('cities')
   const [showAddCity, setShowAddCity] = useState(false)
-  const [newCity, setNewCity] = useState<CityForm>({ name: '', manager1_name: '', manager1_phone: '', manager2_name: '', manager2_phone: '', password: '' })
+  const [newCity, setNewCity] = useState<CityForm>({ name: '', manager1_name: '', manager1_phone: '', manager2_name: '', manager2_phone: '', location_url: '', password: '' })
   const [editingCity, setEditingCity] = useState<City | null>(null)
   const [changePasswordForm, setChangePasswordForm] = useState({ currentPassword: '', newPassword: '', confirmPassword: '' })
   const [showChangePassword, setShowChangePassword] = useState(false)
@@ -76,13 +76,18 @@ export default function SuperAdminPage() {
 
   const handleAddCity = async (e: React.FormEvent) => {
     e.preventDefault()
-    if (!newCity.name || !newCity.manager1_name || !newCity.manager1_phone || !newCity.manager2_name || !newCity.manager2_phone || !newCity.password) {
-      alert('אנא מלא את כל השדות')
+    if (!newCity.name || !newCity.manager1_name || !newCity.manager1_phone || !newCity.password) {
+      alert('אנא מלא את כל השדות החובה (שם עיר, מנהל ראשון, טלפון, סיסמה)')
       return
     }
 
-    if (newCity.manager1_phone.length !== 10 || newCity.manager2_phone.length !== 10) {
-      alert('מספרי טלפון חייבים להיות בני 10 ספרות')
+    if (newCity.manager1_phone.length !== 10) {
+      alert('טלפון מנהל ראשון חייב להיות בן 10 ספרות')
+      return
+    }
+
+    if (newCity.manager2_phone && newCity.manager2_phone.length !== 10) {
+      alert('טלפון מנהל שני חייב להיות בן 10 ספרות (או השאר ריק)')
       return
     }
 
@@ -95,7 +100,7 @@ export default function SuperAdminPage() {
       if (error) throw error
 
       alert('העיר נוספה בהצלחה!')
-      setNewCity({ name: '', manager1_name: '', manager1_phone: '', manager2_name: '', manager2_phone: '', password: '' })
+      setNewCity({ name: '', manager1_name: '', manager1_phone: '', manager2_name: '', manager2_phone: '', location_url: '', password: '' })
       setShowAddCity(false)
       fetchCities()
     } catch (error) {
@@ -110,13 +115,18 @@ export default function SuperAdminPage() {
     e.preventDefault()
     if (!editingCity) return
 
-    if (!editingCity.name || !editingCity.manager1_name || !editingCity.manager1_phone || !editingCity.manager2_name || !editingCity.manager2_phone || !editingCity.password) {
-      alert('אנא מלא את כל השדות')
+    if (!editingCity.name || !editingCity.manager1_name || !editingCity.manager1_phone || !editingCity.password) {
+      alert('אנא מלא את כל השדות החובה (שם עיר, מנהל ראשון, טלפון, סיסמה)')
       return
     }
 
-    if (editingCity.manager1_phone.length !== 10 || editingCity.manager2_phone.length !== 10) {
-      alert('מספרי טלפון חייבים להיות בני 10 ספרות')
+    if (editingCity.manager1_phone.length !== 10) {
+      alert('טלפון מנהל ראשון חייב להיות בן 10 ספרות')
+      return
+    }
+
+    if (editingCity.manager2_phone && editingCity.manager2_phone.length !== 10) {
+      alert('טלפון מנהל שני חייב להיות בן 10 ספרות (או השאר ריק)')
       return
     }
 
@@ -128,8 +138,9 @@ export default function SuperAdminPage() {
           name: editingCity.name,
           manager1_name: editingCity.manager1_name,
           manager1_phone: editingCity.manager1_phone,
-          manager2_name: editingCity.manager2_name,
-          manager2_phone: editingCity.manager2_phone,
+          manager2_name: editingCity.manager2_name || null,
+          manager2_phone: editingCity.manager2_phone || null,
+          location_url: editingCity.location_url || null,
           password: editingCity.password,
           is_active: editingCity.is_active
         })
@@ -394,17 +405,16 @@ export default function SuperAdminPage() {
                     />
                   </div>
                   <div className="space-y-2">
-                    <label className="block text-sm font-semibold text-gray-700">👤 מנהל שני - שם</label>
+                    <label className="block text-sm font-semibold text-gray-700">👤 מנהל שני - שם <span className="text-gray-400 text-xs">(אופציונלי)</span></label>
                     <Input
                       value={newCity.manager2_name}
                       onChange={(e) => setNewCity({ ...newCity, manager2_name: e.target.value })}
                       placeholder="לדוגמה: דוד לוי"
                       className="h-12"
-                      required
                     />
                   </div>
                   <div className="space-y-2">
-                    <label className="block text-sm font-semibold text-gray-700">📱 מנהל שני - טלפון</label>
+                    <label className="block text-sm font-semibold text-gray-700">📱 מנהל שני - טלפון <span className="text-gray-400 text-xs">(אופציונלי)</span></label>
                     <Input
                       type="tel"
                       value={newCity.manager2_phone}
@@ -418,8 +428,18 @@ export default function SuperAdminPage() {
                       pattern="[0-9]{10}"
                       maxLength={10}
                       className="h-12"
-                      required
                     />
+                  </div>
+                  <div className="space-y-2 md:col-span-2">
+                    <label className="block text-sm font-semibold text-gray-700">📍 קישור Google Maps למיקום הארון <span className="text-gray-400 text-xs">(אופציונלי)</span></label>
+                    <Input
+                      type="url"
+                      value={newCity.location_url}
+                      onChange={(e) => setNewCity({ ...newCity, location_url: e.target.value })}
+                      placeholder="https://maps.google.com/?q=31.7683,35.2137"
+                      className="h-12"
+                    />
+                    <p className="text-xs text-gray-500">💡 פתח Google Maps, לחץ ארוך על המיקום, והעתק את הקישור</p>
                   </div>
                   <div className="space-y-2">
                     <label className="block text-sm font-semibold text-gray-700">🔐 סיסמת העיר</label>
@@ -487,25 +507,31 @@ export default function SuperAdminPage() {
                           required
                         />
                         <Input
-                          value={editingCity.manager2_name}
+                          value={editingCity.manager2_name || ''}
                           onChange={(e) => setEditingCity({ ...editingCity, manager2_name: e.target.value })}
-                          placeholder="מנהל 2 - שם"
-                          required
+                          placeholder="מנהל 2 - שם (אופציונלי)"
                         />
                         <Input
                           type="tel"
-                          value={editingCity.manager2_phone}
+                          value={editingCity.manager2_phone || ''}
                           onChange={(e) => {
                             const value = e.target.value.replace(/\D/g, '')
                             if (value.length <= 10) {
                               setEditingCity({ ...editingCity, manager2_phone: value })
                             }
                           }}
-                          placeholder="מנהל 2 - טלפון"
+                          placeholder="מנהל 2 - טלפון (אופציונלי)"
                           pattern="[0-9]{10}"
                           maxLength={10}
-                          required
                         />
+                        <div className="md:col-span-2">
+                          <Input
+                            type="url"
+                            value={editingCity.location_url || ''}
+                            onChange={(e) => setEditingCity({ ...editingCity, location_url: e.target.value })}
+                            placeholder="📍 קישור Google Maps (אופציונלי)"
+                          />
+                        </div>
                         <Input
                           type="password"
                           value={editingCity.password}
@@ -537,14 +563,28 @@ export default function SuperAdminPage() {
                                 <p className="text-sm text-gray-600">📱 {city.manager1_phone}</p>
                               </div>
                             </div>
-                            {/* Manager 2 */}
-                            <div className="flex items-center gap-3 bg-white rounded-lg p-2 border border-gray-200">
-                              <span className="text-lg">👤</span>
-                              <div className="flex-1">
-                                <p className="font-semibold text-gray-800">{city.manager2_name}</p>
-                                <p className="text-sm text-gray-600">📱 {city.manager2_phone}</p>
+                            {/* Manager 2 - Only show if exists */}
+                            {city.manager2_name && city.manager2_phone && (
+                              <div className="flex items-center gap-3 bg-white rounded-lg p-2 border border-gray-200">
+                                <span className="text-lg">👤</span>
+                                <div className="flex-1">
+                                  <p className="font-semibold text-gray-800">{city.manager2_name}</p>
+                                  <p className="text-sm text-gray-600">📱 {city.manager2_phone}</p>
+                                </div>
                               </div>
-                            </div>
+                            )}
+                            {/* Location Link */}
+                            {city.location_url && (
+                              <a
+                                href={city.location_url}
+                                target="_blank"
+                                rel="noopener noreferrer"
+                                className="flex items-center gap-3 bg-white rounded-lg p-2 border border-gray-200 hover:bg-gray-50 transition-colors"
+                              >
+                                <span className="text-lg">📍</span>
+                                <p className="font-semibold text-blue-600">מיקום הארון במפה</p>
+                              </a>
+                            )}
                           </div>
                           <p className="text-sm text-gray-500 mt-3">🔐 סיסמה: ••••••</p>
                         </div>

@@ -16,8 +16,9 @@ CREATE TABLE IF NOT EXISTS public.cities (
     name TEXT NOT NULL UNIQUE,
     manager1_name TEXT NOT NULL,
     manager1_phone TEXT NOT NULL CHECK (manager1_phone ~ '^[0-9]{10}$'),
-    manager2_name TEXT NOT NULL,
-    manager2_phone TEXT NOT NULL CHECK (manager2_phone ~ '^[0-9]{10}$'),
+    manager2_name TEXT,
+    manager2_phone TEXT CHECK (manager2_phone IS NULL OR manager2_phone ~ '^[0-9]{10}$'),
+    location_url TEXT,
     password TEXT NOT NULL,
     is_active BOOLEAN DEFAULT true NOT NULL,
     created_at TIMESTAMP WITH TIME ZONE DEFAULT TIMEZONE('utc'::text, NOW()) NOT NULL,
@@ -87,11 +88,12 @@ ON CONFLICT (key) DO NOTHING;
 -- Enable Row Level Security on cities
 ALTER TABLE public.cities ENABLE ROW LEVEL SECURITY;
 
--- Allow public read access to active cities (for city selection page)
+-- Allow public read access to ALL cities (including inactive for super-admin)
 DROP POLICY IF EXISTS "Allow public read access to active cities" ON public.cities;
-CREATE POLICY "Allow public read access to active cities"
+DROP POLICY IF EXISTS "Allow public read access to cities" ON public.cities;
+CREATE POLICY "Allow public read access to cities"
     ON public.cities FOR SELECT
-    USING (is_active = true);
+    USING (true);
 
 -- Allow public update access (needed for password verification)
 -- In production, you should add authentication checks here
@@ -123,10 +125,10 @@ GRANT SELECT, INSERT, UPDATE, DELETE ON public.cities TO authenticated;
 -- ================================================
 
 -- Insert sample cities
-INSERT INTO public.cities (name, manager1_name, manager1_phone, manager2_name, manager2_phone, password) VALUES
-    ('ירושלים', 'יוסי כהן', '0501234567', 'דוד לוי', '0507654321', '1111'),
-    ('תל אביב', 'דני שלום', '0502345678', 'משה גולן', '0508765432', '2222'),
-    ('חיפה', 'אבי ישראל', '0503456789', 'יעקב כהן', '0509876543', '3333')
+INSERT INTO public.cities (name, manager1_name, manager1_phone, manager2_name, manager2_phone, location_url, password) VALUES
+    ('ירושלים', 'יוסי כהן', '0501234567', 'דוד לוי', '0507654321', 'https://maps.google.com/?q=31.7683,35.2137', '1111'),
+    ('תל אביב', 'דני שלום', '0502345678', 'משה גולן', '0508765432', 'https://maps.google.com/?q=32.0853,34.7818', '2222'),
+    ('חיפה', 'אבי ישראל', '0503456789', 'יעקב כהן', '0509876543', 'https://maps.google.com/?q=32.7940,34.9896', '3333')
 ON CONFLICT (name) DO NOTHING;
 
 -- ================================================

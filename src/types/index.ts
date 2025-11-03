@@ -3,8 +3,9 @@ export interface City {
   name: string
   manager1_name: string
   manager1_phone: string
-  manager2_name: string
-  manager2_phone: string
+  manager2_name?: string | null
+  manager2_phone?: string | null
+  location_url?: string | null
   password: string
   is_active: boolean
   created_at: string
@@ -56,7 +57,8 @@ export interface CityForm {
   name: string
   manager1_name: string
   manager1_phone: string
-  manager2_name: string
-  manager2_phone: string
+  manager2_name?: string
+  manager2_phone?: string
+  location_url?: string
   password: string
 }

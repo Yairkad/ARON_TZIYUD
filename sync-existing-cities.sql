@@ -23,26 +23,27 @@ DELETE FROM cities WHERE name IN ('ירושלים', 'תל אביב', 'חיפה')
 -- ================================================
 -- החלף את הדוגמאות למטה עם הנתונים שלך
 -- פורמט:
--- ('שם העיר', 'שם מנהל 1', 'טלפון מנהל 1', 'שם מנהל 2', 'טלפון מנהל 2', 'סיסמה')
+-- ('שם העיר', 'שם מנהל 1', 'טלפון מנהל 1', 'שם מנהל 2 או NULL', 'טלפון מנהל 2 או NULL', 'קישור מפה או NULL', 'סיסמה')
 
-INSERT INTO public.cities (name, manager1_name, manager1_phone, manager2_name, manager2_phone, password) VALUES
-    -- דוגמה 1
-    ('ירושלים', 'יוסי כהן', '0501234567', 'דוד לוי', '0507654321', '1111'),
+INSERT INTO public.cities (name, manager1_name, manager1_phone, manager2_name, manager2_phone, location_url, password) VALUES
+    -- דוגמה 1 - עם 2 מנהלים ומיקום
+    ('ירושלים', 'יוסי כהן', '0501234567', 'דוד לוי', '0507654321', 'https://maps.google.com/?q=31.7683,35.2137', '1111'),
 
-    -- דוגמה 2
-    ('תל אביב', 'דני שלום', '0502345678', 'משה גולן', '0508765432', '2222'),
+    -- דוגמה 2 - עם 2 מנהלים בלי מיקום
+    ('תל אביב', 'דני שלום', '0502345678', 'משה גולן', '0508765432', NULL, '2222'),
 
-    -- דוגמה 3
-    ('חיפה', 'אבי ישראל', '0503456789', 'יעקב כהן', '0509876543', '3333')
+    -- דוגמה 3 - עם מנהל אחד בלבד
+    ('חיפה', 'אבי ישראל', '0503456789', NULL, NULL, 'https://maps.google.com/?q=32.7940,34.9896', '3333')
 
     -- הוסף עוד ערים כאן...
-    -- ,('עיר נוספת', 'מנהל 1', '0501111111', 'מנהל 2', '0502222222', 'סיסמה')
+    -- ,('עיר נוספת', 'מנהל 1', '0501111111', NULL, NULL, NULL, 'סיסמה')
 
 ON CONFLICT (name) DO UPDATE SET
     manager1_name = EXCLUDED.manager1_name,
     manager1_phone = EXCLUDED.manager1_phone,
     manager2_name = EXCLUDED.manager2_name,
     manager2_phone = EXCLUDED.manager2_phone,
+    location_url = EXCLUDED.location_url,
     password = EXCLUDED.password,
     is_active = true;
 
@@ -56,6 +57,7 @@ SELECT
     manager1_phone AS "טלפון 1",
     manager2_name AS "מנהל 2",
     manager2_phone AS "טלפון 2",
+    CASE WHEN location_url IS NOT NULL THEN '✅' ELSE '❌' END AS "יש מיקום",
     is_active AS "פעיל"
 FROM cities
 ORDER BY name;

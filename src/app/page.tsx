@@ -118,31 +118,45 @@ export default function HomePage() {
                           </Button>
                         </div>
                       </div>
-                      {/* Manager 2 */}
-                      <div className="flex items-center justify-between bg-white rounded-lg p-2 border border-gray-200">
-                        <div className="flex items-center gap-2">
-                          <span className="text-lg">👤</span>
-                          <span className="font-semibold text-gray-700">{city.manager2_name}</span>
+                      {/* Manager 2 - Only show if exists */}
+                      {city.manager2_name && city.manager2_phone && (
+                        <div className="flex items-center justify-between bg-white rounded-lg p-2 border border-gray-200">
+                          <div className="flex items-center gap-2">
+                            <span className="text-lg">👤</span>
+                            <span className="font-semibold text-gray-700">{city.manager2_name}</span>
+                          </div>
+                          <div className="flex gap-1">
+                            <Button
+                              onClick={() => handleCall(city.manager2_phone)}
+                              size="icon"
+                              className="h-8 w-8 bg-green-500 hover:bg-green-600 rounded-full"
+                              title="חייג"
+                            >
+                              <Phone className="h-4 w-4" />
+                            </Button>
+                            <Button
+                              onClick={() => handleWhatsApp(city.manager2_phone)}
+                              size="icon"
+                              className="h-8 w-8 bg-blue-500 hover:bg-blue-600 rounded-full"
+                              title="WhatsApp"
+                            >
+                              <MessageCircle className="h-4 w-4" />
+                            </Button>
+                          </div>
                         </div>
-                        <div className="flex gap-1">
-                          <Button
-                            onClick={() => handleCall(city.manager2_phone)}
-                            size="icon"
-                            className="h-8 w-8 bg-green-500 hover:bg-green-600 rounded-full"
-                            title="חייג"
-                          >
-                            <Phone className="h-4 w-4" />
-                          </Button>
-                          <Button
-                            onClick={() => handleWhatsApp(city.manager2_phone)}
-                            size="icon"
-                            className="h-8 w-8 bg-blue-500 hover:bg-blue-600 rounded-full"
-                            title="WhatsApp"
-                          >
-                            <MessageCircle className="h-4 w-4" />
-                          </Button>
-                        </div>
-                      </div>
+                      )}
+                      {/* Location Link */}
+                      {city.location_url && (
+                        <a
+                          href={city.location_url}
+                          target="_blank"
+                          rel="noopener noreferrer"
+                          className="flex items-center gap-2 bg-white rounded-lg p-2 border border-gray-200 hover:bg-gray-50 transition-colors"
+                        >
+                          <span className="text-lg">📍</span>
+                          <span className="font-semibold text-blue-600">מיקום הארון במפה</span>
+                        </a>
+                      )}
                     </div>
                   </CardDescription>
                 </CardHeader>
