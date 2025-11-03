@@ -93,9 +93,20 @@ export default function SuperAdminPage() {
 
     setLoading(true)
     try {
+      const cityData = {
+        name: newCity.name,
+        manager1_name: newCity.manager1_name,
+        manager1_phone: newCity.manager1_phone,
+        manager2_name: newCity.manager2_name || null,
+        manager2_phone: newCity.manager2_phone || null,
+        location_url: newCity.location_url || null,
+        password: newCity.password,
+        is_active: true
+      }
+
       const { error } = await supabase
         .from('cities')
-        .insert([newCity])
+        .insert([cityData])
 
       if (error) throw error
 
