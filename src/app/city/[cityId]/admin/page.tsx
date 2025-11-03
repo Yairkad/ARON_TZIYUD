@@ -1,15 +1,20 @@
 'use client'
 
 import { useState, useEffect } from 'react'
+import { useParams } from 'next/navigation'
 import Link from 'next/link'
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card'
 import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
 import { supabase } from '@/lib/supabase'
-import { Equipment, BorrowHistory, Setting } from '@/types'
+import { Equipment, BorrowHistory, City } from '@/types'
 import { ArrowRight } from 'lucide-react'
 
-export default function AdminPage() {
+export default function CityAdminPage() {
+  const params = useParams()
+  const cityId = params.cityId as string
+
+  const [city, setCity] = useState<City | null>(null)
   const [equipment, setEquipment] = useState<Equipment[]>([])
   const [borrowHistory, setBorrowHistory] = useState<BorrowHistory[]>([])
   const [isAuthenticated, setIsAuthenticated] = useState(false)
@@ -18,38 +23,37 @@ export default function AdminPage() {
   const [activeTab, setActiveTab] = useState<'equipment' | 'history' | 'settings'>('equipment')
   const [newEquipment, setNewEquipment] = useState({ name: '', quantity: 0 })
   const [editingEquipment, setEditingEquipment] = useState<{ id: string; name: string; quantity: number } | null>(null)
-  const [adminPassword, setAdminPassword] = useState<string>('')
   const [changePasswordForm, setChangePasswordForm] = useState({ currentPassword: '', newPassword: '', confirmPassword: '' })
   const [showChangePassword, setShowChangePassword] = useState(false)
 
   useEffect(() => {
-    fetchAdminPassword()
-  }, [])
+    if (cityId) {
+      fetchCity()
+    }
+  }, [cityId])
 
   useEffect(() => {
-    if (isAuthenticated) {
+    if (isAuthenticated && cityId) {
       fetchData()
     }
-  }, [isAuthenticated])
+  }, [isAuthenticated, cityId])
 
-  const fetchAdminPassword = async () => {
+  const fetchCity = async () => {
     try {
       const { data, error } = await supabase
-        .from('settings')
-        .select('value')
-        .eq('key', 'admin_password')
+        .from('cities')
+        .select('*')
+        .eq('id', cityId)
+        .eq('is_active', true)
         .single()
 
       if (error) {
-        console.error('Error fetching admin password:', error)
-        // Fallback to env variable
-        setAdminPassword(process.env.NEXT_PUBLIC_ADMIN_PASSWORD || '1234')
+        console.error('Error fetching city:', error)
       } else {
-        setAdminPassword(data?.value || '1234')
+        setCity(data)
       }
     } catch (error) {
-      console.error('Error fetching admin password:', error)
-      setAdminPassword(process.env.NEXT_PUBLIC_ADMIN_PASSWORD || '1234')
+      console.error('Error fetching city:', error)
     }
   }
 
@@ -61,8 +65,9 @@ export default function AdminPage() {
     const { data, error } = await supabase
       .from('equipment')
       .select('*')
+      .eq('city_id', cityId)
       .order('name')
-    
+
     if (error) {
       console.error('Error fetching equipment:', error)
     } else {
@@ -74,8 +79,9 @@ export default function AdminPage() {
     const { data, error } = await supabase
       .from('borrow_history')
       .select('*')
+      .eq('city_id', cityId)
       .order('borrow_date', { ascending: false })
-    
+
     if (error) {
       console.error('Error fetching history:', error)
     } else {
@@ -85,7 +91,11 @@ export default function AdminPage() {
 
   const handleLogin = (e: React.FormEvent) => {
     e.preventDefault()
-    if (password === adminPassword) {
+    if (!city) {
+      alert('שגיאה בטעינת נתוני העיר')
+      return
+    }
+    if (password === city.password) {
       setIsAuthenticated(true)
       setPassword('')
     } else {
@@ -96,7 +106,12 @@ export default function AdminPage() {
   const handleChangePassword = async (e: React.FormEvent) => {
     e.preventDefault()
 
-    if (changePasswordForm.currentPassword !== adminPassword) {
+    if (!city) {
+      alert('שגיאה בטעינת נתוני העיר')
+      return
+    }
+
+    if (changePasswordForm.currentPassword !== city.password) {
       alert('הסיסמה הנוכחית שגויה')
       return
     }
@@ -114,14 +129,15 @@ export default function AdminPage() {
     setLoading(true)
     try {
       const { error } = await supabase
-        .from('settings')
-        .update({ value: changePasswordForm.newPassword })
-        .eq('key', 'admin_password')
+        .from('cities')
+        .update({ password: changePasswordForm.newPassword })
+        .eq('id', cityId)
 
       if (error) throw error
 
       alert('הסיסמה שונתה בהצלחה!')
-      setAdminPassword(changePasswordForm.newPassword)
+      // Update local city state
+      setCity({ ...city, password: changePasswordForm.newPassword })
       setChangePasswordForm({ currentPassword: '', newPassword: '', confirmPassword: '' })
       setShowChangePassword(false)
     } catch (error) {
@@ -145,7 +161,8 @@ export default function AdminPage() {
         .from('equipment')
         .insert({
           name: newEquipment.name,
-          quantity: newEquipment.quantity
+          quantity: newEquipment.quantity,
+          city_id: cityId
         })
 
       if (error) throw error
@@ -262,7 +279,7 @@ export default function AdminPage() {
           <CardHeader className="bg-gradient-to-r from-blue-600 to-indigo-600 text-white pb-8">
             <div className="text-center">
               <div className="text-5xl mb-4">🔐</div>
-              <CardTitle className="text-3xl font-bold mb-2">כניסת מנהל</CardTitle>
+              <CardTitle className="text-3xl font-bold mb-2">כניסת מנהל - {city?.name}</CardTitle>
               <CardDescription className="text-blue-100 text-base">הזן סיסמת מנהל לגישה לפאנל הניהול</CardDescription>
             </div>
           </CardHeader>
@@ -282,11 +299,12 @@ export default function AdminPage() {
               <div className="flex gap-3">
                 <Button
                   type="submit"
-                  className="flex-1 h-12 bg-gradient-to-r from-blue-600 to-indigo-600 hover:from-blue-700 hover:to-indigo-700 text-white font-bold text-lg rounded-xl shadow-lg hover:shadow-xl transition-all duration-200 hover:scale-105"
+                  disabled={!city}
+                  className="flex-1 h-12 bg-gradient-to-r from-blue-600 to-indigo-600 hover:from-blue-700 hover:to-indigo-700 text-white font-bold text-lg rounded-xl shadow-lg hover:shadow-xl transition-all duration-200 hover:scale-105 disabled:opacity-50"
                 >
                   ✅ כניסה למערכת
                 </Button>
-                <Link href="/" className="flex-1">
+                <Link href={`/city/${cityId}`} className="flex-1">
                   <Button
                     type="button"
                     variant="outline"
@@ -309,17 +327,19 @@ export default function AdminPage() {
         <header className="bg-white/80 backdrop-blur-lg border border-gray-200/50 rounded-2xl shadow-xl p-8 mb-8">
           <div className="flex justify-between items-center">
             <div>
-              <h1 className="text-4xl font-bold bg-gradient-to-r from-blue-600 to-indigo-600 bg-clip-text text-transparent mb-2">🛡️ פאנל ניהול</h1>
+              <h1 className="text-4xl font-bold bg-gradient-to-r from-blue-600 to-indigo-600 bg-clip-text text-transparent mb-2">
+                🛡️ פאנל ניהול - {city?.name}
+              </h1>
               <p className="text-gray-600 text-lg">ניהול ציוד והיסטוריית השאלות</p>
             </div>
             <div className="flex gap-3">
-              <Link href="/">
+              <Link href={`/city/${cityId}`}>
                 <Button
                   variant="outline"
                   className="border-2 border-blue-600 text-blue-600 hover:bg-blue-50 font-semibold px-6 py-2 rounded-xl transition-all duration-200 hover:scale-105"
                 >
                   <ArrowRight className="ml-2 h-4 w-4" />
-                  חזרה לדף הראשי
+                  חזרה לממשק משתמש
                 </Button>
               </Link>
               <Button

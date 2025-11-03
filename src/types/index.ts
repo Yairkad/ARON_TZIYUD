@@ -1,7 +1,19 @@
+export interface City {
+  id: string
+  name: string
+  manager_name: string
+  manager_phone: string
+  password: string
+  is_active: boolean
+  created_at: string
+  updated_at: string
+}
+
 export interface Equipment {
   id: string
   name: string
   quantity: number
+  city_id: string
   created_at: string
   updated_at: string
 }
@@ -12,6 +24,7 @@ export interface BorrowHistory {
   phone: string
   equipment_id: string
   equipment_name: string
+  city_id: string
   borrow_date: string
   return_date?: string
   status: 'borrowed' | 'returned'
@@ -35,4 +48,11 @@ export interface Setting {
   value: string
   created_at: string
   updated_at: string
+}
+
+export interface CityForm {
+  name: string
+  manager_name: string
+  manager_phone: string
+  password: string
 }

@@ -1,0 +1,134 @@
+-- ================================================
+-- Multi-City System Database Structure
+-- ================================================
+-- This file creates the multi-city infrastructure
+-- for the equipment management system
+--
+-- To apply: Run this SQL in Supabase SQL Editor
+-- ================================================
+
+-- ================================================
+-- STEP 1: Create Cities Table
+-- ================================================
+
+CREATE TABLE IF NOT EXISTS public.cities (
+    id UUID DEFAULT gen_random_uuid() PRIMARY KEY,
+    name TEXT NOT NULL UNIQUE,
+    manager_name TEXT NOT NULL,
+    manager_phone TEXT NOT NULL CHECK (manager_phone ~ '^[0-9]{10}$'),
+    password TEXT NOT NULL,
+    is_active BOOLEAN DEFAULT true NOT NULL,
+    created_at TIMESTAMP WITH TIME ZONE DEFAULT TIMEZONE('utc'::text, NOW()) NOT NULL,
+    updated_at TIMESTAMP WITH TIME ZONE DEFAULT TIMEZONE('utc'::text, NOW()) NOT NULL
+);
+
+-- Create index on name for faster lookups
+CREATE INDEX IF NOT EXISTS idx_cities_name ON public.cities(name);
+CREATE INDEX IF NOT EXISTS idx_cities_is_active ON public.cities(is_active);
+
+-- Create updated_at trigger function for cities
+CREATE OR REPLACE FUNCTION update_cities_updated_at()
+RETURNS TRIGGER AS $$
+BEGIN
+    NEW.updated_at = TIMEZONE('utc'::text, NOW());
+    RETURN NEW;
+END;
+$$ LANGUAGE plpgsql;
+
+-- Create trigger for auto-updating updated_at
+DROP TRIGGER IF EXISTS update_cities_updated_at ON public.cities;
+CREATE TRIGGER update_cities_updated_at
+    BEFORE UPDATE ON public.cities
+    FOR EACH ROW
+    EXECUTE FUNCTION update_cities_updated_at();
+
+-- ================================================
+-- STEP 2: Add city_id to Equipment Table
+-- ================================================
+
+-- Add city_id column to equipment table
+ALTER TABLE public.equipment
+ADD COLUMN IF NOT EXISTS city_id UUID REFERENCES public.cities(id) ON DELETE CASCADE;
+
+-- Create index on city_id for faster queries
+CREATE INDEX IF NOT EXISTS idx_equipment_city_id ON public.equipment(city_id);
+
+-- ================================================
+-- STEP 3: Add city_id to Borrow History Table
+-- ================================================
+
+-- Add city_id column to borrow_history table
+ALTER TABLE public.borrow_history
+ADD COLUMN IF NOT EXISTS city_id UUID REFERENCES public.cities(id) ON DELETE CASCADE;
+
+-- Create index on city_id for faster queries
+CREATE INDEX IF NOT EXISTS idx_borrow_history_city_id ON public.borrow_history(city_id);
+
+-- ================================================
+-- STEP 4: Update Settings Table for Super Admin
+-- ================================================
+
+-- Update the admin password key to super_admin_password
+UPDATE public.settings
+SET key = 'super_admin_password'
+WHERE key = 'admin_password';
+
+-- Insert super admin password if not exists
+INSERT INTO public.settings (key, value)
+VALUES ('super_admin_password', '1234')
+ON CONFLICT (key) DO NOTHING;
+
+-- ================================================
+-- STEP 5: Row Level Security for Cities
+-- ================================================
+
+-- Enable Row Level Security on cities
+ALTER TABLE public.cities ENABLE ROW LEVEL SECURITY;
+
+-- Allow public read access to active cities (for city selection page)
+DROP POLICY IF EXISTS "Allow public read access to active cities" ON public.cities;
+CREATE POLICY "Allow public read access to active cities"
+    ON public.cities FOR SELECT
+    USING (is_active = true);
+
+-- Allow public update access (needed for password verification)
+-- In production, you should add authentication checks here
+DROP POLICY IF EXISTS "Allow public update access to cities" ON public.cities;
+CREATE POLICY "Allow public update access to cities"
+    ON public.cities FOR UPDATE
+    USING (true)
+    WITH CHECK (true);
+
+-- Grant permissions
+GRANT SELECT, UPDATE ON public.cities TO anon;
+GRANT SELECT, UPDATE ON public.cities TO authenticated;
+
+-- ================================================
+-- STEP 6: Insert Sample Cities (for testing)
+-- ================================================
+
+-- Insert sample cities
+INSERT INTO public.cities (name, manager_name, manager_phone, password) VALUES
+    ('ירושלים', 'יוסי כהן', '0501234567', '1111'),
+    ('תל אביב', 'דני לוי', '0502345678', '2222'),
+    ('חיפה', 'משה אברהם', '0503456789', '3333')
+ON CONFLICT (name) DO NOTHING;
+
+-- ================================================
+-- IMPORTANT NOTES:
+-- ================================================
+-- 1. After running this SQL, you need to:
+--    - Manually assign city_id to existing equipment records
+--    - Manually assign city_id to existing borrow_history records
+--    - OR delete existing data if this is a fresh start
+--
+-- 2. In production, you should:
+--    - Hash passwords using bcrypt or similar
+--    - Add proper authentication for RLS policies
+--    - Consider using Supabase Auth
+--
+-- 3. Data integrity:
+--    - Foreign keys use ON DELETE CASCADE
+--    - This means deleting a city will delete all related equipment and history
+--    - For soft delete, set is_active = false instead
+-- ================================================
