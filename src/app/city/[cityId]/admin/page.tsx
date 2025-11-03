@@ -33,6 +33,9 @@ export default function CityAdminPage() {
     manager2_phone: '',
     location_url: ''
   })
+  const [allCities, setAllCities] = useState<City[]>([])
+  const [selectedCityToCopy, setSelectedCityToCopy] = useState<string>('')
+  const [showCopyEquipment, setShowCopyEquipment] = useState(false)
 
   useEffect(() => {
     if (cityId) {
@@ -43,6 +46,7 @@ export default function CityAdminPage() {
   useEffect(() => {
     if (isAuthenticated && cityId) {
       fetchData()
+      fetchAllCities()
     }
   }, [isAuthenticated, cityId])
 
@@ -102,6 +106,25 @@ export default function CityAdminPage() {
       console.error('Error fetching history:', error)
     } else {
       setBorrowHistory(data || [])
+    }
+  }
+
+  const fetchAllCities = async () => {
+    try {
+      const { data, error } = await supabase
+        .from('cities')
+        .select('*')
+        .eq('is_active', true)
+        .order('name')
+
+      if (error) {
+        console.error('Error fetching cities:', error)
+      } else {
+        // Filter out current city
+        setAllCities((data || []).filter(c => c.id !== cityId))
+      }
+    } catch (error) {
+      console.error('Error fetching cities:', error)
     }
   }
 
@@ -405,6 +428,72 @@ export default function CityAdminPage() {
     }
   }
 
+  const handleCopyEquipmentFromCity = async () => {
+    if (!selectedCityToCopy) {
+      alert('אנא בחר עיר להעתקת הציוד ממנה')
+      return
+    }
+
+    if (!confirm('האם אתה בטוח שברצונך להעתיק את הציוד? הציוד הקיים ישאר כמו שהוא ויתווספו פריטים חדשים.')) {
+      return
+    }
+
+    setLoading(true)
+    try {
+      // Fetch equipment from selected city
+      const { data: sourceEquipment, error: fetchError } = await supabase
+        .from('equipment')
+        .select('name, quantity')
+        .eq('city_id', selectedCityToCopy)
+
+      if (fetchError) throw fetchError
+
+      if (!sourceEquipment || sourceEquipment.length === 0) {
+        alert('העיר שנבחרה אין בה ציוד להעתקה')
+        setLoading(false)
+        return
+      }
+
+      // Get existing equipment names in current city to avoid duplicates
+      const existingNames = equipment.map(e => e.name.toLowerCase())
+
+      // Filter out equipment that already exists
+      const newEquipment = sourceEquipment.filter(
+        item => !existingNames.includes(item.name.toLowerCase())
+      )
+
+      if (newEquipment.length === 0) {
+        alert('כל הציוד מהעיר שנבחרה כבר קיים בעיר שלך')
+        setLoading(false)
+        return
+      }
+
+      // Prepare equipment data with current city_id
+      const equipmentToInsert = newEquipment.map(item => ({
+        name: item.name,
+        quantity: item.quantity,
+        city_id: cityId
+      }))
+
+      // Insert new equipment
+      const { error: insertError } = await supabase
+        .from('equipment')
+        .insert(equipmentToInsert)
+
+      if (insertError) throw insertError
+
+      alert(`הצלחה! ${newEquipment.length} פריטי ציוד הועתקו בהצלחה`)
+      setShowCopyEquipment(false)
+      setSelectedCityToCopy('')
+      fetchEquipment()
+    } catch (error) {
+      console.error('Error copying equipment:', error)
+      alert('אירעה שגיאה בהעתקת הציוד')
+    } finally {
+      setLoading(false)
+    }
+  }
+
   if (!isAuthenticated) {
     return (
       <div className="min-h-screen bg-gradient-to-br from-blue-50 via-white to-indigo-50 flex items-center justify-center p-4">
@@ -556,6 +645,66 @@ export default function CityAdminPage() {
 
         {activeTab === 'equipment' && (
           <div className="space-y-6">
+            {/* Copy Equipment Section */}
+            {!showCopyEquipment ? (
+              <div className="bg-gradient-to-r from-purple-50 to-pink-50 rounded-xl p-4 border-2 border-purple-200">
+                <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-3">
+                  <div>
+                    <h3 className="text-lg font-bold text-gray-800 mb-1">📋 העתק ציוד מעיר אחרת</h3>
+                    <p className="text-sm text-gray-600">טען רשימת ציוד מוכנה מעיר קיימת</p>
+                  </div>
+                  <Button
+                    onClick={() => setShowCopyEquipment(true)}
+                    className="bg-gradient-to-r from-purple-600 to-pink-600 hover:from-purple-700 hover:to-pink-700 text-white font-semibold px-6 py-3 rounded-xl transition-all duration-200 hover:scale-105"
+                  >
+                    📥 העתק ציוד
+                  </Button>
+                </div>
+              </div>
+            ) : (
+              <Card className="border-2 border-purple-300 bg-gradient-to-r from-purple-50 to-pink-50">
+                <CardHeader>
+                  <CardTitle className="text-xl font-bold text-gray-800">📥 העתק ציוד מעיר אחרת</CardTitle>
+                  <CardDescription>בחר עיר להעתקת הציוד ממנה. ציוד כפול לא יועתק.</CardDescription>
+                </CardHeader>
+                <CardContent>
+                  <div className="space-y-4">
+                    <div className="space-y-2">
+                      <label className="block text-sm font-semibold text-gray-700">🏙️ בחר עיר</label>
+                      <select
+                        value={selectedCityToCopy}
+                        onChange={(e) => setSelectedCityToCopy(e.target.value)}
+                        className="w-full h-12 px-4 border-2 border-gray-200 rounded-xl focus:border-purple-500 transition-colors bg-white text-gray-800"
+                      >
+                        <option value="">-- בחר עיר --</option>
+                        {allCities.map(city => (
+                          <option key={city.id} value={city.id}>{city.name}</option>
+                        ))}
+                      </select>
+                    </div>
+                    <div className="flex gap-3">
+                      <Button
+                        onClick={handleCopyEquipmentFromCity}
+                        disabled={loading || !selectedCityToCopy}
+                        className="flex-1 h-12 bg-gradient-to-r from-purple-600 to-pink-600 hover:from-purple-700 hover:to-pink-700 text-white font-bold rounded-xl shadow-md hover:shadow-lg transition-all"
+                      >
+                        {loading ? '⏳ מעתיק...' : '✅ העתק ציוד'}
+                      </Button>
+                      <Button
+                        onClick={() => {
+                          setShowCopyEquipment(false)
+                          setSelectedCityToCopy('')
+                        }}
+                        className="flex-1 h-12 bg-white border-2 border-gray-400 text-gray-700 hover:bg-gray-50 font-semibold rounded-xl transition-all"
+                      >
+                        ❌ ביטול
+                      </Button>
+                    </div>
+                  </div>
+                </CardContent>
+              </Card>
+            )}
+
             <Card className="border-0 shadow-2xl rounded-2xl overflow-hidden bg-white/90 backdrop-blur-sm mb-6">
               <CardHeader className="bg-gradient-to-r from-green-50 to-emerald-50 pb-4">
                 <CardTitle className="text-xl font-bold text-gray-800">➕ הוספת ציוד חדש</CardTitle>
