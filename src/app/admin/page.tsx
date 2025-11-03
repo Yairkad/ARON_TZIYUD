@@ -279,12 +279,23 @@ export default function AdminPage() {
                   required
                 />
               </div>
-              <Button 
-                type="submit" 
-                className="w-full h-12 bg-gradient-to-r from-blue-600 to-indigo-600 hover:from-blue-700 hover:to-indigo-700 text-white font-bold text-lg rounded-xl shadow-lg hover:shadow-xl transition-all duration-200 hover:scale-105"
-              >
-                ✅ כניסה למערכת
-              </Button>
+              <div className="flex gap-3">
+                <Button
+                  type="submit"
+                  className="flex-1 h-12 bg-gradient-to-r from-blue-600 to-indigo-600 hover:from-blue-700 hover:to-indigo-700 text-white font-bold text-lg rounded-xl shadow-lg hover:shadow-xl transition-all duration-200 hover:scale-105"
+                >
+                  ✅ כניסה למערכת
+                </Button>
+                <Link href="/" className="flex-1">
+                  <Button
+                    type="button"
+                    variant="outline"
+                    className="w-full h-12 border-2 border-gray-300 text-gray-700 hover:bg-gray-50 font-semibold text-lg rounded-xl transition-all duration-200 hover:scale-105"
+                  >
+                    ↩️ חזור
+                  </Button>
+                </Link>
+              </div>
             </form>
           </CardContent>
         </Card>

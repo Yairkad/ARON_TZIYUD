@@ -162,20 +162,20 @@ export default function Home() {
     <div className="min-h-screen bg-gradient-to-br from-blue-50 via-white to-indigo-50">
       <div className="max-w-5xl mx-auto px-4 py-6">
         {/* Header */}
-        <header className="bg-white/80 backdrop-blur-lg border border-gray-200/50 rounded-2xl shadow-xl p-8 mb-8">
-          <div className="flex justify-between items-center">
-            <div className="flex-1">
-              <h1 className="text-4xl font-bold bg-gradient-to-r from-blue-600 to-indigo-600 bg-clip-text text-transparent mb-2">ארון ציוד ידידים</h1>
-              <p className="text-gray-600 text-lg">מערכת חכמה לניהול השאלות והחזרות</p>
-            </div>
-            <Link href="/admin">
-              <Button
-                variant="outline"
-                className="border-2 border-blue-600 text-blue-600 hover:bg-blue-50 font-semibold px-6 py-2 rounded-xl transition-all duration-200 hover:scale-105"
-              >
-                🔐 כניסת מנהל
-              </Button>
-            </Link>
+        <header className="bg-white/80 backdrop-blur-lg border border-gray-200/50 rounded-2xl shadow-xl p-8 mb-8 relative">
+          <Link href="/admin" className="absolute left-6 top-6">
+            <Button
+              variant="ghost"
+              size="icon"
+              className="h-10 w-10 rounded-full hover:bg-blue-50 text-blue-600 transition-all duration-200 hover:scale-110"
+              title="כניסת מנהל"
+            >
+              🔐
+            </Button>
+          </Link>
+          <div className="text-center">
+            <h1 className="text-4xl font-bold bg-gradient-to-r from-blue-600 to-indigo-600 bg-clip-text text-transparent mb-2">ארון ציוד ידידים</h1>
+            <p className="text-gray-600 text-lg">מערכת חכמה לניהול השאלות והחזרות</p>
           </div>
         </header>
 
@@ -225,9 +225,18 @@ export default function Home() {
                   <div className="space-y-2">
                     <label className="block text-sm font-semibold text-gray-700">📱 מספר טלפון</label>
                     <Input
+                      type="tel"
                       value={borrowForm.phone}
-                      onChange={(e) => setBorrowForm({ ...borrowForm, phone: e.target.value })}
-                      placeholder="05X-XXXXXXX"
+                      onChange={(e) => {
+                        const value = e.target.value.replace(/\D/g, '')
+                        if (value.length <= 10) {
+                          setBorrowForm({ ...borrowForm, phone: value })
+                        }
+                      }}
+                      placeholder="0501234567"
+                      pattern="[0-9]{10}"
+                      title="נא להזין מספר טלפון תקין בן 10 ספרות"
+                      maxLength={10}
                       className="h-12 border-2 border-gray-200 rounded-xl focus:border-blue-500 transition-colors"
                       required
                     />
@@ -311,9 +320,18 @@ export default function Home() {
                   <label className="block text-sm font-semibold text-gray-700">📱 מספר טלפון</label>
                   <div className="flex gap-3">
                     <Input
+                      type="tel"
                       value={returnForm.phone}
-                      onChange={(e) => setReturnForm({ phone: e.target.value })}
-                      placeholder="05X-XXXXXXX"
+                      onChange={(e) => {
+                        const value = e.target.value.replace(/\D/g, '')
+                        if (value.length <= 10) {
+                          setReturnForm({ phone: value })
+                        }
+                      }}
+                      placeholder="0501234567"
+                      pattern="[0-9]{10}"
+                      title="נא להזין מספר טלפון תקין בן 10 ספרות"
+                      maxLength={10}
                       className="h-12 border-2 border-gray-200 rounded-xl focus:border-blue-500 transition-colors"
                     />
                     <Button 
