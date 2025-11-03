@@ -252,7 +252,7 @@ export default function Home() {
                         className="h-12 border-2 border-gray-200 rounded-xl focus:border-blue-500 transition-colors"
                       />
                       {showEquipmentDropdown && (
-                        <div className="absolute z-50 w-full mt-1 max-h-96 overflow-y-auto bg-white border-2 border-gray-200 rounded-xl shadow-lg">
+                        <div className="absolute z-[100] w-full mt-1 max-h-96 overflow-y-auto bg-white border-2 border-gray-200 rounded-xl shadow-lg">
                           {equipment
                             .filter(item =>
                               item.quantity > 0 &&
