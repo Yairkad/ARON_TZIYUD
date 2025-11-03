@@ -645,66 +645,6 @@ export default function CityAdminPage() {
 
         {activeTab === 'equipment' && (
           <div className="space-y-6">
-            {/* Copy Equipment Section */}
-            {!showCopyEquipment ? (
-              <div className="bg-gradient-to-r from-purple-50 to-pink-50 rounded-xl p-4 border-2 border-purple-200">
-                <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-3">
-                  <div>
-                    <h3 className="text-lg font-bold text-gray-800 mb-1">📋 העתק ציוד מעיר אחרת</h3>
-                    <p className="text-sm text-gray-600">טען רשימת ציוד מוכנה מעיר קיימת</p>
-                  </div>
-                  <Button
-                    onClick={() => setShowCopyEquipment(true)}
-                    className="bg-gradient-to-r from-purple-600 to-pink-600 hover:from-purple-700 hover:to-pink-700 text-white font-semibold px-6 py-3 rounded-xl transition-all duration-200 hover:scale-105"
-                  >
-                    📥 העתק ציוד
-                  </Button>
-                </div>
-              </div>
-            ) : (
-              <Card className="border-2 border-purple-300 bg-gradient-to-r from-purple-50 to-pink-50">
-                <CardHeader>
-                  <CardTitle className="text-xl font-bold text-gray-800">📥 העתק ציוד מעיר אחרת</CardTitle>
-                  <CardDescription>בחר עיר להעתקת הציוד ממנה. ציוד כפול לא יועתק.</CardDescription>
-                </CardHeader>
-                <CardContent>
-                  <div className="space-y-4">
-                    <div className="space-y-2">
-                      <label className="block text-sm font-semibold text-gray-700">🏙️ בחר עיר</label>
-                      <select
-                        value={selectedCityToCopy}
-                        onChange={(e) => setSelectedCityToCopy(e.target.value)}
-                        className="w-full h-12 px-4 border-2 border-gray-200 rounded-xl focus:border-purple-500 transition-colors bg-white text-gray-800"
-                      >
-                        <option value="">-- בחר עיר --</option>
-                        {allCities.map(city => (
-                          <option key={city.id} value={city.id}>{city.name}</option>
-                        ))}
-                      </select>
-                    </div>
-                    <div className="flex gap-3">
-                      <Button
-                        onClick={handleCopyEquipmentFromCity}
-                        disabled={loading || !selectedCityToCopy}
-                        className="flex-1 h-12 bg-gradient-to-r from-purple-600 to-pink-600 hover:from-purple-700 hover:to-pink-700 text-white font-bold rounded-xl shadow-md hover:shadow-lg transition-all"
-                      >
-                        {loading ? '⏳ מעתיק...' : '✅ העתק ציוד'}
-                      </Button>
-                      <Button
-                        onClick={() => {
-                          setShowCopyEquipment(false)
-                          setSelectedCityToCopy('')
-                        }}
-                        className="flex-1 h-12 bg-white border-2 border-gray-400 text-gray-700 hover:bg-gray-50 font-semibold rounded-xl transition-all"
-                      >
-                        ❌ ביטול
-                      </Button>
-                    </div>
-                  </div>
-                </CardContent>
-              </Card>
-            )}
-
             <Card className="border-0 shadow-2xl rounded-2xl overflow-hidden bg-white/90 backdrop-blur-sm mb-6">
               <CardHeader className="bg-gradient-to-r from-green-50 to-emerald-50 pb-4">
                 <CardTitle className="text-xl font-bold text-gray-800">➕ הוספת ציוד חדש</CardTitle>
@@ -1034,6 +974,66 @@ export default function CityAdminPage() {
             </CardHeader>
             <CardContent className="p-6">
               <div className="space-y-6">
+                {/* Copy Equipment Section */}
+                {!showCopyEquipment ? (
+                  <div className="bg-gradient-to-r from-purple-50 to-pink-50 rounded-xl p-6 border-2 border-purple-200">
+                    <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-3">
+                      <div>
+                        <h3 className="text-lg font-bold text-gray-800 mb-1">📋 העתק ציוד מעיר אחרת</h3>
+                        <p className="text-sm text-gray-600">טען רשימת ציוד מוכנה מעיר קיימת - חיסכון בזמן לערים חדשות</p>
+                      </div>
+                      <Button
+                        onClick={() => setShowCopyEquipment(true)}
+                        className="bg-gradient-to-r from-purple-600 to-pink-600 hover:from-purple-700 hover:to-pink-700 text-white font-semibold px-6 py-3 rounded-xl transition-all duration-200 hover:scale-105"
+                      >
+                        📥 העתק ציוד
+                      </Button>
+                    </div>
+                  </div>
+                ) : (
+                  <Card className="border-2 border-purple-300 bg-gradient-to-r from-purple-50 to-pink-50">
+                    <CardHeader>
+                      <CardTitle className="text-xl font-bold text-gray-800">📥 העתק ציוד מעיר אחרת</CardTitle>
+                      <CardDescription>בחר עיר להעתקת הציוד ממנה. ציוד כפול לא יועתק.</CardDescription>
+                    </CardHeader>
+                    <CardContent>
+                      <div className="space-y-4">
+                        <div className="space-y-2">
+                          <label className="block text-sm font-semibold text-gray-700">🏙️ בחר עיר</label>
+                          <select
+                            value={selectedCityToCopy}
+                            onChange={(e) => setSelectedCityToCopy(e.target.value)}
+                            className="w-full h-12 px-4 border-2 border-gray-200 rounded-xl focus:border-purple-500 transition-colors bg-white text-gray-800"
+                          >
+                            <option value="">-- בחר עיר --</option>
+                            {allCities.map(city => (
+                              <option key={city.id} value={city.id}>{city.name}</option>
+                            ))}
+                          </select>
+                        </div>
+                        <div className="flex gap-3">
+                          <Button
+                            onClick={handleCopyEquipmentFromCity}
+                            disabled={loading || !selectedCityToCopy}
+                            className="flex-1 h-12 bg-gradient-to-r from-purple-600 to-pink-600 hover:from-purple-700 hover:to-pink-700 text-white font-bold rounded-xl shadow-md hover:shadow-lg transition-all"
+                          >
+                            {loading ? '⏳ מעתיק...' : '✅ העתק ציוד'}
+                          </Button>
+                          <Button
+                            onClick={() => {
+                              setShowCopyEquipment(false)
+                              setSelectedCityToCopy('')
+                            }}
+                            className="flex-1 h-12 bg-white border-2 border-gray-400 text-gray-700 hover:bg-gray-50 font-semibold rounded-xl transition-all"
+                          >
+                            ❌ ביטול
+                          </Button>
+                        </div>
+                      </div>
+                    </CardContent>
+                  </Card>
+                )}
+
                 {/* City Details Edit Form */}
                 <Card className="border-2 border-indigo-200 bg-gradient-to-r from-indigo-50 to-blue-50">
                   <CardHeader>
