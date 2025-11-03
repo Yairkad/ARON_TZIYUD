@@ -190,6 +190,16 @@ Vercel יעשה deploy אוטומטי!
 
 ## פתרון בעיות נפוצות
 
+### ⚠️ Build נכשל ב-Vercel עם שגיאות על manager1_name/manager1_phone
+**בעיה:** הערים שלך קיימות אבל ללא נתונים בשדות החובה החדשים (manager1_name, manager1_phone)
+
+**פתרון:**
+1. הרץ את `quick-fix-empty-managers.sql` ב-Supabase SQL Editor
+2. זה ימלא נתונים זמניים ("מנהל זמני", "0500000000")
+3. חכה שה-build יצליח ב-Vercel (1-2 דקות)
+4. היכנס לממשק הניהול המרכזי
+5. ערוך כל עיר ומלא את הנתונים האמיתיים
+
 ### שגיאה: "city_id cannot be null"
 - וודא שהרצת את ה-SQL ב-Supabase
 - בדוק ש-`city_id` מועבר נכון בכל פעולות INSERT
