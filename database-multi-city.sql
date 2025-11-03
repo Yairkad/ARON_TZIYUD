@@ -14,8 +14,10 @@
 CREATE TABLE IF NOT EXISTS public.cities (
     id UUID DEFAULT gen_random_uuid() PRIMARY KEY,
     name TEXT NOT NULL UNIQUE,
-    manager_name TEXT NOT NULL,
-    manager_phone TEXT NOT NULL CHECK (manager_phone ~ '^[0-9]{10}$'),
+    manager1_name TEXT NOT NULL,
+    manager1_phone TEXT NOT NULL CHECK (manager1_phone ~ '^[0-9]{10}$'),
+    manager2_name TEXT NOT NULL,
+    manager2_phone TEXT NOT NULL CHECK (manager2_phone ~ '^[0-9]{10}$'),
     password TEXT NOT NULL,
     is_active BOOLEAN DEFAULT true NOT NULL,
     created_at TIMESTAMP WITH TIME ZONE DEFAULT TIMEZONE('utc'::text, NOW()) NOT NULL,
@@ -108,10 +110,10 @@ GRANT SELECT, UPDATE ON public.cities TO authenticated;
 -- ================================================
 
 -- Insert sample cities
-INSERT INTO public.cities (name, manager_name, manager_phone, password) VALUES
-    ('ירושלים', 'יוסי כהן', '0501234567', '1111'),
-    ('תל אביב', 'דני לוי', '0502345678', '2222'),
-    ('חיפה', 'משה אברהם', '0503456789', '3333')
+INSERT INTO public.cities (name, manager1_name, manager1_phone, manager2_name, manager2_phone, password) VALUES
+    ('ירושלים', 'יוסי כהן', '0501234567', 'דוד לוי', '0507654321', '1111'),
+    ('תל אביב', 'דני שלום', '0502345678', 'משה גולן', '0508765432', '2222'),
+    ('חיפה', 'אבי ישראל', '0503456789', 'יעקב כהן', '0509876543', '3333')
 ON CONFLICT (name) DO NOTHING;
 
 -- ================================================

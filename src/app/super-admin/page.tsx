@@ -16,7 +16,7 @@ export default function SuperAdminPage() {
   const [superAdminPassword, setSuperAdminPassword] = useState<string>('')
   const [activeTab, setActiveTab] = useState<'cities' | 'settings'>('cities')
   const [showAddCity, setShowAddCity] = useState(false)
-  const [newCity, setNewCity] = useState<CityForm>({ name: '', manager_name: '', manager_phone: '', password: '' })
+  const [newCity, setNewCity] = useState<CityForm>({ name: '', manager1_name: '', manager1_phone: '', manager2_name: '', manager2_phone: '', password: '' })
   const [editingCity, setEditingCity] = useState<City | null>(null)
   const [changePasswordForm, setChangePasswordForm] = useState({ currentPassword: '', newPassword: '', confirmPassword: '' })
   const [showChangePassword, setShowChangePassword] = useState(false)
@@ -76,13 +76,13 @@ export default function SuperAdminPage() {
 
   const handleAddCity = async (e: React.FormEvent) => {
     e.preventDefault()
-    if (!newCity.name || !newCity.manager_name || !newCity.manager_phone || !newCity.password) {
+    if (!newCity.name || !newCity.manager1_name || !newCity.manager1_phone || !newCity.manager2_name || !newCity.manager2_phone || !newCity.password) {
       alert('אנא מלא את כל השדות')
       return
     }
 
-    if (newCity.manager_phone.length !== 10) {
-      alert('מספר טלפון חייב להיות בן 10 ספרות')
+    if (newCity.manager1_phone.length !== 10 || newCity.manager2_phone.length !== 10) {
+      alert('מספרי טלפון חייבים להיות בני 10 ספרות')
       return
     }
 
@@ -95,7 +95,7 @@ export default function SuperAdminPage() {
       if (error) throw error
 
       alert('העיר נוספה בהצלחה!')
-      setNewCity({ name: '', manager_name: '', manager_phone: '', password: '' })
+      setNewCity({ name: '', manager1_name: '', manager1_phone: '', manager2_name: '', manager2_phone: '', password: '' })
       setShowAddCity(false)
       fetchCities()
     } catch (error) {
@@ -110,13 +110,13 @@ export default function SuperAdminPage() {
     e.preventDefault()
     if (!editingCity) return
 
-    if (!editingCity.name || !editingCity.manager_name || !editingCity.manager_phone || !editingCity.password) {
+    if (!editingCity.name || !editingCity.manager1_name || !editingCity.manager1_phone || !editingCity.manager2_name || !editingCity.manager2_phone || !editingCity.password) {
       alert('אנא מלא את כל השדות')
       return
     }
 
-    if (editingCity.manager_phone.length !== 10) {
-      alert('מספר טלפון חייב להיות בן 10 ספרות')
+    if (editingCity.manager1_phone.length !== 10 || editingCity.manager2_phone.length !== 10) {
+      alert('מספרי טלפון חייבים להיות בני 10 ספרות')
       return
     }
 
@@ -126,8 +126,10 @@ export default function SuperAdminPage() {
         .from('cities')
         .update({
           name: editingCity.name,
-          manager_name: editingCity.manager_name,
-          manager_phone: editingCity.manager_phone,
+          manager1_name: editingCity.manager1_name,
+          manager1_phone: editingCity.manager1_phone,
+          manager2_name: editingCity.manager2_name,
+          manager2_phone: editingCity.manager2_phone,
           password: editingCity.password,
           is_active: editingCity.is_active
         })
@@ -353,7 +355,7 @@ export default function SuperAdminPage() {
             <CardContent className="p-6">
               <form onSubmit={handleAddCity} className="space-y-4">
                 <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                  <div className="space-y-2">
+                  <div className="space-y-2 md:col-span-2">
                     <label className="block text-sm font-semibold text-gray-700">🏙️ שם העיר</label>
                     <Input
                       value={newCity.name}
@@ -364,27 +366,55 @@ export default function SuperAdminPage() {
                     />
                   </div>
                   <div className="space-y-2">
-                    <label className="block text-sm font-semibold text-gray-700">👤 שם מנהל היחידה</label>
+                    <label className="block text-sm font-semibold text-gray-700">👤 מנהל ראשון - שם</label>
                     <Input
-                      value={newCity.manager_name}
-                      onChange={(e) => setNewCity({ ...newCity, manager_name: e.target.value })}
+                      value={newCity.manager1_name}
+                      onChange={(e) => setNewCity({ ...newCity, manager1_name: e.target.value })}
                       placeholder="לדוגמה: יוסי כהן"
                       className="h-12"
                       required
                     />
                   </div>
                   <div className="space-y-2">
-                    <label className="block text-sm font-semibold text-gray-700">📱 טלפון מנהל</label>
+                    <label className="block text-sm font-semibold text-gray-700">📱 מנהל ראשון - טלפון</label>
                     <Input
                       type="tel"
-                      value={newCity.manager_phone}
+                      value={newCity.manager1_phone}
                       onChange={(e) => {
                         const value = e.target.value.replace(/\D/g, '')
                         if (value.length <= 10) {
-                          setNewCity({ ...newCity, manager_phone: value })
+                          setNewCity({ ...newCity, manager1_phone: value })
                         }
                       }}
                       placeholder="0501234567"
+                      pattern="[0-9]{10}"
+                      maxLength={10}
+                      className="h-12"
+                      required
+                    />
+                  </div>
+                  <div className="space-y-2">
+                    <label className="block text-sm font-semibold text-gray-700">👤 מנהל שני - שם</label>
+                    <Input
+                      value={newCity.manager2_name}
+                      onChange={(e) => setNewCity({ ...newCity, manager2_name: e.target.value })}
+                      placeholder="לדוגמה: דוד לוי"
+                      className="h-12"
+                      required
+                    />
+                  </div>
+                  <div className="space-y-2">
+                    <label className="block text-sm font-semibold text-gray-700">📱 מנהל שני - טלפון</label>
+                    <Input
+                      type="tel"
+                      value={newCity.manager2_phone}
+                      onChange={(e) => {
+                        const value = e.target.value.replace(/\D/g, '')
+                        if (value.length <= 10) {
+                          setNewCity({ ...newCity, manager2_phone: value })
+                        }
+                      }}
+                      placeholder="0507654321"
                       pattern="[0-9]{10}"
                       maxLength={10}
                       className="h-12"

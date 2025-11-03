@@ -92,30 +92,61 @@ export default function HomePage() {
                     {city.name}
                   </CardTitle>
                   <CardDescription className="text-base">
-                    <div className="flex items-center gap-2 mt-2">
-                      <span className="text-lg">👤</span>
-                      <span className="font-semibold text-gray-700">{city.manager_name}</span>
+                    <div className="space-y-2 mt-3">
+                      {/* Manager 1 */}
+                      <div className="flex items-center justify-between bg-white rounded-lg p-2 border border-gray-200">
+                        <div className="flex items-center gap-2">
+                          <span className="text-lg">👤</span>
+                          <span className="font-semibold text-gray-700">{city.manager1_name}</span>
+                        </div>
+                        <div className="flex gap-1">
+                          <Button
+                            onClick={() => handleCall(city.manager1_phone)}
+                            size="icon"
+                            className="h-8 w-8 bg-green-500 hover:bg-green-600 rounded-full"
+                            title="חייג"
+                          >
+                            <Phone className="h-4 w-4" />
+                          </Button>
+                          <Button
+                            onClick={() => handleWhatsApp(city.manager1_phone)}
+                            size="icon"
+                            className="h-8 w-8 bg-blue-500 hover:bg-blue-600 rounded-full"
+                            title="WhatsApp"
+                          >
+                            <MessageCircle className="h-4 w-4" />
+                          </Button>
+                        </div>
+                      </div>
+                      {/* Manager 2 */}
+                      <div className="flex items-center justify-between bg-white rounded-lg p-2 border border-gray-200">
+                        <div className="flex items-center gap-2">
+                          <span className="text-lg">👤</span>
+                          <span className="font-semibold text-gray-700">{city.manager2_name}</span>
+                        </div>
+                        <div className="flex gap-1">
+                          <Button
+                            onClick={() => handleCall(city.manager2_phone)}
+                            size="icon"
+                            className="h-8 w-8 bg-green-500 hover:bg-green-600 rounded-full"
+                            title="חייג"
+                          >
+                            <Phone className="h-4 w-4" />
+                          </Button>
+                          <Button
+                            onClick={() => handleWhatsApp(city.manager2_phone)}
+                            size="icon"
+                            className="h-8 w-8 bg-blue-500 hover:bg-blue-600 rounded-full"
+                            title="WhatsApp"
+                          >
+                            <MessageCircle className="h-4 w-4" />
+                          </Button>
+                        </div>
+                      </div>
                     </div>
                   </CardDescription>
                 </CardHeader>
                 <CardContent className="p-6 space-y-4">
-                  {/* Contact Buttons */}
-                  <div className="flex gap-3">
-                    <Button
-                      onClick={() => handleCall(city.manager_phone)}
-                      className="flex-1 h-12 bg-gradient-to-r from-green-500 to-emerald-500 hover:from-green-600 hover:to-emerald-600 text-white font-semibold rounded-xl shadow-md hover:shadow-lg transition-all"
-                    >
-                      <Phone className="h-5 w-5 ml-2" />
-                      חייג
-                    </Button>
-                    <Button
-                      onClick={() => handleWhatsApp(city.manager_phone)}
-                      className="flex-1 h-12 bg-gradient-to-r from-blue-500 to-cyan-500 hover:from-blue-600 hover:to-cyan-600 text-white font-semibold rounded-xl shadow-md hover:shadow-lg transition-all"
-                    >
-                      <MessageCircle className="h-5 w-5 ml-2" />
-                      WhatsApp
-                    </Button>
-                  </div>
 
                   {/* Enter System Button */}
                   <Link href={`/city/${city.id}`} className="block">
