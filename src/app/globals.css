@@ -1,5 +1,27 @@
 @import "tailwindcss";
 
+/* Global body background with subtle pattern */
+body {
+  background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+  background-attachment: fixed;
+  min-height: 100vh;
+  font-size: 14px; /* Smaller base font size */
+}
+
+body::before {
+  content: '';
+  position: fixed;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  background-image:
+    radial-gradient(circle at 20% 50%, rgba(255, 255, 255, 0.05) 0%, transparent 50%),
+    radial-gradient(circle at 80% 80%, rgba(255, 255, 255, 0.05) 0%, transparent 50%);
+  pointer-events: none;
+  z-index: 0;
+}
+
 /* RTL support for Hebrew */
 [dir="rtl"] {
   font-family: "Segoe UI", "Rubik", "Arial", sans-serif;
@@ -72,4 +94,38 @@ html {
 
 ::-webkit-scrollbar-thumb:hover {
   background: linear-gradient(to bottom, #1e40af, #4338ca);
+}
+
+/* Responsive typography - smaller on mobile */
+@media (max-width: 640px) {
+  body {
+    font-size: 13px;
+  }
+
+  h1 {
+    font-size: 1.5rem !important;
+  }
+
+  h2 {
+    font-size: 1.25rem !important;
+  }
+
+  h3 {
+    font-size: 1.1rem !important;
+  }
+
+  button {
+    font-size: 0.875rem !important;
+    padding: 0.5rem 1rem !important;
+  }
+
+  input, select, textarea {
+    font-size: 14px !important;
+  }
+}
+
+/* Content container with proper z-index */
+.content-wrapper {
+  position: relative;
+  z-index: 1;
 }

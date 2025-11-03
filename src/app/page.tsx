@@ -8,6 +8,7 @@ import { Input } from '@/components/ui/input'
 import { supabase } from '@/lib/supabase'
 import { City } from '@/types'
 import { Phone, MessageCircle, ArrowLeft, Search } from 'lucide-react'
+import Logo from '@/components/Logo'
 
 export default function HomePage() {
   const [cities, setCities] = useState<City[]>([])
@@ -52,12 +53,15 @@ export default function HomePage() {
   )
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-blue-50 via-white to-indigo-50">
-      <div className="max-w-6xl mx-auto px-4 py-8">
+    <div className="min-h-screen content-wrapper">
+      <div className="max-w-6xl mx-auto px-3 sm:px-4 py-4 sm:py-8">
+        {/* Logo */}
+        <Logo />
+
         {/* Header */}
-        <header className="text-center mb-12">
-          <div className="bg-white/80 backdrop-blur-lg border border-gray-200/50 rounded-2xl shadow-xl p-8 relative">
-            <Link href="/super-admin" className="absolute left-6 top-6">
+        <header className="text-center mb-6 sm:mb-12">
+          <div className="bg-white/90 backdrop-blur-lg border border-gray-200/50 rounded-2xl shadow-xl p-4 sm:p-8 relative">
+            <Link href="/super-admin" className="absolute left-3 sm:left-6 top-3 sm:top-6">
               <Button
                 variant="ghost"
                 size="icon"
@@ -67,10 +71,7 @@ export default function HomePage() {
                 🔐
               </Button>
             </Link>
-            <h1 className="text-5xl font-bold bg-gradient-to-r from-blue-600 to-indigo-600 bg-clip-text text-transparent mb-3">
-              ארון ציוד ידידים
-            </h1>
-            <p className="text-gray-600 text-xl">בחר את העיר שלך להתחיל</p>
+            <p className="text-gray-600 text-base sm:text-lg">בחר את העיר שלך להתחיל</p>
           </div>
         </header>
 

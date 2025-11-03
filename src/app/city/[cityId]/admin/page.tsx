@@ -10,6 +10,7 @@ import { supabase } from '@/lib/supabase'
 import { Equipment, BorrowHistory, City } from '@/types'
 import { ArrowRight, FileDown, Printer } from 'lucide-react'
 import * as XLSX from 'xlsx'
+import Logo from '@/components/Logo'
 
 export default function CityAdminPage() {
   const params = useParams()
@@ -496,7 +497,10 @@ export default function CityAdminPage() {
 
   if (!isAuthenticated) {
     return (
-      <div className="min-h-screen bg-gradient-to-br from-blue-50 via-white to-indigo-50 flex items-center justify-center p-4">
+      <div className="min-h-screen content-wrapper flex items-center justify-center p-4">
+        <div className="absolute top-4 left-1/2 transform -translate-x-1/2">
+          <Logo />
+        </div>
         <Card className="w-full max-w-md border-0 shadow-2xl rounded-2xl overflow-hidden">
           <CardHeader className="bg-gradient-to-r from-blue-600 to-indigo-600 text-white pb-8">
             <div className="text-center">
@@ -562,9 +566,12 @@ export default function CityAdminPage() {
         }
       `}</style>
 
-    <div className="min-h-screen bg-gradient-to-br from-blue-50 via-white to-indigo-50">
-      <div className="max-w-6xl mx-auto px-4 py-6">
-        <header className="bg-white/80 backdrop-blur-lg border border-gray-200/50 rounded-2xl shadow-xl p-8 mb-8">
+    <div className="min-h-screen content-wrapper">
+      <div className="max-w-6xl mx-auto px-3 sm:px-4 py-4 sm:py-6">
+        {/* Logo */}
+        <Logo />
+
+        <header className="bg-white/90 backdrop-blur-lg border border-gray-200/50 rounded-2xl shadow-xl p-4 sm:p-8 mb-6 sm:mb-8">
           <div className="flex justify-between items-center">
             <div>
               <h1 className="text-4xl font-bold bg-gradient-to-r from-blue-600 to-indigo-600 bg-clip-text text-transparent mb-2">

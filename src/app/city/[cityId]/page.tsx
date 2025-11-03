@@ -8,6 +8,7 @@ import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
 import { supabase } from '@/lib/supabase'
 import { Equipment, BorrowHistory, BorrowForm, ReturnForm, City } from '@/types'
+import Logo from '@/components/Logo'
 
 export default function CityPage() {
   const params = useParams()
@@ -195,10 +196,13 @@ export default function CityPage() {
   }
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-blue-50 via-white to-indigo-50">
-      <div className="max-w-5xl mx-auto px-4 py-6">
+    <div className="min-h-screen content-wrapper">
+      <div className="max-w-5xl mx-auto px-3 sm:px-4 py-4 sm:py-6">
+        {/* Logo */}
+        <Logo />
+
         {/* Header */}
-        <header className="bg-white/80 backdrop-blur-lg border border-gray-200/50 rounded-2xl shadow-xl p-8 mb-8 relative">
+        <header className="bg-white/90 backdrop-blur-lg border border-gray-200/50 rounded-2xl shadow-xl p-4 sm:p-8 mb-6 sm:mb-8 relative">
           <Link href="/" className="absolute right-6 top-6">
             <Button
               variant="ghost"
