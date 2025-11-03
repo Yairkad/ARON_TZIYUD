@@ -373,7 +373,7 @@ export default function AdminPage() {
                     value={newEquipment.quantity}
                     onChange={(e) => setNewEquipment({ ...newEquipment, quantity: parseInt(e.target.value) || 0 })}
                     placeholder="כמות"
-                    className="w-32 h-12 border-2 border-gray-200 rounded-xl focus:border-blue-500 transition-colors"
+                    className="w-20 h-12 border-2 border-gray-200 rounded-xl focus:border-blue-500 transition-colors"
                   />
                   <Button 
                     type="submit" 
