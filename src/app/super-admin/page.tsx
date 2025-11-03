@@ -458,28 +458,50 @@ export default function SuperAdminPage() {
                   {editingCity?.id === city.id ? (
                     <form onSubmit={handleUpdateCity} className="space-y-4">
                       <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                        <div className="md:col-span-2">
+                          <Input
+                            value={editingCity.name}
+                            onChange={(e) => setEditingCity({ ...editingCity, name: e.target.value })}
+                            placeholder="שם העיר"
+                            required
+                          />
+                        </div>
                         <Input
-                          value={editingCity.name}
-                          onChange={(e) => setEditingCity({ ...editingCity, name: e.target.value })}
-                          placeholder="שם העיר"
-                          required
-                        />
-                        <Input
-                          value={editingCity.manager_name}
-                          onChange={(e) => setEditingCity({ ...editingCity, manager_name: e.target.value })}
-                          placeholder="שם מנהל"
+                          value={editingCity.manager1_name}
+                          onChange={(e) => setEditingCity({ ...editingCity, manager1_name: e.target.value })}
+                          placeholder="מנהל 1 - שם"
                           required
                         />
                         <Input
                           type="tel"
-                          value={editingCity.manager_phone}
+                          value={editingCity.manager1_phone}
                           onChange={(e) => {
                             const value = e.target.value.replace(/\D/g, '')
                             if (value.length <= 10) {
-                              setEditingCity({ ...editingCity, manager_phone: value })
+                              setEditingCity({ ...editingCity, manager1_phone: value })
                             }
                           }}
-                          placeholder="טלפון מנהל"
+                          placeholder="מנהל 1 - טלפון"
+                          pattern="[0-9]{10}"
+                          maxLength={10}
+                          required
+                        />
+                        <Input
+                          value={editingCity.manager2_name}
+                          onChange={(e) => setEditingCity({ ...editingCity, manager2_name: e.target.value })}
+                          placeholder="מנהל 2 - שם"
+                          required
+                        />
+                        <Input
+                          type="tel"
+                          value={editingCity.manager2_phone}
+                          onChange={(e) => {
+                            const value = e.target.value.replace(/\D/g, '')
+                            if (value.length <= 10) {
+                              setEditingCity({ ...editingCity, manager2_phone: value })
+                            }
+                          }}
+                          placeholder="מנהל 2 - טלפון"
                           pattern="[0-9]{10}"
                           maxLength={10}
                           required
@@ -504,11 +526,27 @@ export default function SuperAdminPage() {
                   ) : (
                     <div>
                       <div className="flex justify-between items-start mb-4">
-                        <div>
-                          <h3 className="text-2xl font-bold text-gray-800 mb-1">🏙️ {city.name}</h3>
-                          <p className="text-gray-600">👤 מנהל: {city.manager_name}</p>
-                          <p className="text-gray-600">📱 טלפון: {city.manager_phone}</p>
-                          <p className="text-sm text-gray-500 mt-2">סיסמה: ••••••</p>
+                        <div className="flex-1">
+                          <h3 className="text-2xl font-bold text-gray-800 mb-3">🏙️ {city.name}</h3>
+                          <div className="space-y-2">
+                            {/* Manager 1 */}
+                            <div className="flex items-center gap-3 bg-white rounded-lg p-2 border border-gray-200">
+                              <span className="text-lg">👤</span>
+                              <div className="flex-1">
+                                <p className="font-semibold text-gray-800">{city.manager1_name}</p>
+                                <p className="text-sm text-gray-600">📱 {city.manager1_phone}</p>
+                              </div>
+                            </div>
+                            {/* Manager 2 */}
+                            <div className="flex items-center gap-3 bg-white rounded-lg p-2 border border-gray-200">
+                              <span className="text-lg">👤</span>
+                              <div className="flex-1">
+                                <p className="font-semibold text-gray-800">{city.manager2_name}</p>
+                                <p className="text-sm text-gray-600">📱 {city.manager2_phone}</p>
+                              </div>
+                            </div>
+                          </div>
+                          <p className="text-sm text-gray-500 mt-3">🔐 סיסמה: ••••••</p>
                         </div>
                         <div className={`px-4 py-2 rounded-lg font-bold ${city.is_active ? 'bg-green-100 text-green-700' : 'bg-gray-200 text-gray-700'}`}>
                           {city.is_active ? '✅ פעילה' : '❌ לא פעילה'}

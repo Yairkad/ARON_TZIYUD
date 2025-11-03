@@ -24,17 +24,21 @@
 4. לחץ על **RUN** (או Ctrl+Enter)
 
 ### 1.3 אישור הצלחה
-וודא שהטבלאות נוצרו בהצלחה:
+וודא שהטבלאות והפוליסיות נוצרו בהצלחה:
 ```sql
 SELECT * FROM cities;
 SELECT column_name FROM information_schema.columns WHERE table_name = 'equipment';
 SELECT column_name FROM information_schema.columns WHERE table_name = 'borrow_history';
+
+-- בדיקת RLS policies
+SELECT policyname FROM pg_policies WHERE tablename = 'cities';
 ```
 
 אתה אמור לראות:
 - טבלת `cities` חדשה עם 3 ערים לדוגמה
 - עמודה `city_id` ב-`equipment`
 - עמודה `city_id` ב-`borrow_history`
+- 4 policies: SELECT, INSERT, UPDATE, DELETE
 
 ---
 
@@ -157,6 +161,19 @@ Vercel יעשה deploy אוטומטי!
 
 ---
 
+## סנכרון עם רשימת ערים קיימת
+
+אם יש לך רשימת ערים קיימת:
+
+1. פתח את הקובץ `sync-existing-cities.sql`
+2. ערוך את רשימת הערים בקובץ עם הנתונים שלך
+3. הרץ את הסקריפט ב-Supabase SQL Editor
+4. הסקריפט ישתמש ב-`ON CONFLICT` כדי לעדכן ערים קיימות או להוסיף חדשות
+
+**טיפ:** אם יש לך ציוד קיים שצריך לשייך לערים, ראה את שלב 2 ב-`database-multi-city.sql`
+
+---
+
 ## פתרון בעיות נפוצות
 
 ### שגיאה: "city_id cannot be null"
@@ -169,11 +186,16 @@ Vercel יעשה deploy אוטומטי!
 
 ### לא רואה ערים בדף הבית
 - בדוק ב-Supabase שיש ערים עם `is_active = true`
-- בדוק את RLS policies בטבלת cities
+- בדוק את RLS policies בטבלת cities (צריך 4 policies: SELECT, INSERT, UPDATE, DELETE)
 
 ### לא מצליח להתחבר כמנהל עיר
 - וודא שהסיסמה נכונה (בדוק ב-Supabase: `SELECT password FROM cities`)
 - בדוק שה-city פעילה (`is_active = true`)
+
+### לא מצליח למחוק עיר
+- וודא שהרצת את הסקריפט המעודכן `database-multi-city.sql`
+- בדוק שיש policy למחיקה: `SELECT policyname FROM pg_policies WHERE tablename = 'cities';`
+- אם חסר policy למחיקה, הרץ מחדש את ה-SQL
 
 ---
 

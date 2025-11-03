@@ -101,9 +101,22 @@ CREATE POLICY "Allow public update access to cities"
     USING (true)
     WITH CHECK (true);
 
+-- Allow public delete access (needed for super-admin to delete cities)
+-- In production, you should add authentication checks here
+DROP POLICY IF EXISTS "Allow public delete access to cities" ON public.cities;
+CREATE POLICY "Allow public delete access to cities"
+    ON public.cities FOR DELETE
+    USING (true);
+
+-- Allow public insert access (needed for super-admin to add cities)
+DROP POLICY IF EXISTS "Allow public insert access to cities" ON public.cities;
+CREATE POLICY "Allow public insert access to cities"
+    ON public.cities FOR INSERT
+    WITH CHECK (true);
+
 -- Grant permissions
-GRANT SELECT, UPDATE ON public.cities TO anon;
-GRANT SELECT, UPDATE ON public.cities TO authenticated;
+GRANT SELECT, INSERT, UPDATE, DELETE ON public.cities TO anon;
+GRANT SELECT, INSERT, UPDATE, DELETE ON public.cities TO authenticated;
 
 -- ================================================
 -- STEP 6: Insert Sample Cities (for testing)
