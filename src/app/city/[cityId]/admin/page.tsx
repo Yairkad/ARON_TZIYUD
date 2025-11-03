@@ -271,7 +271,6 @@ export default function CityAdminPage() {
       'תאריך השאלה': new Date(item.borrow_date).toLocaleDateString('he-IL'),
       'תאריך החזרה': item.return_date ? new Date(item.return_date).toLocaleDateString('he-IL') : 'טרם הוחזר',
       'סטטוס': item.status === 'borrowed' ? 'מושאל' : 'הוחזר',
-      'הערות': item.notes || '-',
     }))
 
     // Create workbook
