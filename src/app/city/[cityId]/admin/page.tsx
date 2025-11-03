@@ -268,7 +268,6 @@ export default function CityAdminPage() {
       'שם לווה': item.name,
       'טלפון': item.phone,
       'ציוד': item.equipment_name,
-      'כמות': item.quantity,
       'תאריך השאלה': new Date(item.borrow_date).toLocaleDateString('he-IL'),
       'תאריך החזרה': item.return_date ? new Date(item.return_date).toLocaleDateString('he-IL') : 'טרם הוחזר',
       'סטטוס': item.status === 'borrowed' ? 'מושאל' : 'הוחזר',
