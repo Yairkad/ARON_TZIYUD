@@ -14,9 +14,12 @@ export default function SuperAdminPage() {
   const [password, setPassword] = useState('')
   const [loading, setLoading] = useState(false)
   const [superAdminPassword, setSuperAdminPassword] = useState<string>('')
+  const [activeTab, setActiveTab] = useState<'cities' | 'settings'>('cities')
   const [showAddCity, setShowAddCity] = useState(false)
   const [newCity, setNewCity] = useState<CityForm>({ name: '', manager_name: '', manager_phone: '', password: '' })
   const [editingCity, setEditingCity] = useState<City | null>(null)
+  const [changePasswordForm, setChangePasswordForm] = useState({ currentPassword: '', newPassword: '', confirmPassword: '' })
+  const [showChangePassword, setShowChangePassword] = useState(false)
 
   useEffect(() => {
     fetchSuperAdminPassword()
@@ -188,6 +191,45 @@ export default function SuperAdminPage() {
     }
   }
 
+  const handleChangePassword = async (e: React.FormEvent) => {
+    e.preventDefault()
+
+    if (changePasswordForm.currentPassword !== superAdminPassword) {
+      alert('הסיסמה הנוכחית שגויה')
+      return
+    }
+
+    if (changePasswordForm.newPassword !== changePasswordForm.confirmPassword) {
+      alert('הסיסמאות החדשות אינן תואמות')
+      return
+    }
+
+    if (changePasswordForm.newPassword.length < 4) {
+      alert('הסיסמה החדשה חייבת להכיל לפחות 4 תווים')
+      return
+    }
+
+    setLoading(true)
+    try {
+      const { error } = await supabase
+        .from('settings')
+        .update({ value: changePasswordForm.newPassword })
+        .eq('key', 'super_admin_password')
+
+      if (error) throw error
+
+      alert('הסיסמה שונתה בהצלחה!')
+      setSuperAdminPassword(changePasswordForm.newPassword)
+      setChangePasswordForm({ currentPassword: '', newPassword: '', confirmPassword: '' })
+      setShowChangePassword(false)
+    } catch (error) {
+      console.error('Error changing password:', error)
+      alert('אירעה שגיאה בשינוי הסיסמה')
+    } finally {
+      setLoading(false)
+    }
+  }
+
   if (!isAuthenticated) {
     return (
       <div className="min-h-screen bg-gradient-to-br from-purple-50 via-white to-pink-50 flex items-center justify-center p-4">
@@ -266,8 +308,34 @@ export default function SuperAdminPage() {
           </div>
         </header>
 
-        {/* Add City Button */}
-        <div className="mb-6">
+        {/* Tab Navigation */}
+        <div className="grid grid-cols-1 md:grid-cols-2 gap-3 mb-8">
+          <Button
+            onClick={() => setActiveTab('cities')}
+            className={`py-6 rounded-xl font-semibold text-lg transition-all duration-300 ${
+              activeTab === 'cities'
+                ? 'bg-gradient-to-r from-purple-600 to-pink-600 text-white shadow-lg shadow-purple-500/50 scale-105'
+                : 'bg-white text-gray-600 border-2 border-gray-200 hover:border-purple-300 hover:bg-purple-50'
+            }`}
+          >
+            <span className="text-2xl ml-2">🏙️</span> ניהול ערים
+          </Button>
+          <Button
+            onClick={() => setActiveTab('settings')}
+            className={`py-6 rounded-xl font-semibold text-lg transition-all duration-300 ${
+              activeTab === 'settings'
+                ? 'bg-gradient-to-r from-purple-600 to-pink-600 text-white shadow-lg shadow-purple-500/50 scale-105'
+                : 'bg-white text-gray-600 border-2 border-gray-200 hover:border-purple-300 hover:bg-purple-50'
+            }`}
+          >
+            <span className="text-2xl ml-2">⚙️</span> הגדרות
+          </Button>
+        </div>
+
+        {activeTab === 'cities' && (
+          <>
+            {/* Add City Button */}
+            <div className="mb-6">
           <Button
             onClick={() => setShowAddCity(!showAddCity)}
             className="bg-gradient-to-r from-green-500 to-emerald-500 hover:from-green-600 hover:to-emerald-600 text-white font-bold px-6 py-3 rounded-xl shadow-lg hover:shadow-xl transition-all duration-200"
@@ -445,6 +513,116 @@ export default function SuperAdminPage() {
             </div>
           </CardContent>
         </Card>
+          </>
+        )}
+
+        {activeTab === 'settings' && (
+          <Card className="border-0 shadow-2xl rounded-2xl overflow-hidden bg-white">
+            <CardHeader className="bg-gradient-to-r from-purple-50 to-pink-50 pb-6">
+              <CardTitle className="text-2xl font-bold text-gray-800">⚙️ הגדרות מערכת</CardTitle>
+              <CardDescription className="text-gray-600">ניהול הגדרות אבטחה ומערכת</CardDescription>
+            </CardHeader>
+            <CardContent className="p-6">
+              <div className="space-y-6">
+                {!showChangePassword ? (
+                  <div className="bg-gradient-to-r from-purple-50 to-pink-50 rounded-xl p-6 border-2 border-purple-200">
+                    <div className="flex justify-between items-center">
+                      <div>
+                        <h3 className="text-lg font-bold text-gray-800 mb-1">🔐 סיסמת מנהל על</h3>
+                        <p className="text-sm text-gray-600">שנה את סיסמת הכניסה לפאנל מנהל על</p>
+                      </div>
+                      <Button
+                        onClick={() => setShowChangePassword(true)}
+                        className="bg-gradient-to-r from-purple-600 to-pink-600 hover:from-purple-700 hover:to-pink-700 text-white font-semibold px-6 py-3 rounded-xl transition-all duration-200 hover:scale-105"
+                      >
+                        שנה סיסמה
+                      </Button>
+                    </div>
+                  </div>
+                ) : (
+                  <Card className="border-2 border-purple-200 bg-gradient-to-r from-purple-50 to-pink-50">
+                    <CardHeader>
+                      <CardTitle className="text-xl font-bold text-gray-800">שינוי סיסמת מנהל על</CardTitle>
+                      <CardDescription>הזן את הסיסמה הנוכחית והסיסמה החדשה</CardDescription>
+                    </CardHeader>
+                    <CardContent>
+                      <form onSubmit={handleChangePassword} className="space-y-4">
+                        <div className="space-y-2">
+                          <label className="block text-sm font-semibold text-gray-700">🔑 סיסמה נוכחית</label>
+                          <Input
+                            type="password"
+                            value={changePasswordForm.currentPassword}
+                            onChange={(e) => setChangePasswordForm({ ...changePasswordForm, currentPassword: e.target.value })}
+                            placeholder="הזן סיסמה נוכחית"
+                            className="h-12 border-2 border-gray-200 rounded-xl focus:border-purple-500 transition-colors"
+                            required
+                          />
+                        </div>
+                        <div className="space-y-2">
+                          <label className="block text-sm font-semibold text-gray-700">🆕 סיסמה חדשה</label>
+                          <Input
+                            type="password"
+                            value={changePasswordForm.newPassword}
+                            onChange={(e) => setChangePasswordForm({ ...changePasswordForm, newPassword: e.target.value })}
+                            placeholder="הזן סיסמה חדשה"
+                            className="h-12 border-2 border-gray-200 rounded-xl focus:border-purple-500 transition-colors"
+                            required
+                          />
+                        </div>
+                        <div className="space-y-2">
+                          <label className="block text-sm font-semibold text-gray-700">✅ אימות סיסמה חדשה</label>
+                          <Input
+                            type="password"
+                            value={changePasswordForm.confirmPassword}
+                            onChange={(e) => setChangePasswordForm({ ...changePasswordForm, confirmPassword: e.target.value })}
+                            placeholder="הזן שוב את הסיסמה החדשה"
+                            className="h-12 border-2 border-gray-200 rounded-xl focus:border-purple-500 transition-colors"
+                            required
+                          />
+                        </div>
+                        <div className="flex gap-3 pt-2">
+                          <Button
+                            type="submit"
+                            disabled={loading}
+                            className="flex-1 h-12 bg-gradient-to-r from-green-500 to-emerald-500 hover:from-green-600 hover:to-emerald-600 text-white font-bold rounded-xl shadow-md hover:shadow-lg transition-all"
+                          >
+                            {loading ? '⏳ משנה...' : '✅ שמור סיסמה חדשה'}
+                          </Button>
+                          <Button
+                            type="button"
+                            onClick={() => {
+                              setShowChangePassword(false)
+                              setChangePasswordForm({ currentPassword: '', newPassword: '', confirmPassword: '' })
+                            }}
+                            className="flex-1 h-12 bg-white border-2 border-gray-400 text-gray-700 hover:bg-gray-50 font-semibold rounded-xl transition-all"
+                          >
+                            ❌ ביטול
+                          </Button>
+                        </div>
+                      </form>
+                    </CardContent>
+                  </Card>
+                )}
+
+                <div className="bg-gradient-to-r from-yellow-50 to-amber-50 rounded-xl p-6 border-2 border-yellow-200">
+                  <div className="flex items-start gap-3">
+                    <span className="text-2xl">⚠️</span>
+                    <div>
+                      <h3 className="font-bold text-gray-800 mb-2">הערות אבטחה חשובות</h3>
+                      <ul className="text-sm text-gray-700 space-y-1">
+                        <li>• הסיסמה נשמרת במסד הנתונים Supabase</li>
+                        <li>• ודא שהסיסמה מכילה לפחות 4 תווים</li>
+                        <li>• שמור את הסיסמה במקום בטוח</li>
+                        <li>• שנה סיסמה באופן קבוע לאבטחה מירבית</li>
+                        <li>• סיסמה זו שולטת בגישה לכל המערכת!</li>
+                      </ul>
+                    </div>
+                  </div>
+                </div>
+              </div>
+            </CardContent>
+          </Card>
+        )}
       </div>
     </div>
   )
