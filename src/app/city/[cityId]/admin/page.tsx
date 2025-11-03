@@ -8,7 +8,8 @@ import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
 import { supabase } from '@/lib/supabase'
 import { Equipment, BorrowHistory, City } from '@/types'
-import { ArrowRight } from 'lucide-react'
+import { ArrowRight, FileDown, Printer } from 'lucide-react'
+import * as XLSX from 'xlsx'
 
 export default function CityAdminPage() {
   const params = useParams()
@@ -250,6 +251,53 @@ export default function CityAdminPage() {
     }
   }
 
+  // Export to Excel
+  const handleExportToExcel = () => {
+    if (!city) return
+
+    // Prepare equipment data
+    const equipmentData = equipment.map((item, index) => ({
+      'מס׳': index + 1,
+      'שם הציוד': item.name,
+      'כמות זמינה': item.quantity,
+    }))
+
+    // Prepare history data
+    const historyData = borrowHistory.map((item, index) => ({
+      'מס׳': index + 1,
+      'שם לווה': item.name,
+      'טלפון': item.phone,
+      'ציוד': item.equipment_name,
+      'כמות': item.quantity,
+      'תאריך השאלה': new Date(item.borrow_date).toLocaleDateString('he-IL'),
+      'תאריך החזרה': item.return_date ? new Date(item.return_date).toLocaleDateString('he-IL') : 'טרם הוחזר',
+      'סטטוס': item.status === 'borrowed' ? 'מושאל' : 'הוחזר',
+      'הערות': item.notes || '-',
+    }))
+
+    // Create workbook
+    const wb = XLSX.utils.book_new()
+
+    // Add equipment sheet
+    const wsEquipment = XLSX.utils.json_to_sheet(equipmentData)
+    XLSX.utils.book_append_sheet(wb, wsEquipment, 'ציוד')
+
+    // Add history sheet
+    const wsHistory = XLSX.utils.json_to_sheet(historyData)
+    XLSX.utils.book_append_sheet(wb, wsHistory, 'היסטוריית השאלות')
+
+    // Generate file name with date
+    const fileName = `${city.name}_דוח_ציוד_${new Date().toLocaleDateString('he-IL').replace(/\//g, '-')}.xlsx`
+
+    // Save file
+    XLSX.writeFile(wb, fileName)
+  }
+
+  // Print functionality
+  const handlePrint = () => {
+    window.print()
+  }
+
   const handleDeleteHistory = async (id: string) => {
     if (!confirm('האם אתה בטוח שברצונך למחוק רשומה זו?')) return
 
@@ -322,6 +370,24 @@ export default function CityAdminPage() {
   }
 
   return (
+    <>
+      {/* Print Styles */}
+      <style jsx global>{`
+        @media print {
+          body {
+            print-color-adjust: exact;
+            -webkit-print-color-adjust: exact;
+          }
+          .print\\:hidden {
+            display: none !important;
+          }
+          @page {
+            margin: 1cm;
+            size: A4;
+          }
+        }
+      `}</style>
+
     <div className="min-h-screen bg-gradient-to-br from-blue-50 via-white to-indigo-50">
       <div className="max-w-6xl mx-auto px-4 py-6">
         <header className="bg-white/80 backdrop-blur-lg border border-gray-200/50 rounded-2xl shadow-xl p-8 mb-8">
@@ -332,7 +398,7 @@ export default function CityAdminPage() {
               </h1>
               <p className="text-gray-600 text-lg">ניהול ציוד והיסטוריית השאלות</p>
             </div>
-            <div className="flex gap-3">
+            <div className="flex gap-3 print:hidden">
               <Link href={`/city/${cityId}`}>
                 <Button
                   variant="outline"
@@ -352,7 +418,25 @@ export default function CityAdminPage() {
           </div>
         </header>
 
-        <div className="grid grid-cols-1 md:grid-cols-3 gap-3 mb-8">
+        {/* Export and Print Buttons */}
+        <div className="mb-6 flex gap-3 justify-center print:hidden">
+          <Button
+            onClick={handleExportToExcel}
+            className="bg-gradient-to-r from-green-500 to-emerald-500 hover:from-green-600 hover:to-emerald-600 text-white font-bold px-6 py-3 rounded-xl shadow-lg hover:shadow-xl transition-all duration-200 hover:scale-105"
+          >
+            <FileDown className="ml-2 h-5 w-5" />
+            ייצוא לאקסל
+          </Button>
+          <Button
+            onClick={handlePrint}
+            className="bg-gradient-to-r from-purple-500 to-pink-500 hover:from-purple-600 hover:to-pink-600 text-white font-bold px-6 py-3 rounded-xl shadow-lg hover:shadow-xl transition-all duration-200 hover:scale-105"
+          >
+            <Printer className="ml-2 h-5 w-5" />
+            הדפסה
+          </Button>
+        </div>
+
+        <div className="grid grid-cols-1 md:grid-cols-3 gap-3 mb-8 print:hidden">
           <Button
             onClick={() => setActiveTab('equipment')}
             className={`py-6 rounded-xl font-semibold text-lg transition-all duration-300 ${
@@ -816,5 +900,6 @@ export default function CityAdminPage() {
         )}
       </div>
     </div>
+    </>
   )
 }

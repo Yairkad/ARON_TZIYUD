@@ -4,13 +4,15 @@ import { useState, useEffect } from 'react'
 import Link from 'next/link'
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card'
 import { Button } from '@/components/ui/button'
+import { Input } from '@/components/ui/input'
 import { supabase } from '@/lib/supabase'
 import { City } from '@/types'
-import { Phone, MessageCircle, ArrowLeft } from 'lucide-react'
+import { Phone, MessageCircle, ArrowLeft, Search } from 'lucide-react'
 
 export default function HomePage() {
   const [cities, setCities] = useState<City[]>([])
   const [loading, setLoading] = useState(true)
+  const [searchQuery, setSearchQuery] = useState('')
 
   useEffect(() => {
     fetchCities()
@@ -42,6 +44,13 @@ export default function HomePage() {
     window.open(`https://wa.me/${formattedPhone}`, '_blank')
   }
 
+  // Filter cities based on search query
+  const filteredCities = cities.filter(city =>
+    city.name.toLowerCase().includes(searchQuery.toLowerCase()) ||
+    city.manager1_name.toLowerCase().includes(searchQuery.toLowerCase()) ||
+    city.manager2_name?.toLowerCase().includes(searchQuery.toLowerCase())
+  )
+
   return (
     <div className="min-h-screen bg-gradient-to-br from-blue-50 via-white to-indigo-50">
       <div className="max-w-6xl mx-auto px-4 py-8">
@@ -65,6 +74,31 @@ export default function HomePage() {
           </div>
         </header>
 
+        {/* Search Bar */}
+        {!loading && cities.length > 0 && (
+          <div className="mb-8">
+            <Card className="border-0 shadow-lg bg-white/80 backdrop-blur-lg">
+              <CardContent className="p-4">
+                <div className="relative">
+                  <Search className="absolute right-3 top-1/2 transform -translate-y-1/2 text-gray-400 h-5 w-5" />
+                  <Input
+                    type="text"
+                    placeholder="חפש עיר לפי שם העיר או שם המנהל..."
+                    value={searchQuery}
+                    onChange={(e) => setSearchQuery(e.target.value)}
+                    className="h-12 pr-10 text-lg border-2 border-gray-200 focus:border-blue-500 rounded-xl"
+                  />
+                </div>
+                {searchQuery && (
+                  <p className="text-sm text-gray-600 mt-2">
+                    נמצאו {filteredCities.length} תוצאות
+                  </p>
+                )}
+              </CardContent>
+            </Card>
+          </div>
+        )}
+
         {/* Cities Grid */}
         {loading ? (
           <div className="text-center py-12">
@@ -79,9 +113,24 @@ export default function HomePage() {
               <p className="text-gray-600 mt-2">אנא פנה למנהל המערכת</p>
             </CardContent>
           </Card>
+        ) : filteredCities.length === 0 ? (
+          <Card className="border-2 border-blue-200 bg-gradient-to-r from-blue-50 to-indigo-50">
+            <CardContent className="p-8 text-center">
+              <p className="text-xl text-blue-700 font-semibold">
+                🔍 לא נמצאו ערים התואמות לחיפוש
+              </p>
+              <p className="text-gray-600 mt-2">נסה לחפש במילים אחרות</p>
+              <Button
+                onClick={() => setSearchQuery('')}
+                className="mt-4 bg-blue-600 hover:bg-blue-700"
+              >
+                נקה חיפוש
+              </Button>
+            </CardContent>
+          </Card>
         ) : (
           <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-            {cities.map(city => (
+            {filteredCities.map(city => (
               <Card
                 key={city.id}
                 className="border-0 shadow-xl hover:shadow-2xl transition-all duration-300 hover:scale-105 bg-white overflow-hidden"
