@@ -252,7 +252,7 @@ export default function Home() {
                         className="h-12 border-2 border-gray-200 rounded-xl focus:border-blue-500 transition-colors"
                       />
                       {showEquipmentDropdown && (
-                        <div className="absolute z-[100] w-full mt-1 max-h-96 overflow-y-auto bg-white border-2 border-gray-200 rounded-xl shadow-lg">
+                        <div className="absolute z-[9999] w-full mt-1 max-h-96 overflow-y-auto bg-white border-2 border-gray-200 rounded-xl shadow-lg">
                           {equipment
                             .filter(item =>
                               item.quantity > 0 &&
@@ -362,7 +362,7 @@ export default function Home() {
         )}
 
         {/* Equipment Inventory - Compact List */}
-        <Card className="mt-8 border-0 shadow-2xl rounded-2xl overflow-hidden bg-white/90 backdrop-blur-sm">
+        <Card className="mt-8 border-0 shadow-2xl rounded-2xl overflow-hidden bg-white/90 backdrop-blur-sm relative z-10">
           <CardHeader className="bg-gradient-to-r from-blue-50 to-indigo-50 pb-6">
             <CardTitle className="text-2xl font-bold text-gray-800">📊 מלאי ציוד</CardTitle>
             <CardDescription className="text-gray-600">סטטוס זמינות ציוד במערכת</CardDescription>
