@@ -250,8 +250,8 @@ export default function SuperAdminPage() {
           <CardHeader className="bg-gradient-to-r from-purple-600 to-pink-600 text-white pb-8">
             <div className="text-center">
               <div className="text-5xl mb-4">👑</div>
-              <CardTitle className="text-3xl font-bold mb-2">כניסת מנהל על</CardTitle>
-              <CardDescription className="text-purple-100 text-base">הזן סיסמת מנהל על לגישה למערכת</CardDescription>
+              <CardTitle className="text-3xl font-bold mb-2">ממשק ניהול מרכזי</CardTitle>
+              <CardDescription className="text-purple-100 text-base">הזן סיסמת מנהל לגישה למערכת</CardDescription>
             </div>
           </CardHeader>
           <CardContent className="p-8">
@@ -295,25 +295,23 @@ export default function SuperAdminPage() {
     <div className="min-h-screen bg-gradient-to-br from-purple-50 via-white to-pink-50">
       <div className="max-w-6xl mx-auto px-4 py-6">
         <header className="bg-white/80 backdrop-blur-lg border border-gray-200/50 rounded-2xl shadow-xl p-8 mb-8">
-          <div className="flex justify-between items-center">
-            <div>
-              <h1 className="text-4xl font-bold bg-gradient-to-r from-purple-600 to-pink-600 bg-clip-text text-transparent mb-2">
-                👑 פאנל מנהל על
-              </h1>
-              <p className="text-gray-600 text-lg">ניהול מרכזי של כל הערים במערכת</p>
-            </div>
-            <div className="flex gap-3">
+          <div className="text-center">
+            <h1 className="text-4xl font-bold bg-gradient-to-r from-purple-600 to-pink-600 bg-clip-text text-transparent mb-2">
+              👑 ממשק ניהול מרכזי
+            </h1>
+            <p className="text-gray-600 text-lg mb-4">ניהול מרכזי של כל הערים במערכת</p>
+            <div className="flex gap-2 justify-center">
               <Link href="/">
                 <Button
                   variant="outline"
-                  className="border-2 border-purple-600 text-purple-600 hover:bg-purple-50 font-semibold px-6 py-2 rounded-xl transition-all duration-200 hover:scale-105"
+                  className="border-2 border-purple-600 text-purple-600 hover:bg-purple-50 font-semibold px-4 py-1.5 text-sm rounded-lg transition-all duration-200 hover:scale-105"
                 >
                   ↩️ חזרה לדף הבית
                 </Button>
               </Link>
               <Button
                 onClick={() => setIsAuthenticated(false)}
-                className="bg-gradient-to-r from-red-500 to-rose-500 hover:from-red-600 hover:to-rose-600 text-white font-semibold px-6 py-2 rounded-xl transition-all duration-200 hover:scale-105"
+                className="bg-gradient-to-r from-red-500 to-rose-500 hover:from-red-600 hover:to-rose-600 text-white font-semibold px-4 py-1.5 text-sm rounded-lg transition-all duration-200 hover:scale-105"
               >
                 🚪 יציאה
               </Button>
