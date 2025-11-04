@@ -15,7 +15,6 @@ export default function SuperAdminPage() {
   const [isAuthenticated, setIsAuthenticated] = useState(false)
   const [password, setPassword] = useState('')
   const [loading, setLoading] = useState(false)
-  const [superAdminPassword, setSuperAdminPassword] = useState<string>('')
   const [activeTab, setActiveTab] = useState<'cities' | 'settings'>('cities')
   const [showAddCity, setShowAddCity] = useState(false)
   const [newCity, setNewCity] = useState<CityForm>({ name: '', manager1_name: '', manager1_phone: '', manager2_name: '', manager2_phone: '', location_url: '', password: '' })
@@ -24,34 +23,10 @@ export default function SuperAdminPage() {
   const [showChangePassword, setShowChangePassword] = useState(false)
 
   useEffect(() => {
-    fetchSuperAdminPassword()
-  }, [])
-
-  useEffect(() => {
     if (isAuthenticated) {
       fetchCities()
     }
   }, [isAuthenticated])
-
-  const fetchSuperAdminPassword = async () => {
-    try {
-      const { data, error } = await supabase
-        .from('settings')
-        .select('value')
-        .eq('key', 'super_admin_password')
-        .single()
-
-      if (error) {
-        console.error('Error fetching super admin password:', error)
-        setSuperAdminPassword('1234')
-      } else {
-        setSuperAdminPassword(data?.value || '1234')
-      }
-    } catch (error) {
-      console.error('Error fetching super admin password:', error)
-      setSuperAdminPassword('1234')
-    }
-  }
 
   const fetchCities = async () => {
     const { data, error } = await supabase
@@ -274,8 +249,6 @@ export default function SuperAdminPage() {
       alert('הסיסמה שונתה בהצלחה!')
       setChangePasswordForm({ currentPassword: '', newPassword: '', confirmPassword: '' })
       setShowChangePassword(false)
-      // רענן את הסיסמה המאוחסנת
-      fetchSuperAdminPassword()
     } catch (error) {
       console.error('Error changing password:', error)
       alert('אירעה שגיאה בשינוי הסיסמה')
