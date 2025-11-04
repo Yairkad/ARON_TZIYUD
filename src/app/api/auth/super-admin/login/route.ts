@@ -19,7 +19,8 @@ export async function POST(request: NextRequest) {
     }
 
     // בדיקת Rate Limiting
-    const clientId = request.ip || 'unknown'
+    const forwardedFor = request.headers.get('x-forwarded-for')
+    const clientId = forwardedFor?.split(',')[0] || request.headers.get('x-real-ip') || 'unknown'
     const attempts = loginAttempts.get(clientId)
 
     if (attempts) {
