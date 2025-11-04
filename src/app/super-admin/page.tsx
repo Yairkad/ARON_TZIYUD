@@ -241,11 +241,6 @@ export default function SuperAdminPage() {
   const handleChangePassword = async (e: React.FormEvent) => {
     e.preventDefault()
 
-    if (changePasswordForm.currentPassword !== superAdminPassword) {
-      alert('הסיסמה הנוכחית שגויה')
-      return
-    }
-
     if (changePasswordForm.newPassword !== changePasswordForm.confirmPassword) {
       alert('הסיסמאות החדשות אינן תואמות')
       return
@@ -258,17 +253,29 @@ export default function SuperAdminPage() {
 
     setLoading(true)
     try {
-      const { error } = await supabase
-        .from('settings')
-        .update({ value: changePasswordForm.newPassword })
-        .eq('key', 'super_admin_password')
+      const response = await fetch('/api/auth/super-admin/change-password', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({
+          currentPassword: changePasswordForm.currentPassword,
+          newPassword: changePasswordForm.newPassword,
+        }),
+      })
 
-      if (error) throw error
+      const data = await response.json()
+
+      if (!response.ok) {
+        alert(data.error || 'שגיאה בשינוי הסיסמה')
+        return
+      }
 
       alert('הסיסמה שונתה בהצלחה!')
-      setSuperAdminPassword(changePasswordForm.newPassword)
       setChangePasswordForm({ currentPassword: '', newPassword: '', confirmPassword: '' })
       setShowChangePassword(false)
+      // רענן את הסיסמה המאוחסנת
+      fetchSuperAdminPassword()
     } catch (error) {
       console.error('Error changing password:', error)
       alert('אירעה שגיאה בשינוי הסיסמה')
