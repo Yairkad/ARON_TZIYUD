@@ -59,23 +59,16 @@ export async function POST(request: NextRequest) {
     // בדיקת סיסמה - תומך גם בסיסמאות ישנות וגם חדשות
     let isPasswordValid = false
 
-    console.log('[DEBUG] Stored password starts with:', storedPassword.substring(0, 10))
-    console.log('[DEBUG] Is encrypted?', storedPassword.startsWith('$2a$') || storedPassword.startsWith('$2b$'))
-
     if (storedPassword.startsWith('$2a$') || storedPassword.startsWith('$2b$')) {
       // סיסמה מוצפנת
-      console.log('[DEBUG] Using bcrypt.compare for encrypted password')
       isPasswordValid = await bcrypt.compare(password, storedPassword)
     } else {
       // סיסמה ישנה בטקסט גלוי
-      console.log('[DEBUG] Using plain text comparison')
       isPasswordValid = password === storedPassword
 
       // אם הסיסמה נכונה, עדכן אותה להצפנה
       if (isPasswordValid) {
-        console.log('[DEBUG] Password is valid, attempting to hash and update...')
         const hashedPassword = await bcrypt.hash(password, 10)
-        console.log('[DEBUG] Hashed password created:', hashedPassword.substring(0, 20))
 
         const { error: updateError } = await supabaseServer
           .from('settings')
@@ -83,12 +76,8 @@ export async function POST(request: NextRequest) {
           .eq('key', 'super_admin_password')
 
         if (updateError) {
-          console.error('[ERROR] Failed to update password:', updateError)
-        } else {
-          console.log('[SUCCESS] Password successfully updated to hashed version')
+          console.error('Failed to update password:', updateError)
         }
-      } else {
-        console.log('[DEBUG] Password validation failed')
       }
     }
 
