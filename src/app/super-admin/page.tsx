@@ -91,22 +91,28 @@ export default function SuperAdminPage() {
 
     setLoading(true)
     try {
-      const cityData = {
-        name: newCity.name,
-        manager1_name: newCity.manager1_name,
-        manager1_phone: newCity.manager1_phone,
-        manager2_name: newCity.manager2_name || null,
-        manager2_phone: newCity.manager2_phone || null,
-        location_url: newCity.location_url || null,
-        password: newCity.password,
-        is_active: true
+      const response = await fetch('/api/super-admin/add-city', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({
+          name: newCity.name,
+          manager1_name: newCity.manager1_name,
+          manager1_phone: newCity.manager1_phone,
+          manager2_name: newCity.manager2_name || null,
+          manager2_phone: newCity.manager2_phone || null,
+          location_url: newCity.location_url || null,
+          password: newCity.password
+        }),
+      })
+
+      const data = await response.json()
+
+      if (!response.ok) {
+        alert(data.error || 'שגיאה בהוספת העיר')
+        return
       }
-
-      const { error } = await supabase
-        .from('cities')
-        .insert([cityData])
-
-      if (error) throw error
 
       alert('העיר נוספה בהצלחה!')
       setNewCity({ name: '', manager1_name: '', manager1_phone: '', manager2_name: '', manager2_phone: '', location_url: '', password: '' })
@@ -141,9 +147,13 @@ export default function SuperAdminPage() {
 
     setLoading(true)
     try {
-      const { error } = await supabase
-        .from('cities')
-        .update({
+      const response = await fetch('/api/super-admin/update-city', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({
+          cityId: editingCity.id,
           name: editingCity.name,
           manager1_name: editingCity.manager1_name,
           manager1_phone: editingCity.manager1_phone,
@@ -152,10 +162,15 @@ export default function SuperAdminPage() {
           location_url: editingCity.location_url || null,
           password: editingCity.password,
           is_active: editingCity.is_active
-        })
-        .eq('id', editingCity.id)
+        }),
+      })
 
-      if (error) throw error
+      const data = await response.json()
+
+      if (!response.ok) {
+        alert(data.error || 'שגיאה בעדכון העיר')
+        return
+      }
 
       alert('העיר עודכנה בהצלחה!')
       setEditingCity(null)
@@ -174,12 +189,23 @@ export default function SuperAdminPage() {
 
     setLoading(true)
     try {
-      const { error } = await supabase
-        .from('cities')
-        .update({ is_active: !city.is_active })
-        .eq('id', city.id)
+      const response = await fetch('/api/super-admin/toggle-city', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({
+          cityId: city.id,
+          is_active: !city.is_active
+        }),
+      })
 
-      if (error) throw error
+      const data = await response.json()
+
+      if (!response.ok) {
+        alert(data.error || `שגיאה ב${action} העיר`)
+        return
+      }
 
       alert(`העיר ${action}ה בהצלחה!`)
       fetchCities()
@@ -196,12 +222,22 @@ export default function SuperAdminPage() {
 
     setLoading(true)
     try {
-      const { error } = await supabase
-        .from('cities')
-        .delete()
-        .eq('id', city.id)
+      const response = await fetch('/api/super-admin/delete-city', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({
+          cityId: city.id
+        }),
+      })
 
-      if (error) throw error
+      const data = await response.json()
+
+      if (!response.ok) {
+        alert(data.error || 'שגיאה במחיקת העיר')
+        return
+      }
 
       alert('העיר נמחקה בהצלחה!')
       fetchCities()
