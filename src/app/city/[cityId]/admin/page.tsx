@@ -173,11 +173,6 @@ export default function CityAdminPage() {
       return
     }
 
-    if (changePasswordForm.currentPassword !== city.password) {
-      alert('הסיסמה הנוכחית שגויה')
-      return
-    }
-
     if (changePasswordForm.newPassword !== changePasswordForm.confirmPassword) {
       alert('הסיסמאות החדשות אינן תואמות')
       return
@@ -190,18 +185,29 @@ export default function CityAdminPage() {
 
     setLoading(true)
     try {
-      const { error } = await supabase
-        .from('cities')
-        .update({ password: changePasswordForm.newPassword })
-        .eq('id', cityId)
+      const response = await fetch('/api/city/change-password', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({
+          cityId: cityId,
+          currentPassword: changePasswordForm.currentPassword,
+          newPassword: changePasswordForm.newPassword,
+        }),
+      })
 
-      if (error) throw error
+      const data = await response.json()
+
+      if (!response.ok) {
+        alert(data.error || 'שגיאה בשינוי הסיסמה')
+        return
+      }
 
       alert('הסיסמה שונתה בהצלחה!')
-      // Update local city state
-      setCity({ ...city, password: changePasswordForm.newPassword })
       setChangePasswordForm({ currentPassword: '', newPassword: '', confirmPassword: '' })
       setShowChangePassword(false)
+      fetchCity()
     } catch (error) {
       console.error('Error changing password:', error)
       alert('אירעה שגיאה בשינוי הסיסמה')
@@ -401,44 +407,26 @@ export default function CityAdminPage() {
 
     setLoading(true)
     try {
-      // Prepare update data
-      const updateData = {
-        manager1_name: editCityForm.manager1_name.trim(),
-        manager1_phone: editCityForm.manager1_phone.trim(),
-        manager2_name: editCityForm.manager2_name.trim() || null,
-        manager2_phone: editCityForm.manager2_phone.trim() || null,
-        location_url: editCityForm.location_url.trim() || null
-      }
+      const response = await fetch('/api/city/update-details', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({
+          cityId: cityId,
+          manager1_name: editCityForm.manager1_name.trim(),
+          manager1_phone: editCityForm.manager1_phone.trim(),
+          manager2_name: editCityForm.manager2_name.trim() || null,
+          manager2_phone: editCityForm.manager2_phone.trim() || null,
+          location_url: editCityForm.location_url.trim() || null
+        }),
+      })
 
-      // Update city
-      const { error: updateError } = await supabase
-        .from('cities')
-        .update(updateData)
-        .eq('id', cityId)
+      const data = await response.json()
 
-      if (updateError) throw updateError
-
-      // Create notification for super admin
-      const changedFields = []
-      if (city.manager1_name !== updateData.manager1_name) changedFields.push('שם מנהל ראשון')
-      if (city.manager1_phone !== updateData.manager1_phone) changedFields.push('טלפון מנהל ראשון')
-      if (city.manager2_name !== updateData.manager2_name) changedFields.push('שם מנהל שני')
-      if (city.manager2_phone !== updateData.manager2_phone) changedFields.push('טלפון מנהל שני')
-      if (city.location_url !== updateData.location_url) changedFields.push('כתובת ארון')
-
-      if (changedFields.length > 0) {
-        const { error: notificationError } = await supabase
-          .from('admin_notifications')
-          .insert({
-            city_id: cityId,
-            city_name: city.name,
-            message: `עודכנו פרטי העיר: ${changedFields.join(', ')}`,
-            is_read: false
-          })
-
-        if (notificationError) {
-          console.error('Error creating notification:', notificationError)
-        }
+      if (!response.ok) {
+        alert(data.error || 'שגיאה בעדכון הפרטים')
+        return
       }
 
       alert('הפרטים עודכנו בהצלחה!')
