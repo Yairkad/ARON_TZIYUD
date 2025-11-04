@@ -1,16 +1,13 @@
-import Image from 'next/image'
-
 export default function Logo() {
   return (
-    <div className="flex items-center justify-center gap-2 sm:gap-3 mb-4 sm:mb-6">
+    <div className="flex flex-col items-center justify-center gap-3 sm:gap-4 mb-4 sm:mb-6">
       {/* Logo Image - שים את הקובץ בתיקייה public/logo.png */}
-      <div className="relative w-12 h-12 sm:w-16 sm:h-16 md:w-20 md:h-20">
-        <Image
+      {/* גודל התמונה: 832x290 - רוחב גדול פי 2.87 מהגובה */}
+      <div className="w-40 h-14 sm:w-52 sm:h-18 md:w-64 md:h-[88px]">
+        <img
           src="/logo.png"
           alt="ארון ציוד ידידים"
-          fill
-          className="object-contain"
-          priority
+          className="w-full h-full object-contain"
         />
       </div>
       <div className="text-center">

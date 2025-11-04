@@ -8,6 +8,7 @@ import { Input } from '@/components/ui/input'
 import { supabase } from '@/lib/supabase'
 import { City, CityForm } from '@/types'
 import Logo from '@/components/Logo'
+import { loginSuperAdmin, checkAuth, logout } from '@/lib/auth'
 
 export default function SuperAdminPage() {
   const [cities, setCities] = useState<City[]>([])
@@ -65,15 +66,36 @@ export default function SuperAdminPage() {
     }
   }
 
-  const handleLogin = (e: React.FormEvent) => {
+  const handleLogin = async (e: React.FormEvent) => {
     e.preventDefault()
-    if (password === superAdminPassword) {
-      setIsAuthenticated(true)
-      setPassword('')
-    } else {
-      alert('סיסמה שגויה')
+
+    setLoading(true)
+    try {
+      const result = await loginSuperAdmin(password)
+      if (result.success) {
+        setIsAuthenticated(true)
+        setPassword('')
+      } else {
+        alert(result.error || 'סיסמה שגויה')
+      }
+    } catch (error) {
+      console.error('Login error:', error)
+      alert('שגיאה בתהליך ההתחברות')
+    } finally {
+      setLoading(false)
     }
   }
+
+  // בדיקת אימות בטעינת הדף
+  useEffect(() => {
+    const verifyAuth = async () => {
+      const { authenticated, userType } = await checkAuth()
+      if (authenticated && userType === 'super') {
+        setIsAuthenticated(true)
+      }
+    }
+    verifyAuth()
+  }, [])
 
   const handleAddCity = async (e: React.FormEvent) => {
     e.preventDefault()
@@ -327,7 +349,10 @@ export default function SuperAdminPage() {
                 </Button>
               </Link>
               <Button
-                onClick={() => setIsAuthenticated(false)}
+                onClick={async () => {
+                  await logout()
+                  setIsAuthenticated(false)
+                }}
                 className="bg-gradient-to-r from-red-500 to-rose-500 hover:from-red-600 hover:to-rose-600 text-white font-semibold px-4 py-1.5 text-sm rounded-lg transition-all duration-200 hover:scale-105"
               >
                 🚪 יציאה

@@ -11,6 +11,7 @@ import { Equipment, BorrowHistory, City } from '@/types'
 import { ArrowRight, FileDown, Printer } from 'lucide-react'
 import * as XLSX from 'xlsx'
 import Logo from '@/components/Logo'
+import { loginCity, checkAuth, logout } from '@/lib/auth'
 
 export default function CityAdminPage() {
   const params = useParams()
@@ -129,19 +130,40 @@ export default function CityAdminPage() {
     }
   }
 
-  const handleLogin = (e: React.FormEvent) => {
+  const handleLogin = async (e: React.FormEvent) => {
     e.preventDefault()
     if (!city) {
       alert('שגיאה בטעינת נתוני העיר')
       return
     }
-    if (password === city.password) {
-      setIsAuthenticated(true)
-      setPassword('')
-    } else {
-      alert('סיסמה שגויה')
+
+    setLoading(true)
+    try {
+      const result = await loginCity(cityId, password)
+      if (result.success) {
+        setIsAuthenticated(true)
+        setPassword('')
+      } else {
+        alert(result.error || 'סיסמה שגויה')
+      }
+    } catch (error) {
+      console.error('Login error:', error)
+      alert('שגיאה בתהליך ההתחברות')
+    } finally {
+      setLoading(false)
     }
   }
+
+  // בדיקת אימות בטעינת הדף
+  useEffect(() => {
+    const verifyAuth = async () => {
+      const { authenticated, userId } = await checkAuth()
+      if (authenticated && userId === cityId) {
+        setIsAuthenticated(true)
+      }
+    }
+    verifyAuth()
+  }, [cityId])
 
   const handleChangePassword = async (e: React.FormEvent) => {
     e.preventDefault()
@@ -590,7 +612,10 @@ export default function CityAdminPage() {
                 </Button>
               </Link>
               <Button
-                onClick={() => setIsAuthenticated(false)}
+                onClick={async () => {
+                  await logout()
+                  setIsAuthenticated(false)
+                }}
                 className="bg-gradient-to-r from-red-500 to-rose-500 hover:from-red-600 hover:to-rose-600 text-white font-semibold px-6 py-2 rounded-xl transition-all duration-200 hover:scale-105"
               >
                 🚪 יציאה
