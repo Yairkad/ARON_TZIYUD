@@ -6,16 +6,18 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/com
 import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
 import { supabase } from '@/lib/supabase'
-import { City, CityForm } from '@/types'
+import { City, CityForm, AdminNotification } from '@/types'
 import Logo from '@/components/Logo'
 import { loginSuperAdmin, checkAuth, logout } from '@/lib/auth'
 
 export default function SuperAdminPage() {
   const [cities, setCities] = useState<City[]>([])
+  const [notifications, setNotifications] = useState<AdminNotification[]>([])
+  const [unreadCount, setUnreadCount] = useState(0)
   const [isAuthenticated, setIsAuthenticated] = useState(false)
   const [password, setPassword] = useState('')
   const [loading, setLoading] = useState(false)
-  const [activeTab, setActiveTab] = useState<'cities' | 'settings'>('cities')
+  const [activeTab, setActiveTab] = useState<'cities' | 'notifications' | 'settings'>('cities')
   const [showAddCity, setShowAddCity] = useState(false)
   const [newCity, setNewCity] = useState<CityForm>({ name: '', manager1_name: '', manager1_phone: '', manager2_name: '', manager2_phone: '', location_url: '', password: '' })
   const [editingCity, setEditingCity] = useState<City | null>(null)
@@ -25,6 +27,7 @@ export default function SuperAdminPage() {
   useEffect(() => {
     if (isAuthenticated) {
       fetchCities()
+      fetchNotifications()
     }
   }, [isAuthenticated])
 
@@ -38,6 +41,59 @@ export default function SuperAdminPage() {
       console.error('Error fetching cities:', error)
     } else {
       setCities(data || [])
+    }
+  }
+
+  const fetchNotifications = async () => {
+    const { data, error } = await supabase
+      .from('admin_notifications')
+      .select('*')
+      .order('created_at', { ascending: false })
+
+    if (error) {
+      console.error('Error fetching notifications:', error)
+    } else {
+      setNotifications(data || [])
+      setUnreadCount((data || []).filter(n => !n.is_read).length)
+    }
+  }
+
+  const markAsRead = async (notificationId: string) => {
+    const { error } = await supabase
+      .from('admin_notifications')
+      .update({ is_read: true })
+      .eq('id', notificationId)
+
+    if (error) {
+      console.error('Error marking notification as read:', error)
+    } else {
+      fetchNotifications()
+    }
+  }
+
+  const markAllAsRead = async () => {
+    const { error } = await supabase
+      .from('admin_notifications')
+      .update({ is_read: true })
+      .eq('is_read', false)
+
+    if (error) {
+      console.error('Error marking all as read:', error)
+    } else {
+      fetchNotifications()
+    }
+  }
+
+  const deleteNotification = async (notificationId: string) => {
+    const { error } = await supabase
+      .from('admin_notifications')
+      .delete()
+      .eq('id', notificationId)
+
+    if (error) {
+      console.error('Error deleting notification:', error)
+    } else {
+      fetchNotifications()
     }
   }
 
@@ -378,7 +434,7 @@ export default function SuperAdminPage() {
         </header>
 
         {/* Tab Navigation */}
-        <div className="grid grid-cols-1 md:grid-cols-2 gap-3 mb-8">
+        <div className="grid grid-cols-1 md:grid-cols-3 gap-3 mb-8">
           <Button
             onClick={() => setActiveTab('cities')}
             className={`py-6 rounded-xl font-semibold text-lg transition-all duration-300 ${
@@ -388,6 +444,21 @@ export default function SuperAdminPage() {
             }`}
           >
             <span className="text-2xl ml-2">🏙️</span> ניהול ערים
+          </Button>
+          <Button
+            onClick={() => setActiveTab('notifications')}
+            className={`py-6 rounded-xl font-semibold text-lg transition-all duration-300 relative ${
+              activeTab === 'notifications'
+                ? 'bg-gradient-to-r from-purple-600 to-pink-600 text-white shadow-lg shadow-purple-500/50 scale-105'
+                : 'bg-white text-gray-600 border-2 border-gray-200 hover:border-purple-300 hover:bg-purple-50'
+            }`}
+          >
+            <span className="text-2xl ml-2">🔔</span> התראות
+            {unreadCount > 0 && (
+              <span className="absolute top-2 left-2 bg-red-500 text-white text-xs font-bold rounded-full h-6 w-6 flex items-center justify-center">
+                {unreadCount}
+              </span>
+            )}
           </Button>
           <Button
             onClick={() => setActiveTab('settings')}
@@ -678,6 +749,88 @@ export default function SuperAdminPage() {
           </CardContent>
         </Card>
           </>
+        )}
+
+        {activeTab === 'notifications' && (
+          <Card className="border-0 shadow-2xl rounded-2xl overflow-hidden bg-white">
+            <CardHeader className="bg-gradient-to-r from-blue-50 to-indigo-50 pb-6">
+              <div className="flex justify-between items-center">
+                <div>
+                  <CardTitle className="text-2xl font-bold text-gray-800">🔔 התראות מערכת</CardTitle>
+                  <CardDescription className="text-gray-600">התראות על שינויים בערים במערכת</CardDescription>
+                </div>
+                {unreadCount > 0 && (
+                  <Button
+                    onClick={markAllAsRead}
+                    className="bg-gradient-to-r from-blue-600 to-indigo-600 hover:from-blue-700 hover:to-indigo-700 text-white font-semibold px-6 py-3 rounded-xl transition-all duration-200 hover:scale-105"
+                  >
+                    ✅ סמן הכל כנקרא
+                  </Button>
+                )}
+              </div>
+            </CardHeader>
+            <CardContent className="p-6">
+              {notifications.length === 0 ? (
+                <div className="text-center py-12 bg-gray-50 rounded-xl border-2 border-dashed border-gray-300">
+                  <p className="text-xl text-gray-500">📭 אין התראות</p>
+                  <p className="text-gray-400 text-sm mt-2">התראות על שינויים יופיעו כאן</p>
+                </div>
+              ) : (
+                <div className="space-y-3">
+                  {notifications.map(notification => (
+                    <div
+                      key={notification.id}
+                      className={`flex items-start justify-between p-5 rounded-xl border-2 transition-all duration-200 hover:shadow-md ${
+                        notification.is_read
+                          ? 'bg-white border-gray-200'
+                          : 'bg-gradient-to-r from-blue-50 to-indigo-50 border-blue-300'
+                      }`}
+                    >
+                      <div className="flex-1">
+                        <div className="flex items-center gap-2 mb-2">
+                          {!notification.is_read && (
+                            <span className="bg-blue-500 h-2 w-2 rounded-full"></span>
+                          )}
+                          <h3 className="font-bold text-lg text-gray-800">{notification.city_name}</h3>
+                        </div>
+                        <p className="text-gray-700 mb-2">{notification.message}</p>
+                        <p className="text-sm text-gray-500">
+                          🕐 {new Date(notification.created_at).toLocaleString('he-IL', {
+                            dateStyle: 'short',
+                            timeStyle: 'short'
+                          })}
+                        </p>
+                      </div>
+                      <div className="flex gap-2 mr-3">
+                        {!notification.is_read && (
+                          <Button
+                            onClick={() => markAsRead(notification.id)}
+                            size="icon"
+                            className="h-10 w-10 bg-blue-500 hover:bg-blue-600 rounded-full"
+                            title="סמן כנקרא"
+                          >
+                            ✓
+                          </Button>
+                        )}
+                        <Button
+                          onClick={() => {
+                            if (confirm('האם למחוק התראה זו?')) {
+                              deleteNotification(notification.id)
+                            }
+                          }}
+                          size="icon"
+                          className="h-10 w-10 bg-red-500 hover:bg-red-600 rounded-full"
+                          title="מחק התראה"
+                        >
+                          🗑️
+                        </Button>
+                      </div>
+                    </div>
+                  ))}
+                </div>
+              )}
+            </CardContent>
+          </Card>
         )}
 
         {activeTab === 'settings' && (

@@ -202,8 +202,8 @@ export default function CityPage() {
         <Logo />
 
         {/* Header */}
-        <header className="bg-white/90 backdrop-blur-lg border border-gray-200/50 rounded-2xl shadow-xl p-4 sm:p-8 mb-6 sm:mb-8 relative">
-          <Link href="/" className="absolute right-6 top-6">
+        <header className="bg-white/90 backdrop-blur-lg border border-gray-200/50 rounded-2xl shadow-xl p-4 sm:p-8 mb-6 sm:mb-8 sm:relative">
+          <Link href="/" className="hidden sm:block absolute right-6 top-6">
             <Button
               variant="ghost"
               size="icon"
@@ -213,7 +213,7 @@ export default function CityPage() {
               ↩️
             </Button>
           </Link>
-          <Link href={`/city/${cityId}/admin`} className="absolute left-6 top-6">
+          <Link href={`/city/${cityId}/admin`} className="hidden sm:block absolute left-6 top-6">
             <Button
               variant="ghost"
               size="icon"
@@ -230,6 +230,26 @@ export default function CityPage() {
             <p className="text-gray-600 text-lg">מערכת חכמה לניהול השאלות והחזרות</p>
           </div>
         </header>
+
+        {/* Mobile Navigation Buttons - Below Header */}
+        <div className="sm:hidden flex gap-3 mb-6">
+          <Link href="/" className="flex-1">
+            <Button
+              variant="outline"
+              className="w-full h-14 rounded-xl border-2 border-gray-200 hover:border-gray-300 hover:bg-gray-50 text-gray-700 font-semibold text-lg transition-all"
+            >
+              ↩️ חזור לבחירת עיר
+            </Button>
+          </Link>
+          <Link href={`/city/${cityId}/admin`} className="flex-1">
+            <Button
+              variant="outline"
+              className="w-full h-14 rounded-xl border-2 border-blue-200 hover:border-blue-300 hover:bg-blue-50 text-blue-600 font-semibold text-lg transition-all"
+            >
+              🔐 כניסת מנהל
+            </Button>
+          </Link>
+        </div>
 
         {/* Tab Navigation */}
         <div className="flex gap-3 mb-8">

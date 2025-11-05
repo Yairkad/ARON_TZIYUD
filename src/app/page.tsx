@@ -71,7 +71,7 @@ export default function HomePage() {
                 🔐
               </Button>
             </Link>
-            <p className="text-gray-600 text-base sm:text-lg">בחר את העיר שלך להתחיל</p>
+            <p className="text-gray-600 text-base sm:text-lg">בחר עיר כדי להתחיל</p>
           </div>
         </header>
 
@@ -151,20 +151,20 @@ export default function HomePage() {
                         </div>
                         <div className="flex gap-1">
                           <Button
-                            onClick={() => handleCall(city.manager1_phone)}
-                            size="icon"
-                            className="h-8 w-8 bg-green-500 hover:bg-green-600 rounded-full"
-                            title="חייג"
-                          >
-                            <Phone className="h-4 w-4" />
-                          </Button>
-                          <Button
                             onClick={() => handleWhatsApp(city.manager1_phone)}
                             size="icon"
-                            className="h-8 w-8 bg-blue-500 hover:bg-blue-600 rounded-full"
+                            className="h-8 w-8 bg-green-500 hover:bg-green-600 rounded-full"
                             title="WhatsApp"
                           >
                             <MessageCircle className="h-4 w-4" />
+                          </Button>
+                          <Button
+                            onClick={() => handleCall(city.manager1_phone)}
+                            size="icon"
+                            className="h-8 w-8 bg-blue-500 hover:bg-blue-600 rounded-full"
+                            title="חייג"
+                          >
+                            <Phone className="h-4 w-4" />
                           </Button>
                         </div>
                       </div>
@@ -177,20 +177,20 @@ export default function HomePage() {
                           </div>
                           <div className="flex gap-1">
                             <Button
-                              onClick={() => handleCall(city.manager2_phone!)}
-                              size="icon"
-                              className="h-8 w-8 bg-green-500 hover:bg-green-600 rounded-full"
-                              title="חייג"
-                            >
-                              <Phone className="h-4 w-4" />
-                            </Button>
-                            <Button
                               onClick={() => handleWhatsApp(city.manager2_phone!)}
                               size="icon"
-                              className="h-8 w-8 bg-blue-500 hover:bg-blue-600 rounded-full"
+                              className="h-8 w-8 bg-green-500 hover:bg-green-600 rounded-full"
                               title="WhatsApp"
                             >
                               <MessageCircle className="h-4 w-4" />
+                            </Button>
+                            <Button
+                              onClick={() => handleCall(city.manager2_phone!)}
+                              size="icon"
+                              className="h-8 w-8 bg-blue-500 hover:bg-blue-600 rounded-full"
+                              title="חייג"
+                            >
+                              <Phone className="h-4 w-4" />
                             </Button>
                           </div>
                         </div>
@@ -230,7 +230,7 @@ export default function HomePage() {
           <Card className="bg-gradient-to-r from-blue-50 to-indigo-50 border-2 border-blue-200">
             <CardContent className="p-6">
               <p className="text-gray-700 text-lg">
-                💡 <strong>טיפ:</strong> ניתן ליצור קשר עם מנהל היחידה לפני ההשאלה
+                💡 על מנת לבצע השאלה יש לבצע תיאום מול מנהלי היחידה
               </p>
               <p className="text-gray-600 text-sm mt-2">
                 כל עיר מנוהלת באופן עצמאי עם מלאי ציוד נפרד

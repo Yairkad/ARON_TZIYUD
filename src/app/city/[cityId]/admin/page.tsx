@@ -24,7 +24,7 @@ export default function CityAdminPage() {
   const [password, setPassword] = useState('')
   const [loading, setLoading] = useState(false)
   const [activeTab, setActiveTab] = useState<'equipment' | 'history' | 'settings'>('equipment')
-  const [newEquipment, setNewEquipment] = useState({ name: '', quantity: 0 })
+  const [newEquipment, setNewEquipment] = useState({ name: '', quantity: 1 })
   const [editingEquipment, setEditingEquipment] = useState<{ id: string; name: string; quantity: number } | null>(null)
   const [changePasswordForm, setChangePasswordForm] = useState({ currentPassword: '', newPassword: '', confirmPassword: '' })
   const [showChangePassword, setShowChangePassword] = useState(false)
@@ -236,7 +236,7 @@ export default function CityAdminPage() {
       if (error) throw error
 
       alert('הציוד נוסף בהצלחה!')
-      setNewEquipment({ name: '', quantity: 0 })
+      setNewEquipment({ name: '', quantity: 1 })
       fetchEquipment()
     } catch (error) {
       console.error('Error adding equipment:', error)
@@ -582,14 +582,14 @@ export default function CityAdminPage() {
         <Logo />
 
         <header className="bg-white/90 backdrop-blur-lg border border-gray-200/50 rounded-2xl shadow-xl p-4 sm:p-8 mb-6 sm:mb-8">
-          <div className="flex justify-between items-center">
-            <div>
+          <div className="flex flex-col sm:flex-row justify-between items-center gap-4">
+            <div className="text-center sm:text-right">
               <h1 className="text-4xl font-bold bg-gradient-to-r from-blue-600 to-indigo-600 bg-clip-text text-transparent mb-2">
                 🛡️ פאנל ניהול - {city?.name}
               </h1>
               <p className="text-gray-600 text-lg">ניהול ציוד והיסטוריית השאלות</p>
             </div>
-            <div className="flex gap-3 print:hidden">
+            <div className="hidden sm:flex gap-3 print:hidden">
               <Link href={`/city/${cityId}`}>
                 <Button
                   variant="outline"
@@ -611,6 +611,27 @@ export default function CityAdminPage() {
             </div>
           </div>
         </header>
+
+        {/* Mobile Navigation Buttons - Below Header */}
+        <div className="sm:hidden flex gap-3 mb-6 print:hidden">
+          <Link href={`/city/${cityId}`} className="flex-1">
+            <Button
+              variant="outline"
+              className="w-full h-14 rounded-xl border-2 border-blue-200 hover:border-blue-300 hover:bg-blue-50 text-blue-600 font-semibold text-lg transition-all"
+            >
+              ↩️ חזרה לממשק משתמש
+            </Button>
+          </Link>
+          <Button
+            onClick={async () => {
+              await logout()
+              setIsAuthenticated(false)
+            }}
+            className="flex-1 h-14 rounded-xl bg-gradient-to-r from-red-500 to-rose-500 hover:from-red-600 hover:to-rose-600 text-white font-semibold text-lg transition-all"
+          >
+            🚪 יציאה
+          </Button>
+        </div>
 
         {/* Export and Print Buttons */}
         <div className="mb-6 flex gap-3 justify-center print:hidden">
