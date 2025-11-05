@@ -308,6 +308,7 @@ export default function SuperAdminPage() {
       }
 
       alert(`העיר ${action}ה בהצלחה!`)
+      setCityFilter('all') // Reset filter to "all" to show the toggled city
       fetchCities()
     } catch (error) {
       console.error('Error toggling city status:', error)
