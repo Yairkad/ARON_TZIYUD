@@ -1,0 +1,1008 @@
+<!DOCTYPE html>
+<html lang="he" dir="rtl">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>🛡️ מדריך מנהל עיר - מערכת ארון ציוד ידידים</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        :root {
+            --primary: #f59e0b;
+            --secondary: #f97316;
+            --success: #10b981;
+            --warning: #f59e0b;
+            --danger: #ef4444;
+            --info: #3b82f6;
+            --dark: #1e293b;
+            --light: #f8fafc;
+            --gradient-1: linear-gradient(135deg, #f093fb 0%, #f5576c 100%);
+            --gradient-2: linear-gradient(135deg, #fa709a 0%, #fee140 100%);
+            --gradient-3: linear-gradient(135deg, #4facfe 0%, #00f2fe 100%);
+            --gradient-4: linear-gradient(135deg, #43e97b 0%, #38f9d7 100%);
+        }
+
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            line-height: 1.8;
+            color: var(--dark);
+            background: linear-gradient(135deg, #f093fb 0%, #f5576c 100%);
+            min-height: 100vh;
+            padding: 20px;
+        }
+
+        .container {
+            max-width: 1400px;
+            margin: 0 auto;
+            background: white;
+            border-radius: 30px;
+            box-shadow: 0 20px 60px rgba(0,0,0,0.3);
+            overflow: hidden;
+            animation: fadeIn 1s ease-in;
+        }
+
+        @keyframes fadeIn {
+            from { opacity: 0; transform: translateY(-30px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
+
+        header {
+            background: var(--gradient-1);
+            color: white;
+            padding: 60px 40px;
+            text-align: center;
+            position: relative;
+            overflow: hidden;
+        }
+
+        header::before {
+            content: '';
+            position: absolute;
+            top: 0; left: 0; right: 0; bottom: 0;
+            background: url('data:image/svg+xml,<svg width="100" height="100" xmlns="http://www.w3.org/2000/svg"><defs><pattern id="grid" width="40" height="40" patternUnits="userSpaceOnUse"><path d="M 40 0 L 0 0 0 40" fill="none" stroke="rgba(255,255,255,0.1)" stroke-width="1"/></pattern></defs><rect width="100" height="100" fill="url(%23grid)"/></svg>');
+            opacity: 0.3;
+        }
+
+        h1 {
+            font-size: 3.5em;
+            margin-bottom: 20px;
+            text-shadow: 2px 2px 4px rgba(0,0,0,0.3);
+            position: relative;
+            z-index: 1;
+            animation: slideDown 1s ease-out;
+        }
+
+        @keyframes slideDown {
+            from { opacity: 0; transform: translateY(-50px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
+
+        .subtitle {
+            font-size: 1.4em;
+            opacity: 0.95;
+            position: relative;
+            z-index: 1;
+            animation: slideUp 1s ease-out 0.3s backwards;
+        }
+
+        @keyframes slideUp {
+            from { opacity: 0; transform: translateY(30px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
+
+        .nav-tabs {
+            display: flex;
+            background: #f1f5f9;
+            padding: 10px;
+            gap: 10px;
+            position: sticky;
+            top: 0;
+            z-index: 100;
+            box-shadow: 0 2px 10px rgba(0,0,0,0.1);
+            flex-wrap: wrap;
+            justify-content: center;
+        }
+
+        .nav-tab {
+            padding: 15px 25px;
+            background: white;
+            border: none;
+            border-radius: 12px;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            font-size: 1em;
+            font-weight: 600;
+            color: var(--dark);
+            box-shadow: 0 2px 5px rgba(0,0,0,0.1);
+        }
+
+        .nav-tab:hover {
+            transform: translateY(-3px);
+            box-shadow: 0 5px 15px rgba(0,0,0,0.2);
+        }
+
+        .nav-tab.active {
+            background: var(--gradient-1);
+            color: white;
+            transform: scale(1.05);
+        }
+
+        .content { padding: 40px; }
+
+        .tab-content {
+            display: none;
+            animation: fadeInContent 0.5s ease-in;
+        }
+
+        .tab-content.active { display: block; }
+
+        @keyframes fadeInContent {
+            from { opacity: 0; transform: translateX(20px); }
+            to { opacity: 1; transform: translateX(0); }
+        }
+
+        .section {
+            margin-bottom: 50px;
+            padding: 30px;
+            background: linear-gradient(135deg, #f8fafc 0%, #e2e8f0 100%);
+            border-radius: 20px;
+            border-right: 5px solid var(--primary);
+            box-shadow: 0 5px 15px rgba(0,0,0,0.08);
+            transition: all 0.3s ease;
+        }
+
+        .section:hover {
+            transform: translateX(-5px);
+            box-shadow: 0 10px 25px rgba(0,0,0,0.15);
+        }
+
+        h2 {
+            font-size: 2.2em;
+            color: var(--primary);
+            margin-bottom: 25px;
+            display: flex;
+            align-items: center;
+            gap: 15px;
+        }
+
+        h3 {
+            font-size: 1.6em;
+            color: var(--secondary);
+            margin: 25px 0 15px;
+            padding-bottom: 10px;
+            border-bottom: 3px solid var(--secondary);
+            display: inline-block;
+        }
+
+        h4 {
+            font-size: 1.3em;
+            color: var(--info);
+            margin: 20px 0 10px;
+        }
+
+        .card {
+            background: white;
+            padding: 25px;
+            border-radius: 15px;
+            margin: 20px 0;
+            box-shadow: 0 5px 15px rgba(0,0,0,0.1);
+            transition: all 0.3s ease;
+            border-top: 4px solid var(--primary);
+        }
+
+        .card:hover {
+            transform: translateY(-5px);
+            box-shadow: 0 10px 30px rgba(0,0,0,0.2);
+        }
+
+        .feature-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
+            gap: 25px;
+            margin: 30px 0;
+        }
+
+        .feature-card {
+            background: white;
+            padding: 30px;
+            border-radius: 20px;
+            text-align: center;
+            transition: all 0.3s ease;
+            position: relative;
+            overflow: hidden;
+            box-shadow: 0 5px 15px rgba(0,0,0,0.1);
+        }
+
+        .feature-card::before {
+            content: '';
+            position: absolute;
+            top: 0; left: 0; right: 0;
+            height: 5px;
+            background: var(--gradient-1);
+            transform: scaleX(0);
+            transition: transform 0.3s ease;
+        }
+
+        .feature-card:hover::before { transform: scaleX(1); }
+
+        .feature-card:hover {
+            transform: translateY(-10px) scale(1.02);
+            box-shadow: 0 15px 40px rgba(0,0,0,0.2);
+        }
+
+        .feature-icon {
+            font-size: 3.5em;
+            margin-bottom: 15px;
+            display: inline-block;
+            animation: bounce 2s infinite;
+        }
+
+        @keyframes bounce {
+            0%, 100% { transform: translateY(0); }
+            50% { transform: translateY(-10px); }
+        }
+
+        .feature-card h4 {
+            color: var(--primary);
+            margin: 15px 0;
+            border: none;
+        }
+
+        .steps {
+            counter-reset: step;
+            margin: 30px 0;
+        }
+
+        .step {
+            position: relative;
+            padding: 25px 25px 25px 80px;
+            margin: 20px 0;
+            background: white;
+            border-radius: 15px;
+            box-shadow: 0 3px 10px rgba(0,0,0,0.1);
+            transition: all 0.3s ease;
+        }
+
+        .step:hover {
+            transform: translateX(-10px);
+            box-shadow: 0 8px 25px rgba(0,0,0,0.15);
+        }
+
+        .step::before {
+            counter-increment: step;
+            content: counter(step);
+            position: absolute;
+            right: 25px;
+            top: 50%;
+            transform: translateY(-50%);
+            width: 50px;
+            height: 50px;
+            background: var(--gradient-1);
+            color: white;
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 1.5em;
+            font-weight: bold;
+            box-shadow: 0 5px 15px rgba(0,0,0,0.2);
+        }
+
+        .warning-box {
+            background: linear-gradient(135deg, #fef3c7 0%, #fde68a 100%);
+            border-right: 5px solid var(--warning);
+            padding: 25px;
+            border-radius: 15px;
+            margin: 20px 0;
+            box-shadow: 0 5px 15px rgba(245, 158, 11, 0.2);
+        }
+
+        .success-box {
+            background: linear-gradient(135deg, #d1fae5 0%, #a7f3d0 100%);
+            border-right: 5px solid var(--success);
+            padding: 25px;
+            border-radius: 15px;
+            margin: 20px 0;
+            box-shadow: 0 5px 15px rgba(16, 185, 129, 0.2);
+        }
+
+        .info-box {
+            background: linear-gradient(135deg, #dbeafe 0%, #bfdbfe 100%);
+            border-right: 5px solid var(--info);
+            padding: 25px;
+            border-radius: 15px;
+            margin: 20px 0;
+            box-shadow: 0 5px 15px rgba(59, 130, 246, 0.2);
+        }
+
+        .danger-box {
+            background: linear-gradient(135deg, #fee2e2 0%, #fecaca 100%);
+            border-right: 5px solid var(--danger);
+            padding: 25px;
+            border-radius: 15px;
+            margin: 20px 0;
+            box-shadow: 0 5px 15px rgba(239, 68, 68, 0.2);
+            animation: pulse 2s infinite;
+        }
+
+        @keyframes pulse {
+            0%, 100% { box-shadow: 0 5px 15px rgba(239, 68, 68, 0.2); }
+            50% { box-shadow: 0 5px 25px rgba(239, 68, 68, 0.4); }
+        }
+
+        .badge {
+            display: inline-block;
+            padding: 8px 15px;
+            border-radius: 20px;
+            font-size: 0.9em;
+            font-weight: 600;
+            margin: 5px;
+        }
+
+        .badge-success { background: var(--success); color: white; }
+        .badge-warning { background: var(--warning); color: white; }
+        .badge-info { background: var(--info); color: white; }
+
+        .timeline {
+            position: relative;
+            padding: 30px 0;
+            margin: 40px 0;
+        }
+
+        .timeline::before {
+            content: '';
+            position: absolute;
+            right: 50px;
+            top: 0; bottom: 0;
+            width: 4px;
+            background: var(--gradient-1);
+        }
+
+        .timeline-item {
+            position: relative;
+            padding: 20px 70px 20px 20px;
+            margin: 30px 0;
+        }
+
+        .timeline-item::before {
+            content: '';
+            position: absolute;
+            right: 38px;
+            top: 50%;
+            transform: translateY(-50%);
+            width: 28px;
+            height: 28px;
+            background: white;
+            border: 5px solid var(--primary);
+            border-radius: 50%;
+            box-shadow: 0 0 0 4px white;
+        }
+
+        footer {
+            background: var(--gradient-1);
+            color: white;
+            text-align: center;
+            padding: 40px;
+            margin-top: 50px;
+        }
+
+        footer p {
+            margin: 10px 0;
+            font-size: 1.1em;
+        }
+
+        .scroll-top {
+            position: fixed;
+            bottom: 30px;
+            left: 30px;
+            width: 60px;
+            height: 60px;
+            background: var(--gradient-1);
+            color: white;
+            border-radius: 50%;
+            display: none;
+            align-items: center;
+            justify-content: center;
+            font-size: 2em;
+            cursor: pointer;
+            box-shadow: 0 5px 20px rgba(0,0,0,0.3);
+            transition: all 0.3s ease;
+            z-index: 1000;
+        }
+
+        .scroll-top:hover {
+            transform: translateY(-5px);
+            box-shadow: 0 10px 30px rgba(0,0,0,0.4);
+        }
+
+        .scroll-top.show { display: flex; }
+
+        ul, ol {
+            margin: 15px 0;
+            padding-right: 40px;
+        }
+
+        li {
+            margin: 10px 0;
+            line-height: 1.8;
+        }
+
+        strong {
+            color: var(--primary);
+            font-weight: 700;
+        }
+
+        .highlight {
+            background: linear-gradient(135deg, #fef3c7 0%, #fde68a 100%);
+            padding: 3px 8px;
+            border-radius: 5px;
+            font-weight: 600;
+        }
+
+        @media (max-width: 768px) {
+            body { padding: 5px; font-size: 14px; }
+            .container { border-radius: 15px; }
+            header { padding: 30px 20px; }
+            h1 { font-size: 1.5em; margin-bottom: 10px; }
+            .subtitle { font-size: 0.9em; }
+            .nav-tabs { flex-direction: column; padding: 5px; gap: 5px; }
+            .nav-tab { width: 100%; padding: 10px 15px; font-size: 0.85em; border-radius: 8px; }
+            .content { padding: 15px; }
+            .section { margin-bottom: 25px; padding: 15px; border-radius: 12px; border-right-width: 3px; }
+            h2 { font-size: 1.3em; margin-bottom: 15px; gap: 8px; }
+            h3 { font-size: 1.1em; margin: 15px 0 10px; padding-bottom: 5px; border-bottom-width: 2px; }
+            h4 { font-size: 1em; margin: 12px 0 8px; }
+            .card { padding: 15px; border-radius: 10px; margin: 15px 0; border-top-width: 3px; }
+            .feature-grid { grid-template-columns: 1fr; gap: 12px; margin: 20px 0; }
+            .feature-card { padding: 20px 15px; border-radius: 12px; }
+            .feature-icon { font-size: 2.5em; margin-bottom: 10px; }
+            .feature-card h4 { font-size: 0.95em; margin: 10px 0; }
+            .feature-card p, .feature-card ul { font-size: 0.85em; }
+            .step { padding: 15px 15px 15px 60px; margin: 12px 0; border-radius: 10px; }
+            .step::before { width: 35px; height: 35px; font-size: 1em; right: 12px; }
+            .step h3, .step h4 { font-size: 0.95em; }
+            .step ul, .step ol, .step p { font-size: 0.85em; }
+            .warning-box, .success-box, .info-box, .danger-box { padding: 15px; border-radius: 10px; margin: 15px 0; border-right-width: 3px; }
+            .warning-box h3, .success-box h3, .info-box h3, .danger-box h3 { font-size: 1em; margin-bottom: 10px; }
+            .warning-box ul, .success-box ul, .info-box ul, .danger-box ul,
+            .warning-box p, .success-box p, .info-box p, .danger-box p { font-size: 0.85em; }
+            .badge { padding: 5px 10px; font-size: 0.75em; margin: 3px; }
+            .timeline { padding: 20px 0; margin: 25px 0; }
+            .timeline::before { right: 30px; width: 3px; }
+            .timeline-item { padding: 15px 50px 15px 15px; margin: 20px 0; }
+            .timeline-item::before { right: 20px; width: 22px; height: 22px; border-width: 4px; }
+            .timeline-item h4 { font-size: 0.95em; }
+            .timeline-item p, .timeline-item ul { font-size: 0.85em; }
+            footer { padding: 25px 15px; margin-top: 30px; }
+            footer h2 { font-size: 1.2em; margin-bottom: 15px; }
+            footer p { font-size: 0.9em; margin: 8px 0; }
+            .scroll-top { width: 45px; height: 45px; bottom: 20px; left: 20px; font-size: 1.5em; }
+            ul, ol { margin: 10px 0; padding-right: 25px; }
+            li { margin: 6px 0; font-size: 0.9em; }
+            p { font-size: 0.9em; }
+            .highlight { padding: 2px 6px; border-radius: 4px; font-size: 0.85em; }
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <header>
+            <h1>🛡️ מדריך מנהל עיר</h1>
+            <div class="subtitle">מערכת ארון ציוד ידידים - ניהול מלא של הציוד והיסטוריה</div>
+        </header>
+
+        <nav class="nav-tabs">
+            <button class="nav-tab active" onclick="showTab('intro')">🎯 מבוא</button>
+            <button class="nav-tab" onclick="showTab('login')">🔐 כניסה</button>
+            <button class="nav-tab" onclick="showTab('equipment')">📋 ניהול ציוד</button>
+            <button class="nav-tab" onclick="showTab('history')">📊 היסטוריה</button>
+            <button class="nav-tab" onclick="showTab('settings')">⚙️ הגדרות</button>
+        </nav>
+
+        <div class="content">
+            <!-- Introduction Tab -->
+            <div id="intro" class="tab-content active">
+                <div class="section">
+                    <h2>🎯 על תפקיד מנהל העיר</h2>
+                    <p style="font-size: 1.2em; line-height: 2;">
+                        כ<strong>מנהל עיר</strong> במערכת ארון ציוד ידידים, אתה אחראי על ניהול הציוד בעיר שלך, מעקב אחר השאלות והחזרות, וניהול ההגדרות של העיר. המדריך הזה יעזור לך להבין את כל האפשרויות והכלים העומדים לרשותך.
+                    </p>
+                </div>
+
+                <div class="feature-grid">
+                    <div class="feature-card">
+                        <div class="feature-icon">📋</div>
+                        <h4>ניהול ציוד</h4>
+                        <p>הוספה, עריכה ומחיקה של פריטי ציוד במערכת</p>
+                    </div>
+                    <div class="feature-card">
+                        <div class="feature-icon">📊</div>
+                        <h4>מעקב היסטוריה</h4>
+                        <p>צפייה מלאה בהיסטוריית ההשאלות וההחזרות</p>
+                    </div>
+                    <div class="feature-card">
+                        <div class="feature-icon">📥</div>
+                        <h4>ייצוא דוחות</h4>
+                        <p>ייצוא לאקסל והדפסת דוחות מקיפים</p>
+                    </div>
+                    <div class="feature-card">
+                        <div class="feature-icon">⚙️</div>
+                        <h4>הגדרות עיר</h4>
+                        <p>ניהול פרטי מנהלים, מיקום וסיסמאות</p>
+                    </div>
+                    <div class="feature-card">
+                        <div class="feature-icon">🔍</div>
+                        <h4>סינון וחיפוש</h4>
+                        <p>סינון השאלות לפי סטטוס וחיפוש מתקדם</p>
+                    </div>
+                    <div class="feature-card">
+                        <div class="feature-icon">📋</div>
+                        <h4>העתקת ציוד</h4>
+                        <p>העתקת רשימת ציוד מערים אחרות</p>
+                    </div>
+                </div>
+
+                <div class="info-box">
+                    <h3>💡 אחריות מנהל העיר</h3>
+                    <ul>
+                        <li><strong>שמירה על מלאי מעודכן</strong> - וודא שהציוד במערכת תואם למציאות</li>
+                        <li><strong>מעקב אחר השאלות</strong> - בדוק באופן קבוע מי השאיל ציוד</li>
+                        <li><strong>יצירת קשר עם משתמשים</strong> - צור קשר במקרה של בעיות או איחורים</li>
+                        <li><strong>ניהול הגדרות</strong> - עדכן פרטים אישיים ומיקום ארון בעת הצורך</li>
+                        <li><strong>אבטחת המערכת</strong> - שמור על הסיסמה בסודיות</li>
+                    </ul>
+                </div>
+            </div>
+
+            <!-- Login Tab -->
+            <div id="login" class="tab-content">
+                <div class="section">
+                    <h2>🔐 כניסה למערכת הניהול</h2>
+                    
+                    <div class="card">
+                        <h3>דרכי כניסה</h3>
+                        <div class="steps">
+                            <div class="step">
+                                <h4>במחשב</h4>
+                                <ul>
+                                    <li>לחץ על אייקון 🔐 בפינת השמאלית העליונה של דף העיר</li>
+                                    <li>האייקון מופיע כשאתה בדף הספציפי של העיר</li>
+                                </ul>
+                            </div>
+
+                            <div class="step">
+                                <h4>במובייל</h4>
+                                <ul>
+                                    <li>גלול מטה בדף העיר</li>
+                                    <li>לחץ על כפתור <strong>"🔐 כניסת מנהל"</strong> מתחת לכותרת</li>
+                                </ul>
+                            </div>
+
+                            <div class="step">
+                                <h4>תהליך התחברות</h4>
+                                <ul>
+                                    <li>הזן את סיסמת המנהל שלך</li>
+                                    <li>לחץ על <strong>"✅ כניסה למערכת"</strong></li>
+                                    <li>אם הסיסמה נכונה - תכנס לממשק הניהול</li>
+                                    <li>אם הסיסמה שגויה - תקבל הודעת שגיאה</li>
+                                </ul>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="warning-box">
+                        <h3>⚠️ אבטחת הכניסה</h3>
+                        <ul>
+                            <li>אל תשתף את הסיסמה עם אנשים לא מורשים</li>
+                            <li>החלף סיסמה באופן תקופתי</li>
+                            <li>השתמש בסיסמה חזקה (מינימום 4 תווים)</li>
+                            <li>התנתק מהמערכת כשאתה לא משתמש</li>
+                        </ul>
+                    </div>
+
+                    <div class="info-box">
+                        <h3>📱 כניסה ממכשירים שונים</h3>
+                        <p>ניתן להיכנס למערכת הניהול מכל מכשיר:</p>
+                        <ul>
+                            <li>מחשב שולחני או נייד</li>
+                            <li>טאבלט</li>
+                            <li>טלפון נייד</li>
+                            <li>כל דפדפן מודרני</li>
+                        </ul>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Equipment Management Tab -->
+            <div id="equipment" class="tab-content">
+                <div class="section">
+                    <h2>📋 ניהול ציוד</h2>
+                    
+                    <div class="card">
+                        <h3>➕ הוספת ציוד חדש</h3>
+                        <div class="timeline">
+                            <div class="timeline-item">
+                                <h4>שדות חובה</h4>
+                                <ul>
+                                    <li><strong>שם הציוד</strong> - תאר את הציוד בצורה ברורה</li>
+                                    <li><strong>כמות התחלתית</strong> - כמה יחידות יש (ברירת מחדל: 1)</li>
+                                </ul>
+                            </div>
+                            <div class="timeline-item">
+                                <h4>תהליך ההוספה</h4>
+                                <ol>
+                                    <li>מלא את שם הציוד</li>
+                                    <li>הזן את הכמות הרצויה</li>
+                                    <li>לחץ על <strong>"הוסף ציוד"</strong></li>
+                                    <li>הציוד יתווסף מיד למערכת ויופיע ברשימה</li>
+                                </ol>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="card">
+                        <h3>✏️ עריכת ציוד קיים</h3>
+                        <div class="feature-grid">
+                            <div class="feature-card">
+                                <div class="feature-icon">📝</div>
+                                <h4>שינוי שם</h4>
+                                <p>תקן או עדכן את שם הציוד</p>
+                            </div>
+                            <div class="feature-card">
+                                <div class="feature-icon">🔢</div>
+                                <h4>עדכון כמות</h4>
+                                <p>הוסף או הורד יחידות מהמלאי</p>
+                            </div>
+                        </div>
+
+                        <div class="steps">
+                            <div class="step">
+                                <h4>תהליך העריכה</h4>
+                                <ol>
+                                    <li>לחץ על <strong>"ערוך"</strong> ליד הפריט שברצונך לערוך</li>
+                                    <li>שנה את השדות הרצויים (שם או כמות)</li>
+                                    <li>לחץ על <strong>"שמור"</strong> לאישור השינויים</li>
+                                    <li>או לחץ <strong>"ביטול"</strong> לביטול השינויים</li>
+                                </ol>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="card">
+                        <h3>🗑️ מחיקת ציוד</h3>
+                        <div class="steps">
+                            <div class="step">
+                                <h4>תהליך המחיקה</h4>
+                                <ol>
+                                    <li>לחץ על <strong>"מחק"</strong> ליד הפריט</li>
+                                    <li>אשר את המחיקה בחלון האישור</li>
+                                    <li>הציוד יימחק מהמערכת</li>
+                                </ol>
+                            </div>
+                        </div>
+
+                        <div class="danger-box">
+                            <h3>⚠️ אזהרה חמורה!</h3>
+                            <p style="font-size: 1.2em; font-weight: bold;">
+                                מחיקת ציוד תמחק גם את <strong>כל היסטוריית ההשאלות</strong> שלו!
+                            </p>
+                            <ul>
+                                <li>❌ המחיקה היא <strong>בלתי הפיכה</strong></li>
+                                <li>❌ כל ההשאלות הקשורות לציוד זה יימחקו</li>
+                                <li>❌ אין אפשרות שחזור!</li>
+                            </ul>
+                            <p style="margin-top: 15px;">
+                                <strong>המלצה:</strong> במקום למחוק, אפשר להוריד את הכמות ל-0
+                            </p>
+                        </div>
+                    </div>
+
+                    <div class="card">
+                        <h3>📋 רשימת הציוד</h3>
+                        <p>לכל פריט ברשימה מוצג:</p>
+                        <ul>
+                            <li><strong>שם הציוד</strong> - מה זה</li>
+                            <li><strong>כמות נוכחית</strong> - כמה יחידות זמינות</li>
+                            <li><strong>אינדיקטור צבעוני:</strong>
+                                <ul>
+                                    <li><span class="badge badge-success">ירוק</span> - יש במלאי (כמות > 0)</li>
+                                    <li><span class="badge" style="background: #ef4444; color: white;">אדום</span> - אזל מהמלאי (כמות = 0)</li>
+                                </ul>
+                            </li>
+                            <li><strong>כפתורי פעולה</strong> - ערוך ומחק</li>
+                        </ul>
+                    </div>
+
+                    <div class="success-box">
+                        <h3>💡 טיפים לניהול ציוד יעיל</h3>
+                        <ul>
+                            <li>שמור על שמות ברורים ועקביים לציוד</li>
+                            <li>עדכן כמויות באופן קבוע</li>
+                            <li>אל תמחק ציוד אלא אם כן באמת לא צריך אותו יותר</li>
+                            <li>השתמש בהעתקת ציוד מעיר אחרת לחסוך זמן</li>
+                        </ul>
+                    </div>
+                </div>
+            </div>
+
+            <!-- History Tab -->
+            <div id="history" class="tab-content">
+                <div class="section">
+                    <h2>📊 היסטוריית השאלות</h2>
+                    
+                    <div class="card">
+                        <h3>📋 טבלת היסטוריה מלאה</h3>
+                        <p>הטבלה כוללת את כל המידע על ההשאלות:</p>
+                        
+                        <table style="width: 100%; margin: 20px 0; border-collapse: collapse;">
+                            <thead>
+                                <tr style="background: var(--gradient-1); color: white;">
+                                    <th style="padding: 15px; text-align: center;">שדה</th>
+                                    <th style="padding: 15px; text-align: center;">תיאור</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                <tr style="border-bottom: 1px solid #e2e8f0;">
+                                    <td style="padding: 12px; font-weight: bold;">שם השואל</td>
+                                    <td style="padding: 12px;">מי השאיל את הציוד</td>
+                                </tr>
+                                <tr style="border-bottom: 1px solid #e2e8f0;">
+                                    <td style="padding: 12px; font-weight: bold;">טלפון</td>
+                                    <td style="padding: 12px;">מספר טלפון ליצירת קשר</td>
+                                </tr>
+                                <tr style="border-bottom: 1px solid #e2e8f0;">
+                                    <td style="padding: 12px; font-weight: bold;">שם הציוד</td>
+                                    <td style="padding: 12px;">איזה ציוד הושאל</td>
+                                </tr>
+                                <tr style="border-bottom: 1px solid #e2e8f0;">
+                                    <td style="padding: 12px; font-weight: bold;">תאריך השאלה</td>
+                                    <td style="padding: 12px;">מתי הושאל הציוד</td>
+                                </tr>
+                                <tr style="border-bottom: 1px solid #e2e8f0;">
+                                    <td style="padding: 12px; font-weight: bold;">תאריך החזרה</td>
+                                    <td style="padding: 12px;">מתי הוחזר (אם הוחזר)</td>
+                                </tr>
+                                <tr>
+                                    <td style="padding: 12px; font-weight: bold;">סטטוס</td>
+                                    <td style="padding: 12px;">
+                                        <span class="badge badge-warning">🟡 מושאל</span> או 
+                                        <span class="badge badge-success">🟢 הוחזר</span>
+                                    </td>
+                                </tr>
+                            </tbody>
+                        </table>
+                    </div>
+
+                    <div class="feature-grid">
+                        <div class="feature-card">
+                            <div class="feature-icon">📥</div>
+                            <h4>ייצוא לאקסל</h4>
+                            <p><strong>כפתור:</strong> "📥 ייצוא לאקסל"</p>
+                            <ul style="text-align: right;">
+                                <li>יוצר קובץ Excel (.xlsx)</li>
+                                <li>שם: השאלות_[עיר]_[תאריך]</li>
+                                <li>כולל את כל הנתונים</li>
+                                <li>מתאים להדפסה ולארכוב</li>
+                            </ul>
+                        </div>
+
+                        <div class="feature-card">
+                            <div class="feature-icon">🖨️</div>
+                            <h4>הדפסת דוח</h4>
+                            <p><strong>כפתור:</strong> "🖨️ הדפס דוח"</p>
+                            <ul style="text-align: right;">
+                                <li>פותח תצוגת הדפסה</li>
+                                <li>מסיר אלמנטים מיותרים</li>
+                                <li>מותאם לדף A4</li>
+                                <li>כולל כותרת עם שם העיר</li>
+                            </ul>
+                        </div>
+
+                        <div class="feature-card">
+                            <div class="feature-icon">🔍</div>
+                            <h4>סינון לפי סטטוס</h4>
+                            <p>בחר מה להציג:</p>
+                            <ul style="text-align: right;">
+                                <li><strong>הכל</strong> - כל ההשאלות</li>
+                                <li><strong>מושאל</strong> - רק פעילות</li>
+                                <li><strong>הוחזר</strong> - רק שהוחזרו</li>
+                            </ul>
+                        </div>
+                    </div>
+
+                    <div class="info-box">
+                        <h3>💡 שימושים להיסטוריה</h3>
+                        <ul>
+                            <li><strong>מעקב</strong> - בדוק מי מחזיק ציוד ומתי</li>
+                            <li><strong>תזכורות</strong> - צור קשר עם מי שלא החזיר</li>
+                            <li><strong>סטטיסטיקות</strong> - נתח את דפוסי השימוש</li>
+                            <li><strong>דיווח</strong> - הצג דוחות להנהלה</li>
+                            <li><strong>ארכיון</strong> - שמור רשומות לעתיד</li>
+                        </ul>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Settings Tab -->
+            <div id="settings" class="tab-content">
+                <div class="section">
+                    <h2>⚙️ הגדרות עיר</h2>
+                    
+                    <div class="card">
+                        <h3>👥 עריכת פרטי מנהלים</h3>
+                        
+                        <div class="timeline">
+                            <div class="timeline-item">
+                                <h4>מנהל ראשון (חובה)</h4>
+                                <ul>
+                                    <li><strong>שם מנהל</strong> - שם מלא</li>
+                                    <li><strong>טלפון</strong> - 10 ספרות, מתחיל ב-05</li>
+                                    <li>המנהל הראשון הוא איש הקשר העיקרי</li>
+                                </ul>
+                            </div>
+                            
+                            <div class="timeline-item">
+                                <h4>מנהל שני (אופציונלי)</h4>
+                                <ul>
+                                    <li><strong>שם מנהל</strong> - שם מלא</li>
+                                    <li><strong>טלפון</strong> - 10 ספרות, מתחיל ב-05</li>
+                                    <li>ניתן להשאיר ריק אם אין מנהל שני</li>
+                                </ul>
+                            </div>
+
+                            <div class="timeline-item">
+                                <h4>מיקום הארון</h4>
+                                <ul>
+                                    <li>הדבק קישור Google Maps</li>
+                                    <li>עוזר למשתמשים למצוא את הארון</li>
+                                    <li>אופציונלי - ניתן להשאיר ריק</li>
+                                </ul>
+                            </div>
+                        </div>
+
+                        <div class="steps">
+                            <div class="step">
+                                <h4>שמירת שינויים</h4>
+                                <ol>
+                                    <li>ערוך את הפרטים הרצויים</li>
+                                    <li>לחץ על <strong>"שמור שינויים"</strong></li>
+                                    <li>המערכת מעדכנת את הפרטים</li>
+                                    <li><strong>שולחת התראה למנהל הראשי</strong></li>
+                                    <li>תקבל הודעת אישור</li>
+                                </ol>
+                            </div>
+                        </div>
+
+                        <div class="info-box">
+                            <h3>📧 התראות אוטומטיות</h3>
+                            <p>כאשר משנים פרטי מנהלים או מיקום ארון, המערכת שולחת התראה אוטומטית למנהל הראשי על השינויים.</p>
+                        </div>
+                    </div>
+
+                    <div class="card">
+                        <h3>🔐 שינוי סיסמת מנהל</h3>
+                        
+                        <div class="steps">
+                            <div class="step">
+                                <h4>תהליך שינוי סיסמה</h4>
+                                <ol>
+                                    <li>לחץ על <strong>"שנה סיסמה"</strong></li>
+                                    <li>מלא 3 שדות:
+                                        <ul>
+                                            <li>סיסמה נוכחית (לאימות שזה באמת אתה)</li>
+                                            <li>סיסמה חדשה (לפחות 4 תווים)</li>
+                                            <li>אימות סיסמה חדשה (הקלד שוב)</li>
+                                        </ul>
+                                    </li>
+                                    <li>לחץ על <strong>"✅ שמור סיסמה חדשה"</strong></li>
+                                    <li>הסיסמה תוצפן ותישמר</li>
+                                </ol>
+                            </div>
+                        </div>
+
+                        <div class="warning-box">
+                            <h3>⚠️ חשוב לדעת על סיסמאות</h3>
+                            <ul>
+                                <li><strong>דרישות:</strong> לפחות 4 תווים</li>
+                                <li><strong>הצפנה:</strong> הסיסמה מוצפנת במערכת (bcrypt)</li>
+                                <li><strong>אין שחזור:</strong> לא ניתן לשחזר סיסמה שכוחה</li>
+                                <li><strong>המלצה:</strong> החלף סיסמה כל כמה חודשים</li>
+                                <li><strong>שמירה:</strong> שמור את הסיסמה במקום בטוח</li>
+                            </ul>
+                        </div>
+                    </div>
+
+                    <div class="card">
+                        <h3>📋 העתקת ציוד מעיר אחרת</h3>
+                        
+                        <p style="font-size: 1.1em; margin-bottom: 20px;">
+                            יכולת ייחודית שחוסכת זמן! העתק את רשימת הציוד השלמה מעיר אחרת במערכת.
+                        </p>
+
+                        <div class="steps">
+                            <div class="step">
+                                <h4>תהליך ההעתקה</h4>
+                                <ol>
+                                    <li>לחץ על <strong>"העתק ציוד מעיר אחרת"</strong></li>
+                                    <li>בחר עיר מהרשימה הנפתחת</li>
+                                    <li>המערכת:
+                                        <ul>
+                                            <li>מעתיקה את כל הציוד מהעיר שנבחרה</li>
+                                            <li>מתעלמת מפריטים שכבר קיימים אצלך</li>
+                                            <li>משאירה את הכמויות המקוריות</li>
+                                        </ul>
+                                    </li>
+                                    <li>הציוד מתווסף לרשימה שלך</li>
+                                </ol>
+                            </div>
+                        </div>
+
+                        <div class="success-box">
+                            <h3>💡 מתי להשתמש בהעתקת ציוד?</h3>
+                            <ul>
+                                <li><strong>עיר חדשה:</strong> קל להתחיל עם רשימה מוכנה</li>
+                                <li><strong>סטנדרטיזציה:</strong> אותו ציוד בכל הערים</li>
+                                <li><strong>חסכון בזמן:</strong> במקום להקליד הכל ידנית</li>
+                                <li><strong>עקביות:</strong> שמות זהים בין ערים</li>
+                            </ul>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <footer>
+            <h2 style="color: white; margin-bottom: 20px;">🎉 בהצלחה בניהול העיר!</h2>
+            <p>מדריך מנהל עיר - מערכת ארון ציוד ידידים</p>
+            <p style="margin-top: 20px; opacity: 0.9;">גרסה 2.0 - נובמבר 2024</p>
+        </footer>
+    </div>
+
+    <div class="scroll-top" onclick="scrollToTop()">↑</div>
+
+    <script>
+        function showTab(tabId) {
+            document.querySelectorAll('.tab-content').forEach(tab => tab.classList.remove('active'));
+            document.querySelectorAll('.nav-tab').forEach(tab => tab.classList.remove('active'));
+            document.getElementById(tabId).classList.add('active');
+            event.target.classList.add('active');
+            window.scrollTo({ top: 0, behavior: 'smooth' });
+        }
+
+        function scrollToTop() {
+            window.scrollTo({ top: 0, behavior: 'smooth' });
+        }
+
+        window.addEventListener('scroll', function() {
+            const scrollTop = document.querySelector('.scroll-top');
+            if (window.pageYOffset > 300) {
+                scrollTop.classList.add('show');
+            } else {
+                scrollTop.classList.remove('show');
+            }
+        });
+
+        const observer = new IntersectionObserver((entries) => {
+            entries.forEach(entry => {
+                if (entry.isIntersecting) {
+                    entry.target.style.opacity = '1';
+                    entry.target.style.transform = 'translateY(0)';
+                }
+            });
+        }, { threshold: 0.1 });
+
+        document.addEventListener('DOMContentLoaded', function() {
+            document.querySelectorAll('.section, .card, .feature-card').forEach(section => {
+                section.style.opacity = '0';
+                section.style.transform = 'translateY(30px)';
+                section.style.transition = 'all 0.6s ease';
+                observer.observe(section);
+            });
+        });
+    </script>
+</body>
+</html>

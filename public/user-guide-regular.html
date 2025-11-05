@@ -803,17 +803,420 @@
             <button class="nav-tab active" onclick="showTab('intro')">🎯 מבוא</button>
             <button class="nav-tab" onclick="showTab('home')">🏠 דף הבית</button>
             <button class="nav-tab" onclick="showTab('borrow')">📦 השאלה</button>
-            <button class="nav-tab" onclick="showTab('return')">↩ החזרה</button>
+            <button class="nav-tab" onclick="showTab('return')">🔁 החזרה</button>
             <button class="nav-tab" onclick="showTab('faq')">❓ שאלות</button>
         </nav>
 
         <div class="content">
-            <!-- Copy all tab content from user-guide-regular.html document here -->
-            <!-- For brevity, I'm truncating, but the full HTML would be included -->
+            <!-- Introduction Tab -->
+            <div id="intro" class="tab-content active">
+                <div class="section">
+                    <h2>🎯 על המערכת</h2>
+                    <p style="font-size: 1.2em; line-height: 2;">
+                        <strong>מערכת ארון ציוד ידידים</strong> היא מערכת דיגיטלית מתקדמת לניהול השאלות והחזרות ציוד בין ערים שונות. 
+                        המדריך הזה מיועד למשתמשים רגילים שרוצים לשאול או להחזיר ציוד בקלות ובמהירות.
+                    </p>
+                </div>
+
+                <div class="stats-grid">
+                    <div class="stat-card">
+                        <div class="stat-number">⚡</div>
+                        <div class="stat-label">תהליך מהיר</div>
+                    </div>
+                    <div class="stat-card">
+                        <div class="stat-number">📱</div>
+                        <div class="stat-label">פשוט לשימוש</div>
+                    </div>
+                    <div class="stat-card">
+                        <div class="stat-number">🔒</div>
+                        <div class="stat-label">מאובטח</div>
+                    </div>
+                    <div class="stat-card">
+                        <div class="stat-number">🌐</div>
+                        <div class="stat-label">מכל מקום</div>
+                    </div>
+                </div>
+
+                <div class="feature-grid">
+                    <div class="feature-card">
+                        <div class="feature-icon">📍</div>
+                        <h4>בחירת עיר</h4>
+                        <p>מצא את העיר שלך ובחר אותה מהרשימה</p>
+                    </div>
+                    <div class="feature-card">
+                        <div class="feature-icon">📦</div>
+                        <h4>השאלת ציוד</h4>
+                        <p>מלא פרטים ובחר את הציוד הרצוי</p>
+                    </div>
+                    <div class="feature-card">
+                        <div class="feature-icon">🔁</div>
+                        <h4>החזרת ציוד</h4>
+                        <p>החזר ציוד בקלות עם מספר טלפון</p>
+                    </div>
+                </div>
+
+                <div class="info-box">
+                    <h3>💡 למה המערכת נוחה?</h3>
+                    <ul>
+                        <li><strong>פשוט לשימוש</strong> - ממשק אינטואיטיבי וברור</li>
+                        <li><strong>חסכון בזמן</strong> - תהליך מהיר של דקות בודדות</li>
+                        <li><strong>מעקב קל</strong> - תמיד יודע מה השאלת</li>
+                        <li><strong>נגיש</strong> - פועל בכל דפדפן, מכל מקום</li>
+                    </ul>
+                </div>
+            </div>
+
+            <!-- Home Tab -->
+            <div id="home" class="tab-content">
+                <div class="section">
+                    <h2>🏠 דף הבית - בחירת עיר</h2>
+                    
+                    <div class="card">
+                        <h3>מה מוצג בדף הבית?</h3>
+                        <div class="steps">
+                            <div class="step">
+                                <h4>📍 רשימת ערים</h4>
+                                <ul>
+                                    <li>כל הערים הפעילות במערכת</li>
+                                    <li>שם העיר בכותרת הכרטיס</li>
+                                    <li>שמות מנהלי העיר (עד 2 מנהלים)</li>
+                                    <li>כפתור "כניסה למערכת" לכל עיר</li>
+                                </ul>
+                            </div>
+
+                            <div class="step">
+                                <h4>🔍 חיפוש עיר</h4>
+                                <ul>
+                                    <li>סרגל חיפוש בראש הדף</li>
+                                    <li>חיפוש לפי שם העיר או שם מנהל</li>
+                                    <li>הצגת מספר התוצאות שנמצאו</li>
+                                    <li>כפתור לניקוי החיפוש</li>
+                                </ul>
+                            </div>
+
+                            <div class="step">
+                                <h4>📞 יצירת קשר עם מנהלים</h4>
+                                <ul>
+                                    <li><span class="badge badge-success">WhatsApp</span> - שיחת WhatsApp ישירה</li>
+                                    <li><span class="badge badge-info">טלפון</span> - שיחה רגילה</li>
+                                    <li>מיקום הארון במפה (Google Maps)</li>
+                                </ul>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="warning-box">
+                        <h3>💡 טיפ חשוב</h3>
+                        <p style="font-size: 1.1em;">
+                            <strong>על מנת לבצע השאלה יש לבצע תיאום מול מנהלי היחידה</strong><br>
+                            השתמש בכפתורי WhatsApp או הטלפון כדי ליצור קשר ולתאם את השאלת הציוד.
+                        </p>
+                    </div>
+
+                    <div class="info-box">
+                        <h3>📍 מציאת מיקום הארון</h3>
+                        <p>לחיצה על "מיקום הארון במפה" תפתח את Google Maps:</p>
+                        <ul>
+                            <li>ניתן לראות את המיקום המדויק</li>
+                            <li>אפשר לקבל הוראות ניווט</li>
+                            <li>עוזר למצוא את הארון בקלות</li>
+                        </ul>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Borrow Tab -->
+            <div id="borrow" class="tab-content">
+                <div class="section">
+                    <h2>📦 השאלת ציוד</h2>
+                    
+                    <div class="flow-diagram">
+                        <h3 style="text-align: center; color: var(--primary); margin-bottom: 30px;">תהליך ההשאלה</h3>
+                        <div class="flow-step">1️⃣ כניסה למערכת העיר</div>
+                        <div class="flow-step">2️⃣ מילוי פרטים אישיים</div>
+                        <div class="flow-step">3️⃣ בחירת ציוד מהרשימה</div>
+                        <div class="flow-step">4️⃣ אישור ההשאלה</div>
+                        <div class="flow-step">✅ השאלה הושלמה בהצלחה!</div>
+                    </div>
+                </div>
+
+                <div class="section">
+                    <h2>שלבים מפורטים</h2>
+                    
+                    <div class="steps">
+                        <div class="step">
+                            <h3>כניסה לממשק העיר</h3>
+                            <ul>
+                                <li>בדף הבית, מצא את העיר שלך</li>
+                                <li>לחץ על כפתור <strong>"כניסה למערכת"</strong></li>
+                                <li>תועבר לדף ההשאלות של העיר</li>
+                            </ul>
+                        </div>
+
+                        <div class="step">
+                            <h3>מילוי פרטים אישיים</h3>
+                            <ul>
+                                <li><strong>שם מלא</strong> - שדה חובה לזיהוי</li>
+                                <li><strong>מספר טלפון</strong> - חובה, 10 ספרות (לדוגמה: 0501234567)</li>
+                                <li>הטלפון משמש למעקב אחר ההשאלות</li>
+                                <li>נדרש להחזרת הציוד בעתיד</li>
+                            </ul>
+                        </div>
+
+                        <div class="step">
+                            <h3>בחירת ציוד</h3>
+                            <ul>
+                                <li>סרגל חיפוש חכם - הקלד חלק משם הציוד</li>
+                                <li>רשימת אפשרויות מתעדכנת בזמן אמת</li>
+                                <li>לכל פריט מוצגת הכמות הזמינה</li>
+                                <li><span class="highlight">רק פריטים זמינים (כמות > 0) ניתנים להשאלה</span></li>
+                            </ul>
+                        </div>
+
+                        <div class="step">
+                            <h3>אישור ההשאלה</h3>
+                            <ul>
+                                <li>לחץ על כפתור <strong>"השאל ציוד עכשיו"</strong></li>
+                                <li>המערכת רושמת את ההשאלה אוטומטית</li>
+                                <li>המלאי מתעדכן בזמן אמת</li>
+                                <li>התאריך והשעה נשמרים למעקב</li>
+                                <li>תקבל הודעת אישור על ההשאלה</li>
+                            </ul>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="warning-box">
+                    <h3>⚠️ שים לב!</h3>
+                    <ul>
+                        <li>אם אין ציוד זמין, הכפתור יהיה כבוי</li>
+                        <li>לא ניתן לשאול יותר מפריט אחד בכל פעולה</li>
+                        <li>הטלפון נשמר למעקב והחזרות עתידיות</li>
+                        <li>חשוב לתאם מראש עם מנהלי היחידה</li>
+                        <li>זכור את מספר הטלפון - תצטרך אותו להחזרה</li>
+                    </ul>
+                </div>
+
+                <div class="success-box">
+                    <h3>✅ יתרונות תהליך ההשאלה</h3>
+                    <ul>
+                        <li><strong>מהיר</strong> - תהליך שלם תוך דקות ספורות</li>
+                        <li><strong>פשוט</strong> - ממשק ידידותי וברור למשתמש</li>
+                        <li><strong>מדויק</strong> - תיעוד מלא של כל פרט</li>
+                        <li><strong>בטוח</strong> - מעקב מלא אחר הציוד שהשאלת</li>
+                    </ul>
+                </div>
+
+                <div class="card">
+                    <h3>📊 תצוגת מלאי הציוד</h3>
+                    <p>בתחתית דף העיר מוצגת רשת כרטיסי המלאי:</p>
+                    <ul>
+                        <li><span class="badge badge-success">✅ ציוד זמין</span> - מוצג בירוק עם שם הציוד</li>
+                        <li><span class="badge" style="background: #6b7280; color: white;">❌ חסר זמנית</span> - מוצג באפור</li>
+                        <li>עדכון בזמן אמת אחרי כל השאלה או החזרה</li>
+                    </ul>
+                </div>
+            </div>
+
+            <!-- Return Tab -->
+            <div id="return" class="tab-content">
+                <div class="section">
+                    <h2>🔁 החזרת ציוד</h2>
+                    
+                    <div class="flow-diagram">
+                        <h3 style="text-align: center; color: var(--primary); margin-bottom: 30px;">תהליך ההחזרה</h3>
+                        <div class="flow-step">1️⃣ מעבר לטאב "החזרת ציוד"</div>
+                        <div class="flow-step">2️⃣ הזנת מספר טלפון</div>
+                        <div class="flow-step">3️⃣ צפייה ברשימת הציוד המושאל</div>
+                        <div class="flow-step">4️⃣ בחירת פריט להחזרה</div>
+                        <div class="flow-step">✅ הציוד הוחזר למלאי!</div>
+                    </div>
+                </div>
+
+                <div class="section">
+                    <h2>שלבים מפורטים</h2>
+                    
+                    <div class="steps">
+                        <div class="step">
+                            <h3>זיהוי השואל</h3>
+                            <ul>
+                                <li>הזן את מספר הטלפון (אותו מספר מההשאלה)</li>
+                                <li>לחץ על כפתור <strong>"🔍 חפש"</strong></li>
+                                <li>המערכת מחפשת את כל ההשאלות הפעילות שלך</li>
+                            </ul>
+                        </div>
+
+                        <div class="step">
+                            <h3>צפייה בציוד מושאל</h3>
+                            <p>המערכת תציג רשימה של כל הציוד שטרם הוחזר:</p>
+                            <ul>
+                                <li>שם הציוד שהשאלת</li>
+                                <li>תאריך ההשאלה</li>
+                                <li>כפתור <strong>"✅ החזר"</strong> ליד כל פריט</li>
+                            </ul>
+                        </div>
+
+                        <div class="step">
+                            <h3>ביצוע ההחזרה</h3>
+                            <ul>
+                                <li>לחץ על <strong>"✅ החזר"</strong> ליד הפריט הרצוי</li>
+                                <li>המערכת רושמת את תאריך ההחזרה</li>
+                                <li>סטטוס ההשאלה מתעדכן ל"הוחזר"</li>
+                                <li>הפריט חוזר למלאי (+1)</li>
+                                <li>תקבל הודעת אישור</li>
+                            </ul>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="info-box">
+                    <h3>📭 אם אין השאלות פעילות</h3>
+                    <p style="font-size: 1.1em;">
+                        במקרה שלא נמצאו השאלות פעילות עבור מספר הטלפון שהוזן, המערכת תציג הודעה:
+                        <strong>"לא נמצא ציוד השאלה פעיל עבור מספר טלפון זה"</strong>
+                    </p>
+                    <p>זה אומר שאחד מהדברים הבאים:</p>
+                    <ul>
+                        <li>כל הציוד שהשאלת כבר הוחזר</li>
+                        <li>מספר הטלפון שגוי או לא תואם</li>
+                        <li>לא ביצעת השאלות בעיר זו</li>
+                    </ul>
+                </div>
+
+                <div class="success-box">
+                    <h3>✅ איך אני יודע שהציוד הוחזר?</h3>
+                    <ul>
+                        <li>הפריט יעלם מרשימת ההשאלות הפעילות שלך</li>
+                        <li>תקבל הודעת אישור במערכת</li>
+                        <li>הציוד יחזור להיות זמין בכרטיס המלאי</li>
+                        <li>הכמות הזמינה תעלה ב-1</li>
+                    </ul>
+                </div>
+
+                <div class="warning-box">
+                    <h3>💡 טיפים חשובים</h3>
+                    <ul>
+                        <li>שמור את מספר הטלפון שהזנת בהשאלה</li>
+                        <li>החזר ציוד בהקדם האפשרי כדי לאפשר לאחרים להשתמש בו</li>
+                        <li>אם יש בעיה בהחזרה, פנה למנהלי העיר</li>
+                        <li>וודא שאתה מחזיר את הציוד הנכון</li>
+                    </ul>
+                </div>
+            </div>
+
+            <!-- FAQ Tab -->
+            <div id="faq" class="tab-content">
+                <div class="section">
+                    <h2>❓ שאלות נפוצות</h2>
+                    
+                    <div class="faq-item">
+                        <div class="faq-question">🤔 איך אני מתחיל להשתמש במערכת?</div>
+                        <div class="faq-answer">
+                            1. בדף הבית, חפש את העיר שלך<br>
+                            2. לחץ על "כניסה למערכת"<br>
+                            3. מלא את הפרטים שלך<br>
+                            4. בחר ציוד ולחץ "השאל ציוד עכשיו"
+                        </div>
+                    </div>
+
+                    <div class="faq-item">
+                        <div class="faq-question">📞 מה זה טלפון בן 10 ספרות?</div>
+                        <div class="faq-answer">
+                            מספר טלפון ישראלי מלא, לדוגמה: <code>0501234567</code><br>
+                            - חייב להתחיל ב-05<br>
+                            - בדיוק 10 ספרות (כולל אפס פותח)<br>
+                            - זה המספר שבו יצרו איתך קשר בעתיד
+                        </div>
+                    </div>
+
+                    <div class="faq-item">
+                        <div class="faq-question">❌ הציוד שאני רוצה לא זמין, מה עושים?</div>
+                        <div class="faq-answer">
+                            - בדוק אם הציוד מופיע באפור עם "חסר זמנית"<br>
+                            - נסה שוב מאוחר יותר כשמישהו יחזיר<br>
+                            - פנה למנהלי העיר לברר מתי הציוד יהיה זמין<br>
+                            - אולי יש ציוד דומה זמין
+                        </div>
+                    </div>
+
+                    <div class="faq-item">
+                        <div class="faq-question">🔄 איך אני יודע שהציוד הוחזר?</div>
+                        <div class="faq-answer">
+                            - הציוד יעלם מרשימת ההשאלות הפעילות שלך<br>
+                            - תקבל הודעת אישור במערכת<br>
+                            - הציוד יופיע שוב כזמין (ירוק) בכרטיס המלאי
+                        </div>
+                    </div>
+
+                    <div class="faq-item">
+                        <div class="faq-question">🔢 שכחתי את מספר הטלפון שהזנתי</div>
+                        <div class="faq-answer">
+                            - נסה את כל מספרי הטלפון שלך<br>
+                            - פנה למנהלי העיר - הם יכולים לבדוק בשמך<br>
+                            - חשוב לזכור את המספר בפעם הבאה!
+                        </div>
+                    </div>
+
+                    <div class="faq-item">
+                        <div class="faq-question">📱 המערכת עובדת באפליקציה?</div>
+                        <div class="faq-answer">
+                            לא, המערכת עובדת בדפדפן אינטרנט (Chrome, Safari, Firefox וכו'). המערכת מותאמת מצוין לנייד ועובדת בדפדפן הטלפון בלי צורך באפליקציה.
+                        </div>
+                    </div>
+
+                    <div class="faq-item">
+                        <div class="faq-question">⏱️ כמה זמן לוקח להשאיל ציוד?</div>
+                        <div class="faq-answer">
+                            התהליך כולו לוקח פחות מ-2 דקות!<br>
+                            1. מילוי פרטים - 30 שניות<br>
+                            2. בחירת ציוד - 30 שניות<br>
+                            3. אישור - 10 שניות<br>
+                            זה מהיר ופשוט!
+                        </div>
+                    </div>
+
+                    <div class="faq-item">
+                        <div class="faq-question">🗺️ איך מוצאים את מיקום הארון?</div>
+                        <div class="faq-answer">
+                            בכרטיס העיר בדף הבית יש קישור "מיקום הארון במפה".<br>
+                            לחיצה עליו תפתח Google Maps עם המיקום המדויק.<br>
+                            משם אפשר לקבל הוראות ניווט.
+                        </div>
+                    </div>
+
+                    <div class="faq-item">
+                        <div class="faq-question">🆘 נתקלתי בבעיה, מה לעשות?</div>
+                        <div class="faq-answer">
+                            1. בדוק שיש חיבור אינטרנט תקין<br>
+                            2. רענן את הדף (לחץ F5)<br>
+                            3. נסה דפדפן אחר<br>
+                            4. פנה למנהלי העיר דרך WhatsApp או טלפון
+                        </div>
+                    </div>
+
+                    <div class="faq-item">
+                        <div class="faq-question">💰 יש עלות לשימוש במערכת?</div>
+                        <div class="faq-answer">
+                            לא! המערכת חינמית לחלוטין למשתמשים.<br>
+                            אין צורך בהרשמה, תשלום או מנוי.<br>
+                            פשוט מזינים פרטים ומשאילים ציוד.
+                        </div>
+                    </div>
+                </div>
+
+                <div class="success-box">
+                    <h3>🎉 סיכום - זה קל!</h3>
+                    <p style="font-size: 1.1em;">
+                        המערכת מאפשרת לך לשאול ולהחזיר ציוד בקלות ובמהירות.<br>
+                        כל מה שצריך זה מספר טלפון ושתי דקות של זמן.<br>
+                        אם יש שאלות, מנהלי העיר תמיד זמינים לעזרה!
+                    </p>
+                </div>
+            </div>
         </div>
 
         <footer>
-            <h2 style="color: white; margin-bottom: 20px;">🎉 הצלחה בשימוש במערכת!</h2>
+            <h2 style="color: white; margin-bottom: 20px;">🎉 בהצלחה בשימוש במערכת!</h2>
             <p>מדריך משתמש רגיל - מערכת ארון ציוד ידידים</p>
             <p style="margin-top: 20px; opacity: 0.9;">גרסה 2.0 - נובמבר 2024</p>
         </footer>
@@ -827,13 +1230,13 @@
         function showTab(tabId) {
             const tabs = document.querySelectorAll('.tab-content');
             tabs.forEach(tab => tab.classList.remove('active'));
-
+            
             const navTabs = document.querySelectorAll('.nav-tab');
             navTabs.forEach(tab => tab.classList.remove('active'));
-
+            
             document.getElementById(tabId).classList.add('active');
             event.target.classList.add('active');
-
+            
             window.scrollTo({ top: 0, behavior: 'smooth' });
         }
 
