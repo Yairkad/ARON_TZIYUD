@@ -289,6 +289,8 @@ export default function SuperAdminPage() {
 
     setLoading(true)
     try {
+      console.log('Toggling city:', city.id, 'to:', !city.is_active)
+
       const response = await fetch('/api/super-admin/toggle-city', {
         method: 'POST',
         headers: {
@@ -301,6 +303,7 @@ export default function SuperAdminPage() {
       })
 
       const data = await response.json()
+      console.log('Toggle response:', data)
 
       if (!response.ok) {
         alert(data.error || `שגיאה ב${action} העיר`)
@@ -309,7 +312,8 @@ export default function SuperAdminPage() {
 
       alert(`העיר ${action}ה בהצלחה!`)
       setCityFilter('all') // Reset filter to "all" to show the toggled city
-      fetchCities()
+      await fetchCities()
+      console.log('Cities after fetch:', cities.length)
     } catch (error) {
       console.error('Error toggling city status:', error)
       alert(`אירעה שגיאה ב${action} העיר`)
