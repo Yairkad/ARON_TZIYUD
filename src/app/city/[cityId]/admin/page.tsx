@@ -1343,6 +1343,5 @@ export default function CityAdminPage() {
         )}
       </div>
     </div>
-    </>
   )
 }
