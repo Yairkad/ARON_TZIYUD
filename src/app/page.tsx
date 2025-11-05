@@ -226,7 +226,7 @@ export default function HomePage() {
         )}
 
         {/* Footer Info */}
-        <div className="mt-12 text-center">
+        <div className="mt-12 text-center space-y-4">
           <Card className="bg-gradient-to-r from-blue-50 to-indigo-50 border-2 border-blue-200">
             <CardContent className="p-6">
               <p className="text-gray-700 text-lg">
@@ -237,6 +237,21 @@ export default function HomePage() {
               </p>
             </CardContent>
           </Card>
+
+          {/* User Guide Link */}
+          <a
+            href="/user-guide-regular.html"
+            target="_blank"
+            rel="noopener noreferrer"
+            className="block"
+          >
+            <Button
+              variant="outline"
+              className="w-full sm:w-auto px-8 py-6 text-lg font-semibold border-2 border-purple-500 text-purple-600 hover:bg-purple-50 hover:border-purple-600 transition-all duration-200 rounded-xl shadow-md hover:shadow-lg"
+            >
+              📚 מדריך למשתמש - איך משאילים ציוד?
+            </Button>
+          </a>
         </div>
       </div>
     </div>

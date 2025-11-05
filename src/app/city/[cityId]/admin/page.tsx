@@ -590,6 +590,14 @@ export default function CityAdminPage() {
               <p className="text-gray-600 text-lg">ניהול ציוד והיסטוריית השאלות</p>
             </div>
             <div className="hidden sm:flex gap-3 print:hidden">
+              <a href="/user-guide-city-admin.html" target="_blank" rel="noopener noreferrer">
+                <Button
+                  variant="outline"
+                  className="border-2 border-purple-500 text-purple-600 hover:bg-purple-50 font-semibold px-6 py-2 rounded-xl transition-all duration-200 hover:scale-105"
+                >
+                  📚 מדריך מנהל
+                </Button>
+              </a>
               <Link href={`/city/${cityId}`}>
                 <Button
                   variant="outline"
@@ -613,24 +621,34 @@ export default function CityAdminPage() {
         </header>
 
         {/* Mobile Navigation Buttons - Below Header */}
-        <div className="sm:hidden flex gap-3 mb-6 print:hidden">
-          <Link href={`/city/${cityId}`} className="flex-1">
+        <div className="sm:hidden flex flex-col gap-3 mb-6 print:hidden">
+          <a href="/user-guide-city-admin.html" target="_blank" rel="noopener noreferrer" className="w-full">
             <Button
               variant="outline"
-              className="w-full h-14 rounded-xl border-2 border-blue-200 hover:border-blue-300 hover:bg-blue-50 text-blue-600 font-semibold text-lg transition-all"
+              className="w-full h-14 rounded-xl border-2 border-purple-200 hover:border-purple-300 hover:bg-purple-50 text-purple-600 font-semibold text-lg transition-all"
             >
-              ↩️ חזרה לממשק משתמש
+              📚 מדריך מנהל עיר
             </Button>
-          </Link>
-          <Button
-            onClick={async () => {
-              await logout()
-              setIsAuthenticated(false)
-            }}
-            className="flex-1 h-14 rounded-xl bg-gradient-to-r from-red-500 to-rose-500 hover:from-red-600 hover:to-rose-600 text-white font-semibold text-lg transition-all"
-          >
-            🚪 יציאה
-          </Button>
+          </a>
+          <div className="flex gap-3">
+            <Link href={`/city/${cityId}`} className="flex-1">
+              <Button
+                variant="outline"
+                className="w-full h-14 rounded-xl border-2 border-blue-200 hover:border-blue-300 hover:bg-blue-50 text-blue-600 font-semibold text-lg transition-all"
+              >
+                ↩️ חזרה
+              </Button>
+            </Link>
+            <Button
+              onClick={async () => {
+                await logout()
+                setIsAuthenticated(false)
+              }}
+              className="flex-1 h-14 rounded-xl bg-gradient-to-r from-red-500 to-rose-500 hover:from-red-600 hover:to-rose-600 text-white font-semibold text-lg transition-all"
+            >
+              🚪 יציאה
+            </Button>
+          </div>
         </div>
 
         {/* Export and Print Buttons */}
