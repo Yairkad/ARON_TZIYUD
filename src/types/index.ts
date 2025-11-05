@@ -17,6 +17,8 @@ export interface Equipment {
   name: string
   quantity: number
   city_id: string
+  equipment_status: 'working' | 'faulty'
+  is_consumable: boolean
   created_at: string
   updated_at: string
 }

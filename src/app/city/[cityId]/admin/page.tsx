@@ -8,7 +8,7 @@ import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
 import { supabase } from '@/lib/supabase'
 import { Equipment, BorrowHistory, City } from '@/types'
-import { ArrowRight, FileDown, Printer } from 'lucide-react'
+import { ArrowRight, FileDown } from 'lucide-react'
 import * as XLSX from 'xlsx'
 import Logo from '@/components/Logo'
 import { loginCity, checkAuth, logout } from '@/lib/auth'
@@ -24,8 +24,8 @@ export default function CityAdminPage() {
   const [password, setPassword] = useState('')
   const [loading, setLoading] = useState(false)
   const [activeTab, setActiveTab] = useState<'equipment' | 'history' | 'settings'>('equipment')
-  const [newEquipment, setNewEquipment] = useState({ name: '', quantity: 1 })
-  const [editingEquipment, setEditingEquipment] = useState<{ id: string; name: string; quantity: number } | null>(null)
+  const [newEquipment, setNewEquipment] = useState({ name: '', quantity: 1, equipment_status: 'working' as 'working' | 'faulty', is_consumable: false })
+  const [editingEquipment, setEditingEquipment] = useState<{ id: string; name: string; quantity: number; equipment_status: 'working' | 'faulty'; is_consumable: boolean } | null>(null)
   const [changePasswordForm, setChangePasswordForm] = useState({ currentPassword: '', newPassword: '', confirmPassword: '' })
   const [showChangePassword, setShowChangePassword] = useState(false)
   const [editCityForm, setEditCityForm] = useState({
@@ -230,13 +230,15 @@ export default function CityAdminPage() {
         .insert({
           name: newEquipment.name,
           quantity: newEquipment.quantity,
-          city_id: cityId
+          city_id: cityId,
+          equipment_status: newEquipment.equipment_status,
+          is_consumable: newEquipment.is_consumable
         })
 
       if (error) throw error
 
       alert('הציוד נוסף בהצלחה!')
-      setNewEquipment({ name: '', quantity: 1 })
+      setNewEquipment({ name: '', quantity: 1, equipment_status: 'working', is_consumable: false })
       fetchEquipment()
     } catch (error) {
       console.error('Error adding equipment:', error)
@@ -246,7 +248,7 @@ export default function CityAdminPage() {
     }
   }
 
-  const handleUpdateEquipment = async (id: string, name: string, quantity: number) => {
+  const handleUpdateEquipment = async (id: string, name: string, quantity: number, equipment_status: 'working' | 'faulty', is_consumable: boolean) => {
     if (!name || quantity < 0) {
       alert('אנא מלא שם וכמות תקינים')
       return
@@ -256,7 +258,7 @@ export default function CityAdminPage() {
     try {
       const { error } = await supabase
         .from('equipment')
-        .update({ name, quantity })
+        .update({ name, quantity, equipment_status, is_consumable })
         .eq('id', id)
 
       if (error) throw error
@@ -359,10 +361,6 @@ export default function CityAdminPage() {
   }
 
   // Print functionality
-  const handlePrint = () => {
-    window.print()
-  }
-
   const handleDeleteHistory = async (id: string) => {
     if (!confirm('האם אתה בטוח שברצונך למחוק רשומה זו?')) return
 
@@ -454,7 +452,7 @@ export default function CityAdminPage() {
       // Fetch equipment from selected city
       const { data: sourceEquipment, error: fetchError } = await supabase
         .from('equipment')
-        .select('name, quantity')
+        .select('name, quantity, equipment_status, is_consumable')
         .eq('city_id', selectedCityToCopy)
 
       if (fetchError) throw fetchError
@@ -483,6 +481,8 @@ export default function CityAdminPage() {
       const equipmentToInsert = newEquipment.map(item => ({
         name: item.name,
         quantity: item.quantity,
+        equipment_status: item.equipment_status || 'working',
+        is_consumable: item.is_consumable || false,
         city_id: cityId
       }))
 
@@ -558,24 +558,6 @@ export default function CityAdminPage() {
   }
 
   return (
-    <>
-      {/* Print Styles */}
-      <style jsx global>{`
-        @media print {
-          body {
-            print-color-adjust: exact;
-            -webkit-print-color-adjust: exact;
-          }
-          .print\\:hidden {
-            display: none !important;
-          }
-          @page {
-            margin: 1cm;
-            size: A4;
-          }
-        }
-      `}</style>
-
     <div className="min-h-screen content-wrapper">
       <div className="max-w-6xl mx-auto px-3 sm:px-4 py-4 sm:py-6">
         {/* Logo */}
@@ -589,7 +571,7 @@ export default function CityAdminPage() {
               </h1>
               <p className="text-gray-600 text-lg">ניהול ציוד והיסטוריית השאלות</p>
             </div>
-            <div className="hidden sm:flex gap-3 print:hidden">
+            <div className="hidden sm:flex gap-3">
               <a href="/user-guide-city-admin.html" target="_blank" rel="noopener noreferrer">
                 <Button
                   variant="outline"
@@ -621,7 +603,7 @@ export default function CityAdminPage() {
         </header>
 
         {/* Mobile Navigation Buttons - Below Header */}
-        <div className="sm:hidden flex flex-col gap-3 mb-6 print:hidden">
+        <div className="sm:hidden flex flex-col gap-3 mb-6">
           <a href="/user-guide-city-admin.html" target="_blank" rel="noopener noreferrer" className="w-full">
             <Button
               variant="outline"
@@ -651,8 +633,8 @@ export default function CityAdminPage() {
           </div>
         </div>
 
-        {/* Export and Print Buttons */}
-        <div className="mb-6 flex gap-3 justify-center print:hidden">
+        {/* Export Button */}
+        <div className="mb-6 flex gap-3 justify-center">
           <Button
             onClick={handleExportToExcel}
             className="bg-gradient-to-r from-green-500 to-emerald-500 hover:from-green-600 hover:to-emerald-600 text-white font-bold px-6 py-3 rounded-xl shadow-lg hover:shadow-xl transition-all duration-200 hover:scale-105"
@@ -660,16 +642,9 @@ export default function CityAdminPage() {
             <FileDown className="ml-2 h-5 w-5" />
             ייצוא לאקסל
           </Button>
-          <Button
-            onClick={handlePrint}
-            className="bg-gradient-to-r from-purple-500 to-pink-500 hover:from-purple-600 hover:to-pink-600 text-white font-bold px-6 py-3 rounded-xl shadow-lg hover:shadow-xl transition-all duration-200 hover:scale-105"
-          >
-            <Printer className="ml-2 h-5 w-5" />
-            הדפסה
-          </Button>
         </div>
 
-        <div className="grid grid-cols-1 md:grid-cols-3 gap-3 mb-8 print:hidden">
+        <div className="grid grid-cols-1 md:grid-cols-3 gap-3 mb-8">
           <Button
             onClick={() => setActiveTab('equipment')}
             className={`py-6 rounded-xl font-semibold text-lg transition-all duration-300 ${
@@ -709,27 +684,49 @@ export default function CityAdminPage() {
                 <CardTitle className="text-xl font-bold text-gray-800">➕ הוספת ציוד חדש</CardTitle>
               </CardHeader>
               <CardContent className="p-6">
-                <form onSubmit={handleAddEquipment} className="flex gap-4">
-                  <Input
-                    value={newEquipment.name}
-                    onChange={(e) => setNewEquipment({ ...newEquipment, name: e.target.value })}
-                    placeholder="שם הציוד"
-                    className="flex-1 h-12 border-2 border-gray-200 rounded-xl focus:border-blue-500 transition-colors"
-                  />
-                  <Input
-                    type="number"
-                    value={newEquipment.quantity}
-                    onChange={(e) => setNewEquipment({ ...newEquipment, quantity: parseInt(e.target.value) || 0 })}
-                    placeholder="כמות"
-                    className="w-20 h-12 border-2 border-gray-200 rounded-xl focus:border-blue-500 transition-colors"
-                  />
-                  <Button 
-                    type="submit" 
-                    disabled={loading}
-                    className="h-12 px-8 bg-gradient-to-r from-green-500 to-emerald-500 hover:from-green-600 hover:to-emerald-600 text-white font-bold rounded-xl shadow-md hover:shadow-lg transition-all"
-                  >
-                    ✅ הוסף
-                  </Button>
+                <form onSubmit={handleAddEquipment} className="flex flex-col gap-4">
+                  <div className="flex flex-col sm:flex-row gap-4">
+                    <Input
+                      value={newEquipment.name}
+                      onChange={(e) => setNewEquipment({ ...newEquipment, name: e.target.value })}
+                      placeholder="שם הציוד"
+                      className="flex-1 h-12 border-2 border-gray-200 rounded-xl focus:border-blue-500 transition-colors"
+                    />
+                    <Input
+                      type="number"
+                      value={newEquipment.quantity}
+                      onChange={(e) => setNewEquipment({ ...newEquipment, quantity: parseInt(e.target.value) || 0 })}
+                      placeholder="כמות"
+                      className="w-full sm:w-20 h-12 border-2 border-gray-200 rounded-xl focus:border-blue-500 transition-colors"
+                    />
+                    <select
+                      value={newEquipment.equipment_status}
+                      onChange={(e) => setNewEquipment({ ...newEquipment, equipment_status: e.target.value as 'working' | 'faulty' })}
+                      className="w-full sm:w-32 h-12 border-2 border-gray-200 rounded-xl focus:border-blue-500 transition-colors px-3 text-sm font-medium"
+                    >
+                      <option value="working">✅ תקין</option>
+                      <option value="faulty">⚠️ תקול</option>
+                    </select>
+                    <Button
+                      type="submit"
+                      disabled={loading}
+                      className="h-12 px-8 bg-gradient-to-r from-green-500 to-emerald-500 hover:from-green-600 hover:to-emerald-600 text-white font-bold rounded-xl shadow-md hover:shadow-lg transition-all"
+                    >
+                      ✅ הוסף
+                    </Button>
+                  </div>
+                  <div className="flex items-center gap-2 pr-2">
+                    <input
+                      type="checkbox"
+                      id="is_consumable"
+                      checked={newEquipment.is_consumable}
+                      onChange={(e) => setNewEquipment({ ...newEquipment, is_consumable: e.target.checked })}
+                      className="w-5 h-5 rounded border-2 border-gray-300 text-blue-600 focus:ring-blue-500"
+                    />
+                    <label htmlFor="is_consumable" className="text-sm font-semibold text-gray-700 cursor-pointer">
+                      🔄 ציוד מתכלה (לא דורש החזרה)
+                    </label>
+                  </div>
                 </form>
               </CardContent>
             </Card>
@@ -762,9 +759,32 @@ export default function CityAdminPage() {
                               className="w-full h-12 border-2 border-blue-300 rounded-lg text-base"
                             />
                           </div>
+                          <div>
+                            <label className="block text-xs font-semibold text-gray-600 mb-1">🔧 סטטוס</label>
+                            <select
+                              value={editingEquipment.equipment_status}
+                              onChange={(e) => setEditingEquipment({ ...editingEquipment, equipment_status: e.target.value as 'working' | 'faulty' })}
+                              className="w-full h-12 border-2 border-blue-300 rounded-lg px-3 text-base font-medium"
+                            >
+                              <option value="working">✅ תקין</option>
+                              <option value="faulty">⚠️ תקול</option>
+                            </select>
+                          </div>
+                          <div className="flex items-center gap-2 pr-2">
+                            <input
+                              type="checkbox"
+                              id={`edit_consumable_${item.id}`}
+                              checked={editingEquipment.is_consumable}
+                              onChange={(e) => setEditingEquipment({ ...editingEquipment, is_consumable: e.target.checked })}
+                              className="w-5 h-5 rounded border-2 border-blue-300 text-blue-600 focus:ring-blue-500"
+                            />
+                            <label htmlFor={`edit_consumable_${item.id}`} className="text-sm font-semibold text-gray-700 cursor-pointer">
+                              🔄 ציוד מתכלה
+                            </label>
+                          </div>
                           <div className="flex gap-2">
                             <Button
-                              onClick={() => handleUpdateEquipment(item.id, editingEquipment.name, editingEquipment.quantity)}
+                              onClick={() => handleUpdateEquipment(item.id, editingEquipment.name, editingEquipment.quantity, editingEquipment.equipment_status, editingEquipment.is_consumable)}
                               disabled={loading}
                               className="flex-1 h-12 bg-gradient-to-r from-green-500 to-emerald-500 hover:from-green-600 hover:to-emerald-600 text-white rounded-lg"
                             >
@@ -787,11 +807,19 @@ export default function CityAdminPage() {
                               <p className={`text-2xl font-bold mt-1 ${item.quantity > 0 ? 'text-green-600' : 'text-red-600'}`}>
                                 {item.quantity} יחידות
                               </p>
+                              <p className={`text-sm font-semibold mt-1 ${item.equipment_status === 'working' ? 'text-green-600' : 'text-orange-600'}`}>
+                                {item.equipment_status === 'working' ? '✅ תקין' : '⚠️ תקול'}
+                              </p>
+                              {item.is_consumable && (
+                                <p className="text-xs font-semibold mt-1 text-purple-600">
+                                  🔄 ציוד מתכלה
+                                </p>
+                              )}
                             </div>
                           </div>
                           <div className="flex gap-2">
                             <Button
-                              onClick={() => setEditingEquipment({ id: item.id, name: item.name, quantity: item.quantity })}
+                              onClick={() => setEditingEquipment({ id: item.id, name: item.name, quantity: item.quantity, equipment_status: item.equipment_status, is_consumable: item.is_consumable })}
                               className="flex-1 h-11 border-2 border-blue-500 text-blue-600 hover:bg-blue-50 bg-white rounded-lg"
                             >
                               ✏️ ערוך
@@ -817,6 +845,8 @@ export default function CityAdminPage() {
                       <tr className="bg-gradient-to-r from-blue-100 to-indigo-100 border-b-2 border-blue-200">
                         <th className="text-right p-4 font-bold text-gray-700">🎯 שם הציוד</th>
                         <th className="text-right p-4 font-bold text-gray-700">🔢 כמות</th>
+                        <th className="text-right p-4 font-bold text-gray-700">🔧 סטטוס</th>
+                        <th className="text-right p-4 font-bold text-gray-700">🔄 מתכלה</th>
                         <th className="text-right p-4 font-bold text-gray-700">⚙️ פעולות</th>
                       </tr>
                     </thead>
@@ -849,12 +879,46 @@ export default function CityAdminPage() {
                             )}
                           </td>
                           <td className="p-4">
+                            {editingEquipment?.id === item.id ? (
+                              <select
+                                value={editingEquipment.equipment_status}
+                                onChange={(e) => setEditingEquipment({ ...editingEquipment, equipment_status: e.target.value as 'working' | 'faulty' })}
+                                className="w-32 h-10 border-2 border-blue-300 rounded-lg px-2 text-sm font-medium"
+                              >
+                                <option value="working">✅ תקין</option>
+                                <option value="faulty">⚠️ תקול</option>
+                              </select>
+                            ) : (
+                              <span className={`font-semibold text-sm ${
+                                item.equipment_status === 'working' ? 'text-green-600' : 'text-orange-600'
+                              }`}>
+                                {item.equipment_status === 'working' ? '✅ תקין' : '⚠️ תקול'}
+                              </span>
+                            )}
+                          </td>
+                          <td className="p-4">
+                            {editingEquipment?.id === item.id ? (
+                              <div className="flex items-center gap-2">
+                                <input
+                                  type="checkbox"
+                                  checked={editingEquipment.is_consumable}
+                                  onChange={(e) => setEditingEquipment({ ...editingEquipment, is_consumable: e.target.checked })}
+                                  className="w-4 h-4 rounded border-2 border-blue-300 text-blue-600 focus:ring-blue-500"
+                                />
+                              </div>
+                            ) : (
+                              <span className={`text-sm font-semibold ${item.is_consumable ? 'text-purple-600' : 'text-gray-400'}`}>
+                                {item.is_consumable ? '✓ כן' : '—'}
+                              </span>
+                            )}
+                          </td>
+                          <td className="p-4">
                             <div className="flex gap-2">
                               {editingEquipment?.id === item.id ? (
                                 <>
                                   <Button
                                     size="sm"
-                                    onClick={() => handleUpdateEquipment(item.id, editingEquipment.name, editingEquipment.quantity)}
+                                    onClick={() => handleUpdateEquipment(item.id, editingEquipment.name, editingEquipment.quantity, editingEquipment.equipment_status, editingEquipment.is_consumable)}
                                     disabled={loading}
                                     className="bg-gradient-to-r from-green-500 to-emerald-500 hover:from-green-600 hover:to-emerald-600 text-white rounded-lg"
                                   >
@@ -874,7 +938,7 @@ export default function CityAdminPage() {
                                   <Button
                                     size="sm"
                                     variant="outline"
-                                    onClick={() => setEditingEquipment({ id: item.id, name: item.name, quantity: item.quantity })}
+                                    onClick={() => setEditingEquipment({ id: item.id, name: item.name, quantity: item.quantity, equipment_status: item.equipment_status, is_consumable: item.is_consumable })}
                                     className="border-2 border-blue-500 text-blue-600 hover:bg-blue-50 rounded-lg"
                                   >
                                     ✏️ ערוך

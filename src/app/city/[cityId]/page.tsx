@@ -82,14 +82,25 @@ export default function CityPage() {
 
     setLoading(true)
     const selectedEquipment = equipment.find(eq => eq.id === borrowForm.equipment_id)
-    
+
     if (!selectedEquipment || selectedEquipment.quantity <= 0) {
       alert('הציוד הנבחר אינו זמין')
       setLoading(false)
       return
     }
 
+    if (selectedEquipment.equipment_status === 'faulty') {
+      alert('לא ניתן להשאיל ציוד תקול. אנא בחר ציוד אחר או פנה למנהל העיר.')
+      setLoading(false)
+      return
+    }
+
     try {
+      // For consumable items, mark as returned immediately
+      const isConsumable = selectedEquipment.is_consumable
+      const borrowStatus = isConsumable ? 'returned' : 'borrowed'
+      const returnDate = isConsumable ? new Date().toISOString() : null
+
       // Create borrow record
       const { data: borrowData, error: borrowError } = await supabase
         .from('borrow_history')
@@ -99,7 +110,8 @@ export default function CityPage() {
           equipment_id: borrowForm.equipment_id,
           equipment_name: selectedEquipment.name,
           city_id: cityId,
-          status: 'borrowed'
+          status: borrowStatus,
+          return_date: returnDate
         })
         .select()
         .single()
@@ -114,7 +126,11 @@ export default function CityPage() {
 
       if (updateError) throw updateError
 
-      alert('הציוד הושאל בהצלחה!')
+      if (isConsumable) {
+        alert('הציוד המתכלה נרשם בהצלחה! (לא דורש החזרה)')
+      } else {
+        alert('הציוד הושאל בהצלחה!')
+      }
       setBorrowForm({ name: '', phone: '', equipment_id: '' })
       setEquipmentSearch('')
       fetchEquipment()
@@ -316,7 +332,7 @@ export default function CityPage() {
                 </div>
                 <div className="space-y-2">
                   <label className="block text-sm font-semibold text-gray-700">🎒 בחר ציוד</label>
-                  {equipment.filter(item => item.quantity > 0).length === 0 ? (
+                  {equipment.filter(item => item.quantity > 0 && item.equipment_status === 'working').length === 0 ? (
                     <div className="w-full p-4 border-2 border-orange-200 bg-gradient-to-r from-orange-50 to-amber-50 rounded-xl text-orange-700 text-center font-medium">
                       ⚠️ אין ציוד זמין כרגע. אנא נסה שוב מאוחר יותר.
                     </div>
@@ -337,6 +353,7 @@ export default function CityPage() {
                           {equipment
                             .filter(item =>
                               item.quantity > 0 &&
+                              item.equipment_status === 'working' &&
                               item.name.toLowerCase().includes(equipmentSearch.toLowerCase())
                             )
                             .map(item => (
@@ -463,17 +480,27 @@ export default function CityPage() {
                 <div
                   key={item.id}
                   className={`flex items-center justify-between p-4 rounded-xl border-2 transition-all duration-200 ${
-                    item.quantity > 0
+                    item.quantity > 0 && item.equipment_status === 'working'
                       ? 'bg-gradient-to-l from-green-50 to-white border-green-200 hover:border-green-400 hover:shadow-md'
+                      : item.equipment_status === 'faulty'
+                      ? 'bg-gradient-to-l from-orange-50 to-white border-orange-200 hover:border-orange-300'
                       : 'bg-gradient-to-l from-gray-50 to-white border-gray-200 hover:border-gray-300'
                   }`}
                 >
                   <div className="flex items-center gap-3">
-                    <span className="text-2xl">{item.quantity > 0 ? '✅' : '❌'}</span>
+                    <span className="text-2xl">
+                      {item.equipment_status === 'faulty' ? '⚠️' : item.quantity > 0 ? '✅' : '❌'}
+                    </span>
                     <div>
                       <p className="font-semibold text-gray-800">{item.name}</p>
                       {item.quantity === 0 && (
                         <p className="text-xs text-red-600 font-medium">חסר זמנית</p>
+                      )}
+                      {item.equipment_status === 'faulty' && (
+                        <p className="text-xs text-orange-600 font-medium">ציוד תקול - לא זמין להשאלה</p>
+                      )}
+                      {item.is_consumable && item.quantity > 0 && item.equipment_status === 'working' && (
+                        <p className="text-xs text-purple-600 font-medium">🔄 ציוד מתכלה - לא דורש החזרה</p>
                       )}
                     </div>
                   </div>
