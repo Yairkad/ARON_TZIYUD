@@ -10,6 +10,11 @@ const rubik = Rubik({
 export const metadata: Metadata = {
   title: "ארון ציוד ידידים",
   description: "מערכת לניהול השאלות והחזרות ציוד",
+  icons: {
+    icon: '/favicon.png',
+    shortcut: '/favicon.png',
+    apple: '/favicon.png',
+  },
 };
 
 export default function RootLayout({
