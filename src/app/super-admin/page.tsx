@@ -33,16 +33,28 @@ export default function SuperAdminPage() {
   }, [isAuthenticated])
 
   const fetchCities = async () => {
-    const { data, error } = await supabase
-      .from('cities')
-      .select('*')
-      .order('name')
+    try {
+      console.log('Fetching cities via API...')
+      const response = await fetch('/api/super-admin/cities')
+      const result = await response.json()
 
-    if (error) {
-      console.error('Error fetching cities:', error)
-    } else {
+      console.log('Fetch cities response:', {
+        success: result.success,
+        citiesLength: result.cities?.length,
+        activeCities: result.cities?.filter((c: City) => c.is_active).length,
+        inactiveCities: result.cities?.filter((c: City) => !c.is_active).length
+      })
+
+      if (!response.ok) {
+        console.error('Error fetching cities:', result.error)
+        return
+      }
+
       // Don't filter here - show all cities (active and inactive)
-      setCities(data || [])
+      setCities(result.cities || [])
+      console.log('Cities state updated:', result.cities?.length)
+    } catch (error) {
+      console.error('Error fetching cities:', error)
     }
   }
 
