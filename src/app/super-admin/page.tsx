@@ -661,7 +661,7 @@ export default function SuperAdminPage() {
                 onClick={() => setCityFilter('inactive')}
                 className={`flex-1 ${cityFilter === 'inactive' ? 'bg-gradient-to-r from-gray-600 to-slate-600 text-white' : 'bg-white text-gray-600 border-2 border-gray-200'}`}
               >
-                🔴 משובתות ({cities.filter(c => !c.is_active).length})
+                🔴 מושבתות ({cities.filter(c => !c.is_active).length})
               </Button>
             </div>
 
