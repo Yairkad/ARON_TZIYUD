@@ -45,55 +45,90 @@ export default function SuperAdminPage() {
   }
 
   const fetchNotifications = async () => {
-    const { data, error } = await supabase
-      .from('admin_notifications')
-      .select('*')
-      .order('created_at', { ascending: false })
+    try {
+      const response = await fetch('/api/super-admin/notifications')
+      const data = await response.json()
 
-    if (error) {
+      if (!response.ok) {
+        console.error('Error fetching notifications:', data.error)
+        return
+      }
+
+      setNotifications(data.notifications || [])
+      setUnreadCount((data.notifications || []).filter((n: AdminNotification) => !n.is_read).length)
+    } catch (error) {
       console.error('Error fetching notifications:', error)
-    } else {
-      setNotifications(data || [])
-      setUnreadCount((data || []).filter(n => !n.is_read).length)
     }
   }
 
   const markAsRead = async (notificationId: string) => {
-    const { error } = await supabase
-      .from('admin_notifications')
-      .update({ is_read: true })
-      .eq('id', notificationId)
+    try {
+      const response = await fetch('/api/super-admin/mark-notification-read', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({ notificationId }),
+      })
 
-    if (error) {
-      console.error('Error marking notification as read:', error)
-    } else {
+      const data = await response.json()
+
+      if (!response.ok) {
+        alert(data.error || 'שגיאה בסימון ההתראה')
+        return
+      }
+
       fetchNotifications()
+    } catch (error) {
+      console.error('Error marking notification as read:', error)
+      alert('שגיאה בסימון ההתראה')
     }
   }
 
   const markAllAsRead = async () => {
-    const { error } = await supabase
-      .from('admin_notifications')
-      .update({ is_read: true })
-      .eq('is_read', false)
+    try {
+      const response = await fetch('/api/super-admin/mark-all-notifications-read', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+      })
 
-    if (error) {
-      console.error('Error marking all as read:', error)
-    } else {
+      const data = await response.json()
+
+      if (!response.ok) {
+        alert(data.error || 'שגיאה בסימון ההתראות')
+        return
+      }
+
       fetchNotifications()
+    } catch (error) {
+      console.error('Error marking all as read:', error)
+      alert('שגיאה בסימון ההתראות')
     }
   }
 
   const deleteNotification = async (notificationId: string) => {
-    const { error } = await supabase
-      .from('admin_notifications')
-      .delete()
-      .eq('id', notificationId)
+    try {
+      const response = await fetch('/api/super-admin/delete-notification', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({ notificationId }),
+      })
 
-    if (error) {
-      console.error('Error deleting notification:', error)
-    } else {
+      const data = await response.json()
+
+      if (!response.ok) {
+        alert(data.error || 'שגיאה במחיקת ההתראה')
+        return
+      }
+
       fetchNotifications()
+    } catch (error) {
+      console.error('Error deleting notification:', error)
+      alert('שגיאה במחיקת ההתראה')
     }
   }
 
