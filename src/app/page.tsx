@@ -66,7 +66,7 @@ export default function HomePage() {
                 variant="ghost"
                 size="icon"
                 className="h-10 w-10 rounded-full hover:bg-blue-50 text-blue-600 transition-all duration-200 hover:scale-110"
-                title="כניסת מנהל על"
+                title="כניסת מנהל ראשי"
               >
                 🔐
               </Button>

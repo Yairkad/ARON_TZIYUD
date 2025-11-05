@@ -23,6 +23,7 @@ export default function SuperAdminPage() {
   const [editingCity, setEditingCity] = useState<City | null>(null)
   const [changePasswordForm, setChangePasswordForm] = useState({ currentPassword: '', newPassword: '', confirmPassword: '' })
   const [showChangePassword, setShowChangePassword] = useState(false)
+  const [cityFilter, setCityFilter] = useState<'all' | 'active' | 'inactive'>('all')
 
   useEffect(() => {
     if (isAuthenticated) {
@@ -40,9 +41,17 @@ export default function SuperAdminPage() {
     if (error) {
       console.error('Error fetching cities:', error)
     } else {
+      // Don't filter here - show all cities (active and inactive)
       setCities(data || [])
     }
   }
+
+  // Filter cities based on selected filter
+  const filteredCities = cities.filter(city => {
+    if (cityFilter === 'active') return city.is_active
+    if (cityFilter === 'inactive') return !city.is_active
+    return true // 'all'
+  })
 
   const fetchNotifications = async () => {
     try {
@@ -401,7 +410,7 @@ export default function SuperAdminPage() {
           <CardContent className="p-8">
             <form onSubmit={handleLogin} className="space-y-6">
               <div className="space-y-2">
-                <label className="block text-sm font-semibold text-gray-700">🔑 סיסמת מנהל על</label>
+                <label className="block text-sm font-semibold text-gray-700">🔑 סיסמת מנהל ראשי</label>
                 <Input
                   type="password"
                   value={password}
@@ -630,12 +639,34 @@ export default function SuperAdminPage() {
         {/* Cities List */}
         <Card className="border-0 shadow-2xl rounded-2xl overflow-hidden bg-white">
           <CardHeader className="bg-gradient-to-r from-purple-50 to-pink-50 pb-6">
-            <CardTitle className="text-2xl font-bold text-gray-800">🏙️ רשימת ערים ({cities.length})</CardTitle>
+            <CardTitle className="text-2xl font-bold text-gray-800">🏙️ רשימת ערים ({filteredCities.length})</CardTitle>
             <CardDescription className="text-gray-600">ניהול כל הערים במערכת</CardDescription>
           </CardHeader>
           <CardContent className="p-6">
+            {/* Filter Buttons */}
+            <div className="flex gap-2 mb-6">
+              <Button
+                onClick={() => setCityFilter('all')}
+                className={`flex-1 ${cityFilter === 'all' ? 'bg-gradient-to-r from-purple-600 to-pink-600 text-white' : 'bg-white text-gray-600 border-2 border-gray-200'}`}
+              >
+                הכל ({cities.length})
+              </Button>
+              <Button
+                onClick={() => setCityFilter('active')}
+                className={`flex-1 ${cityFilter === 'active' ? 'bg-gradient-to-r from-green-600 to-emerald-600 text-white' : 'bg-white text-gray-600 border-2 border-gray-200'}`}
+              >
+                🟢 פעילות ({cities.filter(c => c.is_active).length})
+              </Button>
+              <Button
+                onClick={() => setCityFilter('inactive')}
+                className={`flex-1 ${cityFilter === 'inactive' ? 'bg-gradient-to-r from-gray-600 to-slate-600 text-white' : 'bg-white text-gray-600 border-2 border-gray-200'}`}
+              >
+                🔴 משובתות ({cities.filter(c => !c.is_active).length})
+              </Button>
+            </div>
+
             <div className="space-y-4">
-              {cities.map(city => (
+              {filteredCities.map(city => (
                 <div key={city.id} className={`p-6 rounded-xl border-2 transition-all ${city.is_active ? 'bg-gradient-to-r from-blue-50 to-indigo-50 border-blue-200' : 'bg-gray-100 border-gray-300'}`}>
                   {editingCity?.id === city.id ? (
                     <form onSubmit={handleUpdateCity} className="space-y-4">
@@ -880,7 +911,7 @@ export default function SuperAdminPage() {
                   <div className="bg-gradient-to-r from-purple-50 to-pink-50 rounded-xl p-6 border-2 border-purple-200">
                     <div className="flex justify-between items-center">
                       <div>
-                        <h3 className="text-lg font-bold text-gray-800 mb-1">🔐 סיסמת מנהל על</h3>
+                        <h3 className="text-lg font-bold text-gray-800 mb-1">🔐 סיסמת מנהל ראשי</h3>
                         <p className="text-sm text-gray-600">שנה את סיסמת הכניסה לפאנל מנהל על</p>
                       </div>
                       <Button
@@ -894,7 +925,7 @@ export default function SuperAdminPage() {
                 ) : (
                   <Card className="border-2 border-purple-200 bg-gradient-to-r from-purple-50 to-pink-50">
                     <CardHeader>
-                      <CardTitle className="text-xl font-bold text-gray-800">שינוי סיסמת מנהל על</CardTitle>
+                      <CardTitle className="text-xl font-bold text-gray-800">שינוי סיסמת מנהל ראשי</CardTitle>
                       <CardDescription>הזן את הסיסמה הנוכחית והסיסמה החדשה</CardDescription>
                     </CardHeader>
                     <CardContent>
@@ -960,13 +991,10 @@ export default function SuperAdminPage() {
                   <div className="flex items-start gap-3">
                     <span className="text-2xl">⚠️</span>
                     <div>
-                      <h3 className="font-bold text-gray-800 mb-2">הערות אבטחה חשובות</h3>
+                      <h3 className="font-bold text-gray-800 mb-2">הערות חשובות</h3>
                       <ul className="text-sm text-gray-700 space-y-1">
-                        <li>• הסיסמה נשמרת במסד הנתונים Supabase</li>
                         <li>• ודא שהסיסמה מכילה לפחות 4 תווים</li>
                         <li>• שמור את הסיסמה במקום בטוח</li>
-                        <li>• שנה סיסמה באופן קבוע לאבטחה מירבית</li>
-                        <li>• סיסמה זו שולטת בגישה לכל המערכת!</li>
                       </ul>
                     </div>
                   </div>
