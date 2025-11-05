@@ -14,6 +14,8 @@ export async function POST(request: NextRequest) {
       password
     } = await request.json()
 
+    console.log('Add city request:', { name, manager1_name, manager1_phone, manager2_name, manager2_phone, location_url })
+
     if (!name || !manager1_name || !manager1_phone || !password) {
       return NextResponse.json(
         { error: 'אנא מלא את כל השדות החובה (שם עיר, מנהל ראשון, טלפון, סיסמה)' },
@@ -39,7 +41,7 @@ export async function POST(request: NextRequest) {
     const hashedPassword = await bcrypt.hash(password, 10)
 
     // הוספת העיר
-    const { error } = await supabaseServer
+    const { data, error } = await supabaseServer
       .from('cities')
       .insert([{
         name,
@@ -51,23 +53,27 @@ export async function POST(request: NextRequest) {
         password: hashedPassword,
         is_active: true
       }])
+      .select()
 
     if (error) {
-      console.error('Error adding city:', error)
+      console.error('Error adding city - Full error:', JSON.stringify(error, null, 2))
       return NextResponse.json(
-        { error: 'שגיאה בהוספת העיר' },
+        { error: `שגיאה בהוספת העיר: ${error.message || error.code || 'Unknown error'}` },
         { status: 500 }
       )
     }
 
+    console.log('City added successfully:', data)
+
     return NextResponse.json({
       success: true,
-      message: 'העיר נוספה בהצלחה'
+      message: 'העיר נוספה בהצלחה',
+      city: data
     })
   } catch (error) {
-    console.error('Add city error:', error)
+    console.error('Add city error - Full error:', error)
     return NextResponse.json(
-      { error: 'שגיאה בתהליך הוספת העיר' },
+      { error: `שגיאה בתהליך הוספת העיר: ${error instanceof Error ? error.message : 'Unknown error'}` },
       { status: 500 }
     )
   }
