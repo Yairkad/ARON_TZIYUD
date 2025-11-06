@@ -38,6 +38,7 @@ export default function CityAdminPage() {
   const [allCities, setAllCities] = useState<City[]>([])
   const [selectedCityToCopy, setSelectedCityToCopy] = useState<string>('')
   const [showCopyEquipment, setShowCopyEquipment] = useState(false)
+  const [dismissedAlerts, setDismissedAlerts] = useState<Set<string>>(new Set())
 
   useEffect(() => {
     if (cityId) {
@@ -731,49 +732,78 @@ export default function CityAdminPage() {
               </CardContent>
             </Card>
 
-            {/* Low Stock Alerts for Consumable Equipment */}
-            {equipment.filter(item => item.is_consumable && item.quantity <= 3).length > 0 && (
-              <Card className="border-0 shadow-2xl rounded-2xl overflow-hidden bg-gradient-to-r from-orange-50 to-amber-50 border-2 border-orange-300 mb-6">
-                <CardHeader className="bg-gradient-to-r from-orange-100 to-amber-100 pb-4">
-                  <CardTitle className="text-xl font-bold text-orange-800 flex items-center gap-2">
-                    <span className="text-2xl">⚠️</span>
-                    התראת מלאי נמוך - ציוד מתכלה
-                  </CardTitle>
-                  <CardDescription className="text-orange-700 font-medium">
-                    הציוד הבא נגמר או עומד להיגמר - מומלץ לחדש מלאי
-                  </CardDescription>
-                </CardHeader>
-                <CardContent className="p-4">
-                  <div className="space-y-3">
-                    {equipment
-                      .filter(item => item.is_consumable && item.quantity <= 3)
-                      .map(item => (
-                        <div
-                          key={item.id}
-                          className={`flex items-center justify-between p-4 rounded-xl border-2 transition-all ${
-                            item.quantity === 0
-                              ? 'bg-gradient-to-r from-red-100 to-rose-100 border-red-300'
-                              : 'bg-gradient-to-r from-yellow-100 to-amber-100 border-yellow-300'
-                          }`}
-                        >
-                          <div className="flex items-center gap-3">
-                            <span className="text-3xl">
-                              {item.quantity === 0 ? '🚨' : '⚠️'}
-                            </span>
-                            <div>
-                              <p className="font-bold text-lg text-gray-800">{item.name}</p>
-                              <p className={`text-sm font-semibold mt-1 ${
-                                item.quantity === 0 ? 'text-red-700' : 'text-orange-700'
-                              }`}>
-                                {item.quantity === 0
-                                  ? 'המלאי אזל! יש לחדש בהקדם'
-                                  : `נותרו רק ${item.quantity} יחידות`}
-                              </p>
-                              <p className="text-xs text-gray-600 mt-1">
-                                💡 כל לקיחה מורידה יחידה אחת בלבד מהמלאי
-                              </p>
-                            </div>
+            {/* Low Stock Alerts for Consumable Equipment - Compact Version */}
+            {equipment.filter(item => item.is_consumable && item.quantity <= 3 && !dismissedAlerts.has(item.id)).length > 0 && (
+              <div className="mb-4 p-3 bg-gradient-to-r from-orange-50 to-amber-50 border-l-4 border-orange-500 rounded-lg shadow-md">
+                <div className="flex items-start justify-between mb-2">
+                  <div className="flex items-center gap-2">
+                    <span className="text-xl">⚠️</span>
+                    <h3 className="font-bold text-orange-800 text-sm">
+                      התראות מלאי נמוך ({equipment.filter(item => item.is_consumable && item.quantity <= 3 && !dismissedAlerts.has(item.id)).length})
+                    </h3>
+                  </div>
+                  <div className="flex items-center gap-1">
+                    {city?.manager1_phone && (
+                      <a
+                        href={`https://wa.me/972${city.manager1_phone.substring(1)}?text=${encodeURIComponent(
+                          `⚠️ התראת מלאי נמוך - ${city.name}\n\n` +
+                          equipment
+                            .filter(item => item.is_consumable && item.quantity <= 3 && !dismissedAlerts.has(item.id))
+                            .map(item => `• ${item.name}: ${item.quantity === 0 ? 'אזל המלאי!' : `נותרו ${item.quantity} יחידות`}`)
+                            .join('\n') +
+                          '\n\nמומלץ לחדש מלאי בהקדם.'
+                        )}`}
+                        target="_blank"
+                        rel="noopener noreferrer"
+                        className="h-6 px-2 text-xs bg-green-500 hover:bg-green-600 text-white rounded flex items-center gap-1 transition-colors"
+                      >
+                        📱 שלח ל-WhatsApp
+                      </a>
+                    )}
+                    <Button
+                      onClick={() => {
+                        const newDismissed = new Set(dismissedAlerts)
+                        equipment
+                          .filter(item => item.is_consumable && item.quantity <= 3)
+                          .forEach(item => newDismissed.add(item.id))
+                        setDismissedAlerts(newDismissed)
+                      }}
+                      variant="ghost"
+                      size="sm"
+                      className="h-6 px-2 text-xs text-orange-700 hover:text-orange-900 hover:bg-orange-100"
+                    >
+                      ✕ סגור הכל
+                    </Button>
+                  </div>
+                </div>
+                <div className="space-y-2">
+                  {equipment
+                    .filter(item => item.is_consumable && item.quantity <= 3 && !dismissedAlerts.has(item.id))
+                    .map(item => (
+                      <div
+                        key={item.id}
+                        className={`flex items-center justify-between p-2 rounded-lg border transition-all ${
+                          item.quantity === 0
+                            ? 'bg-red-50 border-red-200'
+                            : 'bg-yellow-50 border-yellow-200'
+                        }`}
+                      >
+                        <div className="flex items-center gap-2 flex-1">
+                          <span className="text-lg">
+                            {item.quantity === 0 ? '🚨' : '⚠️'}
+                          </span>
+                          <div className="flex-1">
+                            <p className="font-semibold text-sm text-gray-800">{item.name}</p>
+                            <p className={`text-xs ${
+                              item.quantity === 0 ? 'text-red-700' : 'text-orange-700'
+                            }`}>
+                              {item.quantity === 0
+                                ? 'אזל המלאי'
+                                : `נותרו ${item.quantity} יח'`}
+                            </p>
                           </div>
+                        </div>
+                        <div className="flex items-center gap-1">
                           <Button
                             onClick={() => setEditingEquipment({
                               id: item.id,
@@ -782,21 +812,31 @@ export default function CityAdminPage() {
                               equipment_status: item.equipment_status,
                               is_consumable: item.is_consumable
                             })}
-                            className="bg-gradient-to-r from-blue-500 to-indigo-500 hover:from-blue-600 hover:to-indigo-600 text-white font-semibold px-4 py-2 rounded-xl shadow-md hover:shadow-lg transition-all"
+                            size="sm"
+                            className="h-7 px-2 text-xs bg-blue-500 hover:bg-blue-600 text-white"
                           >
-                            ➕ הוסף מלאי
+                            ➕ הוסף
+                          </Button>
+                          <Button
+                            onClick={() => {
+                              const newDismissed = new Set(dismissedAlerts)
+                              newDismissed.add(item.id)
+                              setDismissedAlerts(newDismissed)
+                            }}
+                            variant="ghost"
+                            size="sm"
+                            className="h-7 w-7 p-0 text-gray-500 hover:text-gray-700 hover:bg-gray-100"
+                          >
+                            ✕
                           </Button>
                         </div>
-                      ))}
-                  </div>
-                  <div className="mt-4 p-4 bg-white/80 rounded-xl border border-orange-200">
-                    <p className="text-sm text-gray-700">
-                      <strong>💡 טיפ:</strong> ציוד מתכלה נרשם אוטומטית כ"הוחזר" בכל לקיחה,
-                      ורק יחידה אחת מורדת מהמלאי (לא כל המארז). חשוב לעקוב אחר המלאי ולחדש אותו בזמן.
-                    </p>
-                  </div>
-                </CardContent>
-              </Card>
+                      </div>
+                    ))}
+                </div>
+                <p className="text-xs text-gray-600 mt-2 pl-7">
+                  💡 כל לקיחה מורידה יחידה בודדת מהמלאי, לא כל המארז
+                </p>
+              </div>
             )}
 
             <Card className="border-0 shadow-2xl rounded-2xl overflow-hidden bg-white/90 backdrop-blur-sm">
