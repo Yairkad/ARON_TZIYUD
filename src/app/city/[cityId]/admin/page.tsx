@@ -731,6 +731,74 @@ export default function CityAdminPage() {
               </CardContent>
             </Card>
 
+            {/* Low Stock Alerts for Consumable Equipment */}
+            {equipment.filter(item => item.is_consumable && item.quantity <= 3).length > 0 && (
+              <Card className="border-0 shadow-2xl rounded-2xl overflow-hidden bg-gradient-to-r from-orange-50 to-amber-50 border-2 border-orange-300 mb-6">
+                <CardHeader className="bg-gradient-to-r from-orange-100 to-amber-100 pb-4">
+                  <CardTitle className="text-xl font-bold text-orange-800 flex items-center gap-2">
+                    <span className="text-2xl">⚠️</span>
+                    התראת מלאי נמוך - ציוד מתכלה
+                  </CardTitle>
+                  <CardDescription className="text-orange-700 font-medium">
+                    הציוד הבא נגמר או עומד להיגמר - מומלץ לחדש מלאי
+                  </CardDescription>
+                </CardHeader>
+                <CardContent className="p-4">
+                  <div className="space-y-3">
+                    {equipment
+                      .filter(item => item.is_consumable && item.quantity <= 3)
+                      .map(item => (
+                        <div
+                          key={item.id}
+                          className={`flex items-center justify-between p-4 rounded-xl border-2 transition-all ${
+                            item.quantity === 0
+                              ? 'bg-gradient-to-r from-red-100 to-rose-100 border-red-300'
+                              : 'bg-gradient-to-r from-yellow-100 to-amber-100 border-yellow-300'
+                          }`}
+                        >
+                          <div className="flex items-center gap-3">
+                            <span className="text-3xl">
+                              {item.quantity === 0 ? '🚨' : '⚠️'}
+                            </span>
+                            <div>
+                              <p className="font-bold text-lg text-gray-800">{item.name}</p>
+                              <p className={`text-sm font-semibold mt-1 ${
+                                item.quantity === 0 ? 'text-red-700' : 'text-orange-700'
+                              }`}>
+                                {item.quantity === 0
+                                  ? 'המלאי אזל! יש לחדש בהקדם'
+                                  : `נותרו רק ${item.quantity} יחידות`}
+                              </p>
+                              <p className="text-xs text-gray-600 mt-1">
+                                💡 כל לקיחה מורידה יחידה אחת בלבד מהמלאי
+                              </p>
+                            </div>
+                          </div>
+                          <Button
+                            onClick={() => setEditingEquipment({
+                              id: item.id,
+                              name: item.name,
+                              quantity: item.quantity,
+                              equipment_status: item.equipment_status,
+                              is_consumable: item.is_consumable
+                            })}
+                            className="bg-gradient-to-r from-blue-500 to-indigo-500 hover:from-blue-600 hover:to-indigo-600 text-white font-semibold px-4 py-2 rounded-xl shadow-md hover:shadow-lg transition-all"
+                          >
+                            ➕ הוסף מלאי
+                          </Button>
+                        </div>
+                      ))}
+                  </div>
+                  <div className="mt-4 p-4 bg-white/80 rounded-xl border border-orange-200">
+                    <p className="text-sm text-gray-700">
+                      <strong>💡 טיפ:</strong> ציוד מתכלה נרשם אוטומטית כ"הוחזר" בכל לקיחה,
+                      ורק יחידה אחת מורדת מהמלאי (לא כל המארז). חשוב לעקוב אחר המלאי ולחדש אותו בזמן.
+                    </p>
+                  </div>
+                </CardContent>
+              </Card>
+            )}
+
             <Card className="border-0 shadow-2xl rounded-2xl overflow-hidden bg-white/90 backdrop-blur-sm">
               <CardHeader className="bg-gradient-to-r from-blue-50 to-indigo-50 pb-6">
                 <CardTitle className="text-2xl font-bold text-gray-800">📋 רשימת ציוד</CardTitle>

@@ -127,7 +127,7 @@ export default function CityPage() {
       if (updateError) throw updateError
 
       if (isConsumable) {
-        alert('הציוד המתכלה נרשם בהצלחה! (לא דורש החזרה)')
+        alert('יחידה אחת של הציוד המתכלה נרשמה בהצלחה! (לא דורש החזרה)\n💡 שים לב: רק יחידה בודדת הורדה מהמלאי, לא כל המארז.')
       } else {
         alert('הציוד הושאל בהצלחה!')
       }
@@ -500,7 +500,7 @@ export default function CityPage() {
                         <p className="text-xs text-orange-600 font-medium">ציוד תקול - לא זמין להשאלה</p>
                       )}
                       {item.is_consumable && item.quantity > 0 && item.equipment_status === 'working' && (
-                        <p className="text-xs text-purple-600 font-medium">🔄 ציוד מתכלה - לא דורש החזרה</p>
+                        <p className="text-xs text-purple-600 font-medium">🔄 ציוד מתכלה - לא דורש החזרה (יחידה בודדת, לא כל המארז)</p>
                       )}
                     </div>
                   </div>
