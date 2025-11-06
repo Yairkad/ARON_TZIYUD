@@ -951,11 +951,11 @@ export default function CityAdminPage() {
                   <table className="w-full border-collapse">
                     <thead>
                       <tr className="bg-gradient-to-r from-blue-100 to-indigo-100 border-b-2 border-blue-200">
-                        <th className="text-right p-4 font-bold text-gray-700">🎯 שם הציוד</th>
-                        <th className="text-right p-4 font-bold text-gray-700">🔢 כמות</th>
-                        <th className="text-right p-4 font-bold text-gray-700">🔧 סטטוס</th>
-                        <th className="text-right p-4 font-bold text-gray-700">🔄 מתכלה</th>
-                        <th className="text-right p-4 font-bold text-gray-700">⚙️ פעולות</th>
+                        <th className="text-center p-4 font-bold text-gray-700">🎯 שם הציוד</th>
+                        <th className="text-center p-4 font-bold text-gray-700">🔢 כמות</th>
+                        <th className="text-center p-4 font-bold text-gray-700">🔧 סטטוס</th>
+                        <th className="text-center p-4 font-bold text-gray-700">🔄 מתכלה</th>
+                        <th className="text-center p-4 font-bold text-gray-700">⚙️ פעולות</th>
                       </tr>
                     </thead>
                     <tbody>
