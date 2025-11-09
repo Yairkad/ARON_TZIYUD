@@ -92,22 +92,21 @@ export default function RequestsTab({ cityId, cityName, managerName }: RequestsT
 
   const handleWhatsAppShare = (request: EquipmentRequestWithItems, token: string) => {
     const url = getRequestUrl(token)
-    const phone = request.requester_phone.replace(/\D/g, '')
-    const internationalPhone = phone.startsWith('0') ? '972' + phone.slice(1) : phone
 
     const message = `שלום ${request.requester_name},
 
-הבקשה שלך לציוד מארון ${cityName} התקבלה!
+הבקשה שלך לציוד מארון ${cityName} ${getStatusText(request.status)}!
 
 📋 סטטוס: ${getStatusText(request.status)}
 📅 תאריך: ${new Date(request.created_at).toLocaleDateString('he-IL')}
-
+${request.call_id ? `🆔 מזהה קריאה: ${request.call_id}\n` : ''}
 🔗 לצפייה בפרטי הבקשה:
 ${url}
 
 תודה!`
 
-    const whatsappUrl = `https://wa.me/${internationalPhone}?text=${encodeURIComponent(message)}`
+    // Don't auto-fill phone - let manager decide who to send to
+    const whatsappUrl = `https://wa.me/?text=${encodeURIComponent(message)}`
     window.open(whatsappUrl, '_blank')
   }
 
@@ -369,7 +368,7 @@ ${url}
                   <div className="text-center mb-4">
                     <div className="text-4xl mb-2">🎉</div>
                     <h4 className="font-bold text-gray-900 text-xl mb-2">טוקן חדש נוצר בהצלחה!</h4>
-                    <p className="text-sm text-gray-600 mb-4">שלח את הקישור למבקש בWhatsApp או העתק אותו</p>
+                    <p className="text-sm text-gray-600 mb-4">העתק את הקישור או פתח WhatsApp כדי לשלוח למבקש</p>
                   </div>
 
                   <div className="bg-white border-2 border-green-300 rounded-xl p-4 mb-4">
