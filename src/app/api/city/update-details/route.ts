@@ -9,7 +9,10 @@ export async function POST(request: NextRequest) {
       manager1_phone,
       manager2_name,
       manager2_phone,
-      location_url
+      location_url,
+      request_mode,
+      cabinet_code,
+      require_call_id
     } = await request.json()
 
     if (!cityId || !manager1_name || !manager1_phone) {
@@ -49,12 +52,23 @@ export async function POST(request: NextRequest) {
     }
 
     // הכנת נתוני העדכון
-    const updateData = {
+    const updateData: any = {
       manager1_name: manager1_name.trim(),
       manager1_phone: manager1_phone.trim(),
       manager2_name: manager2_name ? manager2_name.trim() : null,
       manager2_phone: manager2_phone ? manager2_phone.trim() : null,
       location_url: location_url ? location_url.trim() : null
+    }
+
+    // הוספת שדות אופציונליים רק אם הם סופקו
+    if (request_mode !== undefined) {
+      updateData.request_mode = request_mode
+    }
+    if (cabinet_code !== undefined) {
+      updateData.cabinet_code = cabinet_code ? cabinet_code.trim() : null
+    }
+    if (require_call_id !== undefined) {
+      updateData.require_call_id = require_call_id
     }
 
     // עדכון העיר
@@ -78,6 +92,11 @@ export async function POST(request: NextRequest) {
     if (city.manager2_name !== updateData.manager2_name) changedFields.push('שם מנהל שני')
     if (city.manager2_phone !== updateData.manager2_phone) changedFields.push('טלפון מנהל שני')
     if (city.location_url !== updateData.location_url) changedFields.push('כתובת ארון')
+    if (updateData.request_mode !== undefined && city.request_mode !== updateData.request_mode) {
+      changedFields.push(updateData.request_mode === 'direct' ? 'שונה למצב השאלה ישירה' : 'שונה למצב בקשות')
+    }
+    if (updateData.cabinet_code !== undefined && city.cabinet_code !== updateData.cabinet_code) changedFields.push('קוד ארון')
+    if (updateData.require_call_id !== undefined && city.require_call_id !== updateData.require_call_id) changedFields.push('דרישת מזהה קריאה')
 
     if (changedFields.length > 0) {
       const { error: notificationError } = await supabaseServer

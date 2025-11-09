@@ -89,6 +89,7 @@ export async function POST(request: NextRequest) {
           phone: equipmentRequest.requester_phone,
           equipment_id: item.equipment_id,
           equipment_name: item.equipment.name,
+          city_id: equipmentRequest.city_id,
           status: 'borrowed',
           borrow_date: new Date().toISOString()
         })

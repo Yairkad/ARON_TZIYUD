@@ -1294,20 +1294,33 @@ export default function CityAdminPage() {
                         }
 
                         if (confirm('האם להחליף למצב השאלה ישירה? משתמשים יוכלו לשאול ציוד מיידית ללא אישור')) {
-                          const { error, data } = await supabase
-                            .from('cities')
-                            .update({ request_mode: 'direct' })
-                            .eq('id', cityId)
-                            .select()
+                          try {
+                            const response = await fetch('/api/city/update-details', {
+                              method: 'POST',
+                              headers: { 'Content-Type': 'application/json' },
+                              body: JSON.stringify({
+                                cityId,
+                                manager1_name: city?.manager1_name,
+                                manager1_phone: city?.manager1_phone,
+                                manager2_name: city?.manager2_name,
+                                manager2_phone: city?.manager2_phone,
+                                location_url: city?.location_url,
+                                request_mode: 'direct'
+                              })
+                            })
 
-                          if (error) {
-                            console.error('Update error:', error)
-                            alert('שגיאה בעדכון: ' + error.message)
-                          } else {
-                            console.log('Updated successfully:', data)
+                            const data = await response.json()
+
+                            if (!response.ok) {
+                              throw new Error(data.error || 'שגיאה בעדכון')
+                            }
+
                             alert('✅ המצב עודכן להשאלה ישירה')
                             await fetchCity()
                             window.location.reload()
+                          } catch (error: any) {
+                            console.error('Update error:', error)
+                            alert('שגיאה בעדכון: ' + error.message)
                           }
                         }
                       }}
@@ -1336,20 +1349,33 @@ export default function CityAdminPage() {
                         }
 
                         if (confirm('האם להחליף למצב בקשות? משתמשים ישלחו בקשות שידרשו אישור מנהל')) {
-                          const { error, data } = await supabase
-                            .from('cities')
-                            .update({ request_mode: 'request' })
-                            .eq('id', cityId)
-                            .select()
+                          try {
+                            const response = await fetch('/api/city/update-details', {
+                              method: 'POST',
+                              headers: { 'Content-Type': 'application/json' },
+                              body: JSON.stringify({
+                                cityId,
+                                manager1_name: city?.manager1_name,
+                                manager1_phone: city?.manager1_phone,
+                                manager2_name: city?.manager2_name,
+                                manager2_phone: city?.manager2_phone,
+                                location_url: city?.location_url,
+                                request_mode: 'request'
+                              })
+                            })
 
-                          if (error) {
-                            console.error('Update error:', error)
-                            alert('שגיאה בעדכון: ' + error.message)
-                          } else {
-                            console.log('Updated successfully:', data)
+                            const data = await response.json()
+
+                            if (!response.ok) {
+                              throw new Error(data.error || 'שגיאה בעדכון')
+                            }
+
                             alert('✅ המצב עודכן למצב בקשות')
                             await fetchCity()
                             window.location.reload()
+                          } catch (error: any) {
+                            console.error('Update error:', error)
+                            alert('שגיאה בעדכון: ' + error.message)
                           }
                         }
                       }}
@@ -1382,13 +1408,36 @@ export default function CityAdminPage() {
                         <Input
                           type="text"
                           value={city.cabinet_code || ''}
-                          onChange={async (e) => {
-                            const { error } = await supabase
-                              .from('cities')
-                              .update({ cabinet_code: e.target.value || null })
-                              .eq('id', cityId)
+                          onChange={(e) => {
+                            // Update local state immediately
+                            setCity({ ...city, cabinet_code: e.target.value })
+                          }}
+                          onBlur={async (e) => {
+                            // Save to server when user finishes editing
+                            try {
+                              const response = await fetch('/api/city/update-details', {
+                                method: 'POST',
+                                headers: { 'Content-Type': 'application/json' },
+                                body: JSON.stringify({
+                                  cityId,
+                                  manager1_name: city?.manager1_name,
+                                  manager1_phone: city?.manager1_phone,
+                                  manager2_name: city?.manager2_name,
+                                  manager2_phone: city?.manager2_phone,
+                                  location_url: city?.location_url,
+                                  cabinet_code: e.target.value || null
+                                })
+                              })
 
-                            if (!error) fetchCity()
+                              if (!response.ok) {
+                                alert('שגיאה בעדכון קוד ארון')
+                                fetchCity() // Revert to server value
+                              }
+                            } catch (error) {
+                              console.error('Error updating cabinet code:', error)
+                              alert('שגיאה בעדכון קוד ארון')
+                              fetchCity() // Revert to server value
+                            }
                           }}
                           placeholder="לדוגמה: 1234"
                           className="h-12 border-2 border-gray-200 rounded-xl"
@@ -1404,14 +1453,36 @@ export default function CityAdminPage() {
                         <button
                           onClick={async () => {
                             const newValue = !city.require_call_id
-                            const { error } = await supabase
-                              .from('cities')
-                              .update({ require_call_id: newValue })
-                              .eq('id', cityId)
 
-                            if (!error) {
-                              alert(newValue ? '✅ מזהה קריאה חובה' : '❌ מזהה קריאה אופציונלי')
-                              fetchCity()
+                            // Update local state immediately for instant feedback
+                            setCity({ ...city, require_call_id: newValue })
+
+                            try {
+                              const response = await fetch('/api/city/update-details', {
+                                method: 'POST',
+                                headers: { 'Content-Type': 'application/json' },
+                                body: JSON.stringify({
+                                  cityId,
+                                  manager1_name: city?.manager1_name,
+                                  manager1_phone: city?.manager1_phone,
+                                  manager2_name: city?.manager2_name,
+                                  manager2_phone: city?.manager2_phone,
+                                  location_url: city?.location_url,
+                                  require_call_id: newValue
+                                })
+                              })
+
+                              if (response.ok) {
+                                alert(newValue ? '✅ מזהה קריאה חובה' : '❌ מזהה קריאה אופציונלי')
+                              } else {
+                                // Revert on error
+                                alert('שגיאה בעדכון')
+                                fetchCity()
+                              }
+                            } catch (error) {
+                              console.error('Error updating require_call_id:', error)
+                              alert('שגיאה בעדכון')
+                              fetchCity() // Revert to server value
                             }
                           }}
                           className={`px-6 py-2 rounded-xl font-semibold transition-all ${
