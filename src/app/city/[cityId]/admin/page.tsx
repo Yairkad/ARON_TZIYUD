@@ -12,6 +12,7 @@ import { ArrowRight, FileDown } from 'lucide-react'
 import * as XLSX from 'xlsx'
 import Logo from '@/components/Logo'
 import { loginCity, checkAuth, logout } from '@/lib/auth'
+import RequestsTab from '@/components/RequestsTab'
 
 export default function CityAdminPage() {
   const params = useParams()
@@ -23,7 +24,7 @@ export default function CityAdminPage() {
   const [isAuthenticated, setIsAuthenticated] = useState(false)
   const [password, setPassword] = useState('')
   const [loading, setLoading] = useState(false)
-  const [activeTab, setActiveTab] = useState<'equipment' | 'history' | 'settings'>('equipment')
+  const [activeTab, setActiveTab] = useState<'equipment' | 'history' | 'requests' | 'settings'>('equipment')
   const [newEquipment, setNewEquipment] = useState({ name: '', quantity: 1, equipment_status: 'working' as 'working' | 'faulty', is_consumable: false })
   const [editingEquipment, setEditingEquipment] = useState<{ id: string; name: string; quantity: number; equipment_status: 'working' | 'faulty'; is_consumable: boolean } | null>(null)
   const [changePasswordForm, setChangePasswordForm] = useState({ currentPassword: '', newPassword: '', confirmPassword: '' })
@@ -681,7 +682,7 @@ export default function CityAdminPage() {
           </Button>
         </div>
 
-        <div className="grid grid-cols-1 md:grid-cols-3 gap-3 mb-8">
+        <div className="grid grid-cols-2 md:grid-cols-4 gap-3 mb-8">
           <Button
             onClick={() => setActiveTab('equipment')}
             className={`py-6 rounded-xl font-semibold text-lg transition-all duration-300 ${
@@ -702,6 +703,18 @@ export default function CityAdminPage() {
           >
             <span className="text-2xl ml-2">📊</span> היסטוריית השאלות
           </Button>
+          {city?.request_mode === 'request' && (
+            <Button
+              onClick={() => setActiveTab('requests')}
+              className={`py-6 rounded-xl font-semibold text-lg transition-all duration-300 ${
+                activeTab === 'requests'
+                  ? 'bg-gradient-to-r from-purple-600 to-pink-600 text-white shadow-lg shadow-purple-500/50 scale-105'
+                  : 'bg-white text-gray-600 border-2 border-gray-200 hover:border-purple-300 hover:bg-purple-50'
+              }`}
+            >
+              <span className="text-2xl ml-2">📝</span> בקשות
+            </Button>
+          )}
           <Button
             onClick={() => setActiveTab('settings')}
             className={`py-6 rounded-xl font-semibold text-lg transition-all duration-300 ${
@@ -1231,6 +1244,14 @@ export default function CityAdminPage() {
               </div>
             </CardContent>
           </Card>
+        )}
+
+        {activeTab === 'requests' && city && (
+          <RequestsTab
+            cityId={cityId}
+            cityName={city.name}
+            managerName={city.manager1_name}
+          />
         )}
 
         {activeTab === 'settings' && (
