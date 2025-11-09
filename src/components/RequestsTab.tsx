@@ -378,7 +378,6 @@ ${request.city?.cabinet_code ? `🔐 קוד פתיחת הארון: ${request.cit
                     </Button>
                   )}
                 </div>
-              </div>
 
               {/* Reject Dialog */}
               {rejectReason && rejectReason.requestId === request.id && (
@@ -483,9 +482,9 @@ ${request.city?.cabinet_code ? `🔐 קוד פתיחת הארון: ${request.cit
                   </div>
                 </div>
               )}
-                  </div>
-                )}
-              </div>
+                </div>
+              )}
+            </div>
             )
           })}
         </div>
