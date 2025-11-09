@@ -85,15 +85,12 @@ export async function POST(request: NextRequest) {
       const { error: historyError } = await supabase
         .from('borrow_history')
         .insert({
-          city_id: equipmentRequest.city_id,
+          name: equipmentRequest.requester_name,
+          phone: equipmentRequest.requester_phone,
           equipment_id: item.equipment_id,
-          borrower_name: equipmentRequest.requester_name,
-          borrower_phone: equipmentRequest.requester_phone,
-          quantity: item.quantity,
+          equipment_name: item.equipment.name,
           status: 'borrowed',
-          equipment_status: 'working',
-          borrow_date: new Date().toISOString(),
-          call_id: equipmentRequest.call_id || null
+          borrow_date: new Date().toISOString()
         })
 
       if (historyError) {
