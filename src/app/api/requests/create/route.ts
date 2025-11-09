@@ -132,8 +132,16 @@ export async function POST(request: NextRequest) {
 
     if (createError) {
       console.error('Error creating request:', createError)
+      console.error('Request data:', {
+        city_id: cityId,
+        requester_name: body.requester_name,
+        requester_phone: body.requester_phone,
+        call_id: body.call_id || null,
+        token_hash: tokenHash,
+        expires_at: expiresAt
+      })
       return NextResponse.json(
-        { error: 'שגיאה ביצירת בקשה' },
+        { error: 'שגיאה ביצירת בקשה: ' + (createError.message || createError.toString()) },
         { status: 500 }
       )
     }
@@ -151,6 +159,7 @@ export async function POST(request: NextRequest) {
 
     if (itemsError) {
       console.error('Error creating request items:', itemsError)
+      console.error('Items data:', itemsToInsert)
       // Rollback request
       await supabaseServer
         .from('equipment_requests')
@@ -158,7 +167,7 @@ export async function POST(request: NextRequest) {
         .eq('id', newRequest.id)
 
       return NextResponse.json(
-        { error: 'שגיאה ביצירת פריטי בקשה' },
+        { error: 'שגיאה ביצירת פריטי בקשה: ' + (itemsError.message || itemsError.toString()) },
         { status: 500 }
       )
     }
@@ -177,10 +186,10 @@ export async function POST(request: NextRequest) {
       requestId: newRequest.id,
       expiresAt
     })
-  } catch (error) {
+  } catch (error: any) {
     console.error('Create request error:', error)
     return NextResponse.json(
-      { error: 'שגיאה בתהליך יצירת בקשה' },
+      { error: 'שגיאה בתהליך יצירת בקשה: ' + (error.message || error.toString()) },
       { status: 500 }
     )
   }
