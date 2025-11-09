@@ -126,7 +126,6 @@ export default function CityPage() {
           phone: borrowForm.phone,
           equipment_id: borrowForm.equipment_id,
           equipment_name: selectedEquipment.name,
-          city_id: cityId,
           status: borrowStatus,
           return_date: returnDate
         })
