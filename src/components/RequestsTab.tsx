@@ -18,6 +18,7 @@ export default function RequestsTab({ cityId, cityName, managerName }: RequestsT
   const [search, setSearch] = useState('')
   const [rejectReason, setRejectReason] = useState<{ requestId: string; reason: string } | null>(null)
   const [regeneratedToken, setRegeneratedToken] = useState<{ requestId: string; token: string } | null>(null)
+  const [approvedRequest, setApprovedRequest] = useState<string | null>(null)
 
   useEffect(() => {
     fetchRequests()
@@ -62,6 +63,8 @@ export default function RequestsTab({ cityId, cityName, managerName }: RequestsT
 
       if (action === 'regenerate' && data.newToken) {
         setRegeneratedToken({ requestId, token: data.newToken })
+      } else if (action === 'approve') {
+        setApprovedRequest(requestId)
       } else {
         alert(getSuccessMessage(action))
       }
@@ -114,6 +117,29 @@ ${url}
     const url = getRequestUrl(token)
     navigator.clipboard.writeText(url)
     alert('✅ הקישור הועתק ללוח!')
+  }
+
+  const handleSendApprovalWhatsApp = (request: EquipmentRequestWithItems) => {
+    const phone = request.requester_phone.replace(/\D/g, '')
+    const internationalPhone = phone.startsWith('0') ? '972' + phone.slice(1) : phone
+
+    // Get city data from the request
+    const message = `שלום ${request.requester_name},
+
+✅ הבקשה שלך לציוד מארון ${cityName} אושרה!
+
+📋 פרטי הבקשה:
+${request.items.map(item => `• ${item.equipment.name} - כמות: ${item.quantity}`).join('\n')}
+${request.call_id ? `\n🆔 מזהה קריאה: ${request.call_id}` : ''}
+
+📍 מיקום הארון:
+https://www.google.com/maps/search/?api=1&query=${encodeURIComponent(cityName + ' ארון ציוד')}
+
+${request.city?.cabinet_code ? `🔐 קוד פתיחת הארון: ${request.city.cabinet_code}\n` : ''}
+💚 בהצלחה!`
+
+    const whatsappUrl = `https://wa.me/${internationalPhone}?text=${encodeURIComponent(message)}`
+    window.open(whatsappUrl, '_blank')
   }
 
   const getStatusColor = (status: string) => {
@@ -357,6 +383,37 @@ ${url}
                       className="border-2 border-gray-300 rounded-xl"
                     >
                       ביטול
+                    </Button>
+                  </div>
+                </div>
+              )}
+
+              {/* Approved Request - Send WhatsApp */}
+              {approvedRequest === request.id && (
+                <div className="bg-gradient-to-r from-green-50 to-emerald-50 border-t-2 border-green-200 p-6">
+                  <div className="text-center mb-4">
+                    <div className="text-4xl mb-2">✅</div>
+                    <h4 className="font-bold text-gray-900 text-xl mb-2">הבקשה אושרה בהצלחה!</h4>
+                    <p className="text-sm text-gray-600 mb-4">שלח הודעת אישור למבקש ב-WhatsApp</p>
+                  </div>
+
+                  <div className="flex flex-col sm:flex-row gap-3">
+                    <Button
+                      onClick={() => {
+                        handleSendApprovalWhatsApp(request)
+                        setApprovedRequest(null)
+                      }}
+                      className="flex-1 bg-gradient-to-r from-green-600 to-emerald-600 hover:from-green-700 hover:to-emerald-700 text-white font-semibold rounded-xl shadow-md"
+                    >
+                      <span className="text-xl mr-2">📱</span>
+                      שלח אישור ב-WhatsApp
+                    </Button>
+                    <Button
+                      onClick={() => setApprovedRequest(null)}
+                      variant="outline"
+                      className="border-2 border-gray-300 rounded-xl"
+                    >
+                      דלג
                     </Button>
                   </div>
                 </div>

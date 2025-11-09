@@ -307,33 +307,6 @@ export default function CityPage() {
     alert('הקישור הועתק ללוח!')
   }
 
-  const handleWhatsAppShare = () => {
-    const url = getRequestUrl()
-    const phone = city?.manager1_phone || ''
-    const cleanPhone = phone.replace(/\D/g, '')
-    const internationalPhone = cleanPhone.startsWith('0') ? '972' + cleanPhone.slice(1) : cleanPhone
-
-    const message = `שלום,
-שלחתי בקשה לציוד מארון הציוד - ${city?.name}
-
-פרטי הבקשה:
-שם: ${requestForm.requester_name}
-טלפון: ${requestForm.requester_phone}
-${requestForm.call_id ? `מזהה קריאה: ${requestForm.call_id}\n` : ''}
-פריטים: ${Array.from(selectedItems).map(id => {
-  const item = equipment.find(eq => eq.id === id)
-  return `${item?.name} (${itemQuantities[id] || 1})`
-}).join(', ')}
-
-קישור לבקשה:
-${url}
-
-תודה!`
-
-    const whatsappUrl = `https://wa.me/${internationalPhone}?text=${encodeURIComponent(message)}`
-    window.open(whatsappUrl, '_blank')
-  }
-
   const resetRequestForm = () => {
     setRequestForm({ requester_name: '', requester_phone: '', call_id: '', items: [] })
     setSelectedItems(new Set())
@@ -579,20 +552,12 @@ ${url}
                 <div className="bg-white p-3 rounded-lg border border-gray-200 mb-4">
                   <p className="text-sm text-gray-600 break-all font-mono">{getRequestUrl()}</p>
                 </div>
-                <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
-                  <Button
-                    onClick={handleWhatsAppShare}
-                    className="h-12 bg-gradient-to-r from-green-600 to-green-500 hover:from-green-700 hover:to-green-600 text-white font-semibold rounded-xl shadow-md hover:shadow-lg transition-all"
-                  >
-                    📱 שלח ב-WhatsApp
-                  </Button>
-                  <Button
-                    onClick={handleCopyLink}
-                    className="h-12 bg-gradient-to-r from-blue-600 to-indigo-600 hover:from-blue-700 hover:to-indigo-700 text-white font-semibold rounded-xl shadow-md hover:shadow-lg transition-all"
-                  >
-                    📋 העתק קישור
-                  </Button>
-                </div>
+                <Button
+                  onClick={handleCopyLink}
+                  className="w-full h-12 bg-gradient-to-r from-blue-600 to-indigo-600 hover:from-blue-700 hover:to-indigo-700 text-white font-semibold rounded-xl shadow-md hover:shadow-lg transition-all"
+                >
+                  📋 העתק קישור
+                </Button>
               </div>
 
               <div className="bg-yellow-50 rounded-xl p-4 border-2 border-yellow-200">
