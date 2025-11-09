@@ -392,7 +392,7 @@ export default function CityPage() {
             <p className="text-gray-600 text-lg">
               {isRequestMode ? 'מערכת בקשות לאישור מנהל' : 'מערכת חכמה לניהול השאלות והחזרות'}
             </p>
-            {!city.hide_location && city.location_url && (
+            {city.hide_location !== true && city.location_url && (
               <div className="mt-3">
                 <a
                   href={city.location_url}
