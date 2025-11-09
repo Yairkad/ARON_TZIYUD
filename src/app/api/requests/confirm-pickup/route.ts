@@ -82,6 +82,7 @@ export async function POST(request: NextRequest) {
       }
 
       // 2. Create borrow_history record
+      console.log('Creating borrow_history with city_id:', equipmentRequest.city_id)
       const { error: historyError } = await supabase
         .from('borrow_history')
         .insert({
@@ -90,14 +91,20 @@ export async function POST(request: NextRequest) {
           equipment_id: item.equipment_id,
           equipment_name: item.equipment.name,
           city_id: equipmentRequest.city_id,
-          status: 'borrowed',
-          borrow_date: new Date().toISOString()
+          status: 'borrowed'
         })
 
       if (historyError) {
         console.error('Error creating history:', historyError)
+        console.error('Failed data:', {
+          name: equipmentRequest.requester_name,
+          phone: equipmentRequest.requester_phone,
+          equipment_id: item.equipment_id,
+          equipment_name: item.equipment.name,
+          city_id: equipmentRequest.city_id
+        })
         return NextResponse.json(
-          { error: 'שגיאה ביצירת רשומת היסטוריה' },
+          { error: 'שגיאה ביצירת רשומת היסטוריה: ' + (historyError.message || historyError.toString()) },
           { status: 500 }
         )
       }
