@@ -11,6 +11,7 @@ export interface City {
   request_mode?: 'direct' | 'request'
   cabinet_code?: string | null
   require_call_id?: boolean
+  hide_location?: boolean
   admin_emails?: string[] | null
   created_at: string
   updated_at: string
