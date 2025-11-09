@@ -38,6 +38,12 @@ export default function CityAdminPage() {
   })
   const [allCities, setAllCities] = useState<City[]>([])
   const [selectedCityToCopy, setSelectedCityToCopy] = useState<string>('')
+  const [showPassword, setShowPassword] = useState(false)
+  const [showPasswordFields, setShowPasswordFields] = useState({
+    current: false,
+    new: false,
+    confirm: false
+  })
   const [showCopyEquipment, setShowCopyEquipment] = useState(false)
   const [dismissedAlerts, setDismissedAlerts] = useState<Set<string>>(new Set())
 
@@ -561,14 +567,23 @@ export default function CityAdminPage() {
             <form onSubmit={handleLogin} className="space-y-6">
               <div className="space-y-2">
                 <label className="block text-sm font-semibold text-gray-700">🔑 סיסמת מנהל</label>
-                <Input
-                  type="password"
-                  value={password}
-                  onChange={(e) => setPassword(e.target.value)}
-                  placeholder="הזן סיסמה"
-                  className="h-12 border-2 border-gray-200 rounded-xl focus:border-blue-500 transition-colors"
-                  required
-                />
+                <div className="relative">
+                  <Input
+                    type={showPassword ? "text" : "password"}
+                    value={password}
+                    onChange={(e) => setPassword(e.target.value)}
+                    placeholder="הזן סיסמה"
+                    className="h-12 border-2 border-gray-200 rounded-xl focus:border-blue-500 transition-colors pr-12"
+                    required
+                  />
+                  <button
+                    type="button"
+                    onClick={() => setShowPassword(!showPassword)}
+                    className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-500 hover:text-gray-700 transition-colors"
+                  >
+                    {showPassword ? '👁️' : '👁️‍🗨️'}
+                  </button>
+                </div>
               </div>
               <div className="flex gap-3">
                 <Button

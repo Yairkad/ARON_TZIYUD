@@ -19,6 +19,7 @@ export default function RequestsTab({ cityId, cityName, managerName }: RequestsT
   const [rejectReason, setRejectReason] = useState<{ requestId: string; reason: string } | null>(null)
   const [regeneratedToken, setRegeneratedToken] = useState<{ requestId: string; token: string } | null>(null)
   const [approvedRequest, setApprovedRequest] = useState<string | null>(null)
+  const [expandedRequests, setExpandedRequests] = useState<Set<string>>(new Set())
 
   useEffect(() => {
     fetchRequests()
@@ -117,6 +118,16 @@ ${url}
     const url = getRequestUrl(token)
     navigator.clipboard.writeText(url)
     alert('✅ הקישור הועתק ללוח!')
+  }
+
+  const toggleExpanded = (requestId: string) => {
+    const newExpanded = new Set(expandedRequests)
+    if (newExpanded.has(requestId)) {
+      newExpanded.delete(requestId)
+    } else {
+      newExpanded.add(requestId)
+    }
+    setExpandedRequests(newExpanded)
   }
 
   const handleSendApprovalWhatsApp = (request: EquipmentRequestWithItems) => {
@@ -237,30 +248,35 @@ ${request.city?.cabinet_code ? `🔐 קוד פתיחת הארון: ${request.cit
           </p>
         </div>
       ) : (
-        <div className="space-y-4">
-          {filteredRequests.map(request => (
-            <div key={request.id} className="bg-white rounded-xl shadow-md border-2 border-gray-200 overflow-hidden">
-              {/* Header */}
-              <div className="bg-gradient-to-r from-blue-50 to-indigo-50 p-4 border-b-2 border-gray-200">
-                <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3">
-                  <div className="flex items-center gap-3">
-                    <div className={`px-3 py-1 rounded-full text-sm font-semibold border-2 ${getStatusColor(request.status)}`}>
-                      {getStatusText(request.status)}
+        <div className="space-y-3">
+          {filteredRequests.map(request => {
+            const isExpanded = expandedRequests.has(request.id)
+            return (
+              <div key={request.id} className="bg-white rounded-xl shadow-md border-2 border-gray-200 overflow-hidden transition-all">
+                {/* Compact Header - Always Visible */}
+                <div
+                  onClick={() => toggleExpanded(request.id)}
+                  className="bg-gradient-to-r from-blue-50 to-indigo-50 p-3 cursor-pointer hover:from-blue-100 hover:to-indigo-100 transition-colors"
+                >
+                  <div className="flex items-center justify-between gap-3">
+                    <div className="flex items-center gap-3 flex-1 min-w-0">
+                      <div className={`px-2 py-1 rounded-full text-xs font-semibold border-2 flex-shrink-0 ${getStatusColor(request.status)}`}>
+                        {getStatusText(request.status)}
+                      </div>
+                      <div className="flex-1 min-w-0">
+                        <p className="font-semibold text-gray-900 text-sm truncate">{request.requester_name}</p>
+                        <p className="text-xs text-gray-600 truncate">{request.items?.length || 0} פריטים • {new Date(request.created_at).toLocaleDateString('he-IL')}</p>
+                      </div>
                     </div>
-                    <div className="text-sm text-gray-600">
-                      {new Date(request.created_at).toLocaleString('he-IL')}
-                    </div>
+                    <button className="text-gray-600 hover:text-gray-900 transition-transform duration-200 flex-shrink-0" style={{ transform: isExpanded ? 'rotate(180deg)' : 'rotate(0deg)' }}>
+                      ▼
+                    </button>
                   </div>
-                  {request.expires_at && request.status === 'pending' && (
-                    <div className="text-sm text-orange-600 font-medium">
-                      ⏰ פג תוקף: {new Date(request.expires_at).toLocaleTimeString('he-IL', { hour: '2-digit', minute: '2-digit' })}
-                    </div>
-                  )}
                 </div>
-              </div>
 
-              {/* Content */}
-              <div className="p-6 space-y-4">
+                {/* Expanded Content */}
+                {isExpanded && (
+                  <div className="p-4 space-y-4 border-t-2 border-gray-200">
                 {/* Requester Info */}
                 <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
                   <div>
@@ -466,8 +482,11 @@ ${request.city?.cabinet_code ? `🔐 קוד פתיחת הארון: ${request.cit
                   </div>
                 </div>
               )}
-            </div>
-          ))}
+                  </div>
+                )}
+              </div>
+            )
+          })}
         </div>
       )}
     </div>
