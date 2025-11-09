@@ -1,6 +1,6 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { createClient } from '@supabase/supabase-js'
-import { verifyToken } from '@/lib/token'
+import { hashToken } from '@/lib/token'
 
 const supabase = createClient(
   process.env.NEXT_PUBLIC_SUPABASE_URL!,
@@ -19,7 +19,7 @@ export async function POST(request: NextRequest) {
     }
 
     // Get request by token
-    const tokenHash = verifyToken(token)
+    const tokenHash = hashToken(token)
     const { data: equipmentRequest, error: fetchError } = await supabase
       .from('equipment_requests')
       .select(`
