@@ -459,42 +459,80 @@ export default function CityPage() {
 
                 <div className="space-y-4">
                   <label className="block text-sm font-semibold text-gray-700">🎒 בחר ציוד (ניתן לבחור מספר פריטים)</label>
-                  <div className="space-y-3 max-h-96 overflow-y-auto border-2 border-gray-200 rounded-xl p-4">
+
+                  {/* Search Field */}
+                  <div className="relative">
+                    <Input
+                      type="text"
+                      value={equipmentSearch}
+                      onChange={(e) => setEquipmentSearch(e.target.value)}
+                      placeholder="🔍 חפש ציוד..."
+                      className="h-12 border-2 border-gray-300 rounded-xl pr-10 focus:border-blue-500 transition-colors"
+                    />
+                    {equipmentSearch && (
+                      <button
+                        type="button"
+                        onClick={() => setEquipmentSearch('')}
+                        className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-400 hover:text-gray-600"
+                      >
+                        ✕
+                      </button>
+                    )}
+                  </div>
+
+                  <div className="space-y-2 max-h-96 overflow-y-auto border-2 border-gray-200 rounded-xl p-3">
                     {equipment
                       .filter(item => item.quantity > 0 && item.equipment_status === 'working')
+                      .filter(item => item.name.toLowerCase().includes(equipmentSearch.toLowerCase()))
                       .map(item => (
-                        <div key={item.id} className="flex items-center gap-4 p-4 bg-gray-50 rounded-lg hover:bg-blue-50 transition-colors">
+                        <div key={item.id} className="flex items-center gap-3 p-3 bg-gray-50 rounded-lg hover:bg-blue-50 transition-colors border border-transparent hover:border-blue-200">
                           <input
                             type="checkbox"
                             checked={selectedItems.has(item.id)}
                             onChange={() => handleItemToggle(item.id)}
-                            className="w-5 h-5 text-blue-600 rounded focus:ring-blue-500"
+                            className="w-4 h-4 text-blue-600 rounded focus:ring-blue-500 flex-shrink-0"
                           />
-                          <div className="flex-1">
-                            <p className="font-semibold text-gray-800">{item.name}</p>
-                            <p className="text-sm text-gray-600">זמין: {item.quantity}</p>
-                            {item.is_consumable && (
-                              <p className="text-xs text-purple-600">🔄 ציוד מתכלה</p>
-                            )}
+                          <div className="flex-1 min-w-0">
+                            <div className="flex items-center gap-2">
+                              <p className="font-semibold text-gray-800 text-sm truncate">{item.name}</p>
+                              {item.is_consumable && (
+                                <span className="text-xs bg-purple-100 text-purple-700 px-2 py-0.5 rounded-full flex-shrink-0">מתכלה</span>
+                              )}
+                            </div>
+                            <p className="text-xs text-gray-600 mt-0.5">זמין: {item.quantity}</p>
                           </div>
                           {selectedItems.has(item.id) && item.is_consumable && (
-                            <div className="flex items-center gap-2">
-                              <label className="text-sm font-medium text-gray-700">כמות:</label>
-                              <Input
-                                type="number"
-                                min="1"
-                                max={item.quantity}
-                                value={itemQuantities[item.id] || 1}
-                                onChange={(e) => handleQuantityChange(item.id, parseInt(e.target.value))}
-                                className="w-20 h-10 text-center border-2 border-gray-200 rounded-lg"
-                              />
+                            <div className="flex items-center gap-1.5 flex-shrink-0">
+                              <span className="text-xs font-medium text-gray-600">כמות:</span>
+                              <button
+                                type="button"
+                                onClick={() => handleQuantityChange(item.id, Math.max(1, (itemQuantities[item.id] || 1) - 1))}
+                                disabled={(itemQuantities[item.id] || 1) <= 1}
+                                className="w-7 h-7 flex items-center justify-center bg-red-500 hover:bg-red-600 disabled:bg-gray-300 disabled:cursor-not-allowed text-white font-bold rounded-md transition-all text-sm"
+                              >
+                                -
+                              </button>
+                              <span className="w-10 h-7 flex items-center justify-center font-bold text-sm text-gray-800 bg-white border-2 border-gray-300 rounded-md">
+                                {itemQuantities[item.id] || 1}
+                              </span>
+                              <button
+                                type="button"
+                                onClick={() => handleQuantityChange(item.id, Math.min(item.quantity, (itemQuantities[item.id] || 1) + 1))}
+                                disabled={(itemQuantities[item.id] || 1) >= item.quantity}
+                                className="w-7 h-7 flex items-center justify-center bg-green-500 hover:bg-green-600 disabled:bg-gray-300 disabled:cursor-not-allowed text-white font-bold rounded-md transition-all text-sm"
+                              >
+                                +
+                              </button>
                             </div>
                           )}
                         </div>
                       ))}
-                    {equipment.filter(item => item.quantity > 0 && item.equipment_status === 'working').length === 0 && (
+                    {equipment
+                      .filter(item => item.quantity > 0 && item.equipment_status === 'working')
+                      .filter(item => item.name.toLowerCase().includes(equipmentSearch.toLowerCase()))
+                      .length === 0 && (
                       <div className="text-center py-8 text-gray-500">
-                        אין ציוד זמין כרגע
+                        {equipmentSearch ? 'לא נמצא ציוד התואם לחיפוש' : 'אין ציוד זמין כרגע'}
                       </div>
                     )}
                   </div>
