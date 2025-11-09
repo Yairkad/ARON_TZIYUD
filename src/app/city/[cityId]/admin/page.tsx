@@ -51,6 +51,7 @@ export default function CityAdminPage() {
     if (cityId) {
       fetchCity()
     }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [cityId])
 
   useEffect(() => {
@@ -58,6 +59,7 @@ export default function CityAdminPage() {
       fetchData()
       fetchAllCities()
     }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [isAuthenticated, cityId])
 
   const fetchCity = async () => {

@@ -23,6 +23,7 @@ export default function RequestsTab({ cityId, cityName, managerName }: RequestsT
 
   useEffect(() => {
     fetchRequests()
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [cityId])
 
   const fetchRequests = async () => {

@@ -15,6 +15,7 @@ export default function RequestPage({ params }: { params: Promise<{ token: strin
 
   useEffect(() => {
     verifyToken()
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [])
 
   const verifyToken = async () => {

@@ -46,6 +46,7 @@ export default function CityPage() {
       fetchCity()
       fetchEquipment()
     }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [cityId])
 
   const fetchCity = async () => {

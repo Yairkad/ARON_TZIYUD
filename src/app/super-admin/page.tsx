@@ -30,6 +30,7 @@ export default function SuperAdminPage() {
       fetchCities()
       fetchNotifications()
     }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [isAuthenticated])
 
   const fetchCities = async () => {
