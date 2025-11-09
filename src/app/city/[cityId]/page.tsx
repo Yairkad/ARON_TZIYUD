@@ -99,6 +99,20 @@ export default function CityPage() {
       return
     }
 
+    // Validate name (at least 2 words)
+    const nameParts = borrowForm.name.trim().split(/\s+/)
+    if (nameParts.length < 2) {
+      alert('יש להזין שם ושם משפחה (לפחות 2 מילים)')
+      return
+    }
+
+    // Validate phone (exactly 10 digits, starts with 05)
+    const phoneDigits = borrowForm.phone.replace(/\D/g, '')
+    if (phoneDigits.length !== 10 || !phoneDigits.startsWith('05')) {
+      alert('מספר טלפון חייב להיות 10 ספרות ולהתחיל ב-05')
+      return
+    }
+
     setLoading(true)
     const selectedEquipment = equipment.find(eq => eq.id === borrowForm.equipment_id)
 
@@ -252,6 +266,20 @@ export default function CityPage() {
       return
     }
 
+    // Validate name (at least 2 words)
+    const nameParts = requestForm.requester_name.trim().split(/\s+/)
+    if (nameParts.length < 2) {
+      alert('יש להזין שם ושם משפחה (לפחות 2 מילים)')
+      return
+    }
+
+    // Validate phone (exactly 10 digits, starts with 05)
+    const phoneDigits = requestForm.requester_phone.replace(/\D/g, '')
+    if (phoneDigits.length !== 10 || !phoneDigits.startsWith('05')) {
+      alert('מספר טלפון חייב להיות 10 ספרות ולהתחיל ב-05')
+      return
+    }
+
     if (city?.require_call_id === true && !requestForm.call_id?.trim()) {
       alert('מזהה קריאה הוא שדה חובה')
       return
@@ -364,6 +392,18 @@ export default function CityPage() {
             <p className="text-gray-600 text-lg">
               {isRequestMode ? 'מערכת בקשות לאישור מנהל' : 'מערכת חכמה לניהול השאלות והחזרות'}
             </p>
+            {!city.hide_location && city.location_url && (
+              <div className="mt-3">
+                <a
+                  href={city.location_url}
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  className="inline-block bg-blue-600 text-white px-6 py-2 rounded-lg hover:bg-blue-700 font-semibold transition-all text-sm"
+                >
+                  📍 פתח מיקום בגוגל מפות
+                </a>
+              </div>
+            )}
           </div>
         </header>
 
