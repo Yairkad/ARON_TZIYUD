@@ -37,6 +37,10 @@ export default function CityPage() {
   const [createdToken, setCreatedToken] = useState<string>('')
   const [requestCreated, setRequestCreated] = useState(false)
 
+  // Return status selection
+  const [returnStatus, setReturnStatus] = useState<{ borrowId: string; equipmentId: string } | null>(null)
+  const [selectedStatus, setSelectedStatus] = useState<'working' | 'faulty'>('working')
+
   useEffect(() => {
     if (cityId) {
       fetchCity()
@@ -174,7 +178,7 @@ export default function CityPage() {
     }
   }
 
-  const handleReturn = async (borrowId: string, equipmentId: string) => {
+  const handleReturn = async (borrowId: string, equipmentId: string, equipmentStatus: 'working' | 'faulty' = 'working') => {
     setLoading(true)
 
     try {
@@ -182,7 +186,8 @@ export default function CityPage() {
         .from('borrow_history')
         .update({
           status: 'returned',
-          return_date: new Date().toISOString()
+          return_date: new Date().toISOString(),
+          equipment_status: equipmentStatus
         })
         .eq('id', borrowId)
 
@@ -190,15 +195,21 @@ export default function CityPage() {
 
       const equipmentItem = equipment.find(eq => eq.id === equipmentId)
       if (equipmentItem) {
+        // Update quantity and status
         const { error: qtyUpdateError } = await supabase
           .from('equipment')
-          .update({ quantity: equipmentItem.quantity + 1 })
+          .update({
+            quantity: equipmentItem.quantity + 1,
+            equipment_status: equipmentStatus
+          })
           .eq('id', equipmentId)
 
         if (qtyUpdateError) throw qtyUpdateError
       }
 
-      alert('הציוד הוחזר בהצלחה!')
+      alert(equipmentStatus === 'working' ? 'הציוד הוחזר בהצלחה!' : 'הציוד הוחזר ומסומן כתקול')
+      setReturnStatus(null)
+      setSelectedStatus('working')
       handleReturnSearch()
       fetchEquipment()
     } catch (error) {
@@ -748,20 +759,78 @@ ${url}
                     <h3 className="font-bold text-lg text-gray-800 border-b-2 border-blue-500 pb-2">📦 ציוד שהשאלת:</h3>
                     <div className="space-y-3">
                       {userBorrows.map(borrow => (
-                        <div key={borrow.id} className="flex items-center justify-between p-5 bg-gradient-to-r from-blue-50 to-indigo-50 border-2 border-blue-200 rounded-xl hover:shadow-lg transition-all duration-200">
-                          <div className="flex-1">
-                            <p className="font-bold text-lg text-gray-800">{borrow.equipment_name}</p>
-                            <p className="text-sm text-gray-600 mt-1">
-                              🕐 הושאל: {new Date(borrow.borrow_date).toLocaleDateString('he-IL')}
-                            </p>
+                        <div key={borrow.id} className="border-2 border-blue-200 rounded-xl overflow-hidden">
+                          <div className="flex items-center justify-between p-5 bg-gradient-to-r from-blue-50 to-indigo-50 hover:shadow-lg transition-all duration-200">
+                            <div className="flex-1">
+                              <p className="font-bold text-lg text-gray-800">{borrow.equipment_name}</p>
+                              <p className="text-sm text-gray-600 mt-1">
+                                🕐 הושאל: {new Date(borrow.borrow_date).toLocaleDateString('he-IL')}
+                              </p>
+                            </div>
+                            <Button
+                              onClick={() => {
+                                setReturnStatus({ borrowId: borrow.id, equipmentId: borrow.equipment_id })
+                                setSelectedStatus('working')
+                              }}
+                              disabled={loading}
+                              className="bg-gradient-to-r from-green-500 to-emerald-500 hover:from-green-600 hover:to-emerald-600 text-white font-semibold px-6 py-2 rounded-xl shadow-md hover:shadow-lg transition-all"
+                            >
+                              ✅ החזר
+                            </Button>
                           </div>
-                          <Button
-                            onClick={() => handleReturn(borrow.id, borrow.equipment_id)}
-                            disabled={loading}
-                            className="bg-gradient-to-r from-green-500 to-emerald-500 hover:from-green-600 hover:to-emerald-600 text-white font-semibold px-6 py-2 rounded-xl shadow-md hover:shadow-lg transition-all"
-                          >
-                            ✅ החזר
-                          </Button>
+
+                          {/* Status Selection Dialog */}
+                          {returnStatus && returnStatus.borrowId === borrow.id && (
+                            <div className="bg-gradient-to-r from-yellow-50 to-orange-50 border-t-2 border-yellow-200 p-6">
+                              <h4 className="font-bold text-gray-900 mb-3">מה מצב הציוד שמוחזר?</h4>
+
+                              <div className="grid grid-cols-2 gap-3 mb-4">
+                                <button
+                                  onClick={() => setSelectedStatus('working')}
+                                  className={`p-4 rounded-xl border-2 font-semibold transition-all ${
+                                    selectedStatus === 'working'
+                                      ? 'bg-green-100 border-green-500 text-green-800 shadow-md scale-105'
+                                      : 'bg-white border-gray-300 text-gray-700 hover:border-green-300'
+                                  }`}
+                                >
+                                  <div className="text-2xl mb-1">✅</div>
+                                  <div>תקין</div>
+                                </button>
+
+                                <button
+                                  onClick={() => setSelectedStatus('faulty')}
+                                  className={`p-4 rounded-xl border-2 font-semibold transition-all ${
+                                    selectedStatus === 'faulty'
+                                      ? 'bg-orange-100 border-orange-500 text-orange-800 shadow-md scale-105'
+                                      : 'bg-white border-gray-300 text-gray-700 hover:border-orange-300'
+                                  }`}
+                                >
+                                  <div className="text-2xl mb-1">⚠️</div>
+                                  <div>תקול</div>
+                                </button>
+                              </div>
+
+                              <div className="flex gap-3">
+                                <Button
+                                  onClick={() => handleReturn(returnStatus.borrowId, returnStatus.equipmentId, selectedStatus)}
+                                  disabled={loading}
+                                  className="flex-1 bg-gradient-to-r from-blue-600 to-indigo-600 hover:from-blue-700 hover:to-indigo-700 text-white font-semibold rounded-xl shadow-md"
+                                >
+                                  אשר החזרה
+                                </Button>
+                                <Button
+                                  onClick={() => {
+                                    setReturnStatus(null)
+                                    setSelectedStatus('working')
+                                  }}
+                                  variant="outline"
+                                  className="border-2 border-gray-300 rounded-xl"
+                                >
+                                  ביטול
+                                </Button>
+                              </div>
+                            </div>
+                          )}
                         </div>
                       ))}
                     </div>
