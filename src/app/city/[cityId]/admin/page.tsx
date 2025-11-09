@@ -1262,6 +1262,136 @@ export default function CityAdminPage() {
             </CardHeader>
             <CardContent className="p-6">
               <div className="space-y-6">
+                {/* Request Mode Settings */}
+                <div className="bg-gradient-to-r from-blue-50 to-indigo-50 rounded-xl p-6 border-2 border-blue-200">
+                  <h3 className="text-lg font-bold text-gray-800 mb-4">🎯 מצב פעולה של המערכת</h3>
+                  <p className="text-sm text-gray-600 mb-4">בחר כיצד משתמשים ישאלו ציוד מהארון</p>
+
+                  <div className="grid grid-cols-1 md:grid-cols-2 gap-4 mb-6">
+                    {/* Direct Mode */}
+                    <button
+                      onClick={async () => {
+                        if (confirm('האם להחליף למצב השאלה ישירה? משתמשים יוכלו לשאול ציוד מיידית ללא אישור')) {
+                          const { error } = await supabase
+                            .from('cities')
+                            .update({ request_mode: 'direct' })
+                            .eq('id', cityId)
+
+                          if (error) {
+                            alert('שגיאה בעדכון: ' + error.message)
+                          } else {
+                            alert('✅ המצב עודכן להשאלה ישירה')
+                            fetchCity()
+                          }
+                        }
+                      }}
+                      className={`p-6 rounded-xl border-2 font-semibold transition-all text-right ${
+                        city?.request_mode === 'direct'
+                          ? 'bg-green-100 border-green-500 shadow-lg scale-105'
+                          : 'bg-white border-gray-300 hover:border-green-300'
+                      }`}
+                    >
+                      <div className="text-4xl mb-2">⚡</div>
+                      <div className="text-xl font-bold mb-2">השאלה ישירה</div>
+                      <div className="text-sm text-gray-600">
+                        משתמשים שואלים ציוד מיידית ללא צורך באישור מנהל
+                      </div>
+                      {city?.request_mode === 'direct' && (
+                        <div className="mt-3 text-green-600 font-bold">✓ פעיל כעת</div>
+                      )}
+                    </button>
+
+                    {/* Request Mode */}
+                    <button
+                      onClick={async () => {
+                        if (confirm('האם להחליף למצב בקשות? משתמשים ישלחו בקשות שידרשו אישור מנהל')) {
+                          const { error } = await supabase
+                            .from('cities')
+                            .update({ request_mode: 'request' })
+                            .eq('id', cityId)
+
+                          if (error) {
+                            alert('שגיאה בעדכון: ' + error.message)
+                          } else {
+                            alert('✅ המצב עודכן למצב בקשות')
+                            fetchCity()
+                          }
+                        }
+                      }}
+                      className={`p-6 rounded-xl border-2 font-semibold transition-all text-right ${
+                        city?.request_mode === 'request'
+                          ? 'bg-purple-100 border-purple-500 shadow-lg scale-105'
+                          : 'bg-white border-gray-300 hover:border-purple-300'
+                      }`}
+                    >
+                      <div className="text-4xl mb-2">📝</div>
+                      <div className="text-xl font-bold mb-2">מצב בקשות</div>
+                      <div className="text-sm text-gray-600">
+                        משתמשים שולחים בקשות עם טוקן - מנהל מאשר/דוחה
+                      </div>
+                      {city?.request_mode === 'request' && (
+                        <div className="mt-3 text-purple-600 font-bold">✓ פעיל כעת</div>
+                      )}
+                    </button>
+                  </div>
+
+                  {/* Request Mode Additional Settings */}
+                  {city?.request_mode === 'request' && (
+                    <div className="bg-white rounded-xl p-6 border-2 border-purple-200 space-y-4">
+                      <h4 className="font-bold text-gray-800 mb-3">הגדרות נוספות למצב בקשות</h4>
+
+                      {/* Cabinet Code */}
+                      <div className="space-y-2">
+                        <label className="block text-sm font-semibold text-gray-700">🔐 קוד ארון (אופציונלי)</label>
+                        <p className="text-xs text-gray-500 mb-2">קוד זה יוצג למבקש רק לאחר שהבקשה אושרה</p>
+                        <Input
+                          type="text"
+                          value={city.cabinet_code || ''}
+                          onChange={async (e) => {
+                            const { error } = await supabase
+                              .from('cities')
+                              .update({ cabinet_code: e.target.value || null })
+                              .eq('id', cityId)
+
+                            if (!error) fetchCity()
+                          }}
+                          placeholder="לדוגמה: 1234"
+                          className="h-12 border-2 border-gray-200 rounded-xl"
+                        />
+                      </div>
+
+                      {/* Require Call ID */}
+                      <div className="flex items-center justify-between p-4 bg-gray-50 rounded-xl">
+                        <div>
+                          <div className="font-semibold text-gray-800">🆔 לדרוש מזהה קריאה</div>
+                          <div className="text-sm text-gray-500">האם להצריך מבקשים למלא מזהה קריאה</div>
+                        </div>
+                        <button
+                          onClick={async () => {
+                            const newValue = !city.require_call_id
+                            const { error } = await supabase
+                              .from('cities')
+                              .update({ require_call_id: newValue })
+                              .eq('id', cityId)
+
+                            if (!error) {
+                              alert(newValue ? '✅ מזהה קריאה חובה' : '❌ מזהה קריאה אופציונלי')
+                              fetchCity()
+                            }
+                          }}
+                          className={`px-6 py-2 rounded-xl font-semibold transition-all ${
+                            city.require_call_id
+                              ? 'bg-green-500 text-white'
+                              : 'bg-gray-300 text-gray-600'
+                          }`}
+                        >
+                          {city.require_call_id ? 'ON' : 'OFF'}
+                        </button>
+                      </div>
+                    </div>
+                  )}
+                </div>
+
                 {/* Copy Equipment Section */}
                 {!showCopyEquipment ? (
                   <div className="bg-gradient-to-r from-purple-50 to-pink-50 rounded-xl p-6 border-2 border-purple-200">
