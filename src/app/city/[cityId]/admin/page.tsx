@@ -1271,17 +1271,26 @@ export default function CityAdminPage() {
                     {/* Direct Mode */}
                     <button
                       onClick={async () => {
+                        if (city?.request_mode === 'direct') {
+                          alert('המערכת כבר במצב השאלה ישירה')
+                          return
+                        }
+
                         if (confirm('האם להחליף למצב השאלה ישירה? משתמשים יוכלו לשאול ציוד מיידית ללא אישור')) {
-                          const { error } = await supabase
+                          const { error, data } = await supabase
                             .from('cities')
                             .update({ request_mode: 'direct' })
                             .eq('id', cityId)
+                            .select()
 
                           if (error) {
+                            console.error('Update error:', error)
                             alert('שגיאה בעדכון: ' + error.message)
                           } else {
+                            console.log('Updated successfully:', data)
                             alert('✅ המצב עודכן להשאלה ישירה')
-                            fetchCity()
+                            await fetchCity()
+                            window.location.reload()
                           }
                         }
                       }}
@@ -1304,17 +1313,26 @@ export default function CityAdminPage() {
                     {/* Request Mode */}
                     <button
                       onClick={async () => {
+                        if (city?.request_mode === 'request') {
+                          alert('המערכת כבר במצב בקשות')
+                          return
+                        }
+
                         if (confirm('האם להחליף למצב בקשות? משתמשים ישלחו בקשות שידרשו אישור מנהל')) {
-                          const { error } = await supabase
+                          const { error, data } = await supabase
                             .from('cities')
                             .update({ request_mode: 'request' })
                             .eq('id', cityId)
+                            .select()
 
                           if (error) {
+                            console.error('Update error:', error)
                             alert('שגיאה בעדכון: ' + error.message)
                           } else {
+                            console.log('Updated successfully:', data)
                             alert('✅ המצב עודכן למצב בקשות')
-                            fetchCity()
+                            await fetchCity()
+                            window.location.reload()
                           }
                         }
                       }}

@@ -10,6 +10,8 @@ export default function RequestPage({ params }: { params: Promise<{ token: strin
   const [loading, setLoading] = useState(true)
   const [error, setError] = useState('')
   const [request, setRequest] = useState<EquipmentRequestWithItems | null>(null)
+  const [confirmingPickup, setConfirmingPickup] = useState(false)
+  const [pickupConfirmed, setPickupConfirmed] = useState(false)
 
   useEffect(() => {
     verifyToken()
@@ -66,6 +68,37 @@ export default function RequestPage({ params }: { params: Promise<{ token: strin
       expired: 'bg-orange-100 text-orange-800'
     }
     return colorMap[status] || 'bg-gray-100 text-gray-800'
+  }
+
+  const handleConfirmPickup = async () => {
+    if (!confirm('האם אתה בטוח שלקחת את הציוד? פעולה זו תעדכן את המלאי ותיצור רשומת השאלה.')) {
+      return
+    }
+
+    setConfirmingPickup(true)
+
+    try {
+      const response = await fetch('/api/requests/confirm-pickup', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ token: resolvedParams.token })
+      })
+
+      const data = await response.json()
+
+      if (!response.ok) {
+        alert(`שגיאה: ${data.error}`)
+        return
+      }
+
+      setPickupConfirmed(true)
+      alert('✅ הציוד נלקח בהצלחה! המלאי עודכן.')
+    } catch (error) {
+      console.error('Confirm pickup error:', error)
+      alert('שגיאה באישור לקיחת הציוד')
+    } finally {
+      setConfirmingPickup(false)
+    }
   }
 
   if (loading) {
@@ -180,42 +213,79 @@ export default function RequestPage({ params }: { params: Promise<{ token: strin
         {/* Approved Section */}
         {request.status === 'approved' && (
           <div className="bg-green-50 border-2 border-green-200 rounded-lg shadow-lg p-6 mb-6">
-            <div className="text-center mb-6">
-              <div className="text-green-500 text-6xl mb-4">✓</div>
-              <h2 className="text-2xl font-bold text-green-900 mb-2">
-                הבקשה אושרה!
-              </h2>
-              <p className="text-green-800">
-                אושר על ידי: {request.approved_by}
-              </p>
-            </div>
-
-            {/* Cabinet Code */}
-            {request.city?.cabinet_code && (
-              <div className="bg-white rounded-lg p-6 mb-4">
-                <h3 className="text-lg font-bold text-gray-900 mb-3 text-center">
-                  קוד פתיחת ארון
-                </h3>
-                <div className="text-center">
-                  <p className="text-4xl font-mono font-bold text-blue-600 tracking-wider">
-                    {request.city.cabinet_code}
+            {pickupConfirmed ? (
+              <div className="text-center py-8">
+                <div className="text-green-500 text-7xl mb-4">🎉</div>
+                <h2 className="text-3xl font-bold text-green-900 mb-3">
+                  הציוד נלקח בהצלחה!
+                </h2>
+                <p className="text-green-800 text-lg mb-4">
+                  המלאי עודכן ונוצרה רשומת השאלה
+                </p>
+                <p className="text-gray-700">
+                  אנא החזר את הציוד בסיום השימוש
+                </p>
+              </div>
+            ) : (
+              <>
+                <div className="text-center mb-6">
+                  <div className="text-green-500 text-6xl mb-4">✓</div>
+                  <h2 className="text-2xl font-bold text-green-900 mb-2">
+                    הבקשה אושרה!
+                  </h2>
+                  <p className="text-green-800">
+                    אושר על ידי: {request.approved_by}
                   </p>
                 </div>
-              </div>
-            )}
 
-            {/* Location */}
-            {request.city?.location_url && (
-              <div className="text-center">
-                <a
-                  href={request.city.location_url}
-                  target="_blank"
-                  rel="noopener noreferrer"
-                  className="inline-block bg-blue-600 text-white px-6 py-3 rounded-lg hover:bg-blue-700 font-semibold"
-                >
-                  פתח מיקום בגוגל מפות
-                </a>
-              </div>
+                {/* Cabinet Code */}
+                {request.city?.cabinet_code && (
+                  <div className="bg-white rounded-lg p-6 mb-4">
+                    <h3 className="text-lg font-bold text-gray-900 mb-3 text-center">
+                      קוד פתיחת ארון
+                    </h3>
+                    <div className="text-center">
+                      <p className="text-4xl font-mono font-bold text-blue-600 tracking-wider">
+                        {request.city.cabinet_code}
+                      </p>
+                    </div>
+                  </div>
+                )}
+
+                {/* Location */}
+                {request.city?.location_url && (
+                  <div className="text-center mb-4">
+                    <a
+                      href={request.city.location_url}
+                      target="_blank"
+                      rel="noopener noreferrer"
+                      className="inline-block bg-blue-600 text-white px-6 py-3 rounded-lg hover:bg-blue-700 font-semibold"
+                    >
+                      📍 פתח מיקום בגוגל מפות
+                    </a>
+                  </div>
+                )}
+
+                {/* Confirm Pickup Button */}
+                <div className="bg-white rounded-lg p-6 mt-6 border-2 border-blue-200">
+                  <h3 className="text-lg font-bold text-gray-900 mb-3 text-center">
+                    ⚠️ חשוב - אישור לקיחת ציוד
+                  </h3>
+                  <p className="text-gray-700 text-center mb-4">
+                    לאחר שלקחת את הציוד מהארון, אנא לחץ על הכפתור למטה
+                  </p>
+                  <button
+                    onClick={handleConfirmPickup}
+                    disabled={confirmingPickup}
+                    className="w-full bg-gradient-to-r from-green-500 to-emerald-600 text-white py-4 px-6 rounded-lg font-bold text-lg hover:from-green-600 hover:to-emerald-700 disabled:opacity-50 disabled:cursor-not-allowed transition-all shadow-lg"
+                  >
+                    {confirmingPickup ? '⏳ מאשר לקיחה...' : '✓ אישור - לקחתי את הציוד'}
+                  </button>
+                  <p className="text-sm text-gray-600 text-center mt-3">
+                    פעולה זו תעדכן את המלאי ותאפשר החזרה בעתיד
+                  </p>
+                </div>
+              </>
             )}
           </div>
         )}

@@ -251,7 +251,7 @@ export default function CityPage() {
       return
     }
 
-    if (city?.require_call_id && !requestForm.call_id) {
+    if (city?.require_call_id === true && !requestForm.call_id?.trim()) {
       alert('מזהה קריאה הוא שדה חובה')
       return
     }
@@ -444,7 +444,7 @@ export default function CityPage() {
                   </div>
                 </div>
 
-                {city.require_call_id && (
+                {city?.require_call_id === true && (
                   <div className="space-y-2">
                     <label className="block text-sm font-semibold text-gray-700">🆔 מזהה קריאה *</label>
                     <Input

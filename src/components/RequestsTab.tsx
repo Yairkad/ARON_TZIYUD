@@ -136,6 +136,11 @@ ${request.call_id ? `\n🆔 מזהה קריאה: ${request.call_id}` : ''}
 https://www.google.com/maps/search/?api=1&query=${encodeURIComponent(cityName + ' ארון ציוד')}
 
 ${request.city?.cabinet_code ? `🔐 קוד פתיחת הארון: ${request.city.cabinet_code}\n` : ''}
+🔗 לצפייה בפרטים המלאים:
+היכנס לקישור שקיבלת בעת יצירת הבקשה
+
+⚠️ חשוב: לאחר שתקח את הציוד, אנא לחץ על כפתור אישור הלקיחה בדף הבקשה כדי לעדכן את המלאי.
+
 💚 בהצלחה!`
 
     const whatsappUrl = `https://wa.me/${internationalPhone}?text=${encodeURIComponent(message)}`
