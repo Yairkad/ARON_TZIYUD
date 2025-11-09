@@ -300,6 +300,15 @@ export default function CityAdminPage() {
   const handleUpdateHistoryStatus = async (id: string, status: 'borrowed' | 'returned') => {
     setLoading(true)
     try {
+      // Get the borrow record to find the equipment_id
+      const { data: borrowRecord, error: fetchError } = await supabase
+        .from('borrow_history')
+        .select('*, equipment_id')
+        .eq('id', id)
+        .single()
+
+      if (fetchError) throw fetchError
+
       const updateData: any = { status }
       if (status === 'returned') {
         updateData.return_date = new Date().toISOString()
@@ -312,7 +321,34 @@ export default function CityAdminPage() {
 
       if (error) throw error
 
+      // If status changed to 'returned', increment equipment quantity
+      if (status === 'returned' && borrowRecord.equipment_id) {
+        const equipmentItem = equipment.find(eq => eq.id === borrowRecord.equipment_id)
+        if (equipmentItem) {
+          const { error: qtyUpdateError } = await supabase
+            .from('equipment')
+            .update({ quantity: equipmentItem.quantity + 1 })
+            .eq('id', borrowRecord.equipment_id)
+
+          if (qtyUpdateError) throw qtyUpdateError
+        }
+      }
+
+      // If status changed to 'borrowed', decrement equipment quantity
+      if (status === 'borrowed' && borrowRecord.equipment_id && borrowRecord.status === 'returned') {
+        const equipmentItem = equipment.find(eq => eq.id === borrowRecord.equipment_id)
+        if (equipmentItem && equipmentItem.quantity > 0) {
+          const { error: qtyUpdateError } = await supabase
+            .from('equipment')
+            .update({ quantity: equipmentItem.quantity - 1 })
+            .eq('id', borrowRecord.equipment_id)
+
+          if (qtyUpdateError) throw qtyUpdateError
+        }
+      }
+
       fetchHistory()
+      fetchEquipment() // Refresh equipment to show updated quantity
     } catch (error) {
       console.error('Error updating history:', error)
       alert('אירעה שגיאה בעדכון ההיסטוריה')
