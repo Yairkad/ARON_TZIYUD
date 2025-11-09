@@ -17,6 +17,7 @@ export default function RequestsTab({ cityId, cityName, managerName }: RequestsT
   const [filter, setFilter] = useState<'all' | 'pending' | 'approved' | 'rejected' | 'expired'>('all')
   const [search, setSearch] = useState('')
   const [rejectReason, setRejectReason] = useState<{ requestId: string; reason: string } | null>(null)
+  const [regeneratedToken, setRegeneratedToken] = useState<{ requestId: string; token: string } | null>(null)
 
   useEffect(() => {
     fetchRequests()
@@ -60,7 +61,7 @@ export default function RequestsTab({ cityId, cityName, managerName }: RequestsT
       }
 
       if (action === 'regenerate' && data.newToken) {
-        alert(`טוקן חדש נוצר!\n\nקישור חדש:\n${window.location.origin}/request/${data.newToken}`)
+        setRegeneratedToken({ requestId, token: data.newToken })
       } else {
         alert(getSuccessMessage(action))
       }
@@ -85,17 +86,35 @@ export default function RequestsTab({ cityId, cityName, managerName }: RequestsT
     return messages[action] || 'הפעולה בוצעה בהצלחה'
   }
 
-  const getRequestUrl = (request: EquipmentRequestWithItems) => {
-    // We can't get the original token from hash, but manager can regenerate
-    return `${window.location.origin}/request/[טוקן]`
+  const getRequestUrl = (token: string) => {
+    return `${window.location.origin}/request/${token}`
   }
 
-  const handleWhatsAppShare = (request: EquipmentRequestWithItems) => {
-    alert('💡 לשליחת הקישור ב-WhatsApp, לחץ על "צור טוקן חדש" ואז תקבל קישור חדש לשיתוף')
+  const handleWhatsAppShare = (request: EquipmentRequestWithItems, token: string) => {
+    const url = getRequestUrl(token)
+    const phone = request.requester_phone.replace(/\D/g, '')
+    const internationalPhone = phone.startsWith('0') ? '972' + phone.slice(1) : phone
+
+    const message = `שלום ${request.requester_name},
+
+הבקשה שלך לציוד מארון ${cityName} התקבלה!
+
+📋 סטטוס: ${getStatusText(request.status)}
+📅 תאריך: ${new Date(request.created_at).toLocaleDateString('he-IL')}
+
+🔗 לצפייה בפרטי הבקשה:
+${url}
+
+תודה!`
+
+    const whatsappUrl = `https://wa.me/${internationalPhone}?text=${encodeURIComponent(message)}`
+    window.open(whatsappUrl, '_blank')
   }
 
-  const handleCopyLink = () => {
-    alert('💡 לקבלת קישור להעתקה, לחץ על "צור טוקן חדש"')
+  const handleCopyLink = (token: string) => {
+    const url = getRequestUrl(token)
+    navigator.clipboard.writeText(url)
+    alert('✅ הקישור הועתק ללוח!')
   }
 
   const getStatusColor = (status: string) => {
@@ -339,6 +358,49 @@ export default function RequestsTab({ cityId, cityName, managerName }: RequestsT
                       className="border-2 border-gray-300 rounded-xl"
                     >
                       ביטול
+                    </Button>
+                  </div>
+                </div>
+              )}
+
+              {/* Regenerated Token Display */}
+              {regeneratedToken && regeneratedToken.requestId === request.id && (
+                <div className="bg-gradient-to-r from-green-50 to-emerald-50 border-t-2 border-green-200 p-6">
+                  <div className="text-center mb-4">
+                    <div className="text-4xl mb-2">🎉</div>
+                    <h4 className="font-bold text-gray-900 text-xl mb-2">טוקן חדש נוצר בהצלחה!</h4>
+                    <p className="text-sm text-gray-600 mb-4">שלח את הקישור למבקש בWhatsApp או העתק אותו</p>
+                  </div>
+
+                  <div className="bg-white border-2 border-green-300 rounded-xl p-4 mb-4">
+                    <p className="text-xs text-gray-500 mb-1">קישור לבקשה:</p>
+                    <p className="font-mono text-sm text-blue-600 break-all">
+                      {getRequestUrl(regeneratedToken.token)}
+                    </p>
+                  </div>
+
+                  <div className="flex flex-col sm:flex-row gap-3">
+                    <Button
+                      onClick={() => handleWhatsAppShare(request, regeneratedToken.token)}
+                      className="flex-1 bg-gradient-to-r from-green-600 to-emerald-600 hover:from-green-700 hover:to-emerald-700 text-white font-semibold rounded-xl shadow-md"
+                    >
+                      <span className="text-xl mr-2">📱</span>
+                      שלח ב-WhatsApp
+                    </Button>
+                    <Button
+                      onClick={() => handleCopyLink(regeneratedToken.token)}
+                      variant="outline"
+                      className="flex-1 border-2 border-green-500 text-green-700 hover:bg-green-50 rounded-xl font-semibold"
+                    >
+                      <span className="text-xl mr-2">📋</span>
+                      העתק קישור
+                    </Button>
+                    <Button
+                      onClick={() => setRegeneratedToken(null)}
+                      variant="outline"
+                      className="border-2 border-gray-300 rounded-xl"
+                    >
+                      סגור
                     </Button>
                   </div>
                 </div>
