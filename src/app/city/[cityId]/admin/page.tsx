@@ -159,6 +159,45 @@ export default function CityAdminPage() {
     }
   }
 
+  // Group history records by borrower (name + phone) and date
+  const groupedHistory = borrowHistory.reduce((acc, record) => {
+    const borrowDate = new Date(record.borrow_date)
+    const dateKey = borrowDate.toLocaleDateString('he-IL')
+    const timeKey = borrowDate.toLocaleTimeString('he-IL', { hour: '2-digit', minute: '2-digit' })
+    const key = `${record.name}-${record.phone}-${dateKey}-${timeKey}`
+
+    if (!acc[key]) {
+      acc[key] = {
+        id: key,
+        name: record.name,
+        phone: record.phone,
+        borrow_date: record.borrow_date,
+        date: dateKey,
+        time: timeKey,
+        items: [],
+        allReturned: true
+      }
+    }
+
+    acc[key].items.push(record)
+    if (record.status === 'borrowed') {
+      acc[key].allReturned = false
+    }
+
+    return acc
+  }, {} as Record<string, {
+    id: string
+    name: string
+    phone: string
+    borrow_date: string
+    date: string
+    time: string
+    items: BorrowHistory[]
+    allReturned: boolean
+  }>)
+
+  const groupedHistoryArray = Object.values(groupedHistory)
+
   const fetchPendingRequestsCount = async () => {
     if (city?.request_mode !== 'request') return
 
@@ -1214,58 +1253,81 @@ export default function CityAdminPage() {
             <CardContent className="p-3 md:p-6">
               {/* Mobile View */}
               <div className="block md:hidden space-y-4">
-                {borrowHistory.map(record => (
-                  <div key={record.id} className="bg-gradient-to-r from-blue-50 to-indigo-50 rounded-xl p-4 border-2 border-blue-200">
-                    <div className="space-y-2 mb-3">
-                      <div className="flex justify-between items-start">
+                {groupedHistoryArray.map(group => (
+                  <div key={group.id} className="bg-gradient-to-r from-blue-50 to-indigo-50 rounded-xl p-4 border-2 border-blue-200">
+                    <div className="space-y-3 mb-3">
+                      {/* Header with name and overall status */}
+                      <div className="flex justify-between items-center pb-2 border-b border-gray-300">
                         <div>
-                          <p className="text-xs text-gray-600 font-semibold">🎯 ציוד</p>
-                          <p className="font-bold text-lg text-gray-800">{record.equipment_name}</p>
+                          <p className="text-xs text-gray-600 font-semibold">👤 שם לוקח</p>
+                          <p className="font-bold text-lg text-gray-800">{group.name}</p>
                         </div>
-                        <select
-                          value={record.status}
-                          onChange={(e) => handleUpdateHistoryStatus(record.id, e.target.value as 'borrowed' | 'returned')}
-                          className={`px-3 py-1.5 rounded-lg font-bold text-xs border-2 transition-colors ${
-                            record.status === 'borrowed'
-                              ? 'bg-orange-50 border-orange-300 text-orange-700'
-                              : 'bg-green-50 border-green-300 text-green-700'
-                          }`}
-                          disabled={loading}
-                        >
-                          <option value="borrowed">🟠 הושאל</option>
-                          <option value="returned">🟢 הוחזר</option>
-                        </select>
-                      </div>
-                      <div className="grid grid-cols-2 gap-2 pt-2 border-t border-gray-200">
-                        <div>
-                          <p className="text-xs text-gray-600">👤 שם</p>
-                          <p className="font-medium text-gray-800">{record.name}</p>
-                        </div>
-                        <div>
-                          <p className="text-xs text-gray-600">📱 טלפון</p>
-                          <p className="font-medium text-gray-800 text-sm">{record.phone}</p>
+                        <div className={`px-3 py-1.5 rounded-lg font-bold text-xs ${
+                          group.allReturned
+                            ? 'bg-green-100 text-green-700'
+                            : 'bg-orange-100 text-orange-700'
+                        }`}>
+                          {group.allReturned ? '✅ הוחזר הכל' : '⏳ חלקי/לא הוחזר'}
                         </div>
                       </div>
+
+                      {/* Details */}
                       <div className="grid grid-cols-2 gap-2">
                         <div>
-                          <p className="text-xs text-gray-600">📅 הושאל</p>
-                          <p className="font-medium text-gray-800 text-sm">{new Date(record.borrow_date).toLocaleDateString('he-IL')}</p>
+                          <p className="text-xs text-gray-600">📅 תאריך</p>
+                          <p className="font-medium text-gray-800">{group.date}</p>
                         </div>
                         <div>
-                          <p className="text-xs text-gray-600">📅 הוחזר</p>
-                          <p className="font-medium text-gray-800 text-sm">
-                            {record.return_date ? new Date(record.return_date).toLocaleDateString('he-IL') : '➖'}
-                          </p>
+                          <p className="text-xs text-gray-600">🕐 שעה</p>
+                          <p className="font-medium text-gray-800">{group.time}</p>
+                        </div>
+                      </div>
+                      <div>
+                        <p className="text-xs text-gray-600">📱 טלפון</p>
+                        <p className="font-medium text-gray-800">{group.phone}</p>
+                      </div>
+
+                      {/* Equipment items */}
+                      <div className="pt-2 border-t border-gray-300">
+                        <p className="text-xs text-gray-600 font-semibold mb-2">🎯 ציוד שנלקח</p>
+                        <div className="space-y-2">
+                          {group.items.map(item => (
+                            <div key={item.id} className={`flex justify-between items-center p-3 rounded-lg border-2 ${
+                              item.status === 'borrowed'
+                                ? 'bg-orange-50 border-orange-200'
+                                : 'bg-green-50 border-green-200'
+                            }`}>
+                              <div className="flex-1">
+                                <p className="font-semibold text-gray-800">{item.equipment_name}</p>
+                                <p className="text-xs text-gray-600">כמות: {item.quantity || 1}</p>
+                              </div>
+                              <div className="flex gap-2 items-center">
+                                <button
+                                  onClick={() => handleUpdateHistoryStatus(
+                                    item.id,
+                                    item.status === 'borrowed' ? 'returned' : 'borrowed'
+                                  )}
+                                  disabled={loading}
+                                  className="text-2xl hover:scale-110 transition-transform"
+                                  title={item.status === 'borrowed' ? 'סמן כהוחזר' : 'סמן כהושאל'}
+                                >
+                                  {item.status === 'borrowed' ? '🟠' : '🟢'}
+                                </button>
+                                <Button
+                                  size="sm"
+                                  variant="destructive"
+                                  onClick={() => handleDeleteHistory(item.id)}
+                                  disabled={loading}
+                                  className="h-8 px-2 bg-red-500 hover:bg-red-600"
+                                >
+                                  🗑️
+                                </Button>
+                              </div>
+                            </div>
+                          ))}
                         </div>
                       </div>
                     </div>
-                    <Button
-                      onClick={() => handleDeleteHistory(record.id)}
-                      disabled={loading}
-                      className="w-full h-11 bg-gradient-to-r from-red-500 to-rose-500 hover:from-red-600 hover:to-rose-600 text-white rounded-lg"
-                    >
-                      🗑️ מחק רשומה
-                    </Button>
                   </div>
                 ))}
               </div>
@@ -1275,50 +1337,71 @@ export default function CityAdminPage() {
                 <table className="w-full border-collapse">
                   <thead>
                     <tr className="bg-gradient-to-r from-blue-100 to-indigo-100 border-b-2 border-blue-200">
-                      <th className="text-right p-4 font-bold text-gray-700">📅 תאריך השאלה</th>
                       <th className="text-right p-4 font-bold text-gray-700">👤 שם</th>
+                      <th className="text-right p-4 font-bold text-gray-700">📅 תאריך</th>
+                      <th className="text-right p-4 font-bold text-gray-700">🕐 שעה</th>
                       <th className="text-right p-4 font-bold text-gray-700">📱 טלפון</th>
-                      <th className="text-right p-4 font-bold text-gray-700">🎯 ציוד</th>
+                      <th className="text-right p-4 font-bold text-gray-700">🎯 ציוד שנלקח</th>
                       <th className="text-right p-4 font-bold text-gray-700">🟢 סטטוס</th>
-                      <th className="text-right p-4 font-bold text-gray-700">📅 תאריך החזרה</th>
                       <th className="text-right p-4 font-bold text-gray-700">⚙️ פעולות</th>
                     </tr>
                   </thead>
                   <tbody>
-                    {borrowHistory.map(record => (
-                      <tr key={record.id} className="border-b hover:bg-blue-50 transition-colors">
-                        <td className="p-4 text-gray-700">{new Date(record.borrow_date).toLocaleDateString('he-IL')}</td>
-                        <td className="p-4 font-medium text-gray-800">{record.name}</td>
-                        <td className="p-4 text-gray-600">{record.phone}</td>
-                        <td className="p-4 font-medium text-gray-800">{record.equipment_name}</td>
+                    {groupedHistoryArray.map(group => (
+                      <tr key={group.id} className="border-b hover:bg-blue-50 transition-colors">
+                        <td className="p-4 font-bold text-gray-800">{group.name}</td>
+                        <td className="p-4 text-gray-700">{group.date}</td>
+                        <td className="p-4 text-gray-600">{group.time}</td>
+                        <td className="p-4 text-gray-600">{group.phone}</td>
                         <td className="p-4">
-                          <select
-                            value={record.status}
-                            onChange={(e) => handleUpdateHistoryStatus(record.id, e.target.value as 'borrowed' | 'returned')}
-                            className={`px-4 py-2 rounded-xl font-bold text-sm border-2 transition-colors ${
-                              record.status === 'borrowed'
-                                ? 'bg-orange-50 border-orange-300 text-orange-700 hover:bg-orange-100'
-                                : 'bg-green-50 border-green-300 text-green-700 hover:bg-green-100'
-                            }`}
-                            disabled={loading}
-                          >
-                            <option value="borrowed">🟠 הושאל</option>
-                            <option value="returned">🟢 הוחזר</option>
-                          </select>
-                        </td>
-                        <td className="p-4 text-gray-600">
-                          {record.return_date ? new Date(record.return_date).toLocaleDateString('he-IL') : '➖'}
+                          <div className="flex flex-wrap gap-1">
+                            {group.items.map((item, idx) => (
+                              <div key={item.id} className="flex items-center gap-1">
+                                <span className={`inline-flex items-center px-2 py-1 rounded-lg text-xs font-medium ${
+                                  item.status === 'borrowed'
+                                    ? 'bg-orange-100 text-orange-700 border border-orange-300'
+                                    : 'bg-green-100 text-green-700 border border-green-300'
+                                }`}>
+                                  {item.equipment_name}
+                                  <button
+                                    onClick={() => handleUpdateHistoryStatus(item.id, item.status === 'borrowed' ? 'returned' : 'borrowed')}
+                                    className="ml-1 hover:scale-110 transition-transform"
+                                    disabled={loading}
+                                    title={item.status === 'borrowed' ? 'סמן כהוחזר' : 'סמן כהושאל'}
+                                  >
+                                    {item.status === 'borrowed' ? '🟠' : '🟢'}
+                                  </button>
+                                </span>
+                                {idx < group.items.length - 1 && <span className="text-gray-400">•</span>}
+                              </div>
+                            ))}
+                          </div>
                         </td>
                         <td className="p-4">
-                          <Button
-                            size="sm"
-                            variant="destructive"
-                            onClick={() => handleDeleteHistory(record.id)}
-                            disabled={loading}
-                            className="bg-gradient-to-r from-red-500 to-rose-500 hover:from-red-600 hover:to-rose-600 rounded-lg"
-                          >
-                            🗑️ מחק
-                          </Button>
+                          <span className={`px-3 py-1 rounded-full text-xs font-bold ${
+                            group.allReturned
+                              ? 'bg-green-100 text-green-700'
+                              : 'bg-orange-100 text-orange-700'
+                          }`}>
+                            {group.allReturned ? '✅ הוחזר הכל' : '⏳ חלקי/לא הוחזר'}
+                          </span>
+                        </td>
+                        <td className="p-4">
+                          <div className="flex gap-2">
+                            {group.items.map(item => (
+                              <Button
+                                key={item.id}
+                                size="sm"
+                                variant="ghost"
+                                onClick={() => handleDeleteHistory(item.id)}
+                                disabled={loading}
+                                className="h-8 w-8 p-0 hover:bg-red-100 hover:text-red-600 text-gray-400"
+                                title={`מחק: ${item.equipment_name}`}
+                              >
+                                🗑️
+                              </Button>
+                            ))}
+                          </div>
                         </td>
                       </tr>
                     ))}
