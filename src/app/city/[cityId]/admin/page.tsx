@@ -8,11 +8,19 @@ import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
 import { supabase } from '@/lib/supabase'
 import { Equipment, BorrowHistory, City } from '@/types'
-import { ArrowRight, FileDown } from 'lucide-react'
+import { ArrowRight, FileDown, Bell, BellOff } from 'lucide-react'
 import * as XLSX from 'xlsx'
 import Logo from '@/components/Logo'
 import { loginCity, checkAuth, logout } from '@/lib/auth'
 import RequestsTab from '@/components/RequestsTab'
+import {
+  isPushSupported,
+  hasNotificationPermission,
+  requestNotificationPermission,
+  subscribeToPush,
+  unsubscribeFromPush,
+  isSubscribed
+} from '@/lib/push'
 
 export default function CityAdminPage() {
   const params = useParams()
@@ -52,6 +60,10 @@ export default function CityAdminPage() {
   const [pendingRequestsCount, setPendingRequestsCount] = useState(0)
   const [expandedGroups, setExpandedGroups] = useState<Set<string>>(new Set())
   const [isEditingLocation, setIsEditingLocation] = useState(false)
+  const [showRequestsNotification, setShowRequestsNotification] = useState(false)
+  const [pushEnabled, setPushEnabled] = useState(false)
+  const [pushSupported, setPushSupported] = useState(false)
+  const [enablingPush, setEnablingPush] = useState(false)
 
   useEffect(() => {
     if (cityId) {
@@ -87,17 +99,27 @@ export default function CityAdminPage() {
       const alertKey = `pending-requests-${pendingRequestsCount}`
 
       if (!dismissedAlerts.has(alertKey)) {
-        const message = pendingRequestsCount === 1
-          ? '🔔 יש בקשה אחת חדשה ממתינה לאישור!'
-          : `🔔 יש ${pendingRequestsCount} בקשות חדשות ממתינות לאישור!`
-
-        alert(message)
-
+        setShowRequestsNotification(true)
         setDismissedAlerts(prev => new Set(prev).add(alertKey))
       }
     }
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [pendingRequestsCount, isAuthenticated, city?.request_mode])
+
+  // Check push notification support and subscription status
+  useEffect(() => {
+    const checkPushStatus = async () => {
+      const supported = isPushSupported()
+      setPushSupported(supported)
+
+      if (supported && isAuthenticated) {
+        const subscribed = await isSubscribed()
+        setPushEnabled(subscribed)
+      }
+    }
+
+    checkPushStatus()
+  }, [isAuthenticated])
 
   const fetchCity = async () => {
     try {
@@ -666,6 +688,50 @@ export default function CityAdminPage() {
     }
   }
 
+  const handleTogglePushNotifications = async () => {
+    try {
+      setEnablingPush(true)
+
+      if (pushEnabled) {
+        // Disable push notifications
+        await unsubscribeFromPush()
+        setPushEnabled(false)
+        alert('✅ התראות כבויות')
+      } else {
+        // Enable push notifications
+        // First, check if permission is already granted
+        const hasPermission = hasNotificationPermission()
+
+        if (!hasPermission) {
+          // Request permission
+          const granted = await requestNotificationPermission()
+          if (!granted) {
+            alert('❌ נדרשת הרשאה כדי להפעיל התראות. אנא אפשר התראות בהגדרות הדפדפן.')
+            setEnablingPush(false)
+            return
+          }
+        }
+
+        // Subscribe to push notifications
+        const vapidPublicKey = process.env.NEXT_PUBLIC_VAPID_PUBLIC_KEY
+        if (!vapidPublicKey) {
+          alert('❌ שגיאה: מפתח VAPID לא נמצא')
+          setEnablingPush(false)
+          return
+        }
+
+        await subscribeToPush(cityId, vapidPublicKey)
+        setPushEnabled(true)
+        alert('✅ התראות הופעלו בהצלחה! תקבל עדכונים על בקשות חדשות.')
+      }
+    } catch (error) {
+      console.error('Error toggling push notifications:', error)
+      alert('❌ שגיאה בהפעלת התראות. אנא נסה שוב.')
+    } finally {
+      setEnablingPush(false)
+    }
+  }
+
   if (!isAuthenticated) {
     return (
       <div className="min-h-screen content-wrapper flex items-center justify-center p-4">
@@ -750,6 +816,33 @@ export default function CityAdminPage() {
                   📚 מדריך מנהל
                 </Button>
               </a>
+              {pushSupported && city?.request_mode === 'request' && (
+                <Button
+                  onClick={handleTogglePushNotifications}
+                  disabled={enablingPush}
+                  variant="outline"
+                  className={`border-2 font-semibold px-6 py-2 rounded-xl transition-all duration-200 hover:scale-105 ${
+                    pushEnabled
+                      ? 'border-green-500 text-green-600 hover:bg-green-50'
+                      : 'border-gray-400 text-gray-600 hover:bg-gray-50'
+                  }`}
+                  title={pushEnabled ? 'כבה התראות' : 'הפעל התראות'}
+                >
+                  {enablingPush ? (
+                    '⏳'
+                  ) : pushEnabled ? (
+                    <>
+                      <Bell className="ml-2 h-4 w-4" />
+                      התראות פעילות
+                    </>
+                  ) : (
+                    <>
+                      <BellOff className="ml-2 h-4 w-4" />
+                      הפעל התראות
+                    </>
+                  )}
+                </Button>
+              )}
               <Link href={`/city/${cityId}`}>
                 <Button
                   variant="outline"
@@ -2013,6 +2106,48 @@ export default function CityAdminPage() {
               </div>
             </CardContent>
           </Card>
+        )}
+
+        {/* Requests Notification Dialog */}
+        {showRequestsNotification && (
+          <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/50 backdrop-blur-sm">
+            <div className="bg-white rounded-2xl shadow-2xl max-w-md w-full animate-in fade-in zoom-in duration-300">
+              <div className="p-6 sm:p-8">
+                {/* Icon and Title */}
+                <div className="text-center mb-6">
+                  <div className="text-6xl mb-4 animate-bounce">🔔</div>
+                  <h2 className="text-2xl sm:text-3xl font-bold text-gray-800 mb-2">
+                    בקשות חדשות!
+                  </h2>
+                  <p className="text-lg text-gray-600">
+                    {pendingRequestsCount === 1
+                      ? 'יש בקשה אחת חדשה ממתינה לאישור'
+                      : `יש ${pendingRequestsCount} בקשות חדשות ממתינות לאישור`}
+                  </p>
+                </div>
+
+                {/* Buttons */}
+                <div className="space-y-3">
+                  <Button
+                    onClick={() => {
+                      setActiveTab('requests')
+                      setShowRequestsNotification(false)
+                    }}
+                    className="w-full h-14 bg-gradient-to-r from-blue-600 to-indigo-600 hover:from-blue-700 hover:to-indigo-700 text-white font-bold text-lg rounded-xl shadow-lg hover:shadow-xl transition-all duration-200 hover:scale-105"
+                  >
+                    📋 מעבר לבקשות
+                  </Button>
+                  <Button
+                    onClick={() => setShowRequestsNotification(false)}
+                    variant="outline"
+                    className="w-full h-12 border-2 border-gray-300 text-gray-700 hover:bg-gray-50 font-semibold text-base rounded-xl transition-all duration-200"
+                  >
+                    סגור
+                  </Button>
+                </div>
+              </div>
+            </div>
+          </div>
         )}
       </div>
     </div>

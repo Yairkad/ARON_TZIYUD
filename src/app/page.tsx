@@ -196,18 +196,69 @@ export default function HomePage() {
                           </div>
                         </div>
                       )}
-                      {/* Location Link */}
-                      {city.location_url && (
-                        <a
-                          href={city.location_url}
-                          target="_blank"
-                          rel="noopener noreferrer"
-                          className="flex items-center gap-2 bg-white rounded-lg p-2 border border-gray-200 hover:bg-gray-50 transition-colors"
-                        >
-                          <span className="text-lg">📍</span>
-                          <span className="font-semibold text-blue-600">מיקום הארון במפה</span>
-                        </a>
-                      )}
+                      {/* Navigation Buttons */}
+                      {city.location_url && (() => {
+                        // Extract coordinates from Google Maps URL
+                        let lat = ''
+                        let lng = ''
+
+                        try {
+                          const url = new URL(city.location_url)
+                          const qParam = url.searchParams.get('q')
+                          if (qParam) {
+                            const coords = qParam.split(',')
+                            if (coords.length === 2) {
+                              lat = coords[0].trim()
+                              lng = coords[1].trim()
+                            }
+                          }
+
+                          if (!lat || !lng) {
+                            const pathMatch = url.pathname.match(/(-?\d+\.?\d*),(-?\d+\.?\d*)/)
+                            if (pathMatch) {
+                              lat = pathMatch[1]
+                              lng = pathMatch[2]
+                            }
+                          }
+                        } catch (e) {
+                          console.error('Failed to parse location URL:', e)
+                        }
+
+                        const googleMapsUrl = lat && lng
+                          ? `https://www.google.com/maps?q=${lat},${lng}`
+                          : city.location_url
+
+                        const wazeUrl = lat && lng
+                          ? `https://waze.com/ul?ll=${lat},${lng}&navigate=yes`
+                          : city.location_url
+
+                        return (
+                          <div className="flex items-center gap-2 bg-white rounded-lg p-2 border border-gray-200">
+                            <span className="text-lg">🗺️</span>
+                            <span className="font-semibold text-gray-700 flex-1">ניווט לארון:</span>
+                            <div className="flex gap-1">
+                              <a
+                                href={googleMapsUrl}
+                                target="_blank"
+                                rel="noopener noreferrer"
+                                className="h-8 w-8 bg-blue-500 hover:bg-blue-600 text-white rounded-full flex items-center justify-center transition-colors"
+                                title="Google Maps"
+                              >
+                                <span className="text-xs">📍</span>
+                              </a>
+                              <a
+                                href={wazeUrl}
+                                target="_blank"
+                                rel="noopener noreferrer"
+                                className="h-8 w-8 bg-cyan-500 hover:bg-cyan-600 text-white rounded-full flex items-center justify-center transition-colors"
+                                title="Waze"
+                              >
+                                <span className="text-xs">🚗</span>
+                              </a>
+                            </div>
+                          </div>
+                        )
+                      })()}
                     </div>
                   </CardDescription>
                 </CardHeader>

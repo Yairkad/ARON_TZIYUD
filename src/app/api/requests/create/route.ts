@@ -180,6 +180,26 @@ export async function POST(request: NextRequest) {
       expires_at: expiresAt
     })
 
+    // Send push notification to city managers (fire and forget)
+    try {
+      await fetch(`${process.env.NEXT_PUBLIC_APP_URL || 'http://localhost:3000'}/api/push/send`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          cityId,
+          title: 'בקשה חדשה!',
+          body: `${body.requester_name} שלח/ה בקשה לציוד`,
+          url: `${process.env.NEXT_PUBLIC_APP_URL || 'http://localhost:3000'}/city/${cityId}/admin`
+        })
+      }).catch(err => {
+        // Don't fail the request if push fails
+        console.error('Failed to send push notification:', err)
+      })
+    } catch (pushError) {
+      console.error('Error sending push notification:', pushError)
+      // Continue anyway - push failure shouldn't block request creation
+    }
+
     return NextResponse.json({
       success: true,
       token,

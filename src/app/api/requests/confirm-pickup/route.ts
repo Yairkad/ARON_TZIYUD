@@ -83,6 +83,11 @@ export async function POST(request: NextRequest) {
 
       // 2. Create borrow_history record
       console.log('Creating borrow_history with city_id:', equipmentRequest.city_id)
+
+      // For consumable items, auto-return immediately
+      const isConsumable = item.equipment.is_consumable
+      const currentTime = new Date().toISOString()
+
       const { error: historyError } = await supabase
         .from('borrow_history')
         .insert({
@@ -91,7 +96,10 @@ export async function POST(request: NextRequest) {
           equipment_id: item.equipment_id,
           equipment_name: item.equipment.name,
           city_id: equipmentRequest.city_id,
-          status: 'borrowed'
+          status: isConsumable ? 'returned' : 'borrowed',
+          borrow_date: currentTime,
+          return_date: isConsumable ? currentTime : null,
+          equipment_status: 'working'
         })
 
       if (historyError) {
