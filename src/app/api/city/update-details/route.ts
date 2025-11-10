@@ -11,6 +11,8 @@ export async function POST(request: NextRequest) {
       manager2_phone,
       location_url,
       token_location_url,
+      location_description,
+      location_image_url,
       request_mode,
       cabinet_code,
       require_call_id
@@ -64,6 +66,12 @@ export async function POST(request: NextRequest) {
     // הוספת שדות אופציונליים רק אם הם סופקו
     if (token_location_url !== undefined) {
       updateData.token_location_url = token_location_url ? token_location_url.trim() : null
+    }
+    if (location_description !== undefined) {
+      updateData.location_description = location_description ? location_description.trim() : null
+    }
+    if (location_image_url !== undefined) {
+      updateData.location_image_url = location_image_url ? location_image_url.trim() : null
     }
     if (request_mode !== undefined) {
       updateData.request_mode = request_mode

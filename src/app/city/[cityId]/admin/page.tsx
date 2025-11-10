@@ -35,7 +35,9 @@ export default function CityAdminPage() {
     manager2_name: '',
     manager2_phone: '',
     location_url: '',
-    token_location_url: ''
+    token_location_url: '',
+    location_description: '',
+    location_image_url: ''
   })
   const [allCities, setAllCities] = useState<City[]>([])
   const [selectedCityToCopy, setSelectedCityToCopy] = useState<string>('')
@@ -83,7 +85,9 @@ export default function CityAdminPage() {
           manager2_name: data.manager2_name || '',
           manager2_phone: data.manager2_phone || '',
           location_url: data.location_url || '',
-          token_location_url: data.token_location_url || ''
+          token_location_url: data.token_location_url || '',
+          location_description: data.location_description || '',
+          location_image_url: data.location_image_url || ''
         })
       }
     } catch (error) {
@@ -465,7 +469,9 @@ export default function CityAdminPage() {
           manager2_name: editCityForm.manager2_name.trim() || null,
           manager2_phone: editCityForm.manager2_phone.trim() || null,
           location_url: editCityForm.location_url.trim() || null,
-          token_location_url: editCityForm.token_location_url.trim() || null
+          token_location_url: editCityForm.token_location_url.trim() || null,
+          location_description: editCityForm.location_description.trim() || null,
+          location_image_url: editCityForm.location_image_url.trim() || null
         }),
       })
 
@@ -1640,7 +1646,33 @@ export default function CityAdminPage() {
                           placeholder="https://maps.google.com/?q=..."
                           className="h-12 border-2 border-purple-200 rounded-xl focus:border-purple-500 transition-colors"
                         />
-                        <p className="text-xs text-purple-600">יוצג רק בדף הטוקן לאחר אישור בקשה (אופציונלי)</p>
+                        <p className="text-xs text-purple-600">יוצג רק בדף הטוכן לאחר אישור בקשה (אופציונלי)</p>
+                      </div>
+
+                      {/* Location Description */}
+                      <div className="space-y-2">
+                        <label className="block text-sm font-semibold text-gray-700">📝 תיאור מיקום הארון</label>
+                        <textarea
+                          value={editCityForm.location_description || ''}
+                          onChange={(e) => setEditCityForm({ ...editCityForm, location_description: e.target.value })}
+                          placeholder="לדוגמה: הארון נמצא בכניסה הראשית, ליד דלפק הקבלה..."
+                          rows={4}
+                          className="w-full p-3 border-2 border-gray-200 rounded-xl focus:border-indigo-500 transition-colors resize-none"
+                        />
+                        <p className="text-xs text-gray-500">הוראות טקסט למציאת הארון - יוצג בדף הטוכן (אופציונלי)</p>
+                      </div>
+
+                      {/* Location Image URL */}
+                      <div className="space-y-2">
+                        <label className="block text-sm font-semibold text-gray-700">🖼️ קישור לתמונת מיקום</label>
+                        <Input
+                          type="url"
+                          value={editCityForm.location_image_url || ''}
+                          onChange={(e) => setEditCityForm({ ...editCityForm, location_image_url: e.target.value })}
+                          placeholder="https://example.com/image.jpg"
+                          className="h-12 border-2 border-gray-200 rounded-xl focus:border-indigo-500 transition-colors"
+                        />
+                        <p className="text-xs text-gray-500">תמונה של הארון/מיקום - יוצג בדף הטוכן (אופציונלי)</p>
                       </div>
 
                       <Button
