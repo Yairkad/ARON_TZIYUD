@@ -627,16 +627,23 @@ export default function CityPage() {
               </div>
 
               <div className="bg-blue-50 rounded-xl p-6 border-2 border-blue-200">
-                <p className="text-sm font-semibold text-gray-700 mb-3">🔗 קישור לבקשה:</p>
-                <div className="bg-white p-3 rounded-lg border border-gray-200 mb-4">
-                  <p className="text-sm text-gray-600 break-all font-mono">{getRequestUrl()}</p>
+                <p className="text-sm font-semibold text-gray-700 mb-3 text-center">🔗 הבקשה שלך מוכנה!</p>
+                <p className="text-sm text-gray-600 mb-4 text-center">לחץ על הכפתור למטה כדי לפתוח את דף הבקשה</p>
+                <div className="flex gap-3">
+                  <Button
+                    onClick={() => window.open(getRequestUrl(), '_blank')}
+                    className="flex-1 h-12 bg-gradient-to-r from-blue-600 to-indigo-600 hover:from-blue-700 hover:to-indigo-700 text-white font-semibold rounded-xl shadow-md hover:shadow-lg transition-all"
+                  >
+                    🔗 פתח את הבקשה
+                  </Button>
+                  <Button
+                    onClick={handleCopyLink}
+                    variant="outline"
+                    className="h-12 px-4 border-2 border-blue-400 text-blue-700 hover:bg-blue-50 rounded-xl font-semibold"
+                  >
+                    📋
+                  </Button>
                 </div>
-                <Button
-                  onClick={handleCopyLink}
-                  className="w-full h-12 bg-gradient-to-r from-blue-600 to-indigo-600 hover:from-blue-700 hover:to-indigo-700 text-white font-semibold rounded-xl shadow-md hover:shadow-lg transition-all"
-                >
-                  📋 העתק קישור
-                </Button>
               </div>
 
               <div className="bg-yellow-50 rounded-xl p-4 border-2 border-yellow-200">
