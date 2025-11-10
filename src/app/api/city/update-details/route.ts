@@ -10,10 +10,10 @@ export async function POST(request: NextRequest) {
       manager2_name,
       manager2_phone,
       location_url,
+      token_location_url,
       request_mode,
       cabinet_code,
-      require_call_id,
-      hide_location
+      require_call_id
     } = await request.json()
 
     if (!cityId || !manager1_name || !manager1_phone) {
@@ -62,6 +62,9 @@ export async function POST(request: NextRequest) {
     }
 
     // הוספת שדות אופציונליים רק אם הם סופקו
+    if (token_location_url !== undefined) {
+      updateData.token_location_url = token_location_url ? token_location_url.trim() : null
+    }
     if (request_mode !== undefined) {
       updateData.request_mode = request_mode
     }
@@ -70,9 +73,6 @@ export async function POST(request: NextRequest) {
     }
     if (require_call_id !== undefined) {
       updateData.require_call_id = require_call_id
-    }
-    if (hide_location !== undefined) {
-      updateData.hide_location = hide_location
     }
 
     // עדכון העיר
@@ -95,13 +95,13 @@ export async function POST(request: NextRequest) {
     if (city.manager1_phone !== updateData.manager1_phone) changedFields.push('טלפון מנהל ראשון')
     if (city.manager2_name !== updateData.manager2_name) changedFields.push('שם מנהל שני')
     if (city.manager2_phone !== updateData.manager2_phone) changedFields.push('טלפון מנהל שני')
-    if (city.location_url !== updateData.location_url) changedFields.push('כתובת ארון')
+    if (city.location_url !== updateData.location_url) changedFields.push('כתובת ארון בדף ראשי')
+    if (updateData.token_location_url !== undefined && city.token_location_url !== updateData.token_location_url) changedFields.push('כתובת ארון בטוקן')
     if (updateData.request_mode !== undefined && city.request_mode !== updateData.request_mode) {
       changedFields.push(updateData.request_mode === 'direct' ? 'שונה למצב השאלה ישירה' : 'שונה למצב בקשות')
     }
     if (updateData.cabinet_code !== undefined && city.cabinet_code !== updateData.cabinet_code) changedFields.push('קוד ארון')
     if (updateData.require_call_id !== undefined && city.require_call_id !== updateData.require_call_id) changedFields.push('דרישת מזהה קריאה')
-    if (updateData.hide_location !== undefined && city.hide_location !== updateData.hide_location) changedFields.push(updateData.hide_location ? 'הסתרת מיקום הופעלה' : 'הסתרת מיקום בוטלה')
 
     if (changedFields.length > 0) {
       const { error: notificationError } = await supabaseServer

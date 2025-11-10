@@ -6,12 +6,12 @@ export interface City {
   manager2_name?: string | null
   manager2_phone?: string | null
   location_url?: string | null
+  token_location_url?: string | null
   password: string
   is_active: boolean
   request_mode?: 'direct' | 'request'
   cabinet_code?: string | null
   require_call_id?: boolean
-  hide_location?: boolean
   admin_emails?: string[] | null
   created_at: string
   updated_at: string

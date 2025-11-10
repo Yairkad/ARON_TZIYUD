@@ -34,7 +34,8 @@ export default function CityAdminPage() {
     manager1_phone: '',
     manager2_name: '',
     manager2_phone: '',
-    location_url: ''
+    location_url: '',
+    token_location_url: ''
   })
   const [allCities, setAllCities] = useState<City[]>([])
   const [selectedCityToCopy, setSelectedCityToCopy] = useState<string>('')
@@ -81,7 +82,8 @@ export default function CityAdminPage() {
           manager1_phone: data.manager1_phone || '',
           manager2_name: data.manager2_name || '',
           manager2_phone: data.manager2_phone || '',
-          location_url: data.location_url || ''
+          location_url: data.location_url || '',
+          token_location_url: data.token_location_url || ''
         })
       }
     } catch (error) {
@@ -462,7 +464,8 @@ export default function CityAdminPage() {
           manager1_phone: editCityForm.manager1_phone.trim(),
           manager2_name: editCityForm.manager2_name.trim() || null,
           manager2_phone: editCityForm.manager2_phone.trim() || null,
-          location_url: editCityForm.location_url.trim() || null
+          location_url: editCityForm.location_url.trim() || null,
+          token_location_url: editCityForm.token_location_url.trim() || null
         }),
       })
 
@@ -1494,56 +1497,6 @@ export default function CityAdminPage() {
                           {city.require_call_id ? 'ON' : 'OFF'}
                         </button>
                       </div>
-
-                      {/* Hide Location */}
-                      <div className="flex items-center justify-between p-4 bg-gray-50 rounded-xl">
-                        <div>
-                          <div className="font-semibold text-gray-800">👁️ הסתרת מיקום מדף ראשי</div>
-                          <div className="text-sm text-gray-500">המיקום יישלח רק בטוקן ולא יוצג בדף הראשי</div>
-                        </div>
-                        <button
-                          onClick={async () => {
-                            const newValue = !city.hide_location
-
-                            // Update local state immediately for instant feedback
-                            setCity({ ...city, hide_location: newValue })
-
-                            try {
-                              const response = await fetch('/api/city/update-details', {
-                                method: 'POST',
-                                headers: { 'Content-Type': 'application/json' },
-                                body: JSON.stringify({
-                                  cityId,
-                                  manager1_name: city?.manager1_name,
-                                  manager1_phone: city?.manager1_phone,
-                                  manager2_name: city?.manager2_name,
-                                  manager2_phone: city?.manager2_phone,
-                                  location_url: city?.location_url,
-                                  hide_location: newValue
-                                })
-                              })
-
-                              if (response.ok) {
-                                alert(newValue ? '👁️ מיקום מוסתר מדף ראשי' : '✅ מיקום מוצג בדף ראשי')
-                              } else {
-                                alert('שגיאה בעדכון')
-                                fetchCity()
-                              }
-                            } catch (error) {
-                              console.error('Error updating hide_location:', error)
-                              alert('שגיאה בעדכון')
-                              fetchCity() // Revert to server value
-                            }
-                          }}
-                          className={`px-6 py-2 rounded-xl font-semibold transition-all ${
-                            city.hide_location
-                              ? 'bg-orange-500 text-white'
-                              : 'bg-gray-300 text-gray-600'
-                          }`}
-                        >
-                          {city.hide_location ? 'מוסתר' : 'מוצג'}
-                        </button>
-                      </div>
                     </div>
                   )}
                 </div>
@@ -1664,9 +1617,9 @@ export default function CityAdminPage() {
                         </div>
                       </div>
 
-                      {/* Location URL */}
+                      {/* Location URL for main page */}
                       <div className="space-y-2">
-                        <label className="block text-sm font-semibold text-gray-700">📍 כתובת ארון (קישור Google Maps)</label>
+                        <label className="block text-sm font-semibold text-gray-700">📍 כתובת ארון בדף הראשי (קישור Google Maps)</label>
                         <Input
                           type="url"
                           value={editCityForm.location_url}
@@ -1674,7 +1627,20 @@ export default function CityAdminPage() {
                           placeholder="https://maps.google.com/?q=..."
                           className="h-12 border-2 border-gray-200 rounded-xl focus:border-indigo-500 transition-colors"
                         />
-                        <p className="text-xs text-gray-500">הדבק קישור ממפות Google (אופציונלי)</p>
+                        <p className="text-xs text-gray-500">יוצג בדף הראשי לכל המשתמשים (אופציונלי - השאר ריק להסתרה)</p>
+                      </div>
+
+                      {/* Token Location URL - separate field for token page */}
+                      <div className="space-y-2">
+                        <label className="block text-sm font-semibold text-gray-700">🔐 כתובת ארון בטוקן (קישור Google Maps)</label>
+                        <Input
+                          type="url"
+                          value={editCityForm.token_location_url || ''}
+                          onChange={(e) => setEditCityForm({ ...editCityForm, token_location_url: e.target.value })}
+                          placeholder="https://maps.google.com/?q=..."
+                          className="h-12 border-2 border-purple-200 rounded-xl focus:border-purple-500 transition-colors"
+                        />
+                        <p className="text-xs text-purple-600">יוצג רק בדף הטוקן לאחר אישור בקשה (אופציונלי)</p>
                       </div>
 
                       <Button

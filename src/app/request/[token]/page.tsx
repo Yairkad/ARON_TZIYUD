@@ -253,11 +253,11 @@ export default function RequestPage({ params }: { params: Promise<{ token: strin
                   </div>
                 )}
 
-                {/* Location */}
-                {request.city?.location_url && (
+                {/* Location - prefer token_location_url, fallback to location_url */}
+                {(request.city?.token_location_url || request.city?.location_url) && (
                   <div className="text-center mb-4">
                     <a
-                      href={request.city.location_url}
+                      href={request.city.token_location_url || request.city.location_url}
                       target="_blank"
                       rel="noopener noreferrer"
                       className="inline-block bg-blue-600 text-white px-6 py-3 rounded-lg hover:bg-blue-700 font-semibold"
