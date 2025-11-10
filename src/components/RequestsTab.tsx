@@ -149,10 +149,32 @@ ${url}
     window.open(whatsappUrl, '_blank')
   }
 
-  const handleCopyLink = (token: string) => {
-    const url = getRequestUrl(token)
-    navigator.clipboard.writeText(url)
-    alert('✅ הקישור הועתק ללוח!')
+  const handleCopyLink = (token: string, request?: EquipmentRequestWithItems) => {
+    const tokenUrl = getRequestUrl(token)
+
+    // If request is provided, copy full message; otherwise just URL
+    let textToCopy = tokenUrl
+
+    if (request) {
+      const equipmentList = request.items.map(item => `• ${item.equipment.name} - כמות: ${item.quantity}`).join('\n')
+      const locationUrl = request.city?.token_location_url || request.city?.location_url || ''
+
+      textToCopy = `שלום ${request.requester_name},
+
+✅ הבקשה שלך אושרה!
+
+📦 ציוד:
+${equipmentList}
+
+🔗 לחץ כאן לפרטים מלאים וקוד הארון:
+${tokenUrl}
+${locationUrl ? `\n📍 מיקום הארון:\n${locationUrl}` : ''}
+
+💚 בהצלחה!`
+    }
+
+    navigator.clipboard.writeText(textToCopy)
+    alert(request ? '✅ ההודעה המלאה הועתקה ללוח!' : '✅ הקישור הועתק ללוח!')
   }
 
   const toggleExpanded = (requestId: string) => {
@@ -168,24 +190,24 @@ ${url}
   const handleSendApprovalWhatsApp = (request: EquipmentRequestWithItems) => {
     const phone = request.requester_phone.replace(/\D/g, '')
     const internationalPhone = phone.startsWith('0') ? '972' + phone.slice(1) : phone
+    const tokenUrl = getRequestUrl(request.token_hash)
 
-    // Get city data from the request
+    // Build equipment list
+    const equipmentList = request.items.map(item => `• ${item.equipment.name} - כמות: ${item.quantity}`).join('\n')
+
+    // Build location URL if available
+    const locationUrl = request.city?.token_location_url || request.city?.location_url || ''
+
     const message = `שלום ${request.requester_name},
 
-✅ הבקשה שלך לציוד מארון ${cityName} אושרה!
+✅ הבקשה שלך אושרה!
 
-📋 פרטי הבקשה:
-${request.items.map(item => `• ${item.equipment.name} - כמות: ${item.quantity}`).join('\n')}
-${request.call_id ? `\n🆔 מזהה קריאה: ${request.call_id}` : ''}
+📦 ציוד:
+${equipmentList}
 
-📍 מיקום הארון:
-https://www.google.com/maps/search/?api=1&query=${encodeURIComponent(cityName + ' ארון ציוד')}
-
-${request.city?.cabinet_code ? `🔐 קוד פתיחת הארון: ${request.city.cabinet_code}\n` : ''}
-🔗 לצפייה בפרטים המלאים:
-היכנס לקישור שקיבלת בעת יצירת הבקשה
-
-⚠️ חשוב: לאחר שתקח את הציוד, אנא לחץ על כפתור אישור הלקיחה בדף הבקשה כדי לעדכן את המלאי.
+🔗 לחץ כאן לפרטים מלאים וקוד הארון:
+${tokenUrl}
+${locationUrl ? `\n📍 מיקום הארון:\n${locationUrl}` : ''}
 
 💚 בהצלחה!`
 
@@ -497,11 +519,11 @@ ${request.city?.cabinet_code ? `🔐 קוד פתיחת הארון: ${request.cit
                       שלח אישור ב-WhatsApp
                     </Button>
                     <Button
-                      onClick={() => handleCopyLink(request.token_hash)}
+                      onClick={() => handleCopyLink(request.token_hash, request)}
                       variant="outline"
                       className="border-2 border-blue-400 text-blue-700 hover:bg-blue-50 rounded-xl"
                     >
-                      📋 העתק קישור
+                      📋 העתק הודעה
                     </Button>
                     <Button
                       onClick={() => setApprovedRequest(null)}

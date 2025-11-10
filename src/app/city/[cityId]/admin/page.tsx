@@ -51,6 +51,7 @@ export default function CityAdminPage() {
   const [dismissedAlerts, setDismissedAlerts] = useState<Set<string>>(new Set())
   const [pendingRequestsCount, setPendingRequestsCount] = useState(0)
   const [expandedGroups, setExpandedGroups] = useState<Set<string>>(new Set())
+  const [isEditingLocation, setIsEditingLocation] = useState(false)
 
   useEffect(() => {
     if (cityId) {
@@ -1809,56 +1810,93 @@ export default function CityAdminPage() {
                         </div>
                       </div>
 
-                      {/* Location URL for main page */}
-                      <div className="space-y-2">
-                        <label className="block text-sm font-semibold text-gray-700">📍 כתובת ארון בדף הראשי (קישור Google Maps)</label>
-                        <Input
-                          type="url"
-                          value={editCityForm.location_url}
-                          onChange={(e) => setEditCityForm({ ...editCityForm, location_url: e.target.value })}
-                          placeholder="https://maps.google.com/?q=..."
-                          className="h-12 border-2 border-gray-200 rounded-xl focus:border-indigo-500 transition-colors"
-                        />
-                        <p className="text-xs text-gray-500">יוצג בדף הראשי לכל המשתמשים (אופציונלי - השאר ריק להסתרה)</p>
-                      </div>
+                      {/* Location Settings Section with Edit/Save Buttons */}
+                      <div className="border-2 border-indigo-200 rounded-xl p-4 bg-indigo-50/50">
+                        <div className="flex items-center justify-between mb-4">
+                          <h3 className="text-lg font-bold text-gray-900">📍 הגדרות מיקום</h3>
+                          {!isEditingLocation ? (
+                            <Button
+                              type="button"
+                              onClick={() => setIsEditingLocation(true)}
+                              className="bg-indigo-600 hover:bg-indigo-700 text-white rounded-lg px-4 py-2"
+                            >
+                              ✏️ ערוך
+                            </Button>
+                          ) : (
+                            <div className="flex gap-2">
+                              <Button
+                                type="button"
+                                onClick={() => setIsEditingLocation(false)}
+                                variant="outline"
+                                className="border-2 border-gray-300 rounded-lg px-4 py-2"
+                              >
+                                ❌ ביטול
+                              </Button>
+                            </div>
+                          )}
+                        </div>
 
-                      {/* Token Location URL - separate field for token page */}
-                      <div className="space-y-2">
-                        <label className="block text-sm font-semibold text-gray-700">🔐 כתובת ארון בטוקן (קישור Google Maps)</label>
-                        <Input
-                          type="url"
-                          value={editCityForm.token_location_url || ''}
-                          onChange={(e) => setEditCityForm({ ...editCityForm, token_location_url: e.target.value })}
-                          placeholder="https://maps.google.com/?q=..."
-                          className="h-12 border-2 border-purple-200 rounded-xl focus:border-purple-500 transition-colors"
-                        />
-                        <p className="text-xs text-purple-600">יוצג רק בדף הטוקן לאחר אישור בקשה (אופציונלי)</p>
-                      </div>
+                        <div className="space-y-4">
+                          {/* Location URL for main page */}
+                          <div className="space-y-2">
+                            <label className="block text-sm font-semibold text-gray-700">📍 כתובת ארון בדף הראשי</label>
+                            <Input
+                              type="url"
+                              value={editCityForm.location_url}
+                              onChange={(e) => setEditCityForm({ ...editCityForm, location_url: e.target.value })}
+                              placeholder="https://maps.google.com/?q=..."
+                              className="h-12 border-2 border-gray-200 rounded-xl focus:border-indigo-500 transition-colors"
+                              readOnly={!isEditingLocation}
+                              disabled={!isEditingLocation}
+                            />
+                            <p className="text-xs text-gray-500">יוצג בדף הראשי לכל המשתמשים (אופציונלי)</p>
+                          </div>
 
-                      {/* Location Description */}
-                      <div className="space-y-2">
-                        <label className="block text-sm font-semibold text-gray-700">📝 תיאור מיקום הארון</label>
-                        <textarea
-                          value={editCityForm.location_description || ''}
-                          onChange={(e) => setEditCityForm({ ...editCityForm, location_description: e.target.value })}
-                          placeholder="לדוגמה: הארון נמצא בכניסה הראשית, ליד דלפק הקבלה..."
-                          rows={4}
-                          className="w-full p-3 border-2 border-gray-200 rounded-xl focus:border-indigo-500 transition-colors resize-none"
-                        />
-                        <p className="text-xs text-gray-500">הוראות טקסט למציאת הארון - יוצג בדף הטוקן (אופציונלי)</p>
-                      </div>
+                          {/* Token Location URL - separate field for token page */}
+                          <div className="space-y-2">
+                            <label className="block text-sm font-semibold text-gray-700">🔐 כתובת ארון בטוקן</label>
+                            <Input
+                              type="url"
+                              value={editCityForm.token_location_url || ''}
+                              onChange={(e) => setEditCityForm({ ...editCityForm, token_location_url: e.target.value })}
+                              placeholder="https://maps.google.com/?q=..."
+                              className="h-12 border-2 border-purple-200 rounded-xl focus:border-purple-500 transition-colors"
+                              readOnly={!isEditingLocation}
+                              disabled={!isEditingLocation}
+                            />
+                            <p className="text-xs text-purple-600">יוצג רק בדף הטוקן לאחר אישור בקשה (אופציונלי)</p>
+                          </div>
 
-                      {/* Location Image URL */}
-                      <div className="space-y-2">
-                        <label className="block text-sm font-semibold text-gray-700">🖼️ קישור לתמונת מיקום</label>
-                        <Input
-                          type="url"
-                          value={editCityForm.location_image_url || ''}
-                          onChange={(e) => setEditCityForm({ ...editCityForm, location_image_url: e.target.value })}
-                          placeholder="https://example.com/image.jpg"
-                          className="h-12 border-2 border-gray-200 rounded-xl focus:border-indigo-500 transition-colors"
-                        />
-                        <p className="text-xs text-gray-500">תמונה של הארון/מיקום - יוצג בדף הטוקן (אופציונלי)</p>
+                          {/* Location Description */}
+                          <div className="space-y-2">
+                            <label className="block text-sm font-semibold text-gray-700">📝 תיאור מיקום הארון</label>
+                            <textarea
+                              value={editCityForm.location_description || ''}
+                              onChange={(e) => setEditCityForm({ ...editCityForm, location_description: e.target.value })}
+                              placeholder="לדוגמה: הארון נמצא בכניסה הראשית, ליד דלפק הקבלה..."
+                              rows={4}
+                              className="w-full p-3 border-2 border-gray-200 rounded-xl focus:border-indigo-500 transition-colors resize-none"
+                              readOnly={!isEditingLocation}
+                              disabled={!isEditingLocation}
+                            />
+                            <p className="text-xs text-gray-500">הוראות טקסט למציאת הארון - יוצג בדף הטוקן (אופציונלי)</p>
+                          </div>
+
+                          {/* Location Image URL */}
+                          <div className="space-y-2">
+                            <label className="block text-sm font-semibold text-gray-700">🖼️ קישור לתמונת מיקום</label>
+                            <Input
+                              type="url"
+                              value={editCityForm.location_image_url || ''}
+                              onChange={(e) => setEditCityForm({ ...editCityForm, location_image_url: e.target.value })}
+                              placeholder="https://example.com/image.jpg"
+                              className="h-12 border-2 border-gray-200 rounded-xl focus:border-indigo-500 transition-colors"
+                              readOnly={!isEditingLocation}
+                              disabled={!isEditingLocation}
+                            />
+                            <p className="text-xs text-gray-500">תמונה של הארון/מיקום - יוצג בדף הטוקן (אופציונלי)</p>
+                          </div>
+                        </div>
                       </div>
 
                       <Button

@@ -290,19 +290,77 @@ export default function RequestPage({ params }: { params: Promise<{ token: strin
                   </div>
                 )}
 
-                {/* Location - prefer token_location_url, fallback to location_url */}
-                {(request.city?.token_location_url || request.city?.location_url) && (
-                  <div className="text-center mb-4">
-                    <a
-                      href={(request.city.token_location_url || request.city.location_url) || ''}
-                      target="_blank"
-                      rel="noopener noreferrer"
-                      className="inline-block bg-blue-600 text-white px-6 py-3 rounded-lg hover:bg-blue-700 font-semibold"
-                    >
-                      📍 פתח מיקום בגוגל מפות
-                    </a>
-                  </div>
-                )}
+                {/* Location Navigation Buttons */}
+                {(request.city?.token_location_url || request.city?.location_url) && (() => {
+                  const locationUrl = request.city.token_location_url || request.city.location_url || ''
+
+                  // Extract coordinates from Google Maps URL
+                  // Supports formats like:
+                  // - https://www.google.com/maps?q=31.7683,35.2137
+                  // - https://maps.google.com/?q=31.7683,35.2137
+                  // - https://www.google.com/maps/place/31.7683,35.2137
+                  let lat = ''
+                  let lng = ''
+
+                  try {
+                    const url = new URL(locationUrl)
+
+                    // Try to get from ?q= parameter
+                    const qParam = url.searchParams.get('q')
+                    if (qParam) {
+                      const coords = qParam.split(',')
+                      if (coords.length === 2) {
+                        lat = coords[0].trim()
+                        lng = coords[1].trim()
+                      }
+                    }
+
+                    // If not found, try to extract from pathname (e.g., /maps/place/31.7683,35.2137)
+                    if (!lat || !lng) {
+                      const pathMatch = url.pathname.match(/(-?\d+\.?\d*),(-?\d+\.?\d*)/)
+                      if (pathMatch) {
+                        lat = pathMatch[1]
+                        lng = pathMatch[2]
+                      }
+                    }
+                  } catch (e) {
+                    console.error('Failed to parse location URL:', e)
+                  }
+
+                  const googleMapsUrl = lat && lng
+                    ? `https://www.google.com/maps?q=${lat},${lng}`
+                    : locationUrl
+
+                  const wazeUrl = lat && lng
+                    ? `https://waze.com/ul?ll=${lat},${lng}&navigate=yes`
+                    : locationUrl
+
+                  return (
+                    <div className="bg-white rounded-lg p-6 mb-4">
+                      <h3 className="text-lg font-bold text-gray-900 mb-4 text-center">
+                        🗺️ ניווט לארון
+                      </h3>
+                      <div className="flex justify-center gap-3">
+                        <a
+                          href={googleMapsUrl}
+                          target="_blank"
+                          rel="noopener noreferrer"
+                          className="flex items-center gap-2 bg-blue-500 hover:bg-blue-600 text-white px-6 py-3 rounded-lg font-semibold transition-colors shadow-md"
+                        >
+                          📍 Google Maps
+                        </a>
+                        <a
+                          href={wazeUrl}
+                          target="_blank"
+                          rel="noopener noreferrer"
+                          className="flex items-center gap-2 bg-cyan-500 hover:bg-cyan-600 text-white px-6 py-3 rounded-lg font-semibold transition-colors shadow-md"
+                        >
+                          🚗 Waze
+                        </a>
+                      </div>
+                    </div>
+                  )
+                })()}
 
                 {/* Confirm Pickup Button */}
                 <div className="bg-white rounded-lg p-6 mt-6 border-2 border-blue-200">
