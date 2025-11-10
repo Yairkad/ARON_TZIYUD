@@ -19,7 +19,7 @@ export default function SuperAdminPage() {
   const [loading, setLoading] = useState(false)
   const [activeTab, setActiveTab] = useState<'cities' | 'notifications' | 'settings'>('cities')
   const [showAddCity, setShowAddCity] = useState(false)
-  const [newCity, setNewCity] = useState<CityForm>({ name: '', manager1_name: '', manager1_phone: '', manager2_name: '', manager2_phone: '', location_url: '', password: '' })
+  const [newCity, setNewCity] = useState<CityForm>({ name: '', manager1_name: '', manager1_phone: '', manager2_name: '', manager2_phone: '', location_url: '', token_location_url: '', password: '' })
   const [editingCity, setEditingCity] = useState<City | null>(null)
   const [changePasswordForm, setChangePasswordForm] = useState({ currentPassword: '', newPassword: '', confirmPassword: '' })
   const [showChangePassword, setShowChangePassword] = useState(false)
@@ -216,6 +216,7 @@ export default function SuperAdminPage() {
           manager2_name: newCity.manager2_name || null,
           manager2_phone: newCity.manager2_phone || null,
           location_url: newCity.location_url || null,
+          token_location_url: newCity.token_location_url || null,
           password: newCity.password
         }),
       })
@@ -228,7 +229,7 @@ export default function SuperAdminPage() {
       }
 
       alert('העיר נוספה בהצלחה!')
-      setNewCity({ name: '', manager1_name: '', manager1_phone: '', manager2_name: '', manager2_phone: '', location_url: '', password: '' })
+      setNewCity({ name: '', manager1_name: '', manager1_phone: '', manager2_name: '', manager2_phone: '', location_url: '', token_location_url: '', password: '' })
       setShowAddCity(false)
       fetchCities()
     } catch (error) {
@@ -620,7 +621,7 @@ export default function SuperAdminPage() {
                     />
                   </div>
                   <div className="space-y-2 md:col-span-2">
-                    <label className="block text-sm font-semibold text-gray-700">📍 קישור Google Maps למיקום הארון <span className="text-gray-400 text-xs">(אופציונלי)</span></label>
+                    <label className="block text-sm font-semibold text-gray-700">📍 קישור למיקום הארון - דף ראשי <span className="text-gray-400 text-xs">(אופציונלי)</span></label>
                     <Input
                       type="url"
                       value={newCity.location_url}
@@ -628,7 +629,18 @@ export default function SuperAdminPage() {
                       placeholder="https://maps.google.com/?q=31.7683,35.2137"
                       className="h-12"
                     />
-                    <p className="text-xs text-gray-500">💡 פתח Google Maps, לחץ ארוך על המיקום, והעתק את הקישור</p>
+                    <p className="text-xs text-gray-500">יוצג בדף הראשי לכל המשתמשים (השאר ריק להסתרה)</p>
+                  </div>
+                  <div className="space-y-2 md:col-span-2">
+                    <label className="block text-sm font-semibold text-gray-700">🔐 קישור למיקום הארון - טוקן בלבד <span className="text-gray-400 text-xs">(אופציונלי)</span></label>
+                    <Input
+                      type="url"
+                      value={newCity.token_location_url || ''}
+                      onChange={(e) => setNewCity({ ...newCity, token_location_url: e.target.value })}
+                      placeholder="https://maps.google.com/?q=31.7683,35.2137"
+                      className="h-12 border-purple-200 focus:border-purple-500"
+                    />
+                    <p className="text-xs text-purple-600">יוצג רק בדף הטוקן לאחר אישור בקשה</p>
                   </div>
                   <div className="space-y-2">
                     <label className="block text-sm font-semibold text-gray-700">🔐 סיסמת העיר</label>

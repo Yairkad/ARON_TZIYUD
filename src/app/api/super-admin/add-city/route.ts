@@ -11,10 +11,11 @@ export async function POST(request: NextRequest) {
       manager2_name,
       manager2_phone,
       location_url,
+      token_location_url,
       password
     } = await request.json()
 
-    console.log('Add city request:', { name, manager1_name, manager1_phone, manager2_name, manager2_phone, location_url })
+    console.log('Add city request:', { name, manager1_name, manager1_phone, manager2_name, manager2_phone, location_url, token_location_url })
 
     if (!name || !manager1_name || !manager1_phone || !password) {
       return NextResponse.json(
@@ -50,6 +51,7 @@ export async function POST(request: NextRequest) {
         manager2_name: manager2_name || null,
         manager2_phone: manager2_phone || null,
         location_url: location_url || null,
+        token_location_url: token_location_url || null,
         password: hashedPassword,
         is_active: true
       }])
