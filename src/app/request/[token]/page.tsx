@@ -18,6 +18,17 @@ export default function RequestPage({ params }: { params: Promise<{ token: strin
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [])
 
+  // Auto-refresh every 10 seconds when status is pending
+  useEffect(() => {
+    if (request?.status === 'pending') {
+      const interval = setInterval(() => {
+        verifyToken()
+      }, 10000)
+
+      return () => clearInterval(interval)
+    }
+  }, [request?.status])
+
   const verifyToken = async () => {
     setLoading(true)
     setError('')

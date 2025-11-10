@@ -47,7 +47,7 @@ export async function POST(request: NextRequest) {
     if (updateError) {
       console.error('Error cancelling token:', updateError)
       return NextResponse.json(
-        { error: 'שגיאה בביטול הטוכן' },
+        { error: 'שגיאה בביטול הטוקן' },
         { status: 500 }
       )
     }
@@ -68,12 +68,12 @@ export async function POST(request: NextRequest) {
 
     return NextResponse.json({
       success: true,
-      message: 'הטוכן בוטל בהצלחה'
+      message: 'הטוקן בוטל בהצלחה'
     })
   } catch (error) {
     console.error('Cancel token error:', error)
     return NextResponse.json(
-      { error: 'שגיאה בביטול הטוכן' },
+      { error: 'שגיאה בביטול הטוקן' },
       { status: 500 }
     )
   }

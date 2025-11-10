@@ -84,7 +84,7 @@ export default function RequestsTab({ cityId, cityName, managerName, onRequestsU
   }
 
   const handleExtendToken = async (requestId: string, minutesToAdd: number) => {
-    if (!confirm(`האם להאריך את תוקף הטוכן ב-${minutesToAdd} דקות?`)) return
+    if (!confirm(`האם להאריך את תוקף הטוקן ב-${minutesToAdd} דקות?`)) return
 
     setLoading(true)
     try {
@@ -110,39 +110,6 @@ export default function RequestsTab({ cityId, cityName, managerName, onRequestsU
     } catch (error: any) {
       console.error('Error extending token:', error)
       alert(error.message || 'אירעה שגיאה בהארכת התוקף')
-    } finally {
-      setLoading(false)
-    }
-  }
-
-  const handleCancelToken = async (requestId: string) => {
-    const reason = prompt('סיבת ביטול הטוכן (אופציונלי):')
-    if (reason === null) return // User cancelled
-
-    setLoading(true)
-    try {
-      const response = await fetch('/api/requests/cancel-token', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({
-          requestId,
-          managerName,
-          reason
-        })
-      })
-
-      const data = await response.json()
-
-      if (!response.ok) {
-        throw new Error(data.error || 'שגיאה בביטול הטוכן')
-      }
-
-      alert(data.message)
-      fetchRequests()
-      onRequestsUpdate?.()
-    } catch (error: any) {
-      console.error('Error cancelling token:', error)
-      alert(error.message || 'אירעה שגיאה בביטול הטוכן')
     } finally {
       setLoading(false)
     }
@@ -453,13 +420,6 @@ ${request.city?.cabinet_code ? `🔐 קוד פתיחת הארון: ${request.cit
                         className="bg-gradient-to-r from-purple-600 to-violet-600 hover:from-purple-700 hover:to-violet-700 text-white font-semibold rounded-xl shadow-md"
                       >
                         ⏱️ +60 דק'
-                      </Button>
-                      <Button
-                        onClick={() => handleCancelToken(request.id)}
-                        disabled={loading}
-                        className="bg-gradient-to-r from-orange-600 to-red-600 hover:from-orange-700 hover:to-red-700 text-white font-semibold rounded-xl shadow-md"
-                      >
-                        🔒 בטל טוכן
                       </Button>
                     </>
                   )}

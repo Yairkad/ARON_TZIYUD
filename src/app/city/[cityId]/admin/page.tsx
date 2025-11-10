@@ -79,6 +79,24 @@ export default function CityAdminPage() {
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [isAuthenticated, city?.request_mode])
 
+  // Show notification popup when there are pending requests
+  useEffect(() => {
+    if (pendingRequestsCount > 0 && isAuthenticated && city?.request_mode === 'request') {
+      const alertKey = `pending-requests-${pendingRequestsCount}`
+
+      if (!dismissedAlerts.has(alertKey)) {
+        const message = pendingRequestsCount === 1
+          ? '🔔 יש בקשה אחת חדשה ממתינה לאישור!'
+          : `🔔 יש ${pendingRequestsCount} בקשות חדשות ממתינות לאישור!`
+
+        alert(message)
+
+        setDismissedAlerts(prev => new Set(prev).add(alertKey))
+      }
+    }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [pendingRequestsCount, isAuthenticated, city?.request_mode])
+
   const fetchCity = async () => {
     try {
       const { data, error } = await supabase
@@ -1686,7 +1704,7 @@ export default function CityAdminPage() {
                           placeholder="https://maps.google.com/?q=..."
                           className="h-12 border-2 border-purple-200 rounded-xl focus:border-purple-500 transition-colors"
                         />
-                        <p className="text-xs text-purple-600">יוצג רק בדף הטוכן לאחר אישור בקשה (אופציונלי)</p>
+                        <p className="text-xs text-purple-600">יוצג רק בדף הטוקן לאחר אישור בקשה (אופציונלי)</p>
                       </div>
 
                       {/* Location Description */}
@@ -1699,7 +1717,7 @@ export default function CityAdminPage() {
                           rows={4}
                           className="w-full p-3 border-2 border-gray-200 rounded-xl focus:border-indigo-500 transition-colors resize-none"
                         />
-                        <p className="text-xs text-gray-500">הוראות טקסט למציאת הארון - יוצג בדף הטוכן (אופציונלי)</p>
+                        <p className="text-xs text-gray-500">הוראות טקסט למציאת הארון - יוצג בדף הטוקן (אופציונלי)</p>
                       </div>
 
                       {/* Location Image URL */}
@@ -1712,7 +1730,7 @@ export default function CityAdminPage() {
                           placeholder="https://example.com/image.jpg"
                           className="h-12 border-2 border-gray-200 rounded-xl focus:border-indigo-500 transition-colors"
                         />
-                        <p className="text-xs text-gray-500">תמונה של הארון/מיקום - יוצג בדף הטוכן (אופציונלי)</p>
+                        <p className="text-xs text-gray-500">תמונה של הארון/מיקום - יוצג בדף הטוקן (אופציונלי)</p>
                       </div>
 
                       <Button
