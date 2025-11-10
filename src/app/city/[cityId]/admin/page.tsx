@@ -49,6 +49,7 @@ export default function CityAdminPage() {
   })
   const [showCopyEquipment, setShowCopyEquipment] = useState(false)
   const [dismissedAlerts, setDismissedAlerts] = useState<Set<string>>(new Set())
+  const [pendingRequestsCount, setPendingRequestsCount] = useState(0)
 
   useEffect(() => {
     if (cityId) {
@@ -61,9 +62,22 @@ export default function CityAdminPage() {
     if (isAuthenticated && cityId) {
       fetchData()
       fetchAllCities()
+      fetchPendingRequestsCount()
     }
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [isAuthenticated, cityId])
+
+  // Auto-refresh pending requests count every 15 seconds when in request mode
+  useEffect(() => {
+    if (isAuthenticated && city?.request_mode === 'request') {
+      const interval = setInterval(() => {
+        fetchPendingRequestsCount()
+      }, 15000)
+
+      return () => clearInterval(interval)
+    }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [isAuthenticated, city?.request_mode])
 
   const fetchCity = async () => {
     try {
@@ -124,6 +138,26 @@ export default function CityAdminPage() {
       console.error('Error fetching history:', error)
     } else {
       setBorrowHistory(data || [])
+    }
+  }
+
+  const fetchPendingRequestsCount = async () => {
+    if (city?.request_mode !== 'request') return
+
+    try {
+      const { count, error } = await supabase
+        .from('equipment_requests')
+        .select('*', { count: 'exact', head: true })
+        .eq('city_id', cityId)
+        .eq('status', 'pending')
+
+      if (error) {
+        console.error('Error fetching pending requests count:', error)
+      } else {
+        setPendingRequestsCount(count || 0)
+      }
+    } catch (error) {
+      console.error('Error fetching pending requests count:', error)
     }
   }
 
@@ -732,13 +766,18 @@ export default function CityAdminPage() {
           {city?.request_mode === 'request' && (
             <Button
               onClick={() => setActiveTab('requests')}
-              className={`py-6 rounded-xl font-semibold text-lg transition-all duration-300 ${
+              className={`py-6 rounded-xl font-semibold text-lg transition-all duration-300 relative ${
                 activeTab === 'requests'
                   ? 'bg-gradient-to-r from-purple-600 to-pink-600 text-white shadow-lg shadow-purple-500/50 scale-105'
                   : 'bg-white text-gray-600 border-2 border-gray-200 hover:border-purple-300 hover:bg-purple-50'
               }`}
             >
               <span className="text-2xl ml-2">📝</span> בקשות
+              {pendingRequestsCount > 0 && (
+                <span className="absolute -top-2 -right-2 bg-red-500 text-white text-xs font-bold rounded-full h-6 w-6 flex items-center justify-center animate-pulse shadow-lg">
+                  {pendingRequestsCount}
+                </span>
+              )}
             </Button>
           )}
           <Button
@@ -1277,6 +1316,7 @@ export default function CityAdminPage() {
             cityId={cityId}
             cityName={city.name}
             managerName={city.manager1_name}
+            onRequestsUpdate={fetchPendingRequestsCount}
           />
         )}
 

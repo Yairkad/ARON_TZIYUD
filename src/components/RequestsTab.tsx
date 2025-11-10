@@ -9,9 +9,10 @@ interface RequestsTabProps {
   cityId: string
   cityName: string
   managerName: string
+  onRequestsUpdate?: () => void
 }
 
-export default function RequestsTab({ cityId, cityName, managerName }: RequestsTabProps) {
+export default function RequestsTab({ cityId, cityName, managerName, onRequestsUpdate }: RequestsTabProps) {
   const [requests, setRequests] = useState<EquipmentRequestWithItems[]>([])
   const [loading, setLoading] = useState(false)
   const [filter, setFilter] = useState<'all' | 'pending' | 'approved' | 'rejected' | 'expired'>('all')
@@ -73,6 +74,7 @@ export default function RequestsTab({ cityId, cityName, managerName }: RequestsT
 
       setRejectReason(null)
       fetchRequests()
+      onRequestsUpdate?.()
     } catch (error: any) {
       console.error('Error managing request:', error)
       alert(error.message || 'אירעה שגיאה בעדכון הבקשה')
@@ -104,6 +106,7 @@ export default function RequestsTab({ cityId, cityName, managerName }: RequestsT
 
       alert(data.message)
       fetchRequests()
+      onRequestsUpdate?.()
     } catch (error: any) {
       console.error('Error extending token:', error)
       alert(error.message || 'אירעה שגיאה בהארכת התוקף')
@@ -136,6 +139,7 @@ export default function RequestsTab({ cityId, cityName, managerName }: RequestsT
 
       alert(data.message)
       fetchRequests()
+      onRequestsUpdate?.()
     } catch (error: any) {
       console.error('Error cancelling token:', error)
       alert(error.message || 'אירעה שגיאה בביטול הטוכן')
@@ -531,6 +535,13 @@ ${request.city?.cabinet_code ? `🔐 קוד פתיחת הארון: ${request.cit
                     >
                       <span className="text-xl mr-2">📱</span>
                       שלח אישור ב-WhatsApp
+                    </Button>
+                    <Button
+                      onClick={() => handleCopyLink(request.token_hash)}
+                      variant="outline"
+                      className="border-2 border-blue-400 text-blue-700 hover:bg-blue-50 rounded-xl"
+                    >
+                      📋 העתק קישור
                     </Button>
                     <Button
                       onClick={() => setApprovedRequest(null)}

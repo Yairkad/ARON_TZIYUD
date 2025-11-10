@@ -253,6 +253,32 @@ export default function RequestPage({ params }: { params: Promise<{ token: strin
                   </div>
                 )}
 
+                {/* Location Description */}
+                {request.city?.location_description && (
+                  <div className="bg-white rounded-lg p-6 mb-4">
+                    <h3 className="text-lg font-bold text-gray-900 mb-3 text-center">
+                      📝 הוראות מציאת הארון
+                    </h3>
+                    <p className="text-gray-700 whitespace-pre-wrap text-center leading-relaxed">
+                      {request.city.location_description}
+                    </p>
+                  </div>
+                )}
+
+                {/* Location Image */}
+                {request.city?.location_image_url && (
+                  <div className="bg-white rounded-lg p-6 mb-4">
+                    <h3 className="text-lg font-bold text-gray-900 mb-3 text-center">
+                      🖼️ תמונת מיקום הארון
+                    </h3>
+                    <img
+                      src={request.city.location_image_url}
+                      alt="מיקום הארון"
+                      className="w-full rounded-lg shadow-md"
+                    />
+                  </div>
+                )}
+
                 {/* Location - prefer token_location_url, fallback to location_url */}
                 {(request.city?.token_location_url || request.city?.location_url) && (
                   <div className="text-center mb-4">
