@@ -50,6 +50,7 @@ export default function CityAdminPage() {
   const [showCopyEquipment, setShowCopyEquipment] = useState(false)
   const [dismissedAlerts, setDismissedAlerts] = useState<Set<string>>(new Set())
   const [pendingRequestsCount, setPendingRequestsCount] = useState(0)
+  const [expandedGroups, setExpandedGroups] = useState<Set<string>>(new Set())
 
   useEffect(() => {
     if (cityId) {
@@ -463,6 +464,19 @@ export default function CityAdminPage() {
     }
   }
 
+  // Toggle group expansion
+  const toggleGroupExpansion = (groupId: string) => {
+    setExpandedGroups(prev => {
+      const newSet = new Set(prev)
+      if (newSet.has(groupId)) {
+        newSet.delete(groupId)
+      } else {
+        newSet.add(groupId)
+      }
+      return newSet
+    })
+  }
+
   // Export to Excel
   const handleExportToExcel = () => {
     if (!city) return
@@ -788,16 +802,6 @@ export default function CityAdminPage() {
           </div>
         </div>
 
-        {/* Export Button */}
-        <div className="mb-6 flex gap-3 justify-center">
-          <Button
-            onClick={handleExportToExcel}
-            className="bg-gradient-to-r from-green-500 to-emerald-500 hover:from-green-600 hover:to-emerald-600 text-white font-bold px-6 py-3 rounded-xl shadow-lg hover:shadow-xl transition-all duration-200 hover:scale-105"
-          >
-            <FileDown className="ml-2 h-5 w-5" />
-            ייצוא לאקסל
-          </Button>
-        </div>
 
         <div className="grid grid-cols-2 md:grid-cols-4 gap-3 mb-8">
           <Button
@@ -1253,82 +1257,91 @@ export default function CityAdminPage() {
             <CardContent className="p-3 md:p-6">
               {/* Mobile View */}
               <div className="block md:hidden space-y-4">
-                {groupedHistoryArray.map(group => (
-                  <div key={group.id} className="bg-gradient-to-r from-blue-50 to-indigo-50 rounded-xl p-4 border-2 border-blue-200">
-                    <div className="space-y-3 mb-3">
-                      {/* Header with name and overall status */}
-                      <div className="flex justify-between items-center pb-2 border-b border-gray-300">
-                        <div>
-                          <p className="text-xs text-gray-600 font-semibold">👤 שם לוקח</p>
-                          <p className="font-bold text-lg text-gray-800">{group.name}</p>
+                {groupedHistoryArray.map(group => {
+                  const isExpanded = expandedGroups.has(group.id)
+                  return (
+                    <div key={group.id} className="bg-gradient-to-r from-blue-50 to-indigo-50 rounded-xl p-4 border-2 border-blue-200">
+                      {/* Header - Always visible */}
+                      <div
+                        className="flex justify-between items-center cursor-pointer"
+                        onClick={() => toggleGroupExpansion(group.id)}
+                      >
+                        <div className="flex items-center gap-2">
+                          <button className="text-xl transition-transform duration-200" style={{ transform: isExpanded ? 'rotate(90deg)' : 'rotate(0deg)' }}>
+                            ◀
+                          </button>
+                          <div>
+                            <p className="text-xs text-gray-600 font-semibold">👤 {group.name}</p>
+                            <p className="font-medium text-sm text-gray-700">{group.date} • {group.time}</p>
+                          </div>
                         </div>
                         <div className={`px-3 py-1.5 rounded-lg font-bold text-xs ${
                           group.allReturned
                             ? 'bg-green-100 text-green-700'
                             : 'bg-orange-100 text-orange-700'
                         }`}>
-                          {group.allReturned ? '✅ הוחזר הכל' : '⏳ חלקי/לא הוחזר'}
+                          {group.allReturned ? '✅' : '⏳'}
                         </div>
                       </div>
 
-                      {/* Details */}
-                      <div className="grid grid-cols-2 gap-2">
-                        <div>
-                          <p className="text-xs text-gray-600">📅 תאריך</p>
-                          <p className="font-medium text-gray-800">{group.date}</p>
-                        </div>
-                        <div>
-                          <p className="text-xs text-gray-600">🕐 שעה</p>
-                          <p className="font-medium text-gray-800">{group.time}</p>
-                        </div>
-                      </div>
-                      <div>
-                        <p className="text-xs text-gray-600">📱 טלפון</p>
-                        <p className="font-medium text-gray-800">{group.phone}</p>
-                      </div>
+                      {/* Expanded Details */}
+                      {isExpanded && (
+                        <div className="space-y-3 mt-3 pt-3 border-t border-gray-300">
+                          <div>
+                            <p className="text-xs text-gray-600">📱 טלפון</p>
+                            <p className="font-medium text-gray-800">{group.phone}</p>
+                          </div>
 
-                      {/* Equipment items */}
-                      <div className="pt-2 border-t border-gray-300">
-                        <p className="text-xs text-gray-600 font-semibold mb-2">🎯 ציוד שנלקח</p>
-                        <div className="space-y-2">
-                          {group.items.map(item => (
-                            <div key={item.id} className={`flex justify-between items-center p-3 rounded-lg border-2 ${
-                              item.status === 'borrowed'
-                                ? 'bg-orange-50 border-orange-200'
-                                : 'bg-green-50 border-green-200'
-                            }`}>
-                              <div className="flex-1">
-                                <p className="font-semibold text-gray-800">{item.equipment_name}</p>
-                              </div>
-                              <div className="flex gap-2 items-center">
-                                <button
-                                  onClick={() => handleUpdateHistoryStatus(
-                                    item.id,
-                                    item.status === 'borrowed' ? 'returned' : 'borrowed'
-                                  )}
-                                  disabled={loading}
-                                  className="text-2xl hover:scale-110 transition-transform"
-                                  title={item.status === 'borrowed' ? 'סמן כהוחזר' : 'סמן כהושאל'}
-                                >
-                                  {item.status === 'borrowed' ? '🟠' : '🟢'}
-                                </button>
-                                <Button
-                                  size="sm"
-                                  variant="destructive"
-                                  onClick={() => handleDeleteHistory(item.id)}
-                                  disabled={loading}
-                                  className="h-8 px-2 bg-red-500 hover:bg-red-600"
-                                >
-                                  🗑️
-                                </Button>
-                              </div>
+                          {/* Equipment items */}
+                          <div className="pt-2 border-t border-gray-300">
+                            <p className="text-xs text-gray-600 font-semibold mb-2">🎯 ציוד שנלקח</p>
+                            <div className="space-y-2">
+                              {group.items.map(item => (
+                                <div key={item.id} className={`flex justify-between items-center p-3 rounded-lg border-2 ${
+                                  item.status === 'borrowed'
+                                    ? 'bg-orange-50 border-orange-200'
+                                    : 'bg-green-50 border-green-200'
+                                }`}>
+                                  <div className="flex-1">
+                                    <p className="font-semibold text-gray-800">{item.equipment_name}</p>
+                                  </div>
+                                  <div className="flex gap-2 items-center">
+                                    <button
+                                      onClick={(e) => {
+                                        e.stopPropagation()
+                                        handleUpdateHistoryStatus(
+                                          item.id,
+                                          item.status === 'borrowed' ? 'returned' : 'borrowed'
+                                        )
+                                      }}
+                                      disabled={loading}
+                                      className="text-2xl hover:scale-110 transition-transform"
+                                      title={item.status === 'borrowed' ? 'סמן כהוחזר' : 'סמן כהושאל'}
+                                    >
+                                      {item.status === 'borrowed' ? '🟠' : '🟢'}
+                                    </button>
+                                    <Button
+                                      size="sm"
+                                      variant="destructive"
+                                      onClick={(e) => {
+                                        e.stopPropagation()
+                                        handleDeleteHistory(item.id)
+                                      }}
+                                      disabled={loading}
+                                      className="h-8 px-2 bg-red-500 hover:bg-red-600"
+                                    >
+                                      🗑️
+                                    </Button>
+                                  </div>
+                                </div>
+                              ))}
                             </div>
-                          ))}
+                          </div>
                         </div>
-                      </div>
+                      )}
                     </div>
-                  </div>
-                ))}
+                  )
+                })}
               </div>
 
               {/* Desktop View */}
@@ -1336,6 +1349,7 @@ export default function CityAdminPage() {
                 <table className="w-full border-collapse">
                   <thead>
                     <tr className="bg-gradient-to-r from-blue-100 to-indigo-100 border-b-2 border-blue-200">
+                      <th className="text-right p-4 font-bold text-gray-700 w-8"></th>
                       <th className="text-right p-4 font-bold text-gray-700">👤 שם</th>
                       <th className="text-right p-4 font-bold text-gray-700">📅 תאריך</th>
                       <th className="text-right p-4 font-bold text-gray-700">🕐 שעה</th>
@@ -1346,66 +1360,98 @@ export default function CityAdminPage() {
                     </tr>
                   </thead>
                   <tbody>
-                    {groupedHistoryArray.map(group => (
-                      <tr key={group.id} className="border-b hover:bg-blue-50 transition-colors">
-                        <td className="p-4 font-bold text-gray-800">{group.name}</td>
-                        <td className="p-4 text-gray-700">{group.date}</td>
-                        <td className="p-4 text-gray-600">{group.time}</td>
-                        <td className="p-4 text-gray-600">{group.phone}</td>
-                        <td className="p-4">
-                          <div className="flex flex-wrap gap-1">
-                            {group.items.map((item, idx) => (
-                              <div key={item.id} className="flex items-center gap-1">
-                                <span className={`inline-flex items-center px-2 py-1 rounded-lg text-xs font-medium ${
-                                  item.status === 'borrowed'
-                                    ? 'bg-orange-100 text-orange-700 border border-orange-300'
-                                    : 'bg-green-100 text-green-700 border border-green-300'
-                                }`}>
-                                  {item.equipment_name}
-                                  <button
-                                    onClick={() => handleUpdateHistoryStatus(item.id, item.status === 'borrowed' ? 'returned' : 'borrowed')}
-                                    className="ml-1 hover:scale-110 transition-transform"
-                                    disabled={loading}
-                                    title={item.status === 'borrowed' ? 'סמן כהוחזר' : 'סמן כהושאל'}
-                                  >
-                                    {item.status === 'borrowed' ? '🟠' : '🟢'}
-                                  </button>
-                                </span>
-                                {idx < group.items.length - 1 && <span className="text-gray-400">•</span>}
+                    {groupedHistoryArray.map(group => {
+                      const isExpanded = expandedGroups.has(group.id)
+                      return (
+                        <tr key={group.id} className="border-b hover:bg-blue-50 transition-colors">
+                          <td className="p-4">
+                            <button
+                              onClick={() => toggleGroupExpansion(group.id)}
+                              className="text-lg transition-transform duration-200 hover:scale-110"
+                              style={{ transform: isExpanded ? 'rotate(90deg)' : 'rotate(0deg)' }}
+                            >
+                              ◀
+                            </button>
+                          </td>
+                          <td className="p-4 font-bold text-gray-800">{group.name}</td>
+                          <td className="p-4 text-gray-700">{group.date}</td>
+                          <td className="p-4 text-gray-600">{group.time}</td>
+                          <td className="p-4 text-gray-600">{group.phone}</td>
+                          <td className="p-4">
+                            {isExpanded ? (
+                              <div className="flex flex-wrap gap-1">
+                                {group.items.map((item, idx) => (
+                                  <div key={item.id} className="flex items-center gap-1">
+                                    <span className={`inline-flex items-center px-2 py-1 rounded-lg text-xs font-medium ${
+                                      item.status === 'borrowed'
+                                        ? 'bg-orange-100 text-orange-700 border border-orange-300'
+                                        : 'bg-green-100 text-green-700 border border-green-300'
+                                    }`}>
+                                      {item.equipment_name}
+                                      <button
+                                        onClick={() => handleUpdateHistoryStatus(item.id, item.status === 'borrowed' ? 'returned' : 'borrowed')}
+                                        className="ml-1 hover:scale-110 transition-transform"
+                                        disabled={loading}
+                                        title={item.status === 'borrowed' ? 'סמן כהוחזר' : 'סמן כהושאל'}
+                                      >
+                                        {item.status === 'borrowed' ? '🟠' : '🟢'}
+                                      </button>
+                                    </span>
+                                    {idx < group.items.length - 1 && <span className="text-gray-400">•</span>}
+                                  </div>
+                                ))}
                               </div>
-                            ))}
-                          </div>
-                        </td>
-                        <td className="p-4">
-                          <span className={`px-3 py-1 rounded-full text-xs font-bold ${
-                            group.allReturned
-                              ? 'bg-green-100 text-green-700'
-                              : 'bg-orange-100 text-orange-700'
-                          }`}>
-                            {group.allReturned ? '✅ הוחזר הכל' : '⏳ חלקי/לא הוחזר'}
-                          </span>
-                        </td>
-                        <td className="p-4">
-                          <div className="flex gap-2">
-                            {group.items.map(item => (
-                              <Button
-                                key={item.id}
-                                size="sm"
-                                variant="ghost"
-                                onClick={() => handleDeleteHistory(item.id)}
-                                disabled={loading}
-                                className="h-8 w-8 p-0 hover:bg-red-100 hover:text-red-600 text-gray-400"
-                                title={`מחק: ${item.equipment_name}`}
-                              >
-                                🗑️
-                              </Button>
-                            ))}
-                          </div>
-                        </td>
-                      </tr>
-                    ))}
+                            ) : (
+                              <span className="text-gray-500 text-sm">{group.items.length} פריטים</span>
+                            )}
+                          </td>
+                          <td className="p-4">
+                            <span className={`px-3 py-1 rounded-full text-xs font-bold ${
+                              group.allReturned
+                                ? 'bg-green-100 text-green-700'
+                                : 'bg-orange-100 text-orange-700'
+                            }`}>
+                              {group.allReturned ? '✅' : '⏳'}
+                            </span>
+                          </td>
+                          <td className="p-4">
+                            {isExpanded ? (
+                              <div className="flex gap-2">
+                                {group.items.map(item => (
+                                  <Button
+                                    key={item.id}
+                                    size="sm"
+                                    variant="ghost"
+                                    onClick={() => handleDeleteHistory(item.id)}
+                                    disabled={loading}
+                                    className="h-8 w-8 p-0 hover:bg-red-100 hover:text-red-600 text-gray-400"
+                                    title={`מחק: ${item.equipment_name}`}
+                                  >
+                                    🗑️
+                                  </Button>
+                                ))}
+                              </div>
+                            ) : (
+                              <span className="text-gray-400 text-xs">לחץ על החץ</span>
+                            )}
+                          </td>
+                        </tr>
+                      )
+                    })}
                   </tbody>
                 </table>
+              </div>
+
+              {/* Export Button - Bottom */}
+              <div className="mt-6 flex justify-center">
+                <Button
+                  onClick={handleExportToExcel}
+                  size="sm"
+                  className="bg-gradient-to-r from-green-500 to-emerald-500 hover:from-green-600 hover:to-emerald-600 text-white font-semibold px-4 py-2 rounded-lg shadow-md hover:shadow-lg transition-all"
+                >
+                  <FileDown className="ml-2 h-4 w-4" />
+                  ייצוא לאקסל
+                </Button>
               </div>
             </CardContent>
           </Card>
