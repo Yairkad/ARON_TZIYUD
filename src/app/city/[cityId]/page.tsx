@@ -60,6 +60,7 @@ export default function CityPage() {
     if (error) {
       console.error('Error fetching city:', error)
     } else {
+      console.log('City data - hide_location:', data?.hide_location)
       setCity(data)
     }
   }
