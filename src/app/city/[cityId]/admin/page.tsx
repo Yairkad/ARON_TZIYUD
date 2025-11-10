@@ -715,7 +715,7 @@ export default function CityAdminPage() {
         // Subscribe to push notifications
         const vapidPublicKey = process.env.NEXT_PUBLIC_VAPID_PUBLIC_KEY
         if (!vapidPublicKey) {
-          alert('❌ שגיאה: מפתח VAPID לא נמצא')
+          alert('❌ התראות לא זמינות כרגע.\n\nהמנהל הראשי צריך להגדיר את מפתחות VAPID ב-Vercel.\nלמידע נוסף ראה את הקובץ PUSH_NOTIFICATIONS_SETUP.md')
           setEnablingPush(false)
           return
         }
