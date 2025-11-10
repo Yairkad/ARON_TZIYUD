@@ -500,6 +500,7 @@
             <button class="nav-tab" onclick="showTab('login')">🔐 כניסה</button>
             <button class="nav-tab" onclick="showTab('equipment')">📋 ניהול ציוד</button>
             <button class="nav-tab" onclick="showTab('history')">📊 היסטוריה</button>
+            <button class="nav-tab" onclick="showTab('requests')">🎫 מצב בקשות</button>
             <button class="nav-tab" onclick="showTab('settings')">⚙️ הגדרות</button>
         </nav>
 
@@ -885,6 +886,385 @@
                 </div>
             </div>
 
+            <!-- Requests Tab -->
+            <div id="requests" class="tab-content">
+                <div class="section">
+                    <h2>🎫 מצב בקשות - מה זה ואיך להשתמש</h2>
+
+                    <p style="font-size: 1.2em; line-height: 2;">
+                        <strong>מצב בקשות</strong> הוא מצב חדש שנותן לך <strong>שליטה מלאה</strong> על השאלות הציוד.
+                        במקום שמשתמשים לוקחים ציוד ישירות, הם שולחים <strong>בקשה</strong> שאתה צריך לאשר או לדחות.
+                    </p>
+
+                    <div class="info-box">
+                        <h3>🔄 איך לעבור למצב בקשות?</h3>
+                        <ol>
+                            <li>כנס ל<strong>הגדרות</strong> (⚙️)</li>
+                            <li>מצא את <strong>"מצב פעולה של המערכת"</strong></li>
+                            <li>לחץ על <strong>"מצב בקשות"</strong></li>
+                            <li>אשר את המעבר</li>
+                            <li>טאב <strong>"בקשות"</strong> יופיע בניווט</li>
+                        </ol>
+                    </div>
+
+                    <div class="feature-grid">
+                        <div class="feature-card">
+                            <div class="feature-icon">✅</div>
+                            <h4>יתרונות</h4>
+                            <ul style="text-align: right;">
+                                <li>בקרה מלאה על מי לוקח ציוד</li>
+                                <li>אישור כל בקשה לפני יציאת ציוד</li>
+                                <li>מניעת לקיחה ללא תיאום</li>
+                                <li>תיעוד מלא של כל אישור</li>
+                            </ul>
+                        </div>
+
+                        <div class="feature-card">
+                            <div class="feature-icon">❌</div>
+                            <h4>חסרונות</h4>
+                            <ul style="text-align: right;">
+                                <li>משתמשים צריכים לחכות לאישור</li>
+                                <li>דורש תגובה מהירה מהמנהל</li>
+                                <li>לא מתאים לשימוש דחוף</li>
+                            </ul>
+                        </div>
+
+                        <div class="feature-card">
+                            <div class="feature-icon">⚙️</div>
+                            <h4>מתי להשתמש</h4>
+                            <ul style="text-align: right;">
+                                <li>רוצה שליטה מלאה</li>
+                                <li>ציוד רגיש או יקר</li>
+                                <li>צריך לוודא זמינות</li>
+                                <li>רוצה לדעת מי ומתי</li>
+                            </ul>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="section">
+                    <h2>🔔 תג בקשות ממתינות</h2>
+
+                    <div class="card">
+                        <h3>מה זה?</h3>
+                        <p style="font-size: 1.1em;">
+                            כאשר יש בקשות ממתינות לאישור, <strong>תג אדום מהבהב</strong> יופיע על טאב "בקשות" עם מספר הבקשות.
+                        </p>
+
+                        <div class="feature-grid">
+                            <div class="feature-card">
+                                <div class="feature-icon">🔴</div>
+                                <h4>רענון אוטומטי</h4>
+                                <p>התג מתעדכן כל 15 שניות אוטומטית</p>
+                            </div>
+
+                            <div class="feature-card">
+                                <div class="feature-icon">⚡</div>
+                                <h4>עדכון מיידי</h4>
+                                <p>אחרי אישור/דחייה התג מתעדכן מיד</p>
+                            </div>
+
+                            <div class="feature-card">
+                                <div class="feature-icon">👁️</div>
+                                <h4>תמיד עדכני</h4>
+                                <p>לא צריך לרענן את הדף ידנית</p>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="section">
+                    <h2>📋 ניהול בקשות</h2>
+
+                    <div class="steps">
+                        <div class="step">
+                            <h3>צפייה בבקשות</h3>
+                            <ul>
+                                <li>כנס לטאב <strong>"בקשות"</strong></li>
+                                <li>תראה רשימת כל הבקשות</li>
+                                <li>סנן לפי סטטוס: הכל / ממתין / מאושר / נדחה / פג תוקף</li>
+                                <li>חפש לפי שם או טלפון</li>
+                            </ul>
+                        </div>
+
+                        <div class="step">
+                            <h3>אישור בקשה</h3>
+                            <ol>
+                                <li>בדוק את פרטי הבקשה (שם, טלפון, ציוד)</li>
+                                <li>וודא שהציוד זמין</li>
+                                <li>לחץ על <strong>"✅ אשר"</strong></li>
+                                <li>נוצר טוכן עם תוקף מוגדר</li>
+                                <li>מופיע דיאלוג עם 3 אפשרויות:
+                                    <ul>
+                                        <li><strong>📱 שלח אישור ב-WhatsApp</strong> - שליחה אוטומטית</li>
+                                        <li><strong>📋 העתק קישור</strong> - העתקה ללוח</li>
+                                        <li><strong>דלג</strong> - סגירת הדיאלוג</li>
+                                    </ul>
+                                </li>
+                            </ol>
+                            <div class="success-box" style="margin-top: 15px;">
+                                <h4>✅ טיפ חשוב</h4>
+                                <p>אחרי אישור, השתמש בכפתור <strong>"📋 העתק קישור"</strong> כדי להעתיק את קישור הטוכן ולשלוח למשתמש בכל דרך שתרצה!</p>
+                            </div>
+                        </div>
+
+                        <div class="step">
+                            <h3>דחיית בקשה</h3>
+                            <ol>
+                                <li>בדוק למה אתה דוחה (ציוד לא זמין, פרטים לא נכונים, וכו')</li>
+                                <li>לחץ על <strong>"❌ דחה"</strong></li>
+                                <li>הזן <strong>סיבה לדחייה</strong> (חובה!)</li>
+                                <li>אשר את הדחייה</li>
+                                <li>המשתמש יכול לראות את הסיבה</li>
+                            </ol>
+                            <div class="warning-box" style="margin-top: 15px;">
+                                <h4>⚠️ חשוב להסביר למה</h4>
+                                <p>תמיד כתוב סיבה ברורה לדחייה כדי שהמשתמש יבין מה הבעיה.</p>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="section">
+                    <h2>⏱️ ניהול טוכנים מתקדם</h2>
+
+                    <div class="card">
+                        <h3>הארכת תוקף טוכן</h3>
+                        <p style="font-size: 1.1em; margin-bottom: 15px;">
+                            אם משתמש מאחר או צריך יותר זמן, אתה יכול להאריך את תוקף הטוכן:
+                        </p>
+
+                        <div class="timeline">
+                            <div class="timeline-item">
+                                <h4>איך להאריך?</h4>
+                                <ol>
+                                    <li>מצא את הבקשה המאושרת</li>
+                                    <li>לחץ על אחד מכפתורי ההארכה:
+                                        <ul>
+                                            <li><strong>⏱️ +10 דק'</strong> - הארכה קצרה</li>
+                                            <li><strong>⏱️ +20 דק'</strong> - הארכה בינונית</li>
+                                            <li><strong>⏱️ +30 דק'</strong> - הארכה ארוכה</li>
+                                            <li><strong>⏱️ +60 דק'</strong> - הארכה של שעה</li>
+                                        </ul>
+                                    </li>
+                                    <li>אשר את ההארכה</li>
+                                    <li>הטוכן יהיה תקף לזמן נוסף</li>
+                                </ol>
+                            </div>
+                        </div>
+
+                        <div class="info-box">
+                            <h3>📝 מתי להאריך?</h3>
+                            <ul>
+                                <li>המשתמש התקשר ואמר שהוא מאחר</li>
+                                <li>תנועה קשה והוא לא מספיק להגיע בזמן</li>
+                                <li>הטוכן עומד לפוג והמשתמש עוד לא הגיע</li>
+                                <li>מצב חירום או בעיה בלתי צפויה</li>
+                            </ul>
+                        </div>
+                    </div>
+
+                    <div class="card">
+                        <h3>ביטול טוכן פעיל</h3>
+                        <p style="font-size: 1.1em; margin-bottom: 15px;">
+                            אם משתמש ביטל או לא מגיע, אתה יכול לבטל את הטוכן:
+                        </p>
+
+                        <div class="timeline">
+                            <div class="timeline-item">
+                                <h4>איך לבטל?</h4>
+                                <ol>
+                                    <li>מצא את הבקשה המאושרת</li>
+                                    <li>לחץ על <strong>"🔒 בטל טוכן"</strong></li>
+                                    <li>הזן <strong>סיבת ביטול</strong> (אופציונלי אבל מומלץ)</li>
+                                    <li>אשר את הביטול</li>
+                                    <li>הטוכן מסומן כ"בוטל" ולא יהיה תקף</li>
+                                </ol>
+                            </div>
+                        </div>
+
+                        <div class="warning-box">
+                            <h3>⚠️ מתי לבטל?</h3>
+                            <ul>
+                                <li>המשתמש התקשר וביטל את הבקשה</li>
+                                <li>המשתמש לא הגיע והזמן עבר</li>
+                                <li>טעות באישור (אישרת בטעות)</li>
+                                <li>הציוד התגלה כלא זמין אחרי האישור</li>
+                            </ul>
+                        </div>
+                    </div>
+
+                    <div class="success-box">
+                        <h3>📊 מעקב מלא</h3>
+                        <p>כל פעולה של הארכה או ביטול נרשמת ב-<strong>Activity Log</strong> למעקב ודיווח.</p>
+                    </div>
+                </div>
+
+                <div class="section">
+                    <h2>🔐 קוד פתיחת ארון</h2>
+
+                    <div class="card">
+                        <h3>מה זה קוד ארון?</h3>
+                        <p style="font-size: 1.1em;">
+                            קוד פתיחת ארון הוא <strong>קוד סודי</strong> שמוצג רק למי שקיבל טוכן מאושר.
+                            זה מאפשר לך לשמור על הארון נעול ולתת גישה רק למי שאישרת.
+                        </p>
+
+                        <div class="timeline">
+                            <div class="timeline-item">
+                                <h4>איך להגדיר?</h4>
+                                <ol>
+                                    <li>כנס ל<strong>הגדרות</strong> (⚙️)</li>
+                                    <li>מצא את שדה <strong>"קוד פתיחת ארון"</strong></li>
+                                    <li>הזן קוד (מספרים, אותיות, או שילוב)</li>
+                                    <li>שמור את השינויים</li>
+                                    <li>הקוד יופיע בטוכנים המאושרים</li>
+                                </ol>
+                            </div>
+                        </div>
+
+                        <div class="info-box">
+                            <h3>💡 למה זה שימושי?</h3>
+                            <ul>
+                                <li>הארון נעול ורק מי שמאושר יודע את הקוד</li>
+                                <li>מניעת גישה לא מורשית</li>
+                                <li>אבטחת ציוד רגיש או יקר</li>
+                                <li>הקוד לא מוצג בדף הראשי - רק בטוכן</li>
+                            </ul>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="section">
+                    <h2>🗺️ הדרכת מיקום משופרת</h2>
+
+                    <div class="card">
+                        <h3>3 דרכים לעזור למשתמשים למצוא את הארון</h3>
+
+                        <div class="feature-grid">
+                            <div class="feature-card">
+                                <div class="feature-icon">📝</div>
+                                <h4>תיאור מיקום</h4>
+                                <p><strong>שדה:</strong> location_description</p>
+                                <ul style="text-align: right;">
+                                    <li>טקסט חופשי עם הוראות</li>
+                                    <li>"הארון בכניסה הראשית..."</li>
+                                    <li>"בקומה 2 ליד המעלית..."</li>
+                                    <li>מוצג רק בטוכן</li>
+                                </ul>
+                            </div>
+
+                            <div class="feature-card">
+                                <div class="feature-icon">🖼️</div>
+                                <h4>תמונת הארון</h4>
+                                <p><strong>שדה:</strong> location_image_url</p>
+                                <ul style="text-align: right;">
+                                    <li>קישור לתמונה של הארון</li>
+                                    <li>עוזר לזהות את הארון</li>
+                                    <li>מוצג רק בטוכן</li>
+                                    <li>העלה תמונה לכל שירות ענן</li>
+                                </ul>
+                            </div>
+
+                            <div class="feature-card">
+                                <div class="feature-icon">📍</div>
+                                <h4>שני מיקומים</h4>
+                                <ul style="text-align: right;">
+                                    <li><strong>location_url</strong> - מוצג בדף ראשי</li>
+                                    <li><strong>token_location_url</strong> - רק בטוכן</li>
+                                    <li>מאפשר להסתיר מיקום מדויק</li>
+                                    <li>בטחון וגמישות</li>
+                                </ul>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="timeline">
+                        <div class="timeline-item">
+                            <h4>איפה להגדיר את השדות?</h4>
+                            <ol>
+                                <li>כנס ל<strong>הגדרות</strong> (⚙️)</li>
+                                <li>גלול למטה עד <strong>"פרטי מנהלים ומיקום"</strong></li>
+                                <li>מלא:
+                                    <ul>
+                                        <li><strong>מיקום ארון (דף ראשי)</strong> - Google Maps URL (אופציונלי)</li>
+                                        <li><strong>מיקום ארון (טוכן)</strong> - Google Maps URL (אופציונלי)</li>
+                                        <li><strong>תיאור מיקום הארון</strong> - הוראות טקסט (אופציונלי)</li>
+                                        <li><strong>קישור לתמונת מיקום</strong> - URL של תמונה (אופציונלי)</li>
+                                    </ul>
+                                </li>
+                                <li>לחץ <strong>"שמור שינויים"</strong></li>
+                            </ol>
+                        </div>
+                    </div>
+
+                    <div class="success-box">
+                        <h3>✅ מקרה שימוש: מיקום מוסתר</h3>
+                        <p><strong>רוצה להסתיר את המיקום מהציבור הרחב?</strong></p>
+                        <ul>
+                            <li>השאר את <strong>"מיקום ארון (דף ראשי)"</strong> ריק</li>
+                            <li>מלא את <strong>"מיקום ארון (טוכן)"</strong> עם הכתובת האמיתית</li>
+                            <li>רק מי שקיבל טוכן מאושר יראה את המיקום!</li>
+                        </ul>
+                    </div>
+                </div>
+
+                <div class="section">
+                    <h2>❓ שאלות נפוצות - מצב בקשות</h2>
+
+                    <div class="faq-item">
+                        <div class="faq-question">🤔 מה קורה אם אני לא מגיב לבקשה?</div>
+                        <div class="faq-answer">
+                            הבקשה תישאר במצב "ממתין" עד שתטפל בה. המשתמש לא יוכל לקבל ציוד עד שתאשר או תדחה.
+                            מומלץ להגיב בהקדם כדי לא לעכב משתמשים.
+                        </div>
+                    </div>
+
+                    <div class="faq-item">
+                        <div class="faq-question">⏰ כמה זמן יש לי לאשר בקשה?</div>
+                        <div class="faq-answer">
+                            אין זמן מוגבל - אבל זכור שמשתמשים מחכים! מומלץ להגיב תוך 15-30 דקות.
+                            אם אתה לא יכול להגיב במהירות, שקול אם מצב בקשות מתאים לך.
+                        </div>
+                    </div>
+
+                    <div class="faq-item">
+                        <div class="faq-question">📱 איך אני יודע שיש בקשה חדשה?</div>
+                        <div class="faq-answer">
+                            התג האדום על טאב "בקשות" מתעדכן כל 15 שניות ומראה כמה בקשות ממתינות.
+                            אין צורך לרענן את הדף - זה קורה אוטומטית.
+                        </div>
+                    </div>
+
+                    <div class="faq-item">
+                        <div class="faq-question">🔄 אפשר לחזור למצב השאלה ישירה?</div>
+                        <div class="faq-answer">
+                            כן! ב<strong>הגדרות</strong> תוכל לשנות חזרה ל<strong>"מצב השאלה ישירה"</strong> בכל עת.
+                            כל הבקשות הקיימות יישארו כפי שהן.
+                        </div>
+                    </div>
+
+                    <div class="faq-item">
+                        <div class="faq-question">❌ מה קורה אם אשרתי בטעות?</div>
+                        <div class="faq-answer">
+                            אם הטוכן עדיין פעיל, לחץ על <strong>"🔒 בטל טוכן"</strong> והסבר את הסיבה.
+                            הטוכן יבוטל והמשתמש לא יוכל להשתמש בו.
+                        </div>
+                    </div>
+                </div>
+
+                <div class="success-box">
+                    <h3>🎉 סיכום - מצב בקשות</h3>
+                    <ul>
+                        <li><strong>שליטה מלאה</strong> - אתה מאשר כל בקשה</li>
+                        <li><strong>טוכנים מאובטחים</strong> - קוד ארון, הוראות ותמונה</li>
+                        <li><strong>ניהול גמיש</strong> - הארכה וביטול בלחיצת כפתור</li>
+                        <li><strong>מעקב אוטומטי</strong> - תג בקשות ממתינות מתעדכן כל 15 שניות</li>
+                        <li><strong>תיעוד מלא</strong> - כל פעולה נרשמת למעקב</li>
+                    </ul>
+                </div>
+            </div>
+
             <!-- Settings Tab -->
             <div id="settings" class="tab-content">
                 <div class="section">
@@ -1016,7 +1396,7 @@
         <footer>
             <h2 style="color: white; margin-bottom: 20px;">🎉 בהצלחה בניהול העיר!</h2>
             <p>מדריך מנהל עיר - מערכת ארון ציוד ידידים</p>
-            <p style="margin-top: 20px; opacity: 0.9;">גרסה 2.1 - 6 בנובמבר 2025</p>
+            <p style="margin-top: 20px; opacity: 0.9;">גרסה 3.0 - נובמבר 2024 - כולל מצב בקשות, טוכנים ושדות מיקום</p>
         </footer>
     </div>
 

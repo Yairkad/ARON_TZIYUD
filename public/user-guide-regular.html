@@ -803,6 +803,7 @@
             <button class="nav-tab active" onclick="showTab('intro')">🎯 מבוא</button>
             <button class="nav-tab" onclick="showTab('home')">🏠 דף הבית</button>
             <button class="nav-tab" onclick="showTab('borrow')">📦 השאלה</button>
+            <button class="nav-tab" onclick="showTab('requests')">🎫 מצב בקשות</button>
             <button class="nav-tab" onclick="showTab('return')">🔁 החזרה</button>
             <button class="nav-tab" onclick="showTab('faq')">❓ שאלות</button>
         </nav>
@@ -1043,6 +1044,230 @@
                 </div>
             </div>
 
+            <!-- Requests Mode Tab -->
+            <div id="requests" class="tab-content">
+                <div class="section">
+                    <h2>🎫 מצב בקשות - מה זה?</h2>
+
+                    <p style="font-size: 1.2em; line-height: 2;">
+                        <strong>מצב בקשות</strong> הוא דרך חדשה לנהל השאלות ציוד. במקום השאלה ישירה, אתה שולח <strong>בקשה</strong> והמנהל מאשר אותה.
+                        לאחר אישור, תקבל <strong>טוכן</strong> (קישור מיוחד) עם כל המידע שצריך כדי לקחת את הציוד.
+                    </p>
+
+                    <div class="info-box">
+                        <h3>💡 איך אני יודע באיזה מצב העיר שלי?</h3>
+                        <ul>
+                            <li><strong>מצב השאלה ישירה</strong> - תראה טופס עם פרטים אישיים ובחירת ציוד ישירות</li>
+                            <li><strong>מצב בקשות</strong> - תראה טופס "שליחת בקשה לציוד" עם הסבר על התהליך</li>
+                        </ul>
+                    </div>
+                </div>
+
+                <div class="section">
+                    <h2>תהליך הבקשה</h2>
+
+                    <div class="flow-diagram">
+                        <h3 style="text-align: center; color: var(--primary); margin-bottom: 30px;">זרימת עבודה במצב בקשות</h3>
+                        <div class="flow-step">1️⃣ שליחת בקשה לציוד</div>
+                        <div class="flow-step">2️⃣ מנהל מקבל ובודק את הבקשה</div>
+                        <div class="flow-step">3️⃣ מנהל מאשר/דוחה את הבקשה</div>
+                        <div class="flow-step">4️⃣ קבלת קישור לטוכן (אם אושר)</div>
+                        <div class="flow-step">5️⃣ פתיחת הטוכן וצפייה במידע</div>
+                        <div class="flow-step">6️⃣ הגעה לארון ולקיחת הציוד</div>
+                        <div class="flow-step">✅ אישור לקיחה והשלמת התהליך</div>
+                    </div>
+                </div>
+
+                <div class="section">
+                    <h2>שלבים מפורטים</h2>
+
+                    <div class="steps">
+                        <div class="step">
+                            <h3>שליחת הבקשה</h3>
+                            <ul>
+                                <li><strong>שם מלא</strong> - הזן את שמך</li>
+                                <li><strong>מספר טלפון</strong> - 10 ספרות (לדוגמה: 0501234567)</li>
+                                <li><strong>מזהה קריאה</strong> - אם נדרש על ידי העיר (אופציונלי)</li>
+                                <li><strong>בחירת ציוד</strong> - בחר מהרשימה הנפתחת</li>
+                                <li>לחץ על <strong>"שלח בקשה"</strong></li>
+                            </ul>
+                            <div class="info-box" style="margin-top: 15px;">
+                                <p><strong>💡 טיפ:</strong> וודא שמספר הטלפון נכון - דרכו יצרו איתך קשר!</p>
+                            </div>
+                        </div>
+
+                        <div class="step">
+                            <h3>המתנה לאישור</h3>
+                            <p>לאחר שליחת הבקשה:</p>
+                            <ul>
+                                <li>המנהל מקבל התראה על הבקשה שלך</li>
+                                <li>הוא בודק את הפרטים והזמינות</li>
+                                <li>מחליט אם לאשר או לדחות</li>
+                                <li>זה יכול לקחת כמה דקות או יותר</li>
+                            </ul>
+                            <div class="warning-box" style="margin-top: 15px;">
+                                <h4>⏰ חשוב לדעת</h4>
+                                <p>המתן לקישור הטוכן לפני שאתה מגיע לארון!</p>
+                            </div>
+                        </div>
+
+                        <div class="step">
+                            <h3>קבלת הטוכן</h3>
+                            <p>אם הבקשה אושרה, תקבל:</p>
+                            <ul>
+                                <li><strong>קישור מיוחד</strong> - נשלח אליך (WhatsApp/SMS/מייל)</li>
+                                <li>הקישור פעיל לזמן מוגבל</li>
+                                <li>לחץ על הקישור כדי לפתוח את הטוכן</li>
+                            </ul>
+                            <div class="success-box" style="margin-top: 15px;">
+                                <h4>✅ מה כולל הטוכן?</h4>
+                                <ul>
+                                    <li>פרטי הבקשה שלך</li>
+                                    <li><strong>קוד פתיחת הארון</strong> (אם יש)</li>
+                                    <li><strong>הוראות מציאת הארון</strong> (טקסט מפורט)</li>
+                                    <li><strong>תמונת הארון</strong> (לזיהוי קל)</li>
+                                    <li>קישור למיקום במפה</li>
+                                    <li>כפתור <strong>"אשר לקיחת ציוד"</strong></li>
+                                </ul>
+                            </div>
+                        </div>
+
+                        <div class="step">
+                            <h3>לקיחת הציוד</h3>
+                            <ol>
+                                <li>פתח את הקישור לטוכן</li>
+                                <li>קרא את ההוראות והסתכל על התמונה</li>
+                                <li>השתמש בקוד הארון לפתיחה (אם יש)</li>
+                                <li>קח את הציוד שביקשת</li>
+                                <li><strong>חשוב:</strong> לחץ על כפתור <strong>"✅ אשר לקיחת ציוד"</strong></li>
+                            </ol>
+                            <div class="warning-box" style="margin-top: 15px;">
+                                <h4>⚠️ חובה לאשר לקיחה!</h4>
+                                <p>לחיצה על "אשר לקיחת ציוד" <strong>מעדכנת את המלאי</strong> ומסמנת שהציוד יצא. זה חשוב למעקב!</p>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="section">
+                    <h2>🔐 קוד פתיחת הארון</h2>
+
+                    <div class="card">
+                        <p style="font-size: 1.1em; margin-bottom: 15px;">
+                            <strong>חלק מהערים משתמשות בקוד סודי לפתיחת הארון.</strong>
+                        </p>
+                        <ul>
+                            <li>הקוד מוצג <strong>רק בטוכן</strong> המאושר</li>
+                            <li>לא כל העיר צריכה לראות אותו</li>
+                            <li>אם יש קוד - הוא יופיע בגדול וברור בטוכן</li>
+                            <li>אם אין קוד - הארון פתוח או נפתח על ידי המנהל</li>
+                        </ul>
+                    </div>
+
+                    <div class="feature-grid">
+                        <div class="feature-card">
+                            <div class="feature-icon">🗺️</div>
+                            <h4>הוראות מפורטות</h4>
+                            <p>טקסט המסביר בדיוק איפה הארון נמצא</p>
+                            <ul style="text-align: right;">
+                                <li>"ליד הכניסה הראשית"</li>
+                                <li>"בקומה השנייה ליד המעלית"</li>
+                                <li>"בחדר המשרדים, ארון ימני"</li>
+                            </ul>
+                        </div>
+
+                        <div class="feature-card">
+                            <div class="feature-icon">📸</div>
+                            <h4>תמונת הארון</h4>
+                            <p>תמונה אמיתית של הארון לזיהוי</p>
+                            <ul style="text-align: right;">
+                                <li>רואה איך הארון נראה</li>
+                                <li>קל למצוא אותו במקום</li>
+                                <li>לא תתבלבל עם ארונות אחרים</li>
+                            </ul>
+                        </div>
+
+                        <div class="feature-card">
+                            <div class="feature-icon">⏱️</div>
+                            <h4>טוכן בתוקף</h4>
+                            <p>לטוכן יש תוקף מוגבל בזמן</p>
+                            <ul style="text-align: right;">
+                                <li>בדרך כלל 30-60 דקות</li>
+                                <li>המנהל יכול להאריך אם צריך</li>
+                                <li>אחרי פקיעה - צור קשר עם מנהל</li>
+                            </ul>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="section">
+                    <h2>❓ שאלות נפוצות - מצב בקשות</h2>
+
+                    <div class="faq-item">
+                        <div class="faq-question">🤔 למה העיר שלי עובדת במצב בקשות?</div>
+                        <div class="faq-answer">
+                            מצב בקשות נותן למנהל שליטה מלאה על מי לוקח ציוד ומתי. זה מונע מצבים של לקיחת ציוד ללא תיאום, ומאפשר למנהל לוודא שהציוד באמת זמין.
+                        </div>
+                    </div>
+
+                    <div class="faq-item">
+                        <div class="faq-question">⏰ כמה זמן לוקח לקבל אישור?</div>
+                        <div class="faq-answer">
+                            זה תלוי במנהל. בדרך כלל תוך כמה דקות, אבל יכול להיות גם יותר אם המנהל עסוק. אם עבר הרבה זמן - צור קשר עם המנהל ישירות.
+                        </div>
+                    </div>
+
+                    <div class="faq-item">
+                        <div class="faq-question">❌ הבקשה שלי נדחתה, למה?</div>
+                        <div class="faq-answer">
+                            סיבות אפשריות:<br>
+                            - הציוד לא זמין כרגע<br>
+                            - הפרטים לא היו ברורים<br>
+                            - לא תואמים את המדיניות של העיר<br>
+                            המנהל צריך לספק סיבה לדחייה. אם לא קיבלת סיבה - פנה אליו.
+                        </div>
+                    </div>
+
+                    <div class="faq-item">
+                        <div class="faq-question">🔗 הטוכן שלי פג, מה עושים?</div>
+                        <div class="faq-answer">
+                            אם לא הספקת להגיע בזמן והטוכן פג:<br>
+                            1. צור קשר עם המנהל מיד<br>
+                            2. הוא יכול להאריך את התוקף או ליצור טוכן חדש<br>
+                            3. או לחילופין שלח בקשה חדשה
+                        </div>
+                    </div>
+
+                    <div class="faq-item">
+                        <div class="faq-question">📱 לא קיבלתי את קישור הטוכן</div>
+                        <div class="faq-answer">
+                            אם הבקשה אושרה אבל לא קיבלת קישור:<br>
+                            - בדוק אם המנהל שלח ב-WhatsApp, SMS או מייל<br>
+                            - יכול להיות שהוא שכח לשלוח - פנה אליו<br>
+                            - המנהל יכול להעתיק את הקישור ולשלוח לך שוב
+                        </div>
+                    </div>
+
+                    <div class="faq-item">
+                        <div class="faq-question">🔄 אני צריך להחזיר את הציוד?</div>
+                        <div class="faq-answer">
+                            כן! גם במצב בקשות צריך להחזיר את הציוד בדיוק כמו במצב השאלה הרגיל.<br>
+                            עבור לטאב <strong>"החזרת ציוד"</strong> כדי ללמוד איך.
+                        </div>
+                    </div>
+                </div>
+
+                <div class="success-box">
+                    <h3>✅ יתרונות מצב בקשות</h3>
+                    <ul>
+                        <li><strong>בקרה מלאה</strong> - המנהל בודק כל בקשה</li>
+                        <li><strong>מידע מפורט</strong> - טוכן עם הוראות, תמונה וקוד</li>
+                        <li><strong>מניעת בזבוז</strong> - רק מי שמאושר לוקח ציוד</li>
+                        <li><strong>תיעוד מלא</strong> - כל לקיחה מאושרת ומתועדת</li>
+                    </ul>
+                </div>
+            </div>
+
             <!-- Return Tab -->
             <div id="return" class="tab-content">
                 <div class="section">
@@ -1243,7 +1468,7 @@
         <footer>
             <h2 style="color: white; margin-bottom: 20px;">🎉 בהצלחה בשימוש במערכת!</h2>
             <p>מדריך משתמש רגיל - מערכת ארון ציוד ידידים</p>
-            <p style="margin-top: 20px; opacity: 0.9;">גרסה 2.1 - 6 בנובמבר 2025</p>
+            <p style="margin-top: 20px; opacity: 0.9;">גרסה 3.0 - נובמבר 2024 - כולל מצב בקשות וטוקנים</p>
         </footer>
     </div>
 
