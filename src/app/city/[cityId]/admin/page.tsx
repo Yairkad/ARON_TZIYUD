@@ -1299,7 +1299,6 @@ export default function CityAdminPage() {
                             }`}>
                               <div className="flex-1">
                                 <p className="font-semibold text-gray-800">{item.equipment_name}</p>
-                                <p className="text-xs text-gray-600">כמות: {item.quantity || 1}</p>
                               </div>
                               <div className="flex gap-2 items-center">
                                 <button
