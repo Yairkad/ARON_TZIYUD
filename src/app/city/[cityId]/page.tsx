@@ -392,18 +392,6 @@ export default function CityPage() {
             <p className="text-gray-600 text-lg">
               {isRequestMode ? 'מערכת בקשות לאישור מנהל' : 'מערכת חכמה לניהול השאלות והחזרות'}
             </p>
-            {city.location_url && (
-              <div className="mt-3">
-                <a
-                  href={city.location_url}
-                  target="_blank"
-                  rel="noopener noreferrer"
-                  className="inline-block bg-blue-600 text-white px-6 py-2 rounded-lg hover:bg-blue-700 font-semibold transition-all text-sm"
-                >
-                  📍 פתח מיקום בגוגל מפות
-                </a>
-              </div>
-            )}
           </div>
         </header>
 
