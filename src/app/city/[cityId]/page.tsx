@@ -698,7 +698,6 @@ export default function CityPage() {
                           <th className="px-3 py-2 text-right font-semibold text-gray-700 border-b border-gray-300">שם פריט</th>
                           <th className="px-3 py-2 text-center font-semibold text-gray-700 border-b border-gray-300">כמות זמינה</th>
                           <th className="px-3 py-2 text-center font-semibold text-gray-700 border-b border-gray-300">סטטוס</th>
-                          <th className="px-3 py-2 text-center font-semibold text-gray-700 border-b border-gray-300">כמות לבקשה</th>
                         </tr>
                       </thead>
                       <tbody>
@@ -722,35 +721,35 @@ export default function CityPage() {
                                 {item.quantity}
                               </td>
                               <td className="px-3 py-2 text-center">
-                                {item.is_consumable && (
-                                  <span className="inline-block text-xs bg-purple-100 text-purple-700 px-2 py-1 rounded">אין צורך להחזיר</span>
-                                )}
-                              </td>
-                              <td className="px-3 py-2">
-                                {selectedItems.has(item.id) && item.is_consumable ? (
-                                  <div className="flex items-center justify-center gap-1">
-                                    <button
-                                      type="button"
-                                      onClick={() => handleQuantityChange(item.id, Math.max(1, (itemQuantities[item.id] || 1) - 1))}
-                                      disabled={(itemQuantities[item.id] || 1) <= 1}
-                                      className="w-6 h-6 flex items-center justify-center bg-red-500 hover:bg-red-600 disabled:bg-gray-300 disabled:cursor-not-allowed text-white font-bold rounded text-xs"
-                                    >
-                                      -
-                                    </button>
-                                    <span className="w-8 h-6 flex items-center justify-center font-bold text-xs text-gray-800 bg-white border border-gray-300 rounded">
-                                      {itemQuantities[item.id] || 1}
-                                    </span>
-                                    <button
-                                      type="button"
-                                      onClick={() => handleQuantityChange(item.id, Math.min(item.quantity, (itemQuantities[item.id] || 1) + 1))}
-                                      disabled={(itemQuantities[item.id] || 1) >= item.quantity}
-                                      className="w-6 h-6 flex items-center justify-center bg-green-500 hover:bg-green-600 disabled:bg-gray-300 disabled:cursor-not-allowed text-white font-bold rounded text-xs"
-                                    >
-                                      +
-                                    </button>
+                                {item.is_consumable ? (
+                                  <div className="flex flex-col items-center gap-2">
+                                    <span className="inline-block text-xs bg-purple-100 text-purple-700 px-2 py-1 rounded">אין צורך להחזיר</span>
+                                    {selectedItems.has(item.id) && (
+                                      <div className="flex items-center gap-1">
+                                        <button
+                                          type="button"
+                                          onClick={() => handleQuantityChange(item.id, Math.max(1, (itemQuantities[item.id] || 1) - 1))}
+                                          disabled={(itemQuantities[item.id] || 1) <= 1}
+                                          className="w-6 h-6 flex items-center justify-center bg-red-500 hover:bg-red-600 disabled:bg-gray-300 disabled:cursor-not-allowed text-white font-bold rounded text-xs"
+                                        >
+                                          -
+                                        </button>
+                                        <span className="w-8 h-6 flex items-center justify-center font-bold text-xs text-gray-800 bg-white border border-gray-300 rounded">
+                                          {itemQuantities[item.id] || 1}
+                                        </span>
+                                        <button
+                                          type="button"
+                                          onClick={() => handleQuantityChange(item.id, Math.min(item.quantity, (itemQuantities[item.id] || 1) + 1))}
+                                          disabled={(itemQuantities[item.id] || 1) >= item.quantity}
+                                          className="w-6 h-6 flex items-center justify-center bg-green-500 hover:bg-green-600 disabled:bg-gray-300 disabled:cursor-not-allowed text-white font-bold rounded text-xs"
+                                        >
+                                          +
+                                        </button>
+                                      </div>
+                                    )}
                                   </div>
                                 ) : (
-                                  <span className="text-gray-400 text-xs text-center block">-</span>
+                                  <span className="text-gray-400 text-xs">-</span>
                                 )}
                               </td>
                             </tr>
@@ -760,7 +759,7 @@ export default function CityPage() {
                           .filter(item => item.name.toLowerCase().includes(equipmentSearch.toLowerCase()))
                           .length === 0 && (
                           <tr>
-                            <td colSpan={5} className="text-center py-8 text-gray-500">
+                            <td colSpan={4} className="text-center py-8 text-gray-500">
                               {equipmentSearch ? 'לא נמצא ציוד התואם לחיפוש' : 'אין ציוד זמין כרגע'}
                             </td>
                           </tr>
