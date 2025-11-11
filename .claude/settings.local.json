@@ -20,7 +20,8 @@
       "Bash(test:*)",
       "Bash(cmd /c \"cd /d c:\\Users\\יאיר קדוש\\ARON_TZIYUD && node gen-vapid.js\")",
       "Bash(cmd /c \"npm exec -- node vapid.js\")",
-      "Bash(git reset:*)"
+      "Bash(git reset:*)",
+      "Bash(cmd /c \"npm run dev\")"
     ],
     "deny": [],
     "ask": []

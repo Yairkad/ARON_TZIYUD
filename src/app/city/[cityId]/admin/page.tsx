@@ -664,15 +664,17 @@ export default function CityAdminPage() {
 
       if (!response.ok) {
         alert(data.error || 'שגיאה בעדכון הפרטים')
+        setLoading(false)
         return
       }
 
       alert('הפרטים עודכנו בהצלחה!')
+      setIsEditingLocation(false)
       fetchCity()
+      setLoading(false)
     } catch (error) {
       console.error('Error updating city details:', error)
       alert('אירעה שגיאה בעדכון הפרטים')
-    } finally {
       setLoading(false)
     }
   }
@@ -2094,13 +2096,23 @@ export default function CityAdminPage() {
                               onChange={(e) => {
                                 if (isEditingLocation) {
                                   const newUrl = e.target.value
-                                  const coords = extractCoordinatesFromUrl(newUrl)
-                                  setEditCityForm({
-                                    ...editCityForm,
-                                    location_url: newUrl,
-                                    lat: coords?.lat || null,
-                                    lng: coords?.lng || null
-                                  })
+                                  // If URL is empty, clear coordinates too
+                                  if (!newUrl.trim()) {
+                                    setEditCityForm({
+                                      ...editCityForm,
+                                      location_url: '',
+                                      lat: null,
+                                      lng: null
+                                    })
+                                  } else {
+                                    const coords = extractCoordinatesFromUrl(newUrl)
+                                    setEditCityForm({
+                                      ...editCityForm,
+                                      location_url: newUrl,
+                                      lat: coords?.lat || null,
+                                      lng: coords?.lng || null
+                                    })
+                                  }
                                 }
                               }}
                               placeholder="https://maps.google.com/?q=..."
@@ -2122,13 +2134,23 @@ export default function CityAdminPage() {
                               onChange={(e) => {
                                 if (isEditingLocation) {
                                   const newUrl = e.target.value
-                                  const coords = extractCoordinatesFromUrl(newUrl)
-                                  setEditCityForm({
-                                    ...editCityForm,
-                                    token_location_url: newUrl,
-                                    token_lat: coords?.lat || null,
-                                    token_lng: coords?.lng || null
-                                  })
+                                  // If URL is empty, clear coordinates too
+                                  if (!newUrl.trim()) {
+                                    setEditCityForm({
+                                      ...editCityForm,
+                                      token_location_url: '',
+                                      token_lat: null,
+                                      token_lng: null
+                                    })
+                                  } else {
+                                    const coords = extractCoordinatesFromUrl(newUrl)
+                                    setEditCityForm({
+                                      ...editCityForm,
+                                      token_location_url: newUrl,
+                                      token_lat: coords?.lat || null,
+                                      token_lng: coords?.lng || null
+                                    })
+                                  }
                                 }
                               }}
                               placeholder="https://maps.google.com/?q=..."
