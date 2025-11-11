@@ -1450,6 +1450,7 @@ export default function SuperAdminPage() {
                             city_id: '',
                             permissions: 'full_access',
                             phone: '',
+                            manager_role: '',
                           })
                         }}
                         className="flex-1 h-12 bg-white border-2 border-gray-400 text-gray-700 hover:bg-gray-50 font-semibold rounded-xl transition-all"
