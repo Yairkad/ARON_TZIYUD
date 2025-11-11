@@ -9,13 +9,20 @@ export interface SessionData {
 // בדיקת אימות בצד הלקוח
 export async function checkAuth(): Promise<{ authenticated: boolean; userId?: string; userType?: string }> {
   try {
-    const response = await fetch('/api/auth/verify', {
+    const response = await fetch('/api/auth/me', {
       method: 'GET',
       credentials: 'include' // חשוב! שולח cookies
     })
 
     if (response.ok) {
-      return await response.json()
+      const data = await response.json()
+      if (data.success && data.user) {
+        return {
+          authenticated: true,
+          userId: data.user.id,
+          userType: data.user.role === 'super_admin' ? 'super' : 'city'
+        }
+      }
     }
 
     return { authenticated: false }
