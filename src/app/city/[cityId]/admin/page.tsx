@@ -22,6 +22,46 @@ import {
   isSubscribed
 } from '@/lib/push'
 
+// Function to extract coordinates from Google Maps URL
+function extractCoordinatesFromUrl(url: string): { lat: number; lng: number } | null {
+  if (!url) return null
+
+  try {
+    // Pattern 1: maps.google.com/?q=lat,lng
+    const qPattern = /[?&]q=(-?\d+\.?\d*),(-?\d+\.?\d*)/
+    const qMatch = url.match(qPattern)
+    if (qMatch) {
+      return { lat: parseFloat(qMatch[1]), lng: parseFloat(qMatch[2]) }
+    }
+
+    // Pattern 2: @lat,lng in URL
+    const atPattern = /@(-?\d+\.?\d*),(-?\d+\.?\d*)/
+    const atMatch = url.match(atPattern)
+    if (atMatch) {
+      return { lat: parseFloat(atMatch[1]), lng: parseFloat(atMatch[2]) }
+    }
+
+    // Pattern 3: /place/.../@lat,lng
+    const placePattern = /place\/[^/]+\/@(-?\d+\.?\d*),(-?\d+\.?\d*)/
+    const placeMatch = url.match(placePattern)
+    if (placeMatch) {
+      return { lat: parseFloat(placeMatch[1]), lng: parseFloat(placeMatch[2]) }
+    }
+
+    // Pattern 4: ll=lat,lng (sometimes used)
+    const llPattern = /[?&]ll=(-?\d+\.?\d*),(-?\d+\.?\d*)/
+    const llMatch = url.match(llPattern)
+    if (llMatch) {
+      return { lat: parseFloat(llMatch[1]), lng: parseFloat(llMatch[2]) }
+    }
+
+    return null
+  } catch (error) {
+    console.error('Error extracting coordinates:', error)
+    return null
+  }
+}
+
 export default function CityAdminPage() {
   const params = useParams()
   const cityId = params.cityId as string
@@ -45,7 +85,11 @@ export default function CityAdminPage() {
     location_url: '',
     token_location_url: '',
     location_description: '',
-    location_image_url: ''
+    location_image_url: '',
+    lat: null as number | null,
+    lng: null as number | null,
+    token_lat: null as number | null,
+    token_lng: null as number | null
   })
   const [allCities, setAllCities] = useState<City[]>([])
   const [selectedCityToCopy, setSelectedCityToCopy] = useState<string>('')
@@ -145,7 +189,11 @@ export default function CityAdminPage() {
           location_url: data.location_url || '',
           token_location_url: data.token_location_url || '',
           location_description: data.location_description || '',
-          location_image_url: data.location_image_url || ''
+          location_image_url: data.location_image_url || '',
+          lat: data.lat || null,
+          lng: data.lng || null,
+          token_lat: data.token_lat || null,
+          token_lng: data.token_lng || null
         })
       }
     } catch (error) {
@@ -602,6 +650,10 @@ export default function CityAdminPage() {
           token_location_url: editCityForm.token_location_url?.trim() || null,
           location_description: editCityForm.location_description?.trim() || null,
           location_image_url: editCityForm.location_image_url?.trim() || null,
+          lat: editCityForm.lat,
+          lng: editCityForm.lng,
+          token_lat: editCityForm.token_lat,
+          token_lng: editCityForm.token_lng,
           request_mode: city.request_mode,
           cabinet_code: city.cabinet_code,
           require_call_id: city.require_call_id
@@ -2041,7 +2093,14 @@ export default function CityAdminPage() {
                               value={editCityForm.location_url}
                               onChange={(e) => {
                                 if (isEditingLocation) {
-                                  setEditCityForm({ ...editCityForm, location_url: e.target.value })
+                                  const newUrl = e.target.value
+                                  const coords = extractCoordinatesFromUrl(newUrl)
+                                  setEditCityForm({
+                                    ...editCityForm,
+                                    location_url: newUrl,
+                                    lat: coords?.lat || null,
+                                    lng: coords?.lng || null
+                                  })
                                 }
                               }}
                               placeholder="https://maps.google.com/?q=..."
@@ -2062,7 +2121,14 @@ export default function CityAdminPage() {
                               value={editCityForm.token_location_url || ''}
                               onChange={(e) => {
                                 if (isEditingLocation) {
-                                  setEditCityForm({ ...editCityForm, token_location_url: e.target.value })
+                                  const newUrl = e.target.value
+                                  const coords = extractCoordinatesFromUrl(newUrl)
+                                  setEditCityForm({
+                                    ...editCityForm,
+                                    token_location_url: newUrl,
+                                    token_lat: coords?.lat || null,
+                                    token_lng: coords?.lng || null
+                                  })
                                 }
                               }}
                               placeholder="https://maps.google.com/?q=..."

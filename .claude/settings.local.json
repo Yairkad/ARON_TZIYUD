@@ -12,7 +12,15 @@
       "Bash(npm install:*)",
       "Bash(cmd /c npm install web-push)",
       "Bash(npm run build:*)",
-      "Bash(cmd /c npm run build)"
+      "Bash(cmd /c npm run build)",
+      "Bash(cmd /c \"npm run -v\")",
+      "Bash(node node_modules/web-push/src/cli.js:*)",
+      "Bash(cmd /c node generate-vapid.js)",
+      "Bash(cmd /c \"where node\")",
+      "Bash(test:*)",
+      "Bash(cmd /c \"cd /d c:\\Users\\יאיר קדוש\\ARON_TZIYUD && node gen-vapid.js\")",
+      "Bash(cmd /c \"npm exec -- node vapid.js\")",
+      "Bash(git reset:*)"
     ],
     "deny": [],
     "ask": []

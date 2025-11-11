@@ -294,38 +294,9 @@ export default function RequestPage({ params }: { params: Promise<{ token: strin
                 {(request.city?.token_location_url || request.city?.location_url) && (() => {
                   const locationUrl = request.city.token_location_url || request.city.location_url || ''
 
-                  // Extract coordinates from Google Maps URL
-                  // Supports formats like:
-                  // - https://www.google.com/maps?q=31.7683,35.2137
-                  // - https://maps.google.com/?q=31.7683,35.2137
-                  // - https://www.google.com/maps/place/31.7683,35.2137
-                  let lat = ''
-                  let lng = ''
-
-                  try {
-                    const url = new URL(locationUrl)
-
-                    // Try to get from ?q= parameter
-                    const qParam = url.searchParams.get('q')
-                    if (qParam) {
-                      const coords = qParam.split(',')
-                      if (coords.length === 2) {
-                        lat = coords[0].trim()
-                        lng = coords[1].trim()
-                      }
-                    }
-
-                    // If not found, try to extract from pathname (e.g., /maps/place/31.7683,35.2137)
-                    if (!lat || !lng) {
-                      const pathMatch = url.pathname.match(/(-?\d+\.?\d*),(-?\d+\.?\d*)/)
-                      if (pathMatch) {
-                        lat = pathMatch[1]
-                        lng = pathMatch[2]
-                      }
-                    }
-                  } catch (e) {
-                    console.error('Failed to parse location URL:', e)
-                  }
+                  // Use coordinates from DB - prefer token coords, fall back to main coords
+                  const lat = request.city.token_lat || request.city.lat
+                  const lng = request.city.token_lng || request.city.lng
 
                   const googleMapsUrl = lat && lng
                     ? `https://www.google.com/maps?q=${lat},${lng}`

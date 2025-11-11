@@ -13,6 +13,10 @@ export async function POST(request: NextRequest) {
       token_location_url,
       location_description,
       location_image_url,
+      lat,
+      lng,
+      token_lat,
+      token_lng,
       request_mode,
       cabinet_code,
       require_call_id
@@ -72,6 +76,18 @@ export async function POST(request: NextRequest) {
     }
     if (location_image_url !== undefined) {
       updateData.location_image_url = location_image_url ? location_image_url.trim() : null
+    }
+    if (lat !== undefined) {
+      updateData.lat = lat
+    }
+    if (lng !== undefined) {
+      updateData.lng = lng
+    }
+    if (token_lat !== undefined) {
+      updateData.token_lat = token_lat
+    }
+    if (token_lng !== undefined) {
+      updateData.token_lng = token_lng
     }
     if (request_mode !== undefined) {
       updateData.request_mode = request_mode

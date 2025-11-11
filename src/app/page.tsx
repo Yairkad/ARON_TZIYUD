@@ -198,31 +198,9 @@ export default function HomePage() {
                       )}
                       {/* Navigation Buttons */}
                       {city.location_url && (() => {
-                        // Extract coordinates from Google Maps URL
-                        let lat = ''
-                        let lng = ''
-
-                        try {
-                          const url = new URL(city.location_url)
-                          const qParam = url.searchParams.get('q')
-                          if (qParam) {
-                            const coords = qParam.split(',')
-                            if (coords.length === 2) {
-                              lat = coords[0].trim()
-                              lng = coords[1].trim()
-                            }
-                          }
-
-                          if (!lat || !lng) {
-                            const pathMatch = url.pathname.match(/(-?\d+\.?\d*),(-?\d+\.?\d*)/)
-                            if (pathMatch) {
-                              lat = pathMatch[1]
-                              lng = pathMatch[2]
-                            }
-                          }
-                        } catch (e) {
-                          console.error('Failed to parse location URL:', e)
-                        }
+                        // Use coordinates from DB if available, otherwise fall back to location_url
+                        const lat = city.lat
+                        const lng = city.lng
 
                         const googleMapsUrl = lat && lng
                           ? `https://www.google.com/maps?q=${lat},${lng}`
