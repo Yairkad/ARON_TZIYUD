@@ -29,7 +29,7 @@ export async function DELETE(request: NextRequest) {
     }
 
     // Prevent admin from deleting themselves
-    if (user_id === adminUser.id) {
+    if (user_id === adminUser?.id) {
       return NextResponse.json(
         { success: false, error: 'לא ניתן למחוק את עצמך' },
         { status: 400 }
