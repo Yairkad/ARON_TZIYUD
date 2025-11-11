@@ -87,7 +87,7 @@ export async function GET(request: NextRequest) {
 
     // Get email verification status from auth.users
     const managersWithVerification = await Promise.all(
-      (managers || []).map(async (manager) => {
+      (managers || []).map(async (manager: any) => {
         const { data: authUserData } = await supabase.auth.admin.getUserById(manager.id)
 
         return {
