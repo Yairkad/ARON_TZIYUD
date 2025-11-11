@@ -1,0 +1,228 @@
+<!DOCTYPE html>
+<html lang="he" dir="rtl">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>בדיקה ומחיקת משתמשים</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            max-width: 800px;
+            margin: 50px auto;
+            padding: 20px;
+            background: #f5f5f5;
+        }
+        .container {
+            background: white;
+            padding: 30px;
+            border-radius: 8px;
+            box-shadow: 0 2px 10px rgba(0,0,0,0.1);
+        }
+        h1 {
+            color: #333;
+            text-align: center;
+        }
+        button {
+            width: 100%;
+            padding: 15px;
+            margin: 10px 0;
+            color: white;
+            border: none;
+            border-radius: 5px;
+            font-size: 16px;
+            cursor: pointer;
+        }
+        .check-btn {
+            background: #2196F3;
+        }
+        .check-btn:hover {
+            background: #1976D2;
+        }
+        .delete-btn {
+            background: #f44336;
+        }
+        .delete-btn:hover {
+            background: #d32f2f;
+        }
+        button:disabled {
+            background: #ccc;
+            cursor: not-allowed;
+        }
+        .result {
+            margin-top: 20px;
+            padding: 15px;
+            border-radius: 5px;
+        }
+        .info {
+            background: #e3f2fd;
+            color: #1976d2;
+        }
+        .success {
+            background: #c8e6c9;
+            color: #2e7d32;
+        }
+        .error {
+            background: #ffcdd2;
+            color: #c62828;
+        }
+        pre {
+            background: #f5f5f5;
+            padding: 10px;
+            border-radius: 5px;
+            overflow-x: auto;
+            text-align: left;
+            direction: ltr;
+        }
+        .user-card {
+            background: #f9f9f9;
+            border: 1px solid #ddd;
+            padding: 15px;
+            margin: 10px 0;
+            border-radius: 5px;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>בדיקה ומחיקת משתמשים</h1>
+
+        <button class="check-btn" onclick="checkUsers()">🔍 בדוק משתמשים קיימים</button>
+        <button class="delete-btn" onclick="deleteAllUsers()">🗑️ מחק את כל המשתמשים</button>
+
+        <div id="result"></div>
+    </div>
+
+    <script>
+        const SUPABASE_URL = 'https://jgkmcsxrtovrdiguhwyv.supabase.co';
+        const SUPABASE_SERVICE_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Impna21jc3hydG92cmRpZ3Vod3l2Iiwicm9sZSI6InNlcnZpY2Vfcm9sZSIsImlhdCI6MTc2MjEwNzExMiwiZXhwIjoyMDc3NjgzMTEyfQ.yTAJKE4koX56lJ8ZA0utYf9x2Ytj_mLHwIOzt-xpYxY';
+
+        async function checkUsers() {
+            const resultDiv = document.getElementById('result');
+            resultDiv.innerHTML = '<div class="result info">🔄 בודק משתמשים...</div>';
+
+            try {
+                // Check auth.users
+                const authResponse = await fetch(`${SUPABASE_URL}/auth/v1/admin/users`, {
+                    method: 'GET',
+                    headers: {
+                        'Authorization': `Bearer ${SUPABASE_SERVICE_KEY}`,
+                        'apikey': SUPABASE_SERVICE_KEY
+                    }
+                });
+
+                const authData = await authResponse.json();
+
+                // Check public.users
+                const publicResponse = await fetch(`${SUPABASE_URL}/rest/v1/users?select=*`, {
+                    headers: {
+                        'Authorization': `Bearer ${SUPABASE_SERVICE_KEY}`,
+                        'apikey': SUPABASE_SERVICE_KEY,
+                        'Content-Type': 'application/json'
+                    }
+                });
+
+                const publicData = await publicResponse.json();
+
+                let html = '<div class="result info">';
+                html += `<h3>📊 סטטוס משתמשים</h3>`;
+                html += `<p><strong>auth.users:</strong> ${authData.users ? authData.users.length : 0} משתמשים</p>`;
+                html += `<p><strong>public.users:</strong> ${Array.isArray(publicData) ? publicData.length : 0} משתמשים</p>`;
+
+                if (authData.users && authData.users.length > 0) {
+                    html += '<h4>משתמשים ב-auth.users:</h4>';
+                    authData.users.forEach(user => {
+                        html += `<div class="user-card">`;
+                        html += `<strong>Email:</strong> ${user.email}<br>`;
+                        html += `<strong>ID:</strong> ${user.id}<br>`;
+                        html += `<strong>Created:</strong> ${new Date(user.created_at).toLocaleString('he-IL')}`;
+                        html += `</div>`;
+                    });
+                }
+
+                if (Array.isArray(publicData) && publicData.length > 0) {
+                    html += '<h4>משתמשים ב-public.users:</h4>';
+                    publicData.forEach(user => {
+                        html += `<div class="user-card">`;
+                        html += `<strong>Email:</strong> ${user.email}<br>`;
+                        html += `<strong>Role:</strong> ${user.role}<br>`;
+                        html += `<strong>Permissions:</strong> ${user.permissions}<br>`;
+                        html += `<strong>Active:</strong> ${user.is_active ? 'כן' : 'לא'}`;
+                        html += `</div>`;
+                    });
+                }
+
+                html += '</div>';
+                resultDiv.innerHTML = html;
+
+            } catch (error) {
+                resultDiv.innerHTML = `<div class="result error">❌ שגיאה: ${error.message}</div>`;
+            }
+        }
+
+        async function deleteAllUsers() {
+            if (!confirm('האם אתה בטוח שברצונך למחוק את כל המשתמשים? פעולה זו אינה הפיכה!')) {
+                return;
+            }
+
+            const resultDiv = document.getElementById('result');
+            resultDiv.innerHTML = '<div class="result info">🔄 מוחק משתמשים...</div>';
+
+            try {
+                // Get all users first
+                const authResponse = await fetch(`${SUPABASE_URL}/auth/v1/admin/users`, {
+                    method: 'GET',
+                    headers: {
+                        'Authorization': `Bearer ${SUPABASE_SERVICE_KEY}`,
+                        'apikey': SUPABASE_SERVICE_KEY
+                    }
+                });
+
+                const authData = await authResponse.json();
+
+                if (!authData.users || authData.users.length === 0) {
+                    resultDiv.innerHTML = '<div class="result info">ℹ️ אין משתמשים למחיקה</div>';
+                    return;
+                }
+
+                // Delete each user
+                let deleted = 0;
+                let failed = 0;
+
+                for (const user of authData.users) {
+                    try {
+                        const deleteResponse = await fetch(`${SUPABASE_URL}/auth/v1/admin/users/${user.id}`, {
+                            method: 'DELETE',
+                            headers: {
+                                'Authorization': `Bearer ${SUPABASE_SERVICE_KEY}`,
+                                'apikey': SUPABASE_SERVICE_KEY
+                            }
+                        });
+
+                        if (deleteResponse.ok || deleteResponse.status === 204) {
+                            deleted++;
+                        } else {
+                            failed++;
+                            console.error('Failed to delete user:', user.email, await deleteResponse.text());
+                        }
+                    } catch (err) {
+                        failed++;
+                        console.error('Error deleting user:', user.email, err);
+                    }
+                }
+
+                resultDiv.innerHTML = `
+                    <div class="result success">
+                        <h3>✅ מחיקה הושלמה</h3>
+                        <p>נמחקו: ${deleted} משתמשים</p>
+                        ${failed > 0 ? `<p style="color: #ff6b6b;">נכשלו: ${failed} משתמשים</p>` : ''}
+                        <p>כעת ניתן ליצור משתמש חדש</p>
+                    </div>
+                `;
+
+            } catch (error) {
+                resultDiv.innerHTML = `<div class="result error">❌ שגיאה: ${error.message}</div>`;
+            }
+        }
+    </script>
+</body>
+</html>

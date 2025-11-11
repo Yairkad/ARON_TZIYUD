@@ -5,8 +5,18 @@
 
 // Get these from your Supabase project settings:
 // Dashboard → Settings → API → Project URL and service_role key
-const SUPABASE_URL = process.env.NEXT_PUBLIC_SUPABASE_URL || 'YOUR_SUPABASE_URL'
-const SUPABASE_SERVICE_KEY = process.env.SUPABASE_SERVICE_ROLE_KEY || 'YOUR_SUPABASE_SERVICE_ROLE_KEY'
+const SUPABASE_URL = process.env.NEXT_PUBLIC_SUPABASE_URL
+const SUPABASE_SERVICE_KEY = process.env.SUPABASE_SERVICE_ROLE_KEY
+
+if (!SUPABASE_URL || !SUPABASE_SERVICE_KEY) {
+  console.error('❌ חסרים משתני סביבה:')
+  console.error('  - NEXT_PUBLIC_SUPABASE_URL')
+  console.error('  - SUPABASE_SERVICE_ROLE_KEY')
+  console.error('\nהוסף אותם לקובץ .env.local:')
+  console.error('NEXT_PUBLIC_SUPABASE_URL=your_project_url')
+  console.error('SUPABASE_SERVICE_ROLE_KEY=your_service_role_key')
+  process.exit(1)
+}
 
 async function createSuperAdmin() {
   try {

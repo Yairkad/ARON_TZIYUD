@@ -23,10 +23,32 @@ import {
 } from '@/lib/push'
 
 // Function to extract coordinates from Google Maps URL
-function extractCoordinatesFromUrl(url: string): { lat: number; lng: number } | null {
+// Handles both full URLs and short URLs (via API expansion)
+async function extractCoordinatesFromUrl(url: string): Promise<{ lat: number; lng: number } | null> {
   if (!url) return null
 
   try {
+    // Check if this is a short URL that needs expansion
+    const isShortUrl = url.includes('maps.app.goo.gl') || url.includes('goo.gl/maps')
+
+    if (isShortUrl) {
+      // Use API to expand short URL and extract coordinates
+      const response = await fetch('/api/maps/expand-url', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ url })
+      })
+
+      if (response.ok) {
+        const data = await response.json()
+        if (data.success && data.lat && data.lng) {
+          return { lat: data.lat, lng: data.lng }
+        }
+      }
+      // If API fails, fall through to manual extraction
+    }
+
+    // Manual extraction for full URLs
     // Pattern 1: maps.google.com/?q=lat,lng
     const qPattern = /[?&]q=(-?\d+\.?\d*),(-?\d+\.?\d*)/
     const qMatch = url.match(qPattern)
@@ -2093,7 +2115,7 @@ export default function CityAdminPage() {
                             <Input
                               type="url"
                               value={editCityForm.location_url}
-                              onChange={(e) => {
+                              onChange={async (e) => {
                                 if (isEditingLocation) {
                                   const newUrl = e.target.value
                                   // If URL is empty, clear coordinates too
@@ -2105,17 +2127,26 @@ export default function CityAdminPage() {
                                       lng: null
                                     })
                                   } else {
-                                    const coords = extractCoordinatesFromUrl(newUrl)
+                                    // Set URL immediately for responsive UI
                                     setEditCityForm({
                                       ...editCityForm,
                                       location_url: newUrl,
-                                      lat: coords?.lat || null,
-                                      lng: coords?.lng || null
+                                      lat: null,
+                                      lng: null
                                     })
+                                    // Extract coordinates asynchronously (handles short URLs automatically)
+                                    const coords = await extractCoordinatesFromUrl(newUrl)
+                                    if (coords) {
+                                      setEditCityForm(prev => ({
+                                        ...prev,
+                                        lat: coords.lat,
+                                        lng: coords.lng
+                                      }))
+                                    }
                                   }
                                 }
                               }}
-                              placeholder="https://maps.google.com/?q=..."
+                              placeholder="https://maps.google.com/?q=... או קישור קצר"
                               className={`h-12 border-2 rounded-xl transition-colors ${
                                 isEditingLocation
                                   ? 'border-gray-200 focus:border-indigo-500 cursor-text'
@@ -2131,7 +2162,7 @@ export default function CityAdminPage() {
                             <Input
                               type="url"
                               value={editCityForm.token_location_url || ''}
-                              onChange={(e) => {
+                              onChange={async (e) => {
                                 if (isEditingLocation) {
                                   const newUrl = e.target.value
                                   // If URL is empty, clear coordinates too
@@ -2143,17 +2174,26 @@ export default function CityAdminPage() {
                                       token_lng: null
                                     })
                                   } else {
-                                    const coords = extractCoordinatesFromUrl(newUrl)
+                                    // Set URL immediately for responsive UI
                                     setEditCityForm({
                                       ...editCityForm,
                                       token_location_url: newUrl,
-                                      token_lat: coords?.lat || null,
-                                      token_lng: coords?.lng || null
+                                      token_lat: null,
+                                      token_lng: null
                                     })
+                                    // Extract coordinates asynchronously (handles short URLs automatically)
+                                    const coords = await extractCoordinatesFromUrl(newUrl)
+                                    if (coords) {
+                                      setEditCityForm(prev => ({
+                                        ...prev,
+                                        token_lat: coords.lat,
+                                        token_lng: coords.lng
+                                      }))
+                                    }
                                   }
                                 }
                               }}
-                              placeholder="https://maps.google.com/?q=..."
+                              placeholder="https://maps.google.com/?q=... או קישור קצר"
                               className={`h-12 border-2 rounded-xl transition-colors ${
                                 isEditingLocation
                                   ? 'border-purple-200 focus:border-purple-500 cursor-text'

@@ -23,7 +23,10 @@
       "Bash(git reset:*)",
       "Bash(cmd /c \"npm run dev\")",
       "Bash(node create-super-admin.js:*)",
-      "Bash(cmd /c node:*)"
+      "Bash(cmd /c node:*)",
+      "Bash(cmd /c \"set NEXT_PUBLIC_SUPABASE_URL=https://jgkmcsxrtovrdiguhwyv.supabase.co && set SUPABASE_SERVICE_ROLE_KEY=eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Impna21jc3hydG92cmRpZ3Vod3l2Iiwicm9sZSI6InNlcnZpY2Vfcm9sZSIsImlhdCI6MTc2MjEwNzExMiwiZXhwIjoyMDc3NjgzMTEyfQ.yTAJKE4koX56lJ8ZA0utYf9x2Ytj_mLHwIOzt-xpYxY && node create-super-admin.js\")",
+      "Bash(cmd /c \"node --version\")",
+      "Bash(dir \"src\\app\\api\\auth\\super-admin\\login\"\")"
     ],
     "deny": [],
     "ask": []

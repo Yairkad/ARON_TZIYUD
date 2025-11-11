@@ -1,0 +1,164 @@
+<!DOCTYPE html>
+<html lang="he" dir="rtl">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Create Super Admin</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            max-width: 600px;
+            margin: 50px auto;
+            padding: 20px;
+            background: #f5f5f5;
+        }
+        .container {
+            background: white;
+            padding: 30px;
+            border-radius: 8px;
+            box-shadow: 0 2px 10px rgba(0,0,0,0.1);
+        }
+        h1 {
+            color: #333;
+            text-align: center;
+        }
+        .info {
+            background: #e3f2fd;
+            padding: 15px;
+            border-radius: 5px;
+            margin: 20px 0;
+        }
+        button {
+            width: 100%;
+            padding: 15px;
+            background: #2196F3;
+            color: white;
+            border: none;
+            border-radius: 5px;
+            font-size: 16px;
+            cursor: pointer;
+        }
+        button:hover {
+            background: #1976D2;
+        }
+        button:disabled {
+            background: #ccc;
+            cursor: not-allowed;
+        }
+        .result {
+            margin-top: 20px;
+            padding: 15px;
+            border-radius: 5px;
+            display: none;
+        }
+        .success {
+            background: #c8e6c9;
+            color: #2e7d32;
+        }
+        .error {
+            background: #ffcdd2;
+            color: #c62828;
+        }
+        pre {
+            background: #f5f5f5;
+            padding: 10px;
+            border-radius: 5px;
+            overflow-x: auto;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>יצירת משתמש Super Admin</h1>
+
+        <div class="info">
+            <h3>פרטי המשתמש שייווצר:</h3>
+            <p><strong>Email:</strong> yk74re@gmail.com</p>
+            <p><strong>Password:</strong> Admin2025</p>
+            <p><strong>Role:</strong> super_admin</p>
+            <p><strong>Permissions:</strong> full_access</p>
+        </div>
+
+        <button id="createBtn" onclick="createSuperAdmin()">צור Super Admin</button>
+
+        <div id="result" class="result"></div>
+    </div>
+
+    <script>
+        const SUPABASE_URL = 'https://jgkmcsxrtovrdiguhwyv.supabase.co';
+        const SUPABASE_SERVICE_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Impna21jc3hydG92cmRpZ3Vod3l2Iiwicm9sZSI6InNlcnZpY2Vfcm9sZSIsImlhdCI6MTc2MjEwNzExMiwiZXhwIjoyMDc3NjgzMTEyfQ.yTAJKE4koX56lJ8ZA0utYf9x2Ytj_mLHwIOzt-xpYxY';
+
+        async function createSuperAdmin() {
+            const btn = document.getElementById('createBtn');
+            const resultDiv = document.getElementById('result');
+
+            btn.disabled = true;
+            btn.textContent = 'יוצר משתמש...';
+            resultDiv.style.display = 'none';
+
+            try {
+                console.log('🔄 יוצר משתמש Super Admin...');
+
+                const response = await fetch(`${SUPABASE_URL}/auth/v1/admin/users`, {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                        'Authorization': `Bearer ${SUPABASE_SERVICE_KEY}`,
+                        'apikey': SUPABASE_SERVICE_KEY
+                    },
+                    body: JSON.stringify({
+                        email: 'yk74re@gmail.com',
+                        password: 'Admin2025',
+                        email_confirm: true,
+                        user_metadata: {
+                            full_name: 'Super Admin',
+                            role: 'super_admin',
+                            permissions: 'full_access'
+                        }
+                    })
+                });
+
+                const data = await response.json();
+
+                if (response.ok) {
+                    console.log('✅ Success:', data);
+                    resultDiv.className = 'result success';
+                    resultDiv.innerHTML = `
+                        <h3>✅ Super Admin נוצר בהצלחה!</h3>
+                        <p><strong>User ID:</strong> ${data.id}</p>
+                        <p><strong>Email:</strong> ${data.email}</p>
+                        <hr>
+                        <h4>פרטי התחברות:</h4>
+                        <p><strong>Email:</strong> yk74re@gmail.com</p>
+                        <p><strong>Password:</strong> Admin2025</p>
+                        <p><a href="https://aron-tziyud.vercel.app/super-admin" target="_blank">🌐 התחבר כאן</a></p>
+                    `;
+                    resultDiv.style.display = 'block';
+                    btn.textContent = 'המשתמש נוצר בהצלחה!';
+                    btn.style.background = '#4caf50';
+                } else {
+                    console.error('❌ Error:', data);
+                    resultDiv.className = 'result error';
+                    resultDiv.innerHTML = `
+                        <h3>❌ שגיאה ביצירת משתמש</h3>
+                        <pre>${JSON.stringify(data, null, 2)}</pre>
+                    `;
+                    resultDiv.style.display = 'block';
+                    btn.textContent = 'נסה שוב';
+                    btn.disabled = false;
+                }
+            } catch (error) {
+                console.error('❌ Error:', error);
+                resultDiv.className = 'result error';
+                resultDiv.innerHTML = `
+                    <h3>❌ שגיאה</h3>
+                    <p>${error.message}</p>
+                `;
+                resultDiv.style.display = 'block';
+                btn.textContent = 'נסה שוב';
+                btn.disabled = false;
+            }
+        }
+    </script>
+</body>
+</html>
