@@ -420,16 +420,6 @@ export default function CityPage() {
 
         {/* Header */}
         <header className="bg-white/90 backdrop-blur-lg border border-gray-200/50 rounded-2xl shadow-xl p-4 sm:p-8 mb-6 sm:mb-8 sm:relative">
-          <Link href="/" className="hidden sm:block absolute right-6 top-6">
-            <Button
-              variant="ghost"
-              size="icon"
-              className="h-10 w-10 rounded-full hover:bg-gray-100 text-gray-600 transition-all duration-200 hover:scale-110"
-              title="חזור לבחירת עיר"
-            >
-              ↩️
-            </Button>
-          </Link>
           <Link href="/" className="hidden sm:block absolute left-6 top-6">
             <Button
               variant="ghost"
@@ -1159,65 +1149,57 @@ export default function CityPage() {
             <CardTitle className="text-2xl font-bold text-gray-800">📊 מלאי ציוד</CardTitle>
             <CardDescription className="text-gray-600">סטטוס זמינות ציוד במערכת</CardDescription>
           </CardHeader>
-          <CardContent className="p-6">
-            <div className="overflow-x-auto">
-              <table className="w-full text-sm border-collapse">
-                <thead className="bg-gray-100">
-                  <tr>
-                    <th className="px-4 py-3 text-right font-semibold text-gray-700 border-b-2 border-gray-300">שם פריט</th>
-                    <th className="px-4 py-3 text-center font-semibold text-gray-700 border-b-2 border-gray-300">כמות זמינה</th>
-                    <th className="px-4 py-3 text-center font-semibold text-gray-700 border-b-2 border-gray-300">סטטוס</th>
-                    <th className="px-4 py-3 text-center font-semibold text-gray-700 border-b-2 border-gray-300">סוג</th>
-                  </tr>
-                </thead>
-                <tbody>
-                  {equipment.map((item, index) => (
-                    <tr
-                      key={item.id}
-                      className={`hover:bg-blue-50 transition-colors ${
-                        index !== equipment.length - 1 ? 'border-b border-gray-200' : ''
-                      }`}
-                    >
-                      <td className="px-4 py-3 font-medium text-gray-800">{item.name}</td>
-                      <td className="px-4 py-3 text-center">
-                        <span className={`inline-flex items-center justify-center min-w-[3rem] px-3 py-1 rounded-full text-sm font-semibold ${
-                          item.quantity > 0
-                            ? 'bg-green-100 text-green-700'
-                            : 'bg-red-100 text-red-700'
-                        }`}>
-                          {item.quantity}
-                        </span>
-                      </td>
-                      <td className="px-4 py-3 text-center">
-                        {item.equipment_status === 'faulty' ? (
-                          <span className="inline-flex items-center gap-1 px-3 py-1 bg-orange-100 text-orange-700 rounded-full text-xs font-medium">
-                            ⚠️ תקול
-                          </span>
-                        ) : item.quantity > 0 ? (
-                          <span className="inline-flex items-center gap-1 px-3 py-1 bg-green-100 text-green-700 rounded-full text-xs font-medium">
-                            ✅ זמין
-                          </span>
-                        ) : (
-                          <span className="inline-flex items-center gap-1 px-3 py-1 bg-red-100 text-red-700 rounded-full text-xs font-medium">
-                            ❌ חסר
-                          </span>
-                        )}
-                      </td>
-                      <td className="px-4 py-3 text-center">
-                        {item.is_consumable ? (
-                          <span className="inline-block px-3 py-1 bg-purple-100 text-purple-700 rounded-full text-xs font-medium">
-                            🔄 מתכלה
-                          </span>
-                        ) : (
-                          <span className="inline-block px-3 py-1 bg-blue-100 text-blue-700 rounded-full text-xs font-medium">
-                            רגיל
-                          </span>
-                        )}
-                      </td>
-                    </tr>
-                  ))}
-                </tbody>
-              </table>
+          <CardContent className="p-4 sm:p-6">
+            <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-4 gap-3">
+              {equipment.map((item) => (
+                <div
+                  key={item.id}
+                  className="bg-gradient-to-br from-white to-gray-50 rounded-xl p-2.5 border-2 border-gray-200 hover:border-blue-400 hover:shadow-md transition-all duration-200"
+                >
+                  {/* Item Name & Quantity */}
+                  <div className="flex items-center justify-center gap-1.5 mb-1.5">
+                    <span className="font-semibold text-gray-800 text-xs text-center leading-tight">
+                      {item.name}
+                    </span>
+                    <span className={`inline-flex items-center justify-center min-w-[1.5rem] h-6 px-1.5 rounded-full text-xs font-bold ${
+                      item.quantity > 0
+                        ? 'bg-green-100 text-green-700'
+                        : 'bg-red-100 text-red-700'
+                    }`}>
+                      {item.quantity}
+                    </span>
+                  </div>
+
+                  {/* Status & Type Badges */}
+                  <div className="flex items-center justify-center gap-1.5 flex-wrap">
+                    {/* Status Badge */}
+                    {item.equipment_status === 'faulty' ? (
+                      <span className="inline-flex items-center gap-1 px-1.5 py-0.5 bg-orange-100 text-orange-700 rounded-full text-[10px] font-medium">
+                        ⚠️ תקול
+                      </span>
+                    ) : item.quantity > 0 ? (
+                      <span className="inline-flex items-center gap-1 px-1.5 py-0.5 bg-green-100 text-green-700 rounded-full text-[10px] font-medium">
+                        ✅ זמין
+                      </span>
+                    ) : (
+                      <span className="inline-flex items-center gap-1 px-1.5 py-0.5 bg-red-100 text-red-700 rounded-full text-[10px] font-medium">
+                        ❌ חסר
+                      </span>
+                    )}
+
+                    {/* Type Badge */}
+                    {item.is_consumable ? (
+                      <span className="inline-block px-1.5 py-0.5 bg-purple-100 text-purple-700 rounded-full text-[10px] font-medium">
+                        🔄 מתכלה
+                      </span>
+                    ) : (
+                      <span className="inline-block px-1.5 py-0.5 bg-blue-100 text-blue-700 rounded-full text-[10px] font-medium">
+                        רגיל
+                      </span>
+                    )}
+                  </div>
+                </div>
+              ))}
             </div>
           </CardContent>
         </Card>

@@ -42,6 +42,19 @@ export default function SuperAdminPage() {
   })
   const [userFilter, setUserFilter] = useState<'all' | 'city_manager' | 'super_admin'>('all')
 
+  // Check authentication on mount
+  useEffect(() => {
+    const verifyAuth = async () => {
+      const { authenticated, userType } = await checkAuth()
+      if (authenticated && userType === 'super') {
+        setIsAuthenticated(true)
+      } else {
+        setIsAuthenticated(false)
+      }
+    }
+    verifyAuth()
+  }, [])
+
   useEffect(() => {
     if (isAuthenticated) {
       fetchCities()
