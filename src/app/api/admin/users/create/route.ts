@@ -146,7 +146,7 @@ export async function POST(request: NextRequest) {
       .from('activity_logs')
       .insert({
         city_id: body.city_id || null,
-        manager_name: adminUser.full_name || adminUser.email,
+        manager_name: adminUser?.full_name || adminUser?.email || 'System',
         action: 'user_created',
         details: {
           created_user_email: body.email,

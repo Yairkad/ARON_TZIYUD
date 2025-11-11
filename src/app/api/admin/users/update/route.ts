@@ -106,7 +106,7 @@ export async function PUT(request: NextRequest) {
       .from('activity_logs')
       .insert({
         city_id: existingUser.city_id || null,
-        manager_name: adminUser.full_name || adminUser.email,
+        manager_name: adminUser?.full_name || adminUser?.email || 'System',
         action: 'user_updated',
         details: {
           updated_user_email: existingUser.email,
