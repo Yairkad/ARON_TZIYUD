@@ -18,6 +18,7 @@ interface CreateUserBody {
   city_id?: string
   permissions?: 'view_only' | 'approve_requests' | 'full_access'
   phone?: string
+  manager_role?: 'manager1' | 'manager2'
 }
 
 export async function POST(request: NextRequest) {
@@ -99,6 +100,25 @@ export async function POST(request: NextRequest) {
       )
     }
 
+    // Validate manager_role for city_manager
+    if (body.role === 'city_manager' && body.manager_role) {
+      // Check if this manager_role already exists for this city
+      const { data: existingManager } = await supabase
+        .from('users')
+        .select('id')
+        .eq('city_id', body.city_id)
+        .eq('manager_role', body.manager_role)
+        .eq('role', 'city_manager')
+        .single()
+
+      if (existingManager) {
+        return NextResponse.json(
+          { success: false, error: `כבר קיים ${body.manager_role === 'manager1' ? 'מנהל ראשון' : 'מנהל שני'} עבור עיר זו` },
+          { status: 409 }
+        )
+      }
+    }
+
     // Create user in Supabase Auth
     const { data: authData, error: createError } = await supabase.auth.admin.createUser({
       email: body.email,
@@ -110,6 +130,7 @@ export async function POST(request: NextRequest) {
         city_id: body.city_id,
         permissions: permissions,
         phone: body.phone,
+        manager_role: body.manager_role,
       },
     })
 

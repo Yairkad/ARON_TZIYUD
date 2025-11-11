@@ -143,3 +143,48 @@ export interface ActivityLog {
   ip_address?: string | null
   created_at: string
 }
+
+// City Manager Authentication Interfaces
+export interface CityManager {
+  id: string
+  city_id: string
+  email: string
+  password_hash: string
+  role: 'manager1' | 'manager2'
+  name: string
+  phone: string
+  email_verified: boolean
+  verification_token?: string | null
+  verification_token_expires_at?: string | null
+  reset_token?: string | null
+  reset_token_expires_at?: string | null
+  permissions: {
+    can_edit_equipment: boolean
+    can_approve_requests: boolean
+    can_view_history: boolean
+  }
+  created_at: string
+  updated_at: string
+  last_login?: string | null
+}
+
+export interface CityManagerWithCity extends CityManager {
+  city: City
+}
+
+export interface UpdateManagerForm {
+  name?: string
+  phone?: string
+  email?: string
+  current_password?: string
+  new_password?: string
+}
+
+export interface CreateManagerForm {
+  city_id: string
+  email: string
+  role: 'manager1' | 'manager2'
+  name: string
+  phone: string
+  temporary_password: string
+}

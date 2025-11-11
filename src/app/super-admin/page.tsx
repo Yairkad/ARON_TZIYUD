@@ -39,6 +39,7 @@ export default function SuperAdminPage() {
     city_id: '',
     permissions: 'full_access' as 'view_only' | 'approve_requests' | 'full_access',
     phone: '',
+    manager_role: '' as '' | 'manager1' | 'manager2',
   })
   const [userFilter, setUserFilter] = useState<'all' | 'city_manager' | 'super_admin'>('all')
 
@@ -505,6 +506,7 @@ export default function SuperAdminPage() {
         city_id: '',
         permissions: 'full_access',
         phone: '',
+        manager_role: '',
       })
       setShowAddUser(false)
       fetchUsers()
@@ -1011,6 +1013,12 @@ export default function SuperAdminPage() {
                       </div>
                       <div className="flex gap-2">
                         <Button
+                          onClick={() => router.push(`/city/${city.id}`)}
+                          className="flex-1 bg-gradient-to-r from-purple-600 to-pink-600 hover:from-purple-700 hover:to-pink-700 text-white font-bold"
+                        >
+                          🚪 כניסה לעיר
+                        </Button>
+                        <Button
                           onClick={() => setEditingCity(city)}
                           className="flex-1 bg-blue-500 hover:bg-blue-600"
                         >
@@ -1244,6 +1252,7 @@ export default function SuperAdminPage() {
                     city_id: '',
                     permissions: 'full_access',
                     phone: '',
+                    manager_role: '',
                   })
                 }}
                 className="bg-gradient-to-r from-green-500 to-emerald-500 hover:from-green-600 hover:to-emerald-600 text-white font-bold px-6 py-3 rounded-xl shadow-lg hover:shadow-xl transition-all duration-200"
@@ -1365,21 +1374,40 @@ export default function SuperAdminPage() {
                       </div>
 
                       {userForm.role === 'city_manager' && (
-                        <div className="space-y-2">
-                          <label className="block text-sm font-semibold text-gray-700">🏙️ עיר</label>
-                          <select
-                            value={userForm.city_id}
-                            onChange={(e) => setUserForm({ ...userForm, city_id: e.target.value })}
-                            className="w-full h-12 border-2 border-gray-200 rounded-xl focus:border-purple-500 transition-colors px-3"
-                            required={userForm.role === 'city_manager'}
-                            disabled={!!editingUser}
-                          >
-                            <option value="">בחר עיר</option>
-                            {cities.map(city => (
-                              <option key={city.id} value={city.id}>{city.name}</option>
-                            ))}
-                          </select>
-                        </div>
+                        <>
+                          <div className="space-y-2">
+                            <label className="block text-sm font-semibold text-gray-700">🏙️ עיר</label>
+                            <select
+                              value={userForm.city_id}
+                              onChange={(e) => setUserForm({ ...userForm, city_id: e.target.value })}
+                              className="w-full h-12 border-2 border-gray-200 rounded-xl focus:border-purple-500 transition-colors px-3"
+                              required={userForm.role === 'city_manager'}
+                              disabled={!!editingUser}
+                            >
+                              <option value="">בחר עיר</option>
+                              {cities.map(city => (
+                                <option key={city.id} value={city.id}>{city.name}</option>
+                              ))}
+                            </select>
+                          </div>
+
+                          <div className="space-y-2">
+                            <label className="block text-sm font-semibold text-gray-700">👔 תפקיד מנהל</label>
+                            <select
+                              value={userForm.manager_role}
+                              onChange={(e) => setUserForm({ ...userForm, manager_role: e.target.value as '' | 'manager1' | 'manager2' })}
+                              className="w-full h-12 border-2 border-gray-200 rounded-xl focus:border-purple-500 transition-colors px-3"
+                              disabled={!!editingUser}
+                            >
+                              <option value="">בחר תפקיד מנהל</option>
+                              <option value="manager1">מנהל ראשון</option>
+                              <option value="manager2">מנהל שני</option>
+                            </select>
+                            <p className="text-xs text-gray-500">
+                              כל עיר יכולה להיות עם עד 2 מנהלים - מנהל ראשון ומנהל שני
+                            </p>
+                          </div>
+                        </>
                       )}
 
                       <div className="space-y-2">
