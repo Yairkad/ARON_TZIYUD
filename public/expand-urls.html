@@ -1,0 +1,271 @@
+<!DOCTYPE html>
+<html dir="rtl" lang="he">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>הרחבת קישורים קצרים</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            max-width: 1400px;
+            margin: 20px auto;
+            padding: 20px;
+            background: #f5f5f5;
+        }
+        .container {
+            background: white;
+            padding: 30px;
+            border-radius: 10px;
+            box-shadow: 0 2px 10px rgba(0,0,0,0.1);
+        }
+        h1 {
+            color: #333;
+            text-align: center;
+        }
+        .instructions {
+            background: #e3f2fd;
+            padding: 15px;
+            border-radius: 8px;
+            margin: 20px 0;
+            border-right: 4px solid #2196f3;
+        }
+        .url-item {
+            background: #f9f9f9;
+            padding: 15px;
+            margin: 10px 0;
+            border-radius: 8px;
+            border: 1px solid #ddd;
+        }
+        .url-item h3 {
+            margin: 0 0 10px 0;
+            color: #333;
+        }
+        .short-url {
+            color: #ef4444;
+            font-family: monospace;
+            background: #fee;
+            padding: 5px 10px;
+            border-radius: 4px;
+            display: inline-block;
+            margin: 5px 0;
+        }
+        .expanded-url {
+            color: #22c55e;
+            font-family: monospace;
+            background: #efe;
+            padding: 5px 10px;
+            border-radius: 4px;
+            display: block;
+            margin: 5px 0;
+            word-break: break-all;
+        }
+        .coords {
+            background: #fff3cd;
+            padding: 10px;
+            border-radius: 4px;
+            margin: 10px 0;
+            font-weight: bold;
+        }
+        button {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            border: none;
+            padding: 10px 20px;
+            border-radius: 6px;
+            cursor: pointer;
+            margin: 5px;
+        }
+        button:hover {
+            opacity: 0.9;
+        }
+        .sql-output {
+            background: #1e1e1e;
+            color: #dcdcdc;
+            padding: 20px;
+            border-radius: 8px;
+            font-family: 'Courier New', monospace;
+            white-space: pre-wrap;
+            margin: 20px 0;
+            max-height: 500px;
+            overflow-y: auto;
+        }
+        .copy-btn {
+            background: #22c55e;
+        }
+        iframe {
+            display: none;
+        }
+        .processing {
+            color: #f59e0b;
+            font-style: italic;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>🗺️ הרחבת קישורים קצרים של Google Maps</h1>
+
+        <div class="instructions">
+            <h3>📋 הוראות:</h3>
+            <ol>
+                <li>לחץ על "הרחב את כל הקישורים"</li>
+                <li>הדפדפן יפתח כל קישור קצר ב-iframe נסתר</li>
+                <li>המערכת תחלץ את הקואורדינטות אוטומטית</li>
+                <li>העתק את ה-SQL שנוצר והרץ אותו בבסיס הנתונים</li>
+            </ol>
+        </div>
+
+        <button onclick="expandAllUrls()">▶️ הרחב את כל הקישורים</button>
+        <button class="copy-btn" onclick="copySql()">📋 העתק SQL</button>
+
+        <div id="results"></div>
+        <div id="sql-container"></div>
+    </div>
+
+    <script>
+        const cities = [
+            {
+                name: 'אלעד - בעלי התוספות',
+                shortUrl: 'https://maps.app.goo.gl/NNytWJfWwDEnq1rv9',
+                field: 'location_url'
+            },
+            {
+                name: 'בית שמש - נחל לכיש 1',
+                shortUrl: 'https://maps.app.goo.gl/ZrnWEDMi1bFnUWzZ8',
+                field: 'location_url'
+            },
+            {
+                name: 'נתיבות',
+                shortUrl: 'https://maps.app.goo.gl/a7YPduKSLcQ4qy378',
+                field: 'location_url'
+            },
+            {
+                name: 'צפת - בית המתנדב',
+                shortUrl: 'https://app.goo.gl/D74X2rttD316f3mu8',
+                field: 'location_url'
+            },
+            {
+                name: 'קיבוץ מגדל עוז',
+                shortUrl: 'https://maps.app.goo.gl/UV6BgSt9QYmqHxrh7',
+                field: 'location_url'
+            }
+        ];
+
+        const results = [];
+
+        async function expandAllUrls() {
+            const resultsDiv = document.getElementById('results');
+            resultsDiv.innerHTML = '<h2>מעבד קישורים...</h2>';
+
+            for (const city of cities) {
+                resultsDiv.innerHTML += `<div class="url-item" id="city-${city.name.replace(/\s/g, '-')}">
+                    <h3>${city.name}</h3>
+                    <div class="short-url">${city.shortUrl}</div>
+                    <div class="processing">מרחיב...</div>
+                </div>`;
+
+                await expandUrl(city);
+                await new Promise(resolve => setTimeout(resolve, 1000)); // Wait between requests
+            }
+
+            generateSql();
+        }
+
+        async function expandUrl(city) {
+            try {
+                // Create hidden iframe to load the URL
+                const iframe = document.createElement('iframe');
+                iframe.style.display = 'none';
+                document.body.appendChild(iframe);
+
+                // Load the URL
+                iframe.src = city.shortUrl;
+
+                // Wait for load
+                await new Promise((resolve, reject) => {
+                    iframe.onload = () => {
+                        try {
+                            const expandedUrl = iframe.contentWindow.location.href;
+                            const coords = extractCoordinates(expandedUrl);
+
+                            results.push({
+                                ...city,
+                                expandedUrl,
+                                coords
+                            });
+
+                            updateCityDisplay(city, expandedUrl, coords);
+                            resolve();
+                        } catch (error) {
+                            // CORS error - try alternative method
+                            console.log('CORS blocked, using alternative method');
+                            reject(error);
+                        }
+                    };
+                    iframe.onerror = reject;
+                    setTimeout(reject, 5000); // Timeout after 5 seconds
+                });
+
+                document.body.removeChild(iframe);
+            } catch (error) {
+                console.error('Error expanding URL for', city.name, error);
+                updateCityDisplay(city, 'שגיאה בהרחבה - העתק את הקישור ידנית בדפדפן', null);
+            }
+        }
+
+        function extractCoordinates(url) {
+            // Pattern 1: /@lat,lng,zoom
+            let match = url.match(/@(-?\d+\.?\d*),(-?\d+\.?\d*),/);
+            if (match) return { lat: parseFloat(match[1]), lng: parseFloat(match[2]) };
+
+            // Pattern 2: ?q=lat,lng
+            match = url.match(/[?&]q=(-?\d+\.?\d*),(-?\d+\.?\d*)/);
+            if (match) return { lat: parseFloat(match[1]), lng: parseFloat(match[2]) };
+
+            // Pattern 3: /place/.../@lat,lng
+            match = url.match(/\/place\/[^/]+\/@(-?\d+\.?\d*),(-?\d+\.?\d*)/);
+            if (match) return { lat: parseFloat(match[1]), lng: parseFloat(match[2]) };
+
+            return null;
+        }
+
+        function updateCityDisplay(city, expandedUrl, coords) {
+            const cityDiv = document.getElementById(`city-${city.name.replace(/\s/g, '-')}`);
+            let html = `<h3>${city.name}</h3>
+                <div class="short-url">קישור קצר: ${city.shortUrl}</div>
+                <div class="expanded-url">קישור מורחב: ${expandedUrl}</div>`;
+
+            if (coords) {
+                html += `<div class="coords">📍 קואורדינטות: ${coords.lat}, ${coords.lng}</div>`;
+            } else {
+                html += `<div class="coords" style="background: #fee;">❌ לא נמצאו קואורדינטות</div>`;
+            }
+
+            cityDiv.innerHTML = html;
+        }
+
+        function generateSql() {
+            let sql = '-- SQL לעדכון קואורדינטות מקישורים מורחבים\n\n';
+
+            results.forEach(result => {
+                if (result.coords) {
+                    sql += `-- ${result.name}\n`;
+                    sql += `UPDATE cities\n`;
+                    sql += `SET lat = ${result.coords.lat}, lng = ${result.coords.lng}\n`;
+                    sql += `WHERE name = '${result.name}';\n\n`;
+                }
+            });
+
+            const sqlContainer = document.getElementById('sql-container');
+            sqlContainer.innerHTML = `<h2>📝 SQL לביצוע:</h2><div class="sql-output" id="sql-output">${sql}</div>`;
+        }
+
+        function copySql() {
+            const sqlText = document.getElementById('sql-output').textContent;
+            navigator.clipboard.writeText(sqlText).then(() => {
+                alert('SQL הועתק ללוח!');
+            });
+        }
+    </script>
+</body>
+</html>
