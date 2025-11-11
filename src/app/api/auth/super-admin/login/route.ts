@@ -46,6 +46,12 @@ export async function POST(request: NextRequest) {
     })
 
     if (authError || !authData.user) {
+      console.error('Supabase auth error:', authError)
+      console.error('Auth error details:', {
+        message: authError?.message,
+        status: authError?.status,
+        name: authError?.name
+      })
       updateAttempts(clientId)
       return NextResponse.json(
         { success: false, error: 'מייל או סיסמה שגויים' },
