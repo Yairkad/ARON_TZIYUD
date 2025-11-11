@@ -9,6 +9,7 @@ import { Input } from '@/components/ui/input'
 import { supabase } from '@/lib/supabase'
 import { Equipment, BorrowHistory, BorrowForm, ReturnForm, City, CreateRequestForm } from '@/types'
 import Logo from '@/components/Logo'
+import CameraCapture from '@/components/CameraCapture'
 
 export default function CityPage() {
   const params = useParams()
@@ -41,6 +42,9 @@ export default function CityPage() {
   const [returnStatus, setReturnStatus] = useState<{ borrowId: string; equipmentId: string } | null>(null)
   const [selectedStatus, setSelectedStatus] = useState<'working' | 'faulty'>('working')
   const [faultyNotes, setFaultyNotes] = useState('')
+  const [showCamera, setShowCamera] = useState(false)
+  const [returnImage, setReturnImage] = useState<File | null>(null)
+  const [uploadingImage, setUploadingImage] = useState(false)
 
   useEffect(() => {
     if (cityId) {
@@ -201,6 +205,12 @@ export default function CityPage() {
       return
     }
 
+    // Validate that image is required
+    if (!returnImage) {
+      alert('יש לצלם תמונה של הציוד בארון לפני ההחזרה')
+      return
+    }
+
     setLoading(true)
 
     try {
@@ -222,6 +232,21 @@ export default function CityPage() {
 
       if (updateError) throw updateError
 
+      // Upload return image
+      setUploadingImage(true)
+      const formData = new FormData()
+      formData.append('file', returnImage)
+      formData.append('historyId', borrowId)
+
+      const uploadResponse = await fetch('/api/equipment/upload-return-image', {
+        method: 'POST',
+        body: formData
+      })
+
+      if (!uploadResponse.ok) {
+        throw new Error('שגיאה בהעלאת תמונת ההחזרה')
+      }
+
       const equipmentItem = equipment.find(eq => eq.id === equipmentId)
       if (equipmentItem) {
         // Update quantity and status
@@ -240,6 +265,7 @@ export default function CityPage() {
       setReturnStatus(null)
       setSelectedStatus('working')
       setFaultyNotes('')
+      setReturnImage(null)
       handleReturnSearch()
       fetchEquipment()
     } catch (error) {
@@ -247,6 +273,7 @@ export default function CityPage() {
       alert('אירעה שגיאה בהחזרת הציוד')
     } finally {
       setLoading(false)
+      setUploadingImage(false)
     }
   }
 
@@ -878,22 +905,58 @@ export default function CityPage() {
                                 </div>
                               )}
 
+                              {/* צילום תמונת החזרה - חובה */}
+                              <div className="mb-4 p-4 bg-blue-50 border-2 border-blue-200 rounded-xl">
+                                <label className="block text-sm font-bold text-blue-800 mb-3">
+                                  📸 תמונת הציוד בארון (חובה) *
+                                </label>
+                                {!returnImage ? (
+                                  <Button
+                                    type="button"
+                                    onClick={() => setShowCamera(true)}
+                                    className="w-full bg-gradient-to-r from-blue-500 to-indigo-500 hover:from-blue-600 hover:to-indigo-600 text-white font-semibold py-3 rounded-lg"
+                                  >
+                                    📷 צלם תמונה
+                                  </Button>
+                                ) : (
+                                  <div>
+                                    <div className="mb-2 p-2 bg-green-50 border border-green-300 rounded-lg flex items-center justify-between">
+                                      <span className="text-sm text-green-700 font-semibold">✅ תמונה נוספה</span>
+                                      <Button
+                                        type="button"
+                                        onClick={() => setShowCamera(true)}
+                                        size="sm"
+                                        variant="outline"
+                                        className="text-xs"
+                                      >
+                                        צלם שוב
+                                      </Button>
+                                    </div>
+                                  </div>
+                                )}
+                                <p className="text-xs text-blue-600 mt-2">
+                                  יש לצלם תמונה של הציוד בארון לאחר ההחזרה
+                                </p>
+                              </div>
+
                               <div className="flex gap-3">
                                 <Button
                                   onClick={() => handleReturn(returnStatus.borrowId, returnStatus.equipmentId, selectedStatus)}
-                                  disabled={loading}
-                                  className="flex-1 bg-gradient-to-r from-blue-600 to-indigo-600 hover:from-blue-700 hover:to-indigo-700 text-white font-semibold rounded-xl shadow-md"
+                                  disabled={loading || uploadingImage || !returnImage}
+                                  className="flex-1 bg-gradient-to-r from-blue-600 to-indigo-600 hover:from-blue-700 hover:to-indigo-700 text-white font-semibold rounded-xl shadow-md disabled:opacity-50 disabled:cursor-not-allowed"
                                 >
-                                  אשר החזרה
+                                  {uploadingImage ? 'מעלה תמונה...' : 'אשר החזרה'}
                                 </Button>
                                 <Button
                                   onClick={() => {
                                     setReturnStatus(null)
                                     setSelectedStatus('working')
                                     setFaultyNotes('')
+                                    setReturnImage(null)
                                   }}
                                   variant="outline"
                                   className="border-2 border-gray-300 rounded-xl"
+                                  disabled={loading || uploadingImage}
                                 >
                                   ביטול
                                 </Button>
@@ -959,6 +1022,20 @@ export default function CityPage() {
           </CardContent>
         </Card>
       </div>
+
+      {/* Camera Capture Modal */}
+      {showCamera && (
+        <CameraCapture
+          onCapture={(file) => {
+            setReturnImage(file)
+            setShowCamera(false)
+          }}
+          onCancel={() => setShowCamera(false)}
+          maxSizeKB={500}
+          requireRecent={true}
+          maxAgeMinutes={5}
+        />
+      )}
     </div>
   )
 }
