@@ -21,7 +21,9 @@
       "Bash(cmd /c \"cd /d c:\\Users\\יאיר קדוש\\ARON_TZIYUD && node gen-vapid.js\")",
       "Bash(cmd /c \"npm exec -- node vapid.js\")",
       "Bash(git reset:*)",
-      "Bash(cmd /c \"npm run dev\")"
+      "Bash(cmd /c \"npm run dev\")",
+      "Bash(node create-super-admin.js:*)",
+      "Bash(cmd /c node:*)"
     ],
     "deny": [],
     "ask": []

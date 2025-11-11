@@ -3,8 +3,10 @@
  * Run with: node create-super-admin.js
  */
 
-const SUPABASE_URL = 'YOUR_SUPABASE_URL'
-const SUPABASE_SERVICE_KEY = 'YOUR_SUPABASE_SERVICE_ROLE_KEY'
+// Get these from your Supabase project settings:
+// Dashboard → Settings → API → Project URL and service_role key
+const SUPABASE_URL = process.env.NEXT_PUBLIC_SUPABASE_URL || 'YOUR_SUPABASE_URL'
+const SUPABASE_SERVICE_KEY = process.env.SUPABASE_SERVICE_ROLE_KEY || 'YOUR_SUPABASE_SERVICE_ROLE_KEY'
 
 async function createSuperAdmin() {
   try {
