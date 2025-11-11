@@ -60,13 +60,26 @@ export async function POST(request: NextRequest) {
     }
 
     // בדיקה שהמשתמש הוא super_admin
+    console.log('🔍 Looking for user profile. User ID:', authData.user.id)
+
     const { data: userProfile, error: profileError } = await supabase
       .from('users')
       .select('role, is_active, full_name')
       .eq('id', authData.user.id)
       .single()
 
+    console.log('👤 Profile query result:', {
+      found: !!userProfile,
+      profile: userProfile,
+      error: profileError?.message,
+      errorDetails: profileError
+    })
+
     if (profileError || !userProfile) {
+      console.error('❌ Failed to fetch user profile:', {
+        userId: authData.user.id,
+        error: profileError
+      })
       updateAttempts(clientId)
       return NextResponse.json(
         { success: false, error: 'משתמש לא נמצא' },
