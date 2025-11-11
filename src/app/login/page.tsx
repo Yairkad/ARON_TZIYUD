@@ -40,7 +40,9 @@ export default function UnifiedLoginPage() {
       if (response.ok && data.success) {
         // Login successful, use hard navigation to force fresh page load
         console.log('Login successful, redirecting to:', data.redirectPath)
-        window.location.href = data.redirectPath
+        // Add cache buster to force fresh page load
+        const cacheBuster = `?t=${Date.now()}`
+        window.location.href = data.redirectPath + cacheBuster
       } else {
         setError(data.error || 'שגיאה בהתחברות')
       }
