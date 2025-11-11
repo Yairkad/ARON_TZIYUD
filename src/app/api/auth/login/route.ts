@@ -9,6 +9,10 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { createServiceClient } from '@/lib/supabase-server'
 
+// Disable caching for this endpoint
+export const dynamic = 'force-dynamic'
+export const revalidate = 0
+
 // Rate limiting
 const loginAttempts = new Map<string, { count: number; lastAttempt: number }>()
 const MAX_ATTEMPTS = 5
