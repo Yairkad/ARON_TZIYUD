@@ -62,12 +62,31 @@ export async function POST(request: NextRequest) {
       )
     }
 
-    // Get user metadata from auth.users
-    const userMetadata = authData.user.user_metadata || {}
-    const userRole = userMetadata.role || null
-    const isActive = userMetadata.is_active !== false
-    const fullName = userMetadata.full_name || authData.user.email
-    const cityId = userMetadata.city_id || null
+    // Get user data from public.users table (more reliable than metadata)
+    const { data: userData, error: userError } = await supabase
+      .from('users')
+      .select('role, city_id, full_name, is_active')
+      .eq('id', authData.user.id)
+      .single()
+
+    if (userError || !userData) {
+      console.error('❌ User not found in users table:', userError)
+      // Fallback to metadata if user not in public.users
+      const userMetadata = authData.user.user_metadata || {}
+      const userRole = userMetadata.role || null
+
+      if (!userRole) {
+        return NextResponse.json(
+          { success: false, error: 'משתמש לא נמצא במערכת' },
+          { status: 403 }
+        )
+      }
+    }
+
+    const userRole = userData.role
+    const isActive = userData.is_active !== false
+    const fullName = userData.full_name || authData.user.email
+    const cityId = userData.city_id || null
 
     console.log('👤 User login:', {
       email: authData.user.email,
