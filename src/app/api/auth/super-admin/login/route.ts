@@ -62,32 +62,21 @@ export async function POST(request: NextRequest) {
     // בדיקה שהמשתמש הוא super_admin
     console.log('🔍 Looking for user profile. User ID:', authData.user.id)
 
-    const { data: userProfile, error: profileError } = await supabase
-      .from('users')
-      .select('role, is_active, full_name')
-      .eq('id', authData.user.id)
-      .single()
+    // Get user metadata from auth.users (this always works with service client)
+    const userMetadata = authData.user.user_metadata || {}
+    const userRole = userMetadata.role || null
+    const isActive = userMetadata.is_active !== false // Default to true
+    const fullName = userMetadata.full_name || authData.user.email
 
-    console.log('👤 Profile query result:', {
-      found: !!userProfile,
-      profile: userProfile,
-      error: profileError?.message,
-      errorDetails: profileError
+    console.log('👤 User metadata:', {
+      role: userRole,
+      isActive: isActive,
+      fullName: fullName
     })
 
-    if (profileError || !userProfile) {
-      console.error('❌ Failed to fetch user profile:', {
-        userId: authData.user.id,
-        error: profileError
-      })
-      updateAttempts(clientId)
-      return NextResponse.json(
-        { success: false, error: 'משתמש לא נמצא' },
-        { status: 404 }
-      )
-    }
-
-    if (userProfile.role !== 'super_admin') {
+    // Verify it's a super admin
+    if (userRole !== 'super_admin') {
+      console.error('❌ User is not super_admin. Role:', userRole)
       updateAttempts(clientId)
       return NextResponse.json(
         { success: false, error: 'אין הרשאות מנהל ראשי' },
@@ -95,7 +84,7 @@ export async function POST(request: NextRequest) {
       )
     }
 
-    if (!userProfile.is_active) {
+    if (!isActive) {
       return NextResponse.json(
         { success: false, error: 'חשבון זה הושבת' },
         { status: 403 }
@@ -116,7 +105,7 @@ export async function POST(request: NextRequest) {
       success: true,
       user: {
         email: authData.user.email,
-        full_name: userProfile.full_name,
+        full_name: fullName,
       },
     })
 
