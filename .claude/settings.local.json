@@ -1,7 +1,22 @@
 {
   "permissions": {
     "allow": [
-      "Bash(cmd /c \"npm run build\")"
+      "Bash(cmd /c \"npm run build\")",
+      "Bash(git pull:*)",
+      "Bash(git stash:*)",
+      "Bash(git stash pop:*)",
+      "Bash(cmd /c \"npm run build 2>&1 | head -100\")",
+      "Bash(start preview-equipment-cards.html)",
+      "Bash(vercel:*)",
+      "Bash(nul)",
+      "Bash(if exist nul del nul)",
+      "Bash(cmd /c \"npm install resend\")",
+      "Bash(dir /B \"src\\app\\login\" 2)",
+      "Bash(dir /B \"src\\app\\auth\" 2)",
+      "Bash(cmd /c \"set NEXT_PUBLIC_SUPABASE_URL=https://jgkmcsxrtovrdiguhwyv.supabase.co && set SUPABASE_SERVICE_ROLE_KEY=eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Impna21jc3hydG92cmRpZ3Vod3l2Iiwicm9sZSI6InNlcnZpY2Vfcm9sZSIsImlhdCI6MTc2MjEwNzExMiwiZXhwIjoyMDc3NjgzMTEyfQ.yTAJKE4koX56lJ8ZA0utYf9x2Ytj_mLHwIOzt-xpYxY && node fix-super-admin-user.js\")",
+      "Bash(node check-user-status.js:*)",
+      "Bash(del add-to-public-users.sql check-user-status.js create-super-admin-sql.sql fix-super-admin-user.js preview-home-design.html)",
+      "Bash(cmd /c \"del add-to-public-users.sql check-user-status.js create-super-admin-sql.sql fix-super-admin-user.js preview-home-design.html nul 2>nul\")"
     ],
     "deny": [],
     "ask": []
