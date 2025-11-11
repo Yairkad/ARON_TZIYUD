@@ -229,8 +229,8 @@ export default function HomePage() {
                           : city.location_url
 
                         const wazeUrl = lat && lng
-                          ? `https://www.waze.com/ul?ll=${lat},${lng}&navigate=yes`
-                          : city.location_url
+                          ? `waze://?ll=${lat},${lng}&navigate=yes`
+                          : `https://www.waze.com/ul?ll=${city.location_url}`
 
                         return (
                           <div className="flex items-center gap-2 bg-white rounded-lg p-2 border border-gray-200">

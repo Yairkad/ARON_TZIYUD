@@ -332,8 +332,8 @@ export default function RequestPage({ params }: { params: Promise<{ token: strin
                     : locationUrl
 
                   const wazeUrl = lat && lng
-                    ? `https://www.waze.com/ul?ll=${lat},${lng}&navigate=yes`
-                    : locationUrl
+                    ? `waze://?ll=${lat},${lng}&navigate=yes`
+                    : `https://www.waze.com/ul?ll=${locationUrl}`
 
                   return (
                     <div className="bg-white rounded-lg p-6 mb-4">

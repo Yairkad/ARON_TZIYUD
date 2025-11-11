@@ -599,9 +599,12 @@ export default function CityAdminPage() {
           manager2_name: editCityForm.manager2_name.trim() || null,
           manager2_phone: editCityForm.manager2_phone.trim() || null,
           location_url: editCityForm.location_url.trim() || null,
-          token_location_url: editCityForm.token_location_url.trim() || null,
-          location_description: editCityForm.location_description.trim() || null,
-          location_image_url: editCityForm.location_image_url.trim() || null
+          token_location_url: editCityForm.token_location_url?.trim() || null,
+          location_description: editCityForm.location_description?.trim() || null,
+          location_image_url: editCityForm.location_image_url?.trim() || null,
+          request_mode: city.request_mode,
+          cabinet_code: city.cabinet_code,
+          require_call_id: city.require_call_id
         }),
       })
 
