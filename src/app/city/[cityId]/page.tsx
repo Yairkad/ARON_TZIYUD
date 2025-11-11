@@ -40,6 +40,7 @@ export default function CityPage() {
   // Return status selection
   const [returnStatus, setReturnStatus] = useState<{ borrowId: string; equipmentId: string } | null>(null)
   const [selectedStatus, setSelectedStatus] = useState<'working' | 'faulty'>('working')
+  const [faultyNotes, setFaultyNotes] = useState('')
 
   useEffect(() => {
     if (cityId) {
@@ -194,16 +195,29 @@ export default function CityPage() {
   }
 
   const handleReturn = async (borrowId: string, equipmentId: string, equipmentStatus: 'working' | 'faulty' = 'working') => {
+    // Validate that if status is faulty, notes must be provided
+    if (equipmentStatus === 'faulty' && !faultyNotes.trim()) {
+      alert('יש לפרט מה קרה לציוד התקול')
+      return
+    }
+
     setLoading(true)
 
     try {
+      const updateData: any = {
+        status: 'returned',
+        return_date: new Date().toISOString(),
+        equipment_status: equipmentStatus
+      }
+
+      // Add notes if equipment is faulty
+      if (equipmentStatus === 'faulty') {
+        updateData.faulty_notes = faultyNotes.trim()
+      }
+
       const { error: updateError } = await supabase
         .from('borrow_history')
-        .update({
-          status: 'returned',
-          return_date: new Date().toISOString(),
-          equipment_status: equipmentStatus
-        })
+        .update(updateData)
         .eq('id', borrowId)
 
       if (updateError) throw updateError
@@ -225,6 +239,7 @@ export default function CityPage() {
       alert(equipmentStatus === 'working' ? 'הציוד הוחזר בהצלחה!' : 'הציוד הוחזר ומסומן כתקול')
       setReturnStatus(null)
       setSelectedStatus('working')
+      setFaultyNotes('')
       handleReturnSearch()
       fetchEquipment()
     } catch (error) {
@@ -816,7 +831,10 @@ export default function CityPage() {
 
                               <div className="grid grid-cols-2 gap-3 mb-4">
                                 <button
-                                  onClick={() => setSelectedStatus('working')}
+                                  onClick={() => {
+                                    setSelectedStatus('working')
+                                    setFaultyNotes('')
+                                  }}
                                   className={`p-4 rounded-xl border-2 font-semibold transition-all ${
                                     selectedStatus === 'working'
                                       ? 'bg-green-100 border-green-500 text-green-800 shadow-md scale-105'
@@ -840,6 +858,26 @@ export default function CityPage() {
                                 </button>
                               </div>
 
+                              {/* Faulty Notes - Required when status is faulty */}
+                              {selectedStatus === 'faulty' && (
+                                <div className="mb-4 p-4 bg-orange-50 border-2 border-orange-200 rounded-xl">
+                                  <label className="block text-sm font-bold text-orange-800 mb-2">
+                                    ⚠️ פרט מה קרה לציוד (חובה) *
+                                  </label>
+                                  <textarea
+                                    value={faultyNotes}
+                                    onChange={(e) => setFaultyNotes(e.target.value)}
+                                    placeholder="למשל: שבור, חסר חלקים, לא עובד, וכו..."
+                                    className="w-full p-3 border-2 border-orange-300 rounded-lg focus:border-orange-500 focus:outline-none resize-none"
+                                    rows={3}
+                                    required
+                                  />
+                                  <p className="text-xs text-orange-600 mt-1">
+                                    נא לתאר בקצרה את מצב הציוד והבעיה
+                                  </p>
+                                </div>
+                              )}
+
                               <div className="flex gap-3">
                                 <Button
                                   onClick={() => handleReturn(returnStatus.borrowId, returnStatus.equipmentId, selectedStatus)}
@@ -852,6 +890,7 @@ export default function CityPage() {
                                   onClick={() => {
                                     setReturnStatus(null)
                                     setSelectedStatus('working')
+                                    setFaultyNotes('')
                                   }}
                                   variant="outline"
                                   className="border-2 border-gray-300 rounded-xl"
