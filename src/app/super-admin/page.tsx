@@ -1,6 +1,7 @@
 'use client'
 
 import { useState, useEffect } from 'react'
+import { useRouter } from 'next/navigation'
 import Link from 'next/link'
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card'
 import { Button } from '@/components/ui/button'
@@ -11,6 +12,7 @@ import Logo from '@/components/Logo'
 import { loginSuperAdmin, checkAuth, logout } from '@/lib/auth'
 
 export default function SuperAdminPage() {
+  const router = useRouter()
   const [cities, setCities] = useState<City[]>([])
   const [notifications, setNotifications] = useState<AdminNotification[]>([])
   const [unreadCount, setUnreadCount] = useState(0)
