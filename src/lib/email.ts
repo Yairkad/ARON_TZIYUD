@@ -195,15 +195,12 @@ export async function sendWelcomeEmail(email: string, tempPassword: string, mana
 }
 
 /**
- * Generic email sending function
- * TODO: Replace with actual email service (SendGrid, Resend, AWS SES, etc.)
+ * Generic email sending function using Resend
  */
 async function sendEmail(options: EmailOptions): Promise<{ success: boolean; error?: string }> {
   try {
-    // For now, we'll log to console (development mode)
-    // In production, replace with actual email service
-
-    if (process.env.NODE_ENV === 'development') {
+    // Development mode - log to console
+    if (process.env.NODE_ENV === 'development' && !process.env.RESEND_API_KEY) {
       console.log('\n📧 ====== EMAIL (Development Mode) ======')
       console.log('To:', options.to)
       console.log('Subject:', options.subject)
@@ -212,21 +209,29 @@ async function sendEmail(options: EmailOptions): Promise<{ success: boolean; err
       return { success: true }
     }
 
-    // TODO: Implement actual email sending
-    // Example with Resend:
-    /*
+    // Production mode - use Resend
+    if (!process.env.RESEND_API_KEY) {
+      console.error('❌ RESEND_API_KEY not configured')
+      return { success: false, error: 'Email service not configured' }
+    }
+
+    const { Resend } = await import('resend')
     const resend = new Resend(process.env.RESEND_API_KEY)
-    await resend.emails.send({
-      from: 'noreply@yourdomain.com',
+
+    const result = await resend.emails.send({
+      from: process.env.EMAIL_FROM || 'onboarding@resend.dev',
       to: options.to,
       subject: options.subject,
       html: options.html,
     })
-    */
 
-    // For now, return success (will need actual implementation)
-    console.warn('⚠️ Email sending not implemented in production. Configure email service.')
-    return { success: false, error: 'Email service not configured' }
+    if (result.error) {
+      console.error('Resend error:', result.error)
+      return { success: false, error: result.error.message }
+    }
+
+    console.log('✅ Email sent successfully:', result.data?.id)
+    return { success: true }
 
   } catch (error) {
     console.error('Email sending error:', error)
