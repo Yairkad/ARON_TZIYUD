@@ -419,14 +419,14 @@ export default function RequestPage({ params }: { params: Promise<{ token: strin
                 </div>
                 <div className="flex gap-2">
                   <Button
-                    onClick={() => handleWhatsApp(request.city.manager1_phone)}
+                    onClick={() => request.city && handleWhatsApp(request.city.manager1_phone)}
                     className="flex-1 bg-green-500 hover:bg-green-600 text-white h-12 rounded-lg font-semibold text-base"
                   >
                     <MessageCircle className="h-5 w-5 ml-2 text-white" />
                     WhatsApp
                   </Button>
                   <Button
-                    onClick={() => handleCall(request.city.manager1_phone)}
+                    onClick={() => request.city && handleCall(request.city.manager1_phone)}
                     className="flex-1 bg-blue-500 hover:bg-blue-600 text-white h-12 rounded-lg font-semibold text-base"
                   >
                     <Phone className="h-5 w-5 ml-2 text-white" />
@@ -446,14 +446,14 @@ export default function RequestPage({ params }: { params: Promise<{ token: strin
                   </div>
                   <div className="flex gap-2">
                     <Button
-                      onClick={() => handleWhatsApp(request.city.manager2_phone!)}
+                      onClick={() => request.city?.manager2_phone && handleWhatsApp(request.city.manager2_phone)}
                       className="flex-1 bg-green-500 hover:bg-green-600 text-white h-12 rounded-lg font-semibold text-base"
                     >
                       <MessageCircle className="h-5 w-5 ml-2 text-white" />
                       WhatsApp
                     </Button>
                     <Button
-                      onClick={() => handleCall(request.city.manager2_phone!)}
+                      onClick={() => request.city?.manager2_phone && handleCall(request.city.manager2_phone)}
                       className="flex-1 bg-blue-500 hover:bg-blue-600 text-white h-12 rounded-lg font-semibold text-base"
                     >
                       <Phone className="h-5 w-5 ml-2 text-white" />
