@@ -118,27 +118,25 @@ export async function POST(request: NextRequest) {
       }
     }
 
-    // 3. Update request status to picked_up (we need to add this status to the schema)
-    // For now, we'll use a custom field or keep it as approved with a picked_up_at timestamp
-    const { error: updateRequestError } = await supabase
+    // 3. Delete the request and token after successful pickup
+    const { error: deleteRequestError } = await supabase
       .from('equipment_requests')
-      .update({
-        status: 'approved', // Keep as approved for now
-        updated_at: new Date().toISOString()
-      })
+      .delete()
       .eq('id', equipmentRequest.id)
 
-    if (updateRequestError) {
-      console.error('Error updating request:', updateRequestError)
+    if (deleteRequestError) {
+      console.error('Error deleting request:', deleteRequestError)
       return NextResponse.json(
-        { error: 'שגיאה בעדכון בקשה' },
+        { error: 'שגיאה במחיקת הבקשה' },
         { status: 500 }
       )
     }
 
+    // Return success with city_id for redirect
     return NextResponse.json({
       success: true,
-      message: 'הציוד נלקח בהצלחה'
+      message: 'הציוד נלקח בהצלחה',
+      city_id: equipmentRequest.city_id
     })
 
   } catch (error) {

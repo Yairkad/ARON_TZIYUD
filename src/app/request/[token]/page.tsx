@@ -3,6 +3,8 @@
 import { use, useEffect, useState } from 'react'
 import { useRouter } from 'next/navigation'
 import { EquipmentRequestWithItems } from '@/types'
+import { Button } from '@/components/ui/button'
+import { Phone, MessageCircle } from 'lucide-react'
 
 export default function RequestPage({ params }: { params: Promise<{ token: string }> }) {
   const resolvedParams = use(params)
@@ -12,6 +14,16 @@ export default function RequestPage({ params }: { params: Promise<{ token: strin
   const [request, setRequest] = useState<EquipmentRequestWithItems | null>(null)
   const [confirmingPickup, setConfirmingPickup] = useState(false)
   const [pickupConfirmed, setPickupConfirmed] = useState(false)
+
+  const handleCall = (phone: string) => {
+    window.location.href = `tel:${phone}`
+  }
+
+  const handleWhatsApp = (phone: string) => {
+    // Remove any non-digit characters and ensure Israeli format
+    const formattedPhone = phone.replace(/\D/g, '').replace(/^0/, '972')
+    window.open(`https://wa.me/${formattedPhone}`, '_blank')
+  }
 
   useEffect(() => {
     verifyToken()
@@ -100,15 +112,20 @@ export default function RequestPage({ params }: { params: Promise<{ token: strin
 
       if (!response.ok) {
         alert(`שגיאה: ${data.error}`)
+        setConfirmingPickup(false)
         return
       }
 
-      setPickupConfirmed(true)
-      alert('✅ הציוד נלקח בהצלחה! המלאי עודכן.')
+      // Success - redirect to city page for equipment return
+      alert('✅ הציוד נלקח בהצלחה! המלאי עודכן.\n\nעכשיו תועבר לעמוד ההחזרה.')
+
+      // Redirect to city page after short delay
+      setTimeout(() => {
+        router.push(`/city/${data.city_id}`)
+      }, 1500)
     } catch (error) {
       console.error('Confirm pickup error:', error)
       alert('שגיאה באישור לקיחת הציוד')
-    } finally {
       setConfirmingPickup(false)
     }
   }
@@ -225,17 +242,14 @@ export default function RequestPage({ params }: { params: Promise<{ token: strin
         {/* Approved Section */}
         {request.status === 'approved' && (
           <div className="bg-green-50 border-2 border-green-200 rounded-lg shadow-lg p-6 mb-6">
-            {pickupConfirmed ? (
+            {confirmingPickup ? (
               <div className="text-center py-8">
-                <div className="text-green-500 text-7xl mb-4">🎉</div>
-                <h2 className="text-3xl font-bold text-green-900 mb-3">
-                  הציוד נלקח בהצלחה!
+                <div className="animate-spin rounded-full h-16 w-16 border-b-4 border-blue-600 mx-auto mb-4"></div>
+                <h2 className="text-2xl font-bold text-gray-900 mb-3">
+                  מעדכן מלאי ומעבר לעמוד החזרה...
                 </h2>
-                <p className="text-green-800 text-lg mb-4">
-                  המלאי עודכן ונוצרה רשומת השאלה
-                </p>
-                <p className="text-gray-700">
-                  אנא החזר את הציוד בסיום השימוש
+                <p className="text-gray-600">
+                  אנא המתן
                 </p>
               </div>
             ) : (
@@ -393,18 +407,60 @@ export default function RequestPage({ params }: { params: Promise<{ token: strin
         {/* City Contact Info */}
         {request.city && (
           <div className="bg-white rounded-lg shadow-lg p-6">
-            <h2 className="text-lg font-bold text-gray-900 mb-4">פרטי התקשרות</h2>
-            <div className="space-y-2">
-              <div>
-                <p className="text-sm text-gray-600">מנהל ראשי</p>
-                <p className="font-semibold text-gray-900">{request.city.manager1_name}</p>
-                <p className="text-gray-700" dir="ltr">{request.city.manager1_phone}</p>
+            <h2 className="text-lg font-bold text-gray-900 mb-4 text-center">📞 פרטי התקשרות</h2>
+            <div className="space-y-4">
+              <div className="bg-gray-50 rounded-lg p-4">
+                <p className="text-sm text-gray-600 mb-2">מנהל ראשי</p>
+                <div className="flex items-center justify-between mb-3">
+                  <div className="flex items-center gap-2">
+                    <span className="text-lg">👤</span>
+                    <span className="font-semibold text-gray-900">{request.city.manager1_name}</span>
+                  </div>
+                </div>
+                <div className="flex gap-2">
+                  <Button
+                    onClick={() => handleWhatsApp(request.city.manager1_phone)}
+                    className="flex-1 bg-green-500 hover:bg-green-600 text-white h-12 rounded-lg font-semibold text-base"
+                  >
+                    <MessageCircle className="h-5 w-5 ml-2 text-white" />
+                    WhatsApp
+                  </Button>
+                  <Button
+                    onClick={() => handleCall(request.city.manager1_phone)}
+                    className="flex-1 bg-blue-500 hover:bg-blue-600 text-white h-12 rounded-lg font-semibold text-base"
+                  >
+                    <Phone className="h-5 w-5 ml-2 text-white" />
+                    חייג
+                  </Button>
+                </div>
+                <p className="text-sm text-gray-600 mt-2 text-center" dir="ltr">{request.city.manager1_phone}</p>
               </div>
-              {request.city.manager2_name && (
-                <div className="pt-2 border-t">
-                  <p className="text-sm text-gray-600">מנהל משני</p>
-                  <p className="font-semibold text-gray-900">{request.city.manager2_name}</p>
-                  <p className="text-gray-700" dir="ltr">{request.city.manager2_phone}</p>
+              {request.city.manager2_name && request.city.manager2_phone && (
+                <div className="bg-gray-50 rounded-lg p-4">
+                  <p className="text-sm text-gray-600 mb-2">מנהל משני</p>
+                  <div className="flex items-center justify-between mb-3">
+                    <div className="flex items-center gap-2">
+                      <span className="text-lg">👤</span>
+                      <span className="font-semibold text-gray-900">{request.city.manager2_name}</span>
+                    </div>
+                  </div>
+                  <div className="flex gap-2">
+                    <Button
+                      onClick={() => handleWhatsApp(request.city.manager2_phone!)}
+                      className="flex-1 bg-green-500 hover:bg-green-600 text-white h-12 rounded-lg font-semibold text-base"
+                    >
+                      <MessageCircle className="h-5 w-5 ml-2 text-white" />
+                      WhatsApp
+                    </Button>
+                    <Button
+                      onClick={() => handleCall(request.city.manager2_phone!)}
+                      className="flex-1 bg-blue-500 hover:bg-blue-600 text-white h-12 rounded-lg font-semibold text-base"
+                    >
+                      <Phone className="h-5 w-5 ml-2 text-white" />
+                      חייג
+                    </Button>
+                  </div>
+                  <p className="text-sm text-gray-600 mt-2 text-center" dir="ltr">{request.city.manager2_phone}</p>
                 </div>
               )}
             </div>
