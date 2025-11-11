@@ -62,7 +62,7 @@ export async function GET(request: NextRequest) {
       fullName = userData.full_name || user.email || ''
     }
 
-    return NextResponse.json({
+    const response = NextResponse.json({
       success: true,
       user: {
         id: user.id,
@@ -72,6 +72,13 @@ export async function GET(request: NextRequest) {
         city_id: cityId,
       },
     })
+
+    // Add no-cache headers
+    response.headers.set('Cache-Control', 'no-store, no-cache, must-revalidate, proxy-revalidate')
+    response.headers.set('Pragma', 'no-cache')
+    response.headers.set('Expires', '0')
+
+    return response
   } catch (error) {
     console.error('Error fetching user info:', error)
     return NextResponse.json(
