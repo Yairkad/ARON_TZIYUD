@@ -69,11 +69,20 @@ export async function POST(request: NextRequest) {
       .eq('id', authData.user.id)
       .single()
 
+    // Determine user data source - prefer database, fallback to metadata
+    let userRole: string | null = null
+    let isActive = true
+    let fullName = authData.user.email || ''
+    let cityId: string | null = null
+
     if (userError || !userData) {
       console.error('❌ User not found in users table:', userError)
       // Fallback to metadata if user not in public.users
       const userMetadata = authData.user.user_metadata || {}
-      const userRole = userMetadata.role || null
+      userRole = userMetadata.role || null
+      isActive = userMetadata.is_active !== false
+      fullName = userMetadata.full_name || authData.user.email || ''
+      cityId = userMetadata.city_id || null
 
       if (!userRole) {
         return NextResponse.json(
@@ -81,12 +90,13 @@ export async function POST(request: NextRequest) {
           { status: 403 }
         )
       }
+    } else {
+      // Use data from users table
+      userRole = userData.role
+      isActive = userData.is_active !== false
+      fullName = userData.full_name || authData.user.email || ''
+      cityId = userData.city_id || null
     }
-
-    const userRole = userData.role
-    const isActive = userData.is_active !== false
-    const fullName = userData.full_name || authData.user.email
-    const cityId = userData.city_id || null
 
     console.log('👤 User login:', {
       email: authData.user.email,
