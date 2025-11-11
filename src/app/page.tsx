@@ -125,31 +125,32 @@ export default function HomePage() {
                   ) : (
                     <div className="max-h-96 overflow-y-auto space-y-2">
                       {cities.map((city) => (
-                        <button
+                        <div
                           key={city.id}
-                          onClick={() => handleCitySelect(city)}
-                          className="w-full text-right p-4 rounded-xl bg-white hover:bg-blue-50 border-2 border-gray-200 hover:border-blue-400 transition-all duration-200 hover:shadow-md group"
+                          className="w-full text-right p-4 rounded-xl bg-white border-2 border-gray-200 hover:border-blue-400 transition-all duration-200 hover:shadow-md group flex items-center justify-between"
                         >
-                          <div className="flex items-center justify-between flex-row-reverse">
-                            <div className="flex items-center gap-3 flex-row-reverse">
-                              <span className="text-2xl group-hover:scale-110 transition-transform">
-                                🏙️
-                              </span>
-                              <div className="text-right">
-                                <h4 className="font-bold text-lg text-gray-800 group-hover:text-blue-600">
-                                  {city.name}
-                                </h4>
-                                <p className="text-sm text-gray-600">
-                                  {city.manager1_name}
-                                  {city.manager2_name && ` • ${city.manager2_name}`}
-                                </p>
-                              </div>
-                            </div>
-                            <span className="text-blue-600 opacity-0 group-hover:opacity-100 transition-opacity">
-                              ◀
+                          <div className="flex items-center gap-3">
+                            <span className="text-2xl group-hover:scale-110 transition-transform">
+                              🏙️
                             </span>
+                            <div className="text-right">
+                              <h4 className="font-bold text-lg text-gray-800">
+                                {city.name}
+                              </h4>
+                              <p className="text-sm text-gray-600">
+                                {city.manager1_name}
+                                {city.manager2_name && ` • ${city.manager2_name}`}
+                              </p>
+                            </div>
                           </div>
-                        </button>
+                          <Button
+                            onClick={() => handleCitySelect(city)}
+                            size="sm"
+                            className="bg-gradient-to-r from-blue-600 to-indigo-600 hover:from-blue-700 hover:to-indigo-700 text-white font-semibold px-4 py-2 rounded-lg transition-all duration-200 hover:scale-105"
+                          >
+                            בחירה
+                          </Button>
+                        </div>
                       ))}
                     </div>
                   )}

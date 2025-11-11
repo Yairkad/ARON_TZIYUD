@@ -2,6 +2,7 @@
 
 import { useState, useEffect } from 'react'
 import { useRouter } from 'next/navigation'
+import Link from 'next/link'
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card'
 import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
@@ -70,7 +71,18 @@ export default function UnifiedLoginPage() {
   }
 
   return (
-    <div className="min-h-screen content-wrapper flex flex-col items-center justify-center p-4 gap-8">
+    <div className="min-h-screen content-wrapper flex flex-col items-center justify-center p-4 gap-8 relative">
+      {/* Back to Home Button */}
+      <Link href="/" className="absolute top-4 left-4">
+        <Button
+          variant="ghost"
+          size="sm"
+          className="h-9 px-3 rounded-full hover:bg-blue-50 text-blue-600 transition-all duration-200 hover:scale-105 border border-blue-200"
+        >
+          ↩️ חזור לדף הבית
+        </Button>
+      </Link>
+
       {/* Logo Section */}
       <div className="w-full max-w-md">
         <div className="flex flex-col items-center justify-center gap-2 mb-4">

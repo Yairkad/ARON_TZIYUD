@@ -620,6 +620,7 @@ export default function SuperAdminPage() {
       city_id: user.city?.id || '',
       permissions: user.permissions,
       phone: user.phone || '',
+      manager_role: user.manager_role || '',
     })
   }
 
