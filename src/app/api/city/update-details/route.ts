@@ -1,7 +1,8 @@
 import { NextRequest, NextResponse } from 'next/server'
-import { supabaseServer } from '@/lib/supabase-server'
+import { createServiceClient } from '@/lib/supabase-server'
 
 export async function POST(request: NextRequest) {
+  const supabase = createServiceClient()
   try {
     const {
       cityId,
@@ -44,7 +45,7 @@ export async function POST(request: NextRequest) {
     }
 
     // שליפת נתוני העיר הנוכחיים
-    const { data: city, error: fetchError } = await supabaseServer
+    const { data: city, error: fetchError } = await supabase
       .from('cities')
       .select('*')
       .eq('id', cityId)
@@ -100,7 +101,7 @@ export async function POST(request: NextRequest) {
     }
 
     // עדכון העיר
-    const { error: updateError } = await supabaseServer
+    const { error: updateError } = await supabase
       .from('cities')
       .update(updateData)
       .eq('id', cityId)
@@ -128,7 +129,7 @@ export async function POST(request: NextRequest) {
     if (updateData.require_call_id !== undefined && city.require_call_id !== updateData.require_call_id) changedFields.push('דרישת מזהה קריאה')
 
     if (changedFields.length > 0) {
-      const { error: notificationError } = await supabaseServer
+      const { error: notificationError } = await supabase
         .from('admin_notifications')
         .insert({
           city_id: cityId,
