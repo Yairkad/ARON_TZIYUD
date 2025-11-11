@@ -29,8 +29,8 @@ export const supabaseServer = createClient(supabaseUrl, supabaseServiceKey, {
  * Create a Supabase client for use in Server Components
  * This client respects the user's authentication state from cookies
  */
-export function createServerClient() {
-  const cookieStore = cookies()
+export async function createServerClient() {
+  const cookieStore = await cookies()
 
   return createClient(supabaseUrl, supabaseAnonKey, {
     auth: {
@@ -68,7 +68,7 @@ export function createServiceClient() {
  * Returns null if not authenticated
  */
 export async function getCurrentUser() {
-  const supabase = createServerClient()
+  const supabase = await createServerClient()
 
   const {
     data: { user },
@@ -87,7 +87,7 @@ export async function getCurrentUser() {
  * Returns null if not authenticated
  */
 export async function getCurrentUserProfile() {
-  const supabase = createServerClient()
+  const supabase = await createServerClient()
 
   const {
     data: { user },
