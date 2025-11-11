@@ -1006,37 +1006,64 @@ export default function CityPage() {
             <CardDescription className="text-gray-600">סטטוס זמינות ציוד במערכת</CardDescription>
           </CardHeader>
           <CardContent className="p-6">
-            <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-3">
-              {equipment.map(item => (
-                <div
-                  key={item.id}
-                  className={`flex items-center justify-between p-4 rounded-xl border-2 transition-all duration-200 ${
-                    item.quantity > 0 && item.equipment_status === 'working'
-                      ? 'bg-gradient-to-l from-green-50 to-white border-green-200 hover:border-green-400 hover:shadow-md'
-                      : item.equipment_status === 'faulty'
-                      ? 'bg-gradient-to-l from-orange-50 to-white border-orange-200 hover:border-orange-300'
-                      : 'bg-gradient-to-l from-gray-50 to-white border-gray-200 hover:border-gray-300'
-                  }`}
-                >
-                  <div className="flex items-center gap-3">
-                    <span className="text-2xl">
-                      {item.equipment_status === 'faulty' ? '⚠️' : item.quantity > 0 ? '✅' : '❌'}
-                    </span>
-                    <div>
-                      <p className="font-semibold text-gray-800">{item.name}</p>
-                      {item.quantity === 0 && (
-                        <p className="text-xs text-red-600 font-medium">חסר זמנית</p>
-                      )}
-                      {item.equipment_status === 'faulty' && (
-                        <p className="text-xs text-orange-600 font-medium">ציוד תקול - לא זמין להשאלה</p>
-                      )}
-                      {item.is_consumable && item.quantity > 0 && item.equipment_status === 'working' && (
-                        <p className="text-xs text-purple-600 font-medium">🔄 ציוד מתכלה</p>
-                      )}
-                    </div>
-                  </div>
-                </div>
-              ))}
+            <div className="overflow-x-auto">
+              <table className="w-full text-sm border-collapse">
+                <thead className="bg-gray-100">
+                  <tr>
+                    <th className="px-4 py-3 text-right font-semibold text-gray-700 border-b-2 border-gray-300">שם פריט</th>
+                    <th className="px-4 py-3 text-center font-semibold text-gray-700 border-b-2 border-gray-300">כמות זמינה</th>
+                    <th className="px-4 py-3 text-center font-semibold text-gray-700 border-b-2 border-gray-300">סטטוס</th>
+                    <th className="px-4 py-3 text-center font-semibold text-gray-700 border-b-2 border-gray-300">סוג</th>
+                  </tr>
+                </thead>
+                <tbody>
+                  {equipment.map((item, index) => (
+                    <tr
+                      key={item.id}
+                      className={`hover:bg-blue-50 transition-colors ${
+                        index !== equipment.length - 1 ? 'border-b border-gray-200' : ''
+                      }`}
+                    >
+                      <td className="px-4 py-3 font-medium text-gray-800">{item.name}</td>
+                      <td className="px-4 py-3 text-center">
+                        <span className={`inline-flex items-center justify-center min-w-[3rem] px-3 py-1 rounded-full text-sm font-semibold ${
+                          item.quantity > 0
+                            ? 'bg-green-100 text-green-700'
+                            : 'bg-red-100 text-red-700'
+                        }`}>
+                          {item.quantity}
+                        </span>
+                      </td>
+                      <td className="px-4 py-3 text-center">
+                        {item.equipment_status === 'faulty' ? (
+                          <span className="inline-flex items-center gap-1 px-3 py-1 bg-orange-100 text-orange-700 rounded-full text-xs font-medium">
+                            ⚠️ תקול
+                          </span>
+                        ) : item.quantity > 0 ? (
+                          <span className="inline-flex items-center gap-1 px-3 py-1 bg-green-100 text-green-700 rounded-full text-xs font-medium">
+                            ✅ זמין
+                          </span>
+                        ) : (
+                          <span className="inline-flex items-center gap-1 px-3 py-1 bg-red-100 text-red-700 rounded-full text-xs font-medium">
+                            ❌ חסר
+                          </span>
+                        )}
+                      </td>
+                      <td className="px-4 py-3 text-center">
+                        {item.is_consumable ? (
+                          <span className="inline-block px-3 py-1 bg-purple-100 text-purple-700 rounded-full text-xs font-medium">
+                            🔄 מתכלה
+                          </span>
+                        ) : (
+                          <span className="inline-block px-3 py-1 bg-blue-100 text-blue-700 rounded-full text-xs font-medium">
+                            רגיל
+                          </span>
+                        )}
+                      </td>
+                    </tr>
+                  ))}
+                </tbody>
+              </table>
             </div>
           </CardContent>
         </Card>
