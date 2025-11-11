@@ -566,6 +566,7 @@ export default function SuperAdminPage() {
         city_id: '',
         permissions: 'full_access',
         phone: '',
+        manager_role: '',
       })
       setEditingUser(null)
       fetchUsers()
