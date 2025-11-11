@@ -621,10 +621,27 @@ export default function SuperAdminPage() {
 
   if (!isAuthenticated) {
     return (
-      <div className="min-h-screen content-wrapper flex items-center justify-center p-4">
-        <div className="absolute top-4 left-1/2 transform -translate-x-1/2">
-          <Logo />
+      <div className="min-h-screen content-wrapper flex flex-col items-center justify-center p-4 gap-8">
+        {/* Logo Section */}
+        <div className="w-full max-w-md">
+          <div className="flex flex-col items-center justify-center gap-2 mb-4">
+            {/* Logo Image */}
+            <div className="w-32 h-11 sm:w-40 sm:h-14">
+              <img
+                src="/logo.png"
+                alt="ארון ציוד ידידים"
+                className="w-full h-full object-contain"
+              />
+            </div>
+            <div className="text-center">
+              <h1 className="text-lg sm:text-xl font-bold bg-gradient-to-r from-blue-600 to-indigo-600 bg-clip-text text-transparent">
+                ארון ציוד ידידים
+              </h1>
+              <p className="text-xs text-gray-600">מערכת השאלות וניהול ציוד</p>
+            </div>
+          </div>
         </div>
+
         <Card className="w-full max-w-md border-0 shadow-2xl rounded-2xl overflow-hidden">
           <CardHeader className="bg-gradient-to-r from-purple-600 to-pink-600 text-white pb-8">
             <div className="text-center">
