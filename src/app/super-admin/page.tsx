@@ -619,93 +619,17 @@ export default function SuperAdminPage() {
     }
   }, [isAuthenticated, activeTab])
 
+  // Redirect to unified login if not authenticated
   if (!isAuthenticated) {
+    if (typeof window !== 'undefined') {
+      window.location.href = '/login'
+    }
     return (
-      <div className="min-h-screen content-wrapper flex flex-col items-center justify-center p-4 gap-8">
-        {/* Logo Section */}
-        <div className="w-full max-w-md">
-          <div className="flex flex-col items-center justify-center gap-2 mb-4">
-            {/* Logo Image */}
-            <div className="w-32 h-11 sm:w-40 sm:h-14">
-              <img
-                src="/logo.png"
-                alt="ארון ציוד ידידים"
-                className="w-full h-full object-contain"
-              />
-            </div>
-            <div className="text-center">
-              <h1 className="text-lg sm:text-xl font-bold bg-gradient-to-r from-blue-600 to-indigo-600 bg-clip-text text-transparent">
-                ארון ציוד ידידים
-              </h1>
-              <p className="text-xs text-gray-600">מערכת השאלות וניהול ציוד</p>
-            </div>
-          </div>
+      <div className="min-h-screen content-wrapper flex items-center justify-center">
+        <div className="text-center">
+          <div className="text-4xl mb-4">⏳</div>
+          <p className="text-gray-600">מעביר לדף התחברות...</p>
         </div>
-
-        <Card className="w-full max-w-md border-0 shadow-2xl rounded-2xl overflow-hidden">
-          <CardHeader className="bg-gradient-to-r from-purple-600 to-pink-600 text-white pb-8">
-            <div className="text-center">
-              <div className="text-5xl mb-4">👑</div>
-              <CardTitle className="text-3xl font-bold mb-2">ממשק ניהול מרכזי</CardTitle>
-              <CardDescription className="text-purple-100 text-base">הזן סיסמת מנהל לגישה למערכת</CardDescription>
-            </div>
-          </CardHeader>
-          <CardContent className="p-8">
-            <form onSubmit={handleLogin} className="space-y-6">
-              <div className="space-y-2">
-                <label className="block text-sm font-semibold text-gray-700">📧 כתובת מייל</label>
-                <Input
-                  type="email"
-                  value={email}
-                  onChange={(e) => setEmail(e.target.value)}
-                  placeholder="admin@example.com"
-                  className="h-12 border-2 border-gray-200 rounded-xl focus:border-purple-500 transition-colors"
-                  required
-                />
-              </div>
-              <div className="space-y-2">
-                <label className="block text-sm font-semibold text-gray-700">🔑 סיסמה</label>
-                <Input
-                  type="password"
-                  value={password}
-                  onChange={(e) => setPassword(e.target.value)}
-                  placeholder="הזן סיסמה"
-                  className="h-12 border-2 border-gray-200 rounded-xl focus:border-purple-500 transition-colors"
-                  required
-                />
-              </div>
-              <div className="flex items-center">
-                <input
-                  type="checkbox"
-                  id="rememberMe"
-                  checked={rememberMe}
-                  onChange={(e) => setRememberMe(e.target.checked)}
-                  className="w-4 h-4 text-purple-600 border-gray-300 rounded focus:ring-purple-500"
-                />
-                <label htmlFor="rememberMe" className="mr-2 text-sm text-gray-700 cursor-pointer">
-                  זכור אותי (30 יום)
-                </label>
-              </div>
-              <div className="flex gap-3">
-                <Button
-                  type="submit"
-                  className="flex-1 h-12 bg-gradient-to-r from-purple-600 to-pink-600 hover:from-purple-700 hover:to-pink-700 text-white font-bold text-lg rounded-xl shadow-lg hover:shadow-xl transition-all duration-200 hover:scale-105"
-                >
-                  ✅ כניסה למערכת
-                </Button>
-                <Link href="/" className="flex-1">
-                  <Button
-                    type="button"
-                    variant="outline"
-                    className="w-full h-12 border-2 border-gray-300 text-gray-700 hover:bg-gray-50 font-semibold text-lg rounded-xl transition-all duration-200 hover:scale-105"
-                  >
-                    ↩️ חזור
-                  </Button>
-                </Link>
-              </div>
-            </form>
-          </CardContent>
-        </Card>
       </div>
     )
   }

@@ -417,14 +417,14 @@ export default function CityPage() {
               ↩️
             </Button>
           </Link>
-          <Link href={`/city/${cityId}/admin`} className="hidden sm:block absolute left-6 top-6">
+          <Link href="/" className="hidden sm:block absolute left-6 top-6">
             <Button
               variant="ghost"
-              size="icon"
-              className="h-10 w-10 rounded-full hover:bg-blue-50 text-blue-600 transition-all duration-200 hover:scale-110"
-              title="כניסת מנהל"
+              size="sm"
+              className="h-9 px-3 rounded-full hover:bg-blue-50 text-blue-600 transition-all duration-200 hover:scale-105 border border-blue-200"
+              title="חזרה לבחירת עיר"
             >
-              🔐
+              ↩️ חזור לבחירת עיר
             </Button>
           </Link>
           <div className="text-center">
@@ -439,14 +439,9 @@ export default function CityPage() {
 
         {/* Mobile Navigation */}
         <div className="sm:hidden flex gap-3 mb-6">
-          <Link href="/" className="flex-1">
-            <Button variant="outline" className="w-full h-14 rounded-xl border-2 border-gray-200 hover:border-gray-300 hover:bg-gray-50 text-gray-700 font-semibold text-lg transition-all">
-              ↩️ חזור לבחירת עיר
-            </Button>
-          </Link>
-          <Link href={`/city/${cityId}/admin`} className="flex-1">
+          <Link href="/" className="w-full">
             <Button variant="outline" className="w-full h-14 rounded-xl border-2 border-blue-200 hover:border-blue-300 hover:bg-blue-50 text-blue-600 font-semibold text-lg transition-all">
-              🔐 כניסת מנהל
+              ↩️ חזור לבחירת עיר
             </Button>
           </Link>
         </div>

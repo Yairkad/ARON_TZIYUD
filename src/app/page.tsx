@@ -43,9 +43,9 @@ export default function HomePage() {
   }
 
   return (
-    <div className="min-h-screen content-wrapper flex flex-col items-center justify-center p-4 relative">
+    <div className="min-h-screen content-wrapper flex flex-col items-center justify-center p-4 pt-20 sm:pt-4 relative">
       {/* Admin Login Button - Small, top corner */}
-      <div className="absolute top-4 left-4">
+      <div className="absolute top-4 left-4 z-10">
         <Button
           onClick={() => router.push('/login')}
           variant="ghost"
@@ -130,8 +130,8 @@ export default function HomePage() {
                           onClick={() => handleCitySelect(city)}
                           className="w-full text-right p-4 rounded-xl bg-white hover:bg-blue-50 border-2 border-gray-200 hover:border-blue-400 transition-all duration-200 hover:shadow-md group"
                         >
-                          <div className="flex items-center justify-between">
-                            <div className="flex items-center gap-3">
+                          <div className="flex items-center justify-between flex-row-reverse">
+                            <div className="flex items-center gap-3 flex-row-reverse">
                               <span className="text-2xl group-hover:scale-110 transition-transform">
                                 🏙️
                               </span>
