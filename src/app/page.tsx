@@ -160,32 +160,63 @@ export default function HomePage() {
           </Card>
         </div>
 
-        {/* Info Cards */}
-        <div className="grid grid-cols-1 sm:grid-cols-3 gap-4 mt-12">
-          <Card className="border border-gray-200 bg-white/80 backdrop-blur-sm">
-            <CardContent className="p-6 text-center">
-              <div className="text-4xl mb-2">📦</div>
-              <h4 className="font-bold text-gray-800 mb-1">השאלת ציוד</h4>
-              <p className="text-sm text-gray-600">השאל ציוד בקלות ובמהירות</p>
-            </CardContent>
-          </Card>
-
-          <Card className="border border-gray-200 bg-white/80 backdrop-blur-sm">
-            <CardContent className="p-6 text-center">
-              <div className="text-4xl mb-2">📊</div>
-              <h4 className="font-bold text-gray-800 mb-1">מעקב והיסטוריה</h4>
-              <p className="text-sm text-gray-600">עקוב אחר השאלות והחזרות</p>
-            </CardContent>
-          </Card>
-
-          <Card className="border border-gray-200 bg-white/80 backdrop-blur-sm">
-            <CardContent className="p-6 text-center">
-              <div className="text-4xl mb-2">🔔</div>
-              <h4 className="font-bold text-gray-800 mb-1">התראות</h4>
-              <p className="text-sm text-gray-600">קבל התראות על בקשות חדשות</p>
-            </CardContent>
-          </Card>
-        </div>
+        {/* User Guide */}
+        <Card className="border-2 border-purple-200 bg-gradient-to-br from-purple-50 to-pink-50 shadow-lg mt-12">
+          <CardHeader>
+            <CardTitle className="text-2xl text-center text-purple-800">📖 מדריך למשתמש</CardTitle>
+            <CardDescription className="text-center text-purple-600">איך להשתמש במערכת ארון הציוד</CardDescription>
+          </CardHeader>
+          <CardContent className="space-y-6">
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+              <div className="space-y-4">
+                <div className="flex items-start gap-3">
+                  <div className="text-3xl">1️⃣</div>
+                  <div>
+                    <h5 className="font-bold text-gray-800 mb-1">בחר את העיר שלך</h5>
+                    <p className="text-sm text-gray-600">לחץ על "התחל" ובחר את העיר שלך מהרשימה</p>
+                  </div>
+                </div>
+                <div className="flex items-start gap-3">
+                  <div className="text-3xl">2️⃣</div>
+                  <div>
+                    <h5 className="font-bold text-gray-800 mb-1">בחר ציוד</h5>
+                    <p className="text-sm text-gray-600">עיין ברשימת הציוד הזמין ובחר מה שאתה צריך</p>
+                  </div>
+                </div>
+                <div className="flex items-start gap-3">
+                  <div className="text-3xl">3️⃣</div>
+                  <div>
+                    <h5 className="font-bold text-gray-800 mb-1">הזן פרטים</h5>
+                    <p className="text-sm text-gray-600">מלא את הפרטים האישיים שלך ושלח בקשה</p>
+                  </div>
+                </div>
+              </div>
+              <div className="space-y-4">
+                <div className="flex items-start gap-3">
+                  <div className="text-3xl">4️⃣</div>
+                  <div>
+                    <h5 className="font-bold text-gray-800 mb-1">קבל אישור</h5>
+                    <p className="text-sm text-gray-600">המנהל יאשר את הבקשה ותקבל הודעה</p>
+                  </div>
+                </div>
+                <div className="flex items-start gap-3">
+                  <div className="text-3xl">5️⃣</div>
+                  <div>
+                    <h5 className="font-bold text-gray-800 mb-1">קבל את הציוד</h5>
+                    <p className="text-sm text-gray-600">בוא לארון בזמן שסוכם וקבל את הציוד</p>
+                  </div>
+                </div>
+                <div className="flex items-start gap-3">
+                  <div className="text-3xl">6️⃣</div>
+                  <div>
+                    <h5 className="font-bold text-gray-800 mb-1">החזר בזמן</h5>
+                    <p className="text-sm text-gray-600">ציוד שאינו מסומן "אין צורך להחזיר" יש להחזיר</p>
+                  </div>
+                </div>
+              </div>
+            </div>
+          </CardContent>
+        </Card>
       </div>
     </div>
   )

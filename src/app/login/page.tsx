@@ -16,31 +16,8 @@ export default function UnifiedLoginPage() {
   const [rememberMe, setRememberMe] = useState(false)
   const [loading, setLoading] = useState(false)
   const [error, setError] = useState('')
-  const [authChecked, setAuthChecked] = useState(false)
-
-  // Check if already authenticated
-  useEffect(() => {
-    if (authChecked) return // Prevent multiple checks
-
-    const verifyAuth = async () => {
-      const { authenticated, userType } = await checkAuth()
-      if (authenticated) {
-        // Already logged in, redirect based on type
-        if (userType === 'super') {
-          router.push('/super-admin')
-        } else if (userType === 'city') {
-          // Get city_id from cookies or API and redirect
-          const response = await fetch('/api/auth/me')
-          const data = await response.json()
-          if (data.success && data.user.city_id) {
-            router.push(`/city/${data.user.city_id}`)
-          }
-        }
-      }
-      setAuthChecked(true)
-    }
-    verifyAuth()
-  }, [])
+  // Note: We don't check auth here to avoid redirect loops
+  // Users will be redirected after successful login
 
   const handleLogin = async (e: React.FormEvent) => {
     e.preventDefault()
