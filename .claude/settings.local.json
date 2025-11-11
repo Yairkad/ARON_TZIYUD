@@ -1,32 +1,7 @@
 {
   "permissions": {
     "allow": [
-      "Bash(npm run dev:*)",
-      "Bash(where npm:*)",
-      "Bash(node --version:*)",
-      "Bash(git add:*)",
-      "Bash(git commit -m \"$(cat <<''EOF''\nFix: Multiple critical bugs in city management and borrowing system\n\nThis commit fixes 4 major issues:\n\n1. Request mode toggle not saving\n   - Updated API to support request_mode, cabinet_code, require_call_id\n   - Changed admin UI to use API instead of direct Supabase calls\n   - Fixed RLS permission issues\n\n2. Borrowing history not saved for all cities\n   - Added missing city_id to borrow_history inserts\n   - Fixed both direct borrowing and request-based pickup\n   - Now all cities properly track their borrowing history\n\n3. Cabinet code field not responding\n   - Changed from immediate save to onBlur save\n   - Added local state update for instant feedback\n   - Improved user experience with better error handling\n\n4. Require call ID toggle not working\n   - Added local state update before API call\n   - Implemented instant visual feedback\n   - Added error reversion on failed updates\n\nFiles modified:\n- src/app/api/city/update-details/route.ts\n- src/app/api/requests/confirm-pickup/route.ts\n- src/app/city/[cityId]/admin/page.tsx\n- src/app/city/[cityId]/page.tsx\n\n🤖 Generated with [Claude Code](https://claude.com/claude-code)\n\nCo-Authored-By: Claude <noreply@anthropic.com>\nEOF\n)\")",
-      "Bash(git push:*)",
-      "Bash(git commit -m \"$(cat <<''EOF''\nDebug: Add detailed logging for request mode borrow_history error\n\n- Added console.log to track city_id value\n- Removed borrow_date field (use DB default)\n- Added detailed error logging with all field values\n- Enhanced error message to include actual error details\n\nThis will help identify the exact cause of the \"שגיאה ביצירת רשומת היסטוריה\" error.\n\n🤖 Generated with [Claude Code](https://claude.com/claude-code)\n\nCo-Authored-By: Claude <noreply@anthropic.com>\nEOF\n)\")",
-      "Bash(git commit:*)",
-      "Bash(npm install:*)",
-      "Bash(cmd /c npm install web-push)",
-      "Bash(npm run build:*)",
-      "Bash(cmd /c npm run build)",
-      "Bash(cmd /c \"npm run -v\")",
-      "Bash(node node_modules/web-push/src/cli.js:*)",
-      "Bash(cmd /c node generate-vapid.js)",
-      "Bash(cmd /c \"where node\")",
-      "Bash(test:*)",
-      "Bash(cmd /c \"cd /d c:\\Users\\יאיר קדוש\\ARON_TZIYUD && node gen-vapid.js\")",
-      "Bash(cmd /c \"npm exec -- node vapid.js\")",
-      "Bash(git reset:*)",
-      "Bash(cmd /c \"npm run dev\")",
-      "Bash(node create-super-admin.js:*)",
-      "Bash(cmd /c node:*)",
-      "Bash(cmd /c \"set NEXT_PUBLIC_SUPABASE_URL=https://jgkmcsxrtovrdiguhwyv.supabase.co && set SUPABASE_SERVICE_ROLE_KEY=eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Impna21jc3hydG92cmRpZ3Vod3l2Iiwicm9sZSI6InNlcnZpY2Vfcm9sZSIsImlhdCI6MTc2MjEwNzExMiwiZXhwIjoyMDc3NjgzMTEyfQ.yTAJKE4koX56lJ8ZA0utYf9x2Ytj_mLHwIOzt-xpYxY && node create-super-admin.js\")",
-      "Bash(cmd /c \"node --version\")",
-      "Bash(dir \"src\\app\\api\\auth\\super-admin\\login\"\")"
+      "Bash(cmd /c \"npm run build\")"
     ],
     "deny": [],
     "ask": []

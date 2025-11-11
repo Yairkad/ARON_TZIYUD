@@ -62,12 +62,12 @@ export default function HomePage() {
         {/* Header */}
         <header className="text-center mb-6 sm:mb-12">
           <div className="bg-white/90 backdrop-blur-lg border border-gray-200/50 rounded-2xl shadow-xl p-4 sm:p-8 relative">
-            <Link href="/super-admin" className="absolute left-3 sm:left-6 top-3 sm:top-6">
+            <Link href="/login" className="absolute left-3 sm:left-6 top-3 sm:top-6">
               <Button
                 variant="ghost"
                 size="icon"
                 className="h-10 w-10 rounded-full hover:bg-blue-50 text-blue-600 transition-all duration-200 hover:scale-110"
-                title="כניסת מנהל ראשי"
+                title="התחברות למערכת"
               >
                 🔐
               </Button>
@@ -154,18 +154,18 @@ export default function HomePage() {
                           <Button
                             onClick={() => handleWhatsApp(city.manager1_phone)}
                             size="icon"
-                            className="h-8 w-8 bg-green-500 hover:bg-green-600 rounded-full"
+                            className="h-8 w-8 bg-green-500 hover:bg-green-600 rounded-full text-white"
                             title="WhatsApp"
                           >
-                            <MessageCircle className="h-4 w-4" />
+                            <MessageCircle className="h-4 w-4 text-white" />
                           </Button>
                           <Button
                             onClick={() => handleCall(city.manager1_phone)}
                             size="icon"
-                            className="h-8 w-8 bg-blue-500 hover:bg-blue-600 rounded-full"
+                            className="h-8 w-8 bg-blue-500 hover:bg-blue-600 rounded-full text-white"
                             title="חייג"
                           >
-                            <Phone className="h-4 w-4" />
+                            <Phone className="h-4 w-4 text-white" />
                           </Button>
                         </div>
                       </div>
@@ -180,18 +180,18 @@ export default function HomePage() {
                             <Button
                               onClick={() => handleWhatsApp(city.manager2_phone!)}
                               size="icon"
-                              className="h-8 w-8 bg-green-500 hover:bg-green-600 rounded-full"
+                              className="h-8 w-8 bg-green-500 hover:bg-green-600 rounded-full text-white"
                               title="WhatsApp"
                             >
-                              <MessageCircle className="h-4 w-4" />
+                              <MessageCircle className="h-4 w-4 text-white" />
                             </Button>
                             <Button
                               onClick={() => handleCall(city.manager2_phone!)}
                               size="icon"
-                              className="h-8 w-8 bg-blue-500 hover:bg-blue-600 rounded-full"
+                              className="h-8 w-8 bg-blue-500 hover:bg-blue-600 rounded-full text-white"
                               title="חייג"
                             >
-                              <Phone className="h-4 w-4" />
+                              <Phone className="h-4 w-4 text-white" />
                             </Button>
                           </div>
                         </div>

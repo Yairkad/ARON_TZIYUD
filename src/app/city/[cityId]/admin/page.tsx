@@ -956,6 +956,33 @@ export default function CityAdminPage() {
               📚 מדריך מנהל עיר
             </Button>
           </a>
+          {/* Push Notifications - Only in request mode */}
+          {pushSupported && city?.request_mode === 'request' && (
+            <Button
+              onClick={handleTogglePushNotifications}
+              disabled={enablingPush}
+              variant="outline"
+              className={`w-full h-14 rounded-xl border-2 font-semibold text-lg transition-all ${
+                pushEnabled
+                  ? 'border-green-500 text-green-600 hover:bg-green-50'
+                  : 'border-gray-400 text-gray-600 hover:bg-gray-50'
+              }`}
+            >
+              {enablingPush ? (
+                '⏳ מפעיל...'
+              ) : pushEnabled ? (
+                <>
+                  <Bell className="ml-2 h-5 w-5" />
+                  התראות פעילות ✅
+                </>
+              ) : (
+                <>
+                  <BellOff className="ml-2 h-5 w-5" />
+                  הפעל התראות
+                </>
+              )}
+            </Button>
+          )}
           <div className="flex gap-3">
             <Link href={`/city/${cityId}`} className="flex-1">
               <Button

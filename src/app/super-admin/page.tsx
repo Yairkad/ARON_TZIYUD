@@ -27,6 +27,21 @@ export default function SuperAdminPage() {
   const [showChangePassword, setShowChangePassword] = useState(false)
   const [cityFilter, setCityFilter] = useState<'all' | 'active' | 'inactive'>('all')
 
+  // Users Management State
+  const [users, setUsers] = useState<any[]>([])
+  const [showAddUser, setShowAddUser] = useState(false)
+  const [editingUser, setEditingUser] = useState<any>(null)
+  const [userForm, setUserForm] = useState({
+    email: '',
+    password: '',
+    full_name: '',
+    role: 'city_manager' as 'city_manager' | 'super_admin',
+    city_id: '',
+    permissions: 'full_access' as 'view_only' | 'approve_requests' | 'full_access',
+    phone: '',
+  })
+  const [userFilter, setUserFilter] = useState<'all' | 'city_manager' | 'super_admin'>('all')
+
   useEffect(() => {
     if (isAuthenticated) {
       fetchCities()
@@ -415,6 +430,195 @@ export default function SuperAdminPage() {
     }
   }
 
+  // Users Management Functions
+  const fetchUsers = async () => {
+    try {
+      const response = await fetch('/api/admin/users/list')
+      const data = await response.json()
+
+      if (!response.ok) {
+        console.error('Error fetching users:', data.error)
+        return
+      }
+
+      setUsers(data.users || [])
+    } catch (error) {
+      console.error('Error fetching users:', error)
+    }
+  }
+
+  const handleCreateUser = async (e: React.FormEvent) => {
+    e.preventDefault()
+
+    // Validation
+    if (!userForm.email || !userForm.password || !userForm.full_name || !userForm.role) {
+      alert('אנא מלא את כל השדות החובה (מייל, סיסמה, שם מלא, תפקיד)')
+      return
+    }
+
+    if (userForm.role === 'city_manager' && !userForm.city_id) {
+      alert('מנהל עיר חייב להיות משויך לעיר')
+      return
+    }
+
+    if (userForm.password.length < 6) {
+      alert('הסיסמה חייבת להכיל לפחות 6 תווים')
+      return
+    }
+
+    setLoading(true)
+    try {
+      const response = await fetch('/api/admin/users/create', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify(userForm),
+      })
+
+      const data = await response.json()
+
+      if (!response.ok) {
+        alert(data.error || 'שגיאה ביצירת המשתמש')
+        return
+      }
+
+      alert('המשתמש נוצר בהצלחה!')
+      setUserForm({
+        email: '',
+        password: '',
+        full_name: '',
+        role: 'city_manager',
+        city_id: '',
+        permissions: 'full_access',
+        phone: '',
+      })
+      setShowAddUser(false)
+      fetchUsers()
+    } catch (error) {
+      console.error('Error creating user:', error)
+      alert('אירעה שגיאה ביצירת המשתמש')
+    } finally {
+      setLoading(false)
+    }
+  }
+
+  const handleUpdateUser = async (e: React.FormEvent) => {
+    e.preventDefault()
+
+    if (!editingUser) return
+
+    setLoading(true)
+    try {
+      const updateData: any = {
+        user_id: editingUser.id,
+        full_name: userForm.full_name,
+        permissions: userForm.permissions,
+        phone: userForm.phone || null,
+      }
+
+      // Only include password if it was changed
+      if (userForm.password) {
+        if (userForm.password.length < 6) {
+          alert('הסיסמה חייבת להכיל לפחות 6 תווים')
+          setLoading(false)
+          return
+        }
+        updateData.password = userForm.password
+      }
+
+      const response = await fetch('/api/admin/users/update', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify(updateData),
+      })
+
+      const data = await response.json()
+
+      if (!response.ok) {
+        alert(data.error || 'שגיאה בעדכון המשתמש')
+        return
+      }
+
+      alert('המשתמש עודכן בהצלחה!')
+      setUserForm({
+        email: '',
+        password: '',
+        full_name: '',
+        role: 'city_manager',
+        city_id: '',
+        permissions: 'full_access',
+        phone: '',
+      })
+      setEditingUser(null)
+      fetchUsers()
+    } catch (error) {
+      console.error('Error updating user:', error)
+      alert('אירעה שגיאה בעדכון המשתמש')
+    } finally {
+      setLoading(false)
+    }
+  }
+
+  const handleDeleteUser = async (user: any) => {
+    if (!confirm(`האם אתה בטוח שברצונך למחוק את המשתמש ${user.full_name || user.email}?`)) return
+
+    setLoading(true)
+    try {
+      const response = await fetch('/api/admin/users/delete', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({
+          user_id: user.id
+        }),
+      })
+
+      const data = await response.json()
+
+      if (!response.ok) {
+        alert(data.error || 'שגיאה במחיקת המשתמש')
+        return
+      }
+
+      alert('המשתמש נמחק בהצלחה!')
+      fetchUsers()
+    } catch (error) {
+      console.error('Error deleting user:', error)
+      alert('אירעה שגיאה במחיקת המשתמש')
+    } finally {
+      setLoading(false)
+    }
+  }
+
+  const handleEditUser = (user: any) => {
+    setEditingUser(user)
+    setUserForm({
+      email: user.email,
+      password: '', // Don't pre-fill password
+      full_name: user.full_name,
+      role: user.role,
+      city_id: user.city?.id || '',
+      permissions: user.permissions,
+      phone: user.phone || '',
+    })
+  }
+
+  const filteredUsers = users.filter(user => {
+    if (userFilter === 'all') return true
+    return user.role === userFilter
+  })
+
+  // Load users when switching to users tab
+  useEffect(() => {
+    if (isAuthenticated && activeTab === 'users') {
+      fetchUsers()
+    }
+  }, [isAuthenticated, activeTab])
+
   if (!isAuthenticated) {
     return (
       <div className="min-h-screen content-wrapper flex items-center justify-center p-4">
@@ -523,7 +727,7 @@ export default function SuperAdminPage() {
         </header>
 
         {/* Tab Navigation */}
-        <div className="grid grid-cols-1 md:grid-cols-3 gap-3 mb-8">
+        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-3 mb-8">
           <Button
             onClick={() => setActiveTab('cities')}
             className={`py-6 rounded-xl font-semibold text-lg transition-all duration-300 ${
@@ -533,6 +737,16 @@ export default function SuperAdminPage() {
             }`}
           >
             <span className="text-2xl ml-2">🏙️</span> ניהול ערים
+          </Button>
+          <Button
+            onClick={() => setActiveTab('users')}
+            className={`py-6 rounded-xl font-semibold text-lg transition-all duration-300 ${
+              activeTab === 'users'
+                ? 'bg-gradient-to-r from-purple-600 to-pink-600 text-white shadow-lg shadow-purple-500/50 scale-105'
+                : 'bg-white text-gray-600 border-2 border-gray-200 hover:border-purple-300 hover:bg-purple-50'
+            }`}
+          >
+            <span className="text-2xl ml-2">👥</span> ניהול משתמשים
           </Button>
           <Button
             onClick={() => setActiveTab('notifications')}
@@ -1058,6 +1272,301 @@ export default function SuperAdminPage() {
               </div>
             </CardContent>
           </Card>
+        )}
+
+        {activeTab === 'users' && (
+          <>
+            {/* Add User Button & Filter */}
+            <div className="mb-6 flex flex-col sm:flex-row gap-4 items-start sm:items-center justify-between">
+              <Button
+                onClick={() => {
+                  setShowAddUser(!showAddUser)
+                  setEditingUser(null)
+                  setUserForm({
+                    email: '',
+                    password: '',
+                    full_name: '',
+                    role: 'city_manager',
+                    city_id: '',
+                    permissions: 'full_access',
+                    phone: '',
+                  })
+                }}
+                className="bg-gradient-to-r from-green-500 to-emerald-500 hover:from-green-600 hover:to-emerald-600 text-white font-bold px-6 py-3 rounded-xl shadow-lg hover:shadow-xl transition-all duration-200"
+              >
+                {showAddUser ? '❌ ביטול' : '➕ הוספת משתמש חדש'}
+              </Button>
+
+              {/* Filter */}
+              <div className="flex gap-2">
+                <Button
+                  onClick={() => setUserFilter('all')}
+                  className={`px-4 py-2 rounded-lg font-semibold transition-all ${
+                    userFilter === 'all'
+                      ? 'bg-gradient-to-r from-purple-600 to-pink-600 text-white shadow-md'
+                      : 'bg-white text-gray-600 border-2 border-gray-200 hover:border-purple-300'
+                  }`}
+                >
+                  הכל ({users.length})
+                </Button>
+                <Button
+                  onClick={() => setUserFilter('city_manager')}
+                  className={`px-4 py-2 rounded-lg font-semibold transition-all ${
+                    userFilter === 'city_manager'
+                      ? 'bg-gradient-to-r from-purple-600 to-pink-600 text-white shadow-md'
+                      : 'bg-white text-gray-600 border-2 border-gray-200 hover:border-purple-300'
+                  }`}
+                >
+                  מנהלי ערים ({users.filter(u => u.role === 'city_manager').length})
+                </Button>
+                <Button
+                  onClick={() => setUserFilter('super_admin')}
+                  className={`px-4 py-2 rounded-lg font-semibold transition-all ${
+                    userFilter === 'super_admin'
+                      ? 'bg-gradient-to-r from-purple-600 to-pink-600 text-white shadow-md'
+                      : 'bg-white text-gray-600 border-2 border-gray-200 hover:border-purple-300'
+                  }`}
+                >
+                  מנהלים ראשיים ({users.filter(u => u.role === 'super_admin').length})
+                </Button>
+              </div>
+            </div>
+
+            {/* Add/Edit User Form */}
+            {(showAddUser || editingUser) && (
+              <Card className="mb-6 border-2 border-purple-200 bg-gradient-to-r from-purple-50 to-pink-50 shadow-lg">
+                <CardHeader>
+                  <CardTitle className="text-2xl font-bold text-gray-800">
+                    {editingUser ? '✏️ עריכת משתמש' : '➕ הוספת משתמש חדש'}
+                  </CardTitle>
+                  <CardDescription>
+                    {editingUser ? 'ערוך את פרטי המשתמש' : 'מלא את כל הפרטים ליצירת משתמש חדש'}
+                  </CardDescription>
+                </CardHeader>
+                <CardContent>
+                  <form onSubmit={editingUser ? handleUpdateUser : handleCreateUser} className="space-y-4">
+                    <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                      <div className="space-y-2">
+                        <label className="block text-sm font-semibold text-gray-700">👤 שם מלא</label>
+                        <Input
+                          type="text"
+                          value={userForm.full_name}
+                          onChange={(e) => setUserForm({ ...userForm, full_name: e.target.value })}
+                          placeholder="שם מלא"
+                          className="h-12 border-2 border-gray-200 rounded-xl focus:border-purple-500 transition-colors"
+                          required
+                        />
+                      </div>
+
+                      <div className="space-y-2">
+                        <label className="block text-sm font-semibold text-gray-700">📧 כתובת מייל</label>
+                        <Input
+                          type="email"
+                          value={userForm.email}
+                          onChange={(e) => setUserForm({ ...userForm, email: e.target.value })}
+                          placeholder="email@example.com"
+                          className="h-12 border-2 border-gray-200 rounded-xl focus:border-purple-500 transition-colors"
+                          required
+                          disabled={!!editingUser}
+                        />
+                      </div>
+
+                      <div className="space-y-2">
+                        <label className="block text-sm font-semibold text-gray-700">
+                          🔐 סיסמה {editingUser && '(השאר ריק אם לא רוצה לשנות)'}
+                        </label>
+                        <Input
+                          type="password"
+                          value={userForm.password}
+                          onChange={(e) => setUserForm({ ...userForm, password: e.target.value })}
+                          placeholder={editingUser ? 'סיסמה חדשה (אופציונלי)' : 'סיסמה (לפחות 6 תווים)'}
+                          className="h-12 border-2 border-gray-200 rounded-xl focus:border-purple-500 transition-colors"
+                          required={!editingUser}
+                        />
+                      </div>
+
+                      <div className="space-y-2">
+                        <label className="block text-sm font-semibold text-gray-700">📱 טלפון</label>
+                        <Input
+                          type="tel"
+                          value={userForm.phone}
+                          onChange={(e) => setUserForm({ ...userForm, phone: e.target.value })}
+                          placeholder="05xxxxxxxx"
+                          className="h-12 border-2 border-gray-200 rounded-xl focus:border-purple-500 transition-colors"
+                        />
+                      </div>
+
+                      <div className="space-y-2">
+                        <label className="block text-sm font-semibold text-gray-700">👔 תפקיד</label>
+                        <select
+                          value={userForm.role}
+                          onChange={(e) => setUserForm({ ...userForm, role: e.target.value as 'city_manager' | 'super_admin' })}
+                          className="w-full h-12 border-2 border-gray-200 rounded-xl focus:border-purple-500 transition-colors px-3"
+                          required
+                          disabled={!!editingUser}
+                        >
+                          <option value="city_manager">מנהל עיר</option>
+                          <option value="super_admin">מנהל ראשי</option>
+                        </select>
+                      </div>
+
+                      {userForm.role === 'city_manager' && (
+                        <div className="space-y-2">
+                          <label className="block text-sm font-semibold text-gray-700">🏙️ עיר</label>
+                          <select
+                            value={userForm.city_id}
+                            onChange={(e) => setUserForm({ ...userForm, city_id: e.target.value })}
+                            className="w-full h-12 border-2 border-gray-200 rounded-xl focus:border-purple-500 transition-colors px-3"
+                            required={userForm.role === 'city_manager'}
+                            disabled={!!editingUser}
+                          >
+                            <option value="">בחר עיר</option>
+                            {cities.map(city => (
+                              <option key={city.id} value={city.id}>{city.name}</option>
+                            ))}
+                          </select>
+                        </div>
+                      )}
+
+                      <div className="space-y-2">
+                        <label className="block text-sm font-semibold text-gray-700">🔑 הרשאות</label>
+                        <select
+                          value={userForm.permissions}
+                          onChange={(e) => setUserForm({ ...userForm, permissions: e.target.value as any })}
+                          className="w-full h-12 border-2 border-gray-200 rounded-xl focus:border-purple-500 transition-colors px-3"
+                          required
+                        >
+                          <option value="view_only">צפיה בלבד</option>
+                          <option value="approve_requests">אישור בקשות</option>
+                          <option value="full_access">גישה מלאה</option>
+                        </select>
+                      </div>
+                    </div>
+
+                    <div className="flex gap-3 pt-2">
+                      <Button
+                        type="submit"
+                        disabled={loading}
+                        className="flex-1 h-12 bg-gradient-to-r from-green-500 to-emerald-500 hover:from-green-600 hover:to-emerald-600 text-white font-bold rounded-xl shadow-md hover:shadow-lg transition-all"
+                      >
+                        {loading ? '⏳ שומר...' : editingUser ? '✅ עדכן משתמש' : '✅ צור משתמש'}
+                      </Button>
+                      <Button
+                        type="button"
+                        onClick={() => {
+                          setShowAddUser(false)
+                          setEditingUser(null)
+                          setUserForm({
+                            email: '',
+                            password: '',
+                            full_name: '',
+                            role: 'city_manager',
+                            city_id: '',
+                            permissions: 'full_access',
+                            phone: '',
+                          })
+                        }}
+                        className="flex-1 h-12 bg-white border-2 border-gray-400 text-gray-700 hover:bg-gray-50 font-semibold rounded-xl transition-all"
+                      >
+                        ❌ ביטול
+                      </Button>
+                    </div>
+                  </form>
+                </CardContent>
+              </Card>
+            )}
+
+            {/* Users List */}
+            <Card className="border-0 shadow-2xl rounded-2xl overflow-hidden bg-white">
+              <CardHeader className="bg-gradient-to-r from-purple-50 to-pink-50 pb-6">
+                <CardTitle className="text-2xl font-bold text-gray-800">👥 רשימת משתמשים</CardTitle>
+                <CardDescription className="text-gray-600">
+                  ניהול משתמשים, תפקידים והרשאות
+                </CardDescription>
+              </CardHeader>
+              <CardContent className="p-6">
+                {filteredUsers.length === 0 ? (
+                  <div className="text-center py-12 bg-gray-50 rounded-xl">
+                    <span className="text-6xl mb-4 block">👥</span>
+                    <p className="text-gray-500 text-lg">אין משתמשים להצגה</p>
+                  </div>
+                ) : (
+                  <div className="space-y-3">
+                    {filteredUsers.map((user) => (
+                      <div
+                        key={user.id}
+                        className="bg-gradient-to-r from-purple-50 to-pink-50 rounded-xl p-6 border-2 border-purple-200 hover:shadow-lg transition-all duration-200"
+                      >
+                        <div className="flex flex-col lg:flex-row justify-between items-start lg:items-center gap-4">
+                          <div className="flex-1">
+                            <div className="flex items-center gap-3 mb-2">
+                              <span className="text-2xl">
+                                {user.role === 'super_admin' ? '👑' : '👤'}
+                              </span>
+                              <div>
+                                <h3 className="text-xl font-bold text-gray-800">{user.full_name}</h3>
+                                <p className="text-sm text-gray-600">{user.email}</p>
+                              </div>
+                              {!user.is_active && (
+                                <span className="bg-red-500 text-white text-xs px-2 py-1 rounded">מושבת</span>
+                              )}
+                            </div>
+
+                            <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-2 mt-3">
+                              <div className="text-sm">
+                                <span className="font-semibold text-gray-700">תפקיד:</span>{' '}
+                                <span className="text-purple-600">
+                                  {user.role === 'super_admin' ? 'מנהל ראשי' : 'מנהל עיר'}
+                                </span>
+                              </div>
+
+                              {user.city && (
+                                <div className="text-sm">
+                                  <span className="font-semibold text-gray-700">עיר:</span>{' '}
+                                  <span className="text-purple-600">{user.city.name}</span>
+                                </div>
+                              )}
+
+                              <div className="text-sm">
+                                <span className="font-semibold text-gray-700">הרשאות:</span>{' '}
+                                <span className="text-purple-600">
+                                  {user.permissions === 'view_only' && 'צפיה בלבד'}
+                                  {user.permissions === 'approve_requests' && 'אישור בקשות'}
+                                  {user.permissions === 'full_access' && 'גישה מלאה'}
+                                </span>
+                              </div>
+
+                              {user.phone && (
+                                <div className="text-sm">
+                                  <span className="font-semibold text-gray-700">טלפון:</span>{' '}
+                                  <span className="text-purple-600">{user.phone}</span>
+                                </div>
+                              )}
+                            </div>
+                          </div>
+
+                          <div className="flex gap-2">
+                            <Button
+                              onClick={() => handleEditUser(user)}
+                              className="bg-gradient-to-r from-blue-500 to-cyan-500 hover:from-blue-600 hover:to-cyan-600 text-white font-semibold px-4 py-2 rounded-lg transition-all duration-200 hover:scale-105"
+                            >
+                              ✏️ ערוך
+                            </Button>
+                            <Button
+                              onClick={() => handleDeleteUser(user)}
+                              className="bg-gradient-to-r from-red-500 to-rose-500 hover:from-red-600 hover:to-rose-600 text-white font-semibold px-4 py-2 rounded-lg transition-all duration-200 hover:scale-105"
+                            >
+                              🗑️ מחק
+                            </Button>
+                          </div>
+                        </div>
+                      </div>
+                    ))}
+                  </div>
+                )}
+              </CardContent>
+            </Card>
+          </>
         )}
       </div>
     </div>
