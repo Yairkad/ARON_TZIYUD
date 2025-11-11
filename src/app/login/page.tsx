@@ -16,9 +16,12 @@ export default function UnifiedLoginPage() {
   const [rememberMe, setRememberMe] = useState(false)
   const [loading, setLoading] = useState(false)
   const [error, setError] = useState('')
+  const [authChecked, setAuthChecked] = useState(false)
 
   // Check if already authenticated
   useEffect(() => {
+    if (authChecked) return // Prevent multiple checks
+
     const verifyAuth = async () => {
       const { authenticated, userType } = await checkAuth()
       if (authenticated) {
@@ -34,9 +37,10 @@ export default function UnifiedLoginPage() {
           }
         }
       }
+      setAuthChecked(true)
     }
     verifyAuth()
-  }, [router])
+  }, [])
 
   const handleLogin = async (e: React.FormEvent) => {
     e.preventDefault()

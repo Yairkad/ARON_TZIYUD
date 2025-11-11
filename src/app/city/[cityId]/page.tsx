@@ -696,9 +696,9 @@ export default function CityPage() {
                         <tr>
                           <th className="px-3 py-2 text-right font-semibold text-gray-700 border-b border-gray-300">בחר</th>
                           <th className="px-3 py-2 text-right font-semibold text-gray-700 border-b border-gray-300">שם פריט</th>
-                          <th className="px-3 py-2 text-center font-semibold text-gray-700 border-b border-gray-300">זמין</th>
+                          <th className="px-3 py-2 text-center font-semibold text-gray-700 border-b border-gray-300">כמות זמינה</th>
                           <th className="px-3 py-2 text-center font-semibold text-gray-700 border-b border-gray-300">סטטוס</th>
-                          <th className="px-3 py-2 text-center font-semibold text-gray-700 border-b border-gray-300">כמות</th>
+                          <th className="px-3 py-2 text-center font-semibold text-gray-700 border-b border-gray-300">כמות לבקשה</th>
                         </tr>
                       </thead>
                       <tbody>
@@ -722,10 +722,8 @@ export default function CityPage() {
                                 {item.quantity}
                               </td>
                               <td className="px-3 py-2 text-center">
-                                {item.is_consumable ? (
-                                  <span className="inline-block text-xs bg-purple-100 text-purple-700 px-2 py-1 rounded">מתכלה</span>
-                                ) : (
-                                  <span className="inline-block text-xs bg-green-100 text-green-700 px-2 py-1 rounded">רגיל</span>
+                                {item.is_consumable && (
+                                  <span className="inline-block text-xs bg-purple-100 text-purple-700 px-2 py-1 rounded">אין צורך להחזיר</span>
                                 )}
                               </td>
                               <td className="px-3 py-2">
@@ -1188,13 +1186,9 @@ export default function CityPage() {
                     )}
 
                     {/* Type Badge */}
-                    {item.is_consumable ? (
+                    {item.is_consumable && (
                       <span className="inline-block px-1.5 py-0.5 bg-purple-100 text-purple-700 rounded-full text-[10px] font-medium">
-                        🔄 מתכלה
-                      </span>
-                    ) : (
-                      <span className="inline-block px-1.5 py-0.5 bg-blue-100 text-blue-700 rounded-full text-[10px] font-medium">
-                        רגיל
+                        אין צורך להחזיר
                       </span>
                     )}
                   </div>
