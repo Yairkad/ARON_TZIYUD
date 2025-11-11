@@ -31,15 +31,16 @@ export default function UnifiedLoginPage() {
           'Content-Type': 'application/json'
         },
         credentials: 'include',
+        cache: 'no-store',
         body: JSON.stringify({ email, password, rememberMe })
       })
 
       const data = await response.json()
 
       if (response.ok && data.success) {
-        // Login successful, redirect to appropriate page
+        // Login successful, use hard navigation to force fresh page load
         console.log('Login successful, redirecting to:', data.redirectPath)
-        router.push(data.redirectPath)
+        window.location.href = data.redirectPath
       } else {
         setError(data.error || 'שגיאה בהתחברות')
       }
