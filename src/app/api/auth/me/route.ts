@@ -32,11 +32,31 @@ export async function GET(request: NextRequest) {
       )
     }
 
-    // Get user metadata
-    const userMetadata = user.user_metadata || {}
-    const userRole = userMetadata.role || null
-    const cityId = userMetadata.city_id || null
-    const fullName = userMetadata.full_name || user.email
+    // Get user data from public.users table (more reliable than metadata)
+    const { data: userData, error: userError } = await supabase
+      .from('users')
+      .select('role, city_id, full_name, is_active')
+      .eq('id', user.id)
+      .single()
+
+    // Determine user data source - prefer database, fallback to metadata
+    let userRole: string | null = null
+    let cityId: string | null = null
+    let fullName = user.email || ''
+
+    if (userError || !userData) {
+      console.error('❌ User not found in users table:', userError)
+      // Fallback to metadata if user not in public.users
+      const userMetadata = user.user_metadata || {}
+      userRole = userMetadata.role || null
+      cityId = userMetadata.city_id || null
+      fullName = userMetadata.full_name || user.email || ''
+    } else {
+      // Use data from users table
+      userRole = userData.role
+      cityId = userData.city_id || null
+      fullName = userData.full_name || user.email || ''
+    }
 
     return NextResponse.json({
       success: true,
