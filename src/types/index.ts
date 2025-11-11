@@ -9,6 +9,10 @@ export interface City {
   token_location_url?: string | null
   location_description?: string | null
   location_image_url?: string | null
+  lat?: number | null
+  lng?: number | null
+  token_lat?: number | null
+  token_lng?: number | null
   password: string
   is_active: boolean
   request_mode?: 'direct' | 'request'
