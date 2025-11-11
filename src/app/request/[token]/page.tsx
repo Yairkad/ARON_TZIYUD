@@ -332,7 +332,7 @@ export default function RequestPage({ params }: { params: Promise<{ token: strin
                     : locationUrl
 
                   const wazeUrl = lat && lng
-                    ? `https://waze.com/ul?ll=${lat},${lng}&navigate=yes`
+                    ? `https://www.waze.com/ul?ll=${lat},${lng}&navigate=yes`
                     : locationUrl
 
                   return (

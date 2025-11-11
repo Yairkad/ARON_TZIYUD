@@ -64,6 +64,8 @@ export default function CityAdminPage() {
   const [pushEnabled, setPushEnabled] = useState(false)
   const [pushSupported, setPushSupported] = useState(false)
   const [enablingPush, setEnablingPush] = useState(false)
+  const [isCityDetailsExpanded, setIsCityDetailsExpanded] = useState(false)
+  const [equipmentSearchQuery, setEquipmentSearchQuery] = useState('')
 
   useEffect(() => {
     if (cityId) {
@@ -1110,12 +1112,49 @@ export default function CityAdminPage() {
 
             <Card className="border-0 shadow-2xl rounded-2xl overflow-hidden bg-white/90 backdrop-blur-sm">
               <CardHeader className="bg-gradient-to-r from-blue-50 to-indigo-50 pb-6">
-                <CardTitle className="text-2xl font-bold text-gray-800">📋 רשימת ציוד</CardTitle>
+                <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4">
+                  <CardTitle className="text-2xl font-bold text-gray-800">📋 רשימת ציוד</CardTitle>
+                  <div className="relative w-full sm:w-64">
+                    <Input
+                      type="text"
+                      value={equipmentSearchQuery}
+                      onChange={(e) => setEquipmentSearchQuery(e.target.value)}
+                      placeholder="🔍 חפש ציוד..."
+                      className="h-10 border-2 border-gray-200 rounded-xl focus:border-blue-500 transition-colors pr-3"
+                    />
+                    {equipmentSearchQuery && (
+                      <button
+                        onClick={() => setEquipmentSearchQuery('')}
+                        className="absolute left-2 top-1/2 -translate-y-1/2 text-gray-400 hover:text-gray-600 transition-colors"
+                      >
+                        ✕
+                      </button>
+                    )}
+                  </div>
+                </div>
               </CardHeader>
               <CardContent className="p-3 md:p-6">
-                {/* Mobile View */}
-                <div className="block md:hidden space-y-4">
-                  {equipment.map(item => (
+                {equipment.filter(item =>
+                  item.name.toLowerCase().includes(equipmentSearchQuery.toLowerCase())
+                ).length === 0 ? (
+                  <div className="text-center py-12">
+                    <div className="text-6xl mb-4">🔍</div>
+                    <p className="text-gray-500 text-lg font-semibold">
+                      {equipmentSearchQuery ? 'לא נמצא ציוד המתאים לחיפוש' : 'אין ציוד רשום במערכת'}
+                    </p>
+                    {equipmentSearchQuery && (
+                      <p className="text-gray-400 text-sm mt-2">
+                        נסה לחפש במילים אחרות
+                      </p>
+                    )}
+                  </div>
+                ) : (
+                  <>
+                    {/* Mobile View */}
+                    <div className="block md:hidden space-y-4">
+                      {equipment.filter(item =>
+                        item.name.toLowerCase().includes(equipmentSearchQuery.toLowerCase())
+                      ).map(item => (
                     <div key={item.id} className="bg-gradient-to-r from-blue-50 to-indigo-50 rounded-xl p-4 border-2 border-blue-200">
                       {editingEquipment?.id === item.id ? (
                         <div className="space-y-3">
@@ -1228,7 +1267,9 @@ export default function CityAdminPage() {
                       </tr>
                     </thead>
                     <tbody>
-                      {equipment.map(item => (
+                      {equipment.filter(item =>
+                        item.name.toLowerCase().includes(equipmentSearchQuery.toLowerCase())
+                      ).map(item => (
                         <tr key={item.id} className="border-b hover:bg-blue-50 transition-colors">
                           <td className="p-4">
                             {editingEquipment?.id === item.id ? (
@@ -1338,6 +1379,8 @@ export default function CityAdminPage() {
                     </tbody>
                   </table>
                 </div>
+                  </>
+                )}
               </CardContent>
             </Card>
           </div>
@@ -1850,13 +1893,70 @@ export default function CityAdminPage() {
                 {/* City Details Edit Form */}
                 <Card className="border-2 border-indigo-200 bg-gradient-to-r from-indigo-50 to-blue-50">
                   <CardHeader>
-                    <CardTitle className="text-xl font-bold text-gray-800">📋 פרטי העיר</CardTitle>
-                    <CardDescription>עדכן פרטי קשר וכתובת הארון</CardDescription>
+                    <div className="flex items-center justify-between">
+                      <div>
+                        <CardTitle className="text-xl font-bold text-gray-800">📋 פרטי העיר</CardTitle>
+                        <CardDescription>עדכן פרטי קשר וכתובת הארון</CardDescription>
+                      </div>
+                      <Button
+                        type="button"
+                        onClick={() => setIsCityDetailsExpanded(!isCityDetailsExpanded)}
+                        variant="outline"
+                        className="border-2 border-indigo-300 hover:bg-indigo-100 transition-colors"
+                      >
+                        {isCityDetailsExpanded ? (
+                          <>🔼 כיווץ</>
+                        ) : (
+                          <>🔽 הרחב</>
+                        )}
+                      </Button>
+                    </div>
                   </CardHeader>
                   <CardContent>
-                    <form onSubmit={handleUpdateCityDetails} className="space-y-4">
-                      <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                        {/* Manager 1 */}
+                    {!isCityDetailsExpanded ? (
+                      /* Collapsed View - Summary */
+                      <div className="space-y-3">
+                        <div className="bg-white rounded-lg p-4 border border-indigo-100">
+                          <div className="grid grid-cols-1 md:grid-cols-2 gap-3 text-sm">
+                            <div>
+                              <span className="font-semibold text-gray-700">👤 מנהל ראשון:</span>
+                              <span className="text-gray-600 mr-2">{city?.manager1_name || 'לא הוגדר'}</span>
+                            </div>
+                            <div>
+                              <span className="font-semibold text-gray-700">📞 טלפון:</span>
+                              <span className="text-gray-600 mr-2">{city?.manager1_phone || 'לא הוגדר'}</span>
+                            </div>
+                            {city?.manager2_name && (
+                              <>
+                                <div>
+                                  <span className="font-semibold text-gray-700">👤 מנהל שני:</span>
+                                  <span className="text-gray-600 mr-2">{city.manager2_name}</span>
+                                </div>
+                                <div>
+                                  <span className="font-semibold text-gray-700">📞 טלפון:</span>
+                                  <span className="text-gray-600 mr-2">{city.manager2_phone || ''}</span>
+                                </div>
+                              </>
+                            )}
+                            <div className="md:col-span-2">
+                              <span className="font-semibold text-gray-700">📍 מיקום בדף הראשי:</span>
+                              <span className="text-gray-600 mr-2">{city?.location_url ? '✓ מוגדר' : '✗ לא מוגדר'}</span>
+                            </div>
+                            <div className="md:col-span-2">
+                              <span className="font-semibold text-gray-700">🔐 מיקום בטוקן:</span>
+                              <span className="text-gray-600 mr-2">{city?.token_location_url ? '✓ מוגדר' : '✗ לא מוגדר'}</span>
+                            </div>
+                          </div>
+                        </div>
+                        <p className="text-xs text-gray-500 text-center">
+                          💡 לחץ על "הרחב" כדי לערוך את הפרטים
+                        </p>
+                      </div>
+                    ) : (
+                      /* Expanded View - Full Form */
+                      <form onSubmit={handleUpdateCityDetails} className="space-y-4">
+                        <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                          {/* Manager 1 */}
                         <div className="space-y-2">
                           <label className="block text-sm font-semibold text-gray-700">👤 שם מנהל ראשון *</label>
                           <Input
@@ -1936,11 +2036,17 @@ export default function CityAdminPage() {
                             <Input
                               type="url"
                               value={editCityForm.location_url}
-                              onChange={(e) => setEditCityForm({ ...editCityForm, location_url: e.target.value })}
+                              onChange={(e) => {
+                                if (isEditingLocation) {
+                                  setEditCityForm({ ...editCityForm, location_url: e.target.value })
+                                }
+                              }}
                               placeholder="https://maps.google.com/?q=..."
-                              className="h-12 border-2 border-gray-200 rounded-xl focus:border-indigo-500 transition-colors"
-                              readOnly={!isEditingLocation}
-                              disabled={!isEditingLocation}
+                              className={`h-12 border-2 rounded-xl transition-colors ${
+                                isEditingLocation
+                                  ? 'border-gray-200 focus:border-indigo-500 cursor-text'
+                                  : 'border-gray-100 bg-gray-50 text-gray-600 cursor-not-allowed'
+                              }`}
                             />
                             <p className="text-xs text-gray-500">יוצג בדף הראשי לכל המשתמשים (אופציונלי)</p>
                           </div>
@@ -1951,11 +2057,17 @@ export default function CityAdminPage() {
                             <Input
                               type="url"
                               value={editCityForm.token_location_url || ''}
-                              onChange={(e) => setEditCityForm({ ...editCityForm, token_location_url: e.target.value })}
+                              onChange={(e) => {
+                                if (isEditingLocation) {
+                                  setEditCityForm({ ...editCityForm, token_location_url: e.target.value })
+                                }
+                              }}
                               placeholder="https://maps.google.com/?q=..."
-                              className="h-12 border-2 border-purple-200 rounded-xl focus:border-purple-500 transition-colors"
-                              readOnly={!isEditingLocation}
-                              disabled={!isEditingLocation}
+                              className={`h-12 border-2 rounded-xl transition-colors ${
+                                isEditingLocation
+                                  ? 'border-purple-200 focus:border-purple-500 cursor-text'
+                                  : 'border-gray-100 bg-gray-50 text-gray-600 cursor-not-allowed'
+                              }`}
                             />
                             <p className="text-xs text-purple-600">יוצג רק בדף הטוקן לאחר אישור בקשה (אופציונלי)</p>
                           </div>
@@ -1965,12 +2077,18 @@ export default function CityAdminPage() {
                             <label className="block text-sm font-semibold text-gray-700">📝 תיאור מיקום הארון</label>
                             <textarea
                               value={editCityForm.location_description || ''}
-                              onChange={(e) => setEditCityForm({ ...editCityForm, location_description: e.target.value })}
+                              onChange={(e) => {
+                                if (isEditingLocation) {
+                                  setEditCityForm({ ...editCityForm, location_description: e.target.value })
+                                }
+                              }}
                               placeholder="לדוגמה: הארון נמצא בכניסה הראשית, ליד דלפק הקבלה..."
                               rows={4}
-                              className="w-full p-3 border-2 border-gray-200 rounded-xl focus:border-indigo-500 transition-colors resize-none"
-                              readOnly={!isEditingLocation}
-                              disabled={!isEditingLocation}
+                              className={`w-full p-3 border-2 rounded-xl transition-colors resize-none ${
+                                isEditingLocation
+                                  ? 'border-gray-200 focus:border-indigo-500 cursor-text'
+                                  : 'border-gray-100 bg-gray-50 text-gray-600 cursor-not-allowed'
+                              }`}
                             />
                             <p className="text-xs text-gray-500">הוראות טקסט למציאת הארון - יוצג בדף הטוקן (אופציונלי)</p>
                           </div>
@@ -1981,11 +2099,17 @@ export default function CityAdminPage() {
                             <Input
                               type="url"
                               value={editCityForm.location_image_url || ''}
-                              onChange={(e) => setEditCityForm({ ...editCityForm, location_image_url: e.target.value })}
+                              onChange={(e) => {
+                                if (isEditingLocation) {
+                                  setEditCityForm({ ...editCityForm, location_image_url: e.target.value })
+                                }
+                              }}
                               placeholder="https://example.com/image.jpg"
-                              className="h-12 border-2 border-gray-200 rounded-xl focus:border-indigo-500 transition-colors"
-                              readOnly={!isEditingLocation}
-                              disabled={!isEditingLocation}
+                              className={`h-12 border-2 rounded-xl transition-colors ${
+                                isEditingLocation
+                                  ? 'border-gray-200 focus:border-indigo-500 cursor-text'
+                                  : 'border-gray-100 bg-gray-50 text-gray-600 cursor-not-allowed'
+                              }`}
                             />
                             <p className="text-xs text-gray-500">תמונה של הארון/מיקום - יוצג בדף הטוקן (אופציונלי)</p>
                           </div>
@@ -2000,12 +2124,13 @@ export default function CityAdminPage() {
                         {loading ? '⏳ שומר...' : '💾 שמור שינויים'}
                       </Button>
 
-                      <div className="bg-blue-50 rounded-lg p-3 border border-blue-200">
-                        <p className="text-xs text-blue-800">
-                          ℹ️ <strong>שים לב:</strong> שינוי פרטים ישלח התראה למנהל הראשי
-                        </p>
-                      </div>
-                    </form>
+                        <div className="bg-blue-50 rounded-lg p-3 border border-blue-200">
+                          <p className="text-xs text-blue-800">
+                            ℹ️ <strong>שים לב:</strong> שינוי פרטים ישלח התראה למנהל הראשי
+                          </p>
+                        </div>
+                      </form>
+                    )}
                   </CardContent>
                 </Card>
 

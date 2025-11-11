@@ -229,7 +229,7 @@ export default function HomePage() {
                           : city.location_url
 
                         const wazeUrl = lat && lng
-                          ? `https://waze.com/ul?ll=${lat},${lng}&navigate=yes`
+                          ? `https://www.waze.com/ul?ll=${lat},${lng}&navigate=yes`
                           : city.location_url
 
                         return (
