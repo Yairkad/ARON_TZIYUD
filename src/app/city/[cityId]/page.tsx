@@ -10,6 +10,7 @@ import { supabase } from '@/lib/supabase'
 import { Equipment, BorrowHistory, BorrowForm, ReturnForm, City, CreateRequestForm } from '@/types'
 import Logo from '@/components/Logo'
 import CameraCapture from '@/components/CameraCapture'
+import { Phone, MessageCircle } from 'lucide-react'
 
 export default function CityPage() {
   const params = useParams()
@@ -386,6 +387,18 @@ export default function CityPage() {
     setRequestCreated(false)
   }
 
+  // Helper functions for contact
+  const handleCall = (phone: string) => {
+    window.location.href = `tel:${phone}`
+  }
+
+  const handleWhatsApp = (phone: string) => {
+    // Convert phone to international format (972...)
+    const cleanPhone = phone.replace(/\D/g, '')
+    const internationalPhone = cleanPhone.startsWith('0') ? '972' + cleanPhone.slice(1) : cleanPhone
+    window.open(`https://wa.me/${internationalPhone}`, '_blank')
+  }
+
   // === RENDER ===
 
   if (!city) {
@@ -436,6 +449,147 @@ export default function CityPage() {
             </p>
           </div>
         </header>
+
+        {/* Contact Details & Navigation */}
+        <Card className="mb-6 border-0 shadow-lg rounded-2xl overflow-hidden bg-gradient-to-br from-blue-50 to-indigo-50">
+          <CardContent className="p-4 sm:p-6">
+            {/* Managers Section */}
+            {(city.manager1_name || city.manager2_name) && (
+              <div className="mb-4">
+                <h3 className="text-lg font-semibold text-gray-800 mb-3 flex items-center gap-2">
+                  <span className="text-xl">👥</span>
+                  <span>צור קשר</span>
+                </h3>
+                <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+                  {/* Manager 1 */}
+                  {city.manager1_name && city.manager1_phone && (
+                    <div className="flex items-center justify-between bg-white rounded-xl p-3 shadow-sm hover:shadow-md transition-shadow">
+                      <div className="flex items-center gap-2">
+                        <span className="text-2xl">👤</span>
+                        <span className="font-semibold text-gray-800">{city.manager1_name}</span>
+                      </div>
+                      <div className="flex gap-2">
+                        <Button
+                          onClick={() => handleWhatsApp(city.manager1_phone!)}
+                          variant="outline"
+                          size="sm"
+                          className="h-9 px-3 rounded-full hover:bg-green-50 text-green-600 border-green-200 transition-all duration-200 hover:scale-105"
+                          title="שלח הודעה בוואטסאפ"
+                        >
+                          <MessageCircle className="w-4 h-4" />
+                        </Button>
+                        <Button
+                          onClick={() => handleCall(city.manager1_phone!)}
+                          variant="outline"
+                          size="sm"
+                          className="h-9 px-3 rounded-full hover:bg-blue-50 text-blue-600 border-blue-200 transition-all duration-200 hover:scale-105"
+                          title="התקשר"
+                        >
+                          <Phone className="w-4 h-4" />
+                        </Button>
+                      </div>
+                    </div>
+                  )}
+
+                  {/* Manager 2 */}
+                  {city.manager2_name && city.manager2_phone && (
+                    <div className="flex items-center justify-between bg-white rounded-xl p-3 shadow-sm hover:shadow-md transition-shadow">
+                      <div className="flex items-center gap-2">
+                        <span className="text-2xl">👤</span>
+                        <span className="font-semibold text-gray-800">{city.manager2_name}</span>
+                      </div>
+                      <div className="flex gap-2">
+                        <Button
+                          onClick={() => handleWhatsApp(city.manager2_phone!)}
+                          variant="outline"
+                          size="sm"
+                          className="h-9 px-3 rounded-full hover:bg-green-50 text-green-600 border-green-200 transition-all duration-200 hover:scale-105"
+                          title="שלח הודעה בוואטסאפ"
+                        >
+                          <MessageCircle className="w-4 h-4" />
+                        </Button>
+                        <Button
+                          onClick={() => handleCall(city.manager2_phone!)}
+                          variant="outline"
+                          size="sm"
+                          className="h-9 px-3 rounded-full hover:bg-blue-50 text-blue-600 border-blue-200 transition-all duration-200 hover:scale-105"
+                          title="התקשר"
+                        >
+                          <Phone className="w-4 h-4" />
+                        </Button>
+                      </div>
+                    </div>
+                  )}
+                </div>
+              </div>
+            )}
+
+            {/* Navigation Links */}
+            {((city.lat && city.lng) || city.location_url) && (
+              <div>
+                <h3 className="text-lg font-semibold text-gray-800 mb-3 flex items-center gap-2">
+                  <span className="text-xl">🗺️</span>
+                  <span>ניווט למיקום</span>
+                </h3>
+                <div className="flex gap-3 justify-center sm:justify-start">
+                  {/* Google Maps */}
+                  {city.lat && city.lng && (
+                    <a
+                      href={`https://www.google.com/maps/dir/?api=1&destination=${city.lat},${city.lng}`}
+                      target="_blank"
+                      rel="noopener noreferrer"
+                      className="flex-1 sm:flex-none"
+                    >
+                      <Button
+                        variant="outline"
+                        className="w-full sm:w-auto h-12 px-6 rounded-xl border-2 border-blue-200 hover:border-blue-400 hover:bg-blue-50 text-blue-600 font-semibold transition-all duration-200 hover:scale-105"
+                      >
+                        <span className="text-xl ml-2">📍</span>
+                        Google Maps
+                      </Button>
+                    </a>
+                  )}
+
+                  {/* Waze */}
+                  {city.lat && city.lng && (
+                    <a
+                      href={`https://www.waze.com/ul?ll=${city.lat},${city.lng}&navigate=yes`}
+                      target="_blank"
+                      rel="noopener noreferrer"
+                      className="flex-1 sm:flex-none"
+                    >
+                      <Button
+                        variant="outline"
+                        className="w-full sm:w-auto h-12 px-6 rounded-xl border-2 border-purple-200 hover:border-purple-400 hover:bg-purple-50 text-purple-600 font-semibold transition-all duration-200 hover:scale-105"
+                      >
+                        <span className="text-xl ml-2">🚗</span>
+                        Waze
+                      </Button>
+                    </a>
+                  )}
+
+                  {/* Custom Location URL */}
+                  {city.location_url && !city.lat && (
+                    <a
+                      href={city.location_url}
+                      target="_blank"
+                      rel="noopener noreferrer"
+                      className="flex-1 sm:flex-none"
+                    >
+                      <Button
+                        variant="outline"
+                        className="w-full sm:w-auto h-12 px-6 rounded-xl border-2 border-blue-200 hover:border-blue-400 hover:bg-blue-50 text-blue-600 font-semibold transition-all duration-200 hover:scale-105"
+                      >
+                        <span className="text-xl ml-2">📍</span>
+                        מיקום
+                      </Button>
+                    </a>
+                  )}
+                </div>
+              </div>
+            )}
+          </CardContent>
+        </Card>
 
         {/* Mobile Navigation */}
         <div className="sm:hidden flex gap-3 mb-6">
