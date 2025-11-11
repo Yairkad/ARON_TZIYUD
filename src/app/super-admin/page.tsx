@@ -15,6 +15,7 @@ export default function SuperAdminPage() {
   const [notifications, setNotifications] = useState<AdminNotification[]>([])
   const [unreadCount, setUnreadCount] = useState(0)
   const [isAuthenticated, setIsAuthenticated] = useState(false)
+  const [email, setEmail] = useState('')
   const [password, setPassword] = useState('')
   const [loading, setLoading] = useState(false)
   const [activeTab, setActiveTab] = useState<'cities' | 'notifications' | 'settings'>('cities')
@@ -159,12 +160,13 @@ export default function SuperAdminPage() {
 
     setLoading(true)
     try {
-      const result = await loginSuperAdmin(password)
+      const result = await loginSuperAdmin(email, password)
       if (result.success) {
         setIsAuthenticated(true)
+        setEmail('')
         setPassword('')
       } else {
-        alert(result.error || 'סיסמה שגויה')
+        alert(result.error || 'מייל או סיסמה שגויים')
       }
     } catch (error) {
       console.error('Login error:', error)
@@ -429,7 +431,18 @@ export default function SuperAdminPage() {
           <CardContent className="p-8">
             <form onSubmit={handleLogin} className="space-y-6">
               <div className="space-y-2">
-                <label className="block text-sm font-semibold text-gray-700">🔑 סיסמת מנהל ראשי</label>
+                <label className="block text-sm font-semibold text-gray-700">📧 כתובת מייל</label>
+                <Input
+                  type="email"
+                  value={email}
+                  onChange={(e) => setEmail(e.target.value)}
+                  placeholder="admin@example.com"
+                  className="h-12 border-2 border-gray-200 rounded-xl focus:border-purple-500 transition-colors"
+                  required
+                />
+              </div>
+              <div className="space-y-2">
+                <label className="block text-sm font-semibold text-gray-700">🔑 סיסמה</label>
                 <Input
                   type="password"
                   value={password}

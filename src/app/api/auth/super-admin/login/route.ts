@@ -1,6 +1,5 @@
 import { NextRequest, NextResponse } from 'next/server'
-import { supabaseServer } from '@/lib/supabase-server'
-import bcrypt from 'bcryptjs'
+import { createServiceClient } from '@/lib/supabase-server'
 
 // Rate limiting למנהל על
 const loginAttempts = new Map<string, { count: number; lastAttempt: number }>()
@@ -9,11 +8,11 @@ const LOCKOUT_TIME = 30 * 60 * 1000 // 30 דקות
 
 export async function POST(request: NextRequest) {
   try {
-    const { password } = await request.json()
+    const { email, password } = await request.json()
 
-    if (!password) {
+    if (!email || !password) {
       return NextResponse.json(
-        { error: 'נדרשת סיסמה' },
+        { success: false, error: 'נדרשים מייל וסיסמה' },
         { status: 400 }
       )
     }
@@ -38,74 +37,84 @@ export async function POST(request: NextRequest) {
       }
     }
 
-    // שליפת סיסמת מנהל על
-    const { data, error } = await supabaseServer
-      .from('settings')
-      .select('value')
-      .eq('key', 'super_admin_password')
-      .single()
+    // התחברות עם Supabase Auth
+    const supabase = createServiceClient()
 
-    if (error) {
-      console.error('Error fetching super admin password:', error)
+    const { data: authData, error: authError } = await supabase.auth.signInWithPassword({
+      email,
+      password,
+    })
+
+    if (authError || !authData.user) {
       updateAttempts(clientId)
       return NextResponse.json(
-        { error: 'שגיאה בטעינת הגדרות' },
-        { status: 500 }
+        { success: false, error: 'מייל או סיסמה שגויים' },
+        { status: 401 }
       )
     }
 
-    const storedPassword = data?.value || '1234'
+    // בדיקה שהמשתמש הוא super_admin
+    const { data: userProfile, error: profileError } = await supabase
+      .from('users')
+      .select('role, is_active, full_name')
+      .eq('id', authData.user.id)
+      .single()
 
-    // בדיקת סיסמה - תומך גם בסיסמאות ישנות וגם חדשות
-    let isPasswordValid = false
-
-    if (storedPassword.startsWith('$2a$') || storedPassword.startsWith('$2b$')) {
-      // סיסמה מוצפנת
-      isPasswordValid = await bcrypt.compare(password, storedPassword)
-    } else {
-      // סיסמה ישנה בטקסט גלוי
-      isPasswordValid = password === storedPassword
-
-      // אם הסיסמה נכונה, עדכן אותה להצפנה
-      if (isPasswordValid) {
-        const hashedPassword = await bcrypt.hash(password, 10)
-
-        const { error: updateError } = await supabaseServer
-          .from('settings')
-          .update({ value: hashedPassword })
-          .eq('key', 'super_admin_password')
-
-        if (updateError) {
-          console.error('Failed to update password:', updateError)
-        }
-      }
-    }
-
-    if (!isPasswordValid) {
+    if (profileError || !userProfile) {
       updateAttempts(clientId)
       return NextResponse.json(
-        { error: 'סיסמה שגויה' },
-        { status: 401 }
+        { success: false, error: 'משתמש לא נמצא' },
+        { status: 404 }
+      )
+    }
+
+    if (userProfile.role !== 'super_admin') {
+      updateAttempts(clientId)
+      return NextResponse.json(
+        { success: false, error: 'אין הרשאות מנהל ראשי' },
+        { status: 403 }
+      )
+    }
+
+    if (!userProfile.is_active) {
+      return NextResponse.json(
+        { success: false, error: 'חשבון זה הושבת' },
+        { status: 403 }
       )
     }
 
     // איפוס ניסיונות כושלים
     loginAttempts.delete(clientId)
 
-    // יצירת session token
-    const sessionToken = generateSessionToken('super-admin', 'super')
+    // עדכון last_login_at
+    await supabase
+      .from('users')
+      .update({ last_login_at: new Date().toISOString() })
+      .eq('id', authData.user.id)
 
-    // החזרת תגובה עם cookie מאובטח
+    // החזרת תגובה עם session
     const response = NextResponse.json({
-      success: true
+      success: true,
+      user: {
+        email: authData.user.email,
+        full_name: userProfile.full_name,
+      },
     })
 
-    response.cookies.set('super_admin_session', sessionToken, {
-      httpOnly: true,
-      secure: process.env.NODE_ENV === 'production',
-      sameSite: 'strict',
-      maxAge: 60 * 60 * 8, // 8 שעות
-      path: '/'
+    // Set Supabase session cookies
+    const sessionCookies = [
+      { name: 'sb-access-token', value: authData.session.access_token },
+      { name: 'sb-refresh-token', value: authData.session.refresh_token },
+    ]
+
+    sessionCookies.forEach(({ name, value }) => {
+      response.cookies.set(name, value, {
+        httpOnly: true,
+        secure: process.env.NODE_ENV === 'production',
+        sameSite: 'lax',
+        maxAge: 60 * 60 * 8, // 8 שעות
+        path: '/',
+      })
     })
 
     return response
@@ -123,13 +132,4 @@ function updateAttempts(clientId: string) {
   attempts.count++
   attempts.lastAttempt = Date.now()
   loginAttempts.set(clientId, attempts)
-}
-
-function generateSessionToken(userId: string, userType: 'city' | 'super'): string {
-  const payload = {
-    userId,
-    userType,
-    timestamp: Date.now()
-  }
-  return Buffer.from(JSON.stringify(payload)).toString('base64')
 }
