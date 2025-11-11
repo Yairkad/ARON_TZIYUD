@@ -51,7 +51,7 @@ export async function loginCity(cityId: string, password: string): Promise<{ suc
 }
 
 // התחברות מנהל על
-export async function loginSuperAdmin(email: string, password: string): Promise<{ success: boolean; error?: string; user?: any }> {
+export async function loginSuperAdmin(email: string, password: string, rememberMe: boolean = false): Promise<{ success: boolean; error?: string; user?: any }> {
   try {
     const response = await fetch('/api/auth/super-admin/login', {
       method: 'POST',
@@ -59,7 +59,7 @@ export async function loginSuperAdmin(email: string, password: string): Promise<
         'Content-Type': 'application/json'
       },
       credentials: 'include',
-      body: JSON.stringify({ email, password })
+      body: JSON.stringify({ email, password, rememberMe })
     })
 
     const data = await response.json()

@@ -17,8 +17,9 @@ export default function SuperAdminPage() {
   const [isAuthenticated, setIsAuthenticated] = useState(false)
   const [email, setEmail] = useState('')
   const [password, setPassword] = useState('')
+  const [rememberMe, setRememberMe] = useState(false)
   const [loading, setLoading] = useState(false)
-  const [activeTab, setActiveTab] = useState<'cities' | 'notifications' | 'settings'>('cities')
+  const [activeTab, setActiveTab] = useState<'cities' | 'notifications' | 'settings' | 'users'>('cities')
   const [showAddCity, setShowAddCity] = useState(false)
   const [newCity, setNewCity] = useState<CityForm>({ name: '', manager1_name: '', manager1_phone: '', manager2_name: '', manager2_phone: '', location_url: '', token_location_url: '', password: '' })
   const [editingCity, setEditingCity] = useState<City | null>(null)
@@ -160,7 +161,7 @@ export default function SuperAdminPage() {
 
     setLoading(true)
     try {
-      const result = await loginSuperAdmin(email, password)
+      const result = await loginSuperAdmin(email, password, rememberMe)
       if (result.success) {
         setIsAuthenticated(true)
         setEmail('')
@@ -451,6 +452,18 @@ export default function SuperAdminPage() {
                   className="h-12 border-2 border-gray-200 rounded-xl focus:border-purple-500 transition-colors"
                   required
                 />
+              </div>
+              <div className="flex items-center">
+                <input
+                  type="checkbox"
+                  id="rememberMe"
+                  checked={rememberMe}
+                  onChange={(e) => setRememberMe(e.target.checked)}
+                  className="w-4 h-4 text-purple-600 border-gray-300 rounded focus:ring-purple-500"
+                />
+                <label htmlFor="rememberMe" className="mr-2 text-sm text-gray-700 cursor-pointer">
+                  זכור אותי (30 יום)
+                </label>
               </div>
               <div className="flex gap-3">
                 <Button

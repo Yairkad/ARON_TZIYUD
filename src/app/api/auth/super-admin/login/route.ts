@@ -8,7 +8,7 @@ const LOCKOUT_TIME = 30 * 60 * 1000 // 30 דקות
 
 export async function POST(request: NextRequest) {
   try {
-    const { email, password } = await request.json()
+    const { email, password, rememberMe } = await request.json()
 
     if (!email || !password) {
       return NextResponse.json(
@@ -115,12 +115,17 @@ export async function POST(request: NextRequest) {
       { name: 'sb-refresh-token', value: authData.session.refresh_token },
     ]
 
+    // Set cookie duration based on "Remember Me"
+    const cookieMaxAge = rememberMe
+      ? 60 * 60 * 24 * 30 // 30 days
+      : 60 * 60 * 8 // 8 hours
+
     sessionCookies.forEach(({ name, value }) => {
       response.cookies.set(name, value, {
         httpOnly: true,
         secure: process.env.NODE_ENV === 'production',
         sameSite: 'lax',
-        maxAge: 60 * 60 * 8, // 8 שעות
+        maxAge: cookieMaxAge,
         path: '/',
       })
     })
