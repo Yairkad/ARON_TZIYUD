@@ -99,8 +99,6 @@ export default function CityAdminPage() {
   const [activeTab, setActiveTab] = useState<'equipment' | 'history' | 'requests' | 'settings'>('equipment')
   const [newEquipment, setNewEquipment] = useState({ name: '', quantity: 1, equipment_status: 'working' as 'working' | 'faulty', is_consumable: false })
   const [editingEquipment, setEditingEquipment] = useState<{ id: string; name: string; quantity: number; equipment_status: 'working' | 'faulty'; is_consumable: boolean } | null>(null)
-  const [changePasswordForm, setChangePasswordForm] = useState({ currentPassword: '', newPassword: '', confirmPassword: '' })
-  const [showChangePassword, setShowChangePassword] = useState(false)
   const [editCityForm, setEditCityForm] = useState({
     manager1_name: '',
     manager1_phone: '',
@@ -118,11 +116,6 @@ export default function CityAdminPage() {
   const [allCities, setAllCities] = useState<City[]>([])
   const [selectedCityToCopy, setSelectedCityToCopy] = useState<string>('')
   const [showPassword, setShowPassword] = useState(false)
-  const [showPasswordFields, setShowPasswordFields] = useState({
-    current: false,
-    new: false,
-    confirm: false
-  })
   const [showCopyEquipment, setShowCopyEquipment] = useState(false)
   const [dismissedAlerts, setDismissedAlerts] = useState<Set<string>>(new Set())
   const [pendingRequestsCount, setPendingRequestsCount] = useState(0)
@@ -381,63 +374,6 @@ export default function CityAdminPage() {
     }
     verifyAuth()
   }, [cityId])
-
-  const handleChangePassword = async (e: React.FormEvent) => {
-    e.preventDefault()
-
-    // Check permissions
-    if (currentUser?.permissions === 'view_only') {
-      alert('אין לך הרשאה לבצע פעולה זו - הרשאת צפיה בלבד')
-      return
-    }
-
-    if (!city) {
-      alert('שגיאה בטעינת נתוני העיר')
-      return
-    }
-
-    if (changePasswordForm.newPassword !== changePasswordForm.confirmPassword) {
-      alert('הסיסמאות החדשות אינן תואמות')
-      return
-    }
-
-    if (changePasswordForm.newPassword.length < 4) {
-      alert('הסיסמה החדשה חייבת להכיל לפחות 4 תווים')
-      return
-    }
-
-    setLoading(true)
-    try {
-      const response = await fetch('/api/city/change-password', {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-        },
-        credentials: 'include',
-        body: JSON.stringify({
-          currentPassword: changePasswordForm.currentPassword,
-          newPassword: changePasswordForm.newPassword,
-        }),
-      })
-
-      const data = await response.json()
-
-      if (!response.ok) {
-        alert(data.error || 'שגיאה בשינוי הסיסמה')
-        return
-      }
-
-      alert('הסיסמה שונתה בהצלחה!')
-      setChangePasswordForm({ currentPassword: '', newPassword: '', confirmPassword: '' })
-      setShowChangePassword(false)
-      fetchCity()
-    } catch (error) {
-      console.error('Error changing password:', error)
-      alert('אירעה שגיאה בשינוי הסיסמה')
-    } finally {
-      setLoading(false)
-    }
-  }
 
   const handleAddEquipment = async (e: React.FormEvent) => {
     e.preventDefault()
@@ -2506,133 +2442,6 @@ export default function CityAdminPage() {
                   </CardContent>
                 </Card>
 
-                {/* Hide password change for super admin - they should use "Reset Password" in super admin panel */}
-                {currentUser?.role !== 'super_admin' && (
-                  !showChangePassword ? (
-                    <div className="bg-gradient-to-r from-blue-50 to-indigo-50 rounded-xl p-6 border-2 border-blue-200">
-                      <div className="flex justify-between items-center">
-                        <div>
-                          <h3 className="text-lg font-bold text-gray-800 mb-1">🔐 סיסמת מנהל</h3>
-                          <p className="text-sm text-gray-600">שנה את סיסמת הכניסה לפאנל הניהול</p>
-                        </div>
-                        <Button
-                          onClick={() => setShowChangePassword(true)}
-                          className="bg-gradient-to-r from-blue-600 to-indigo-600 hover:from-blue-700 hover:to-indigo-700 text-white font-semibold px-6 py-3 rounded-xl transition-all duration-200 hover:scale-105"
-                        >
-                          שנה סיסמה
-                        </Button>
-                      </div>
-                    </div>
-                  ) : (
-                  <Card className="border-2 border-blue-200 bg-gradient-to-r from-blue-50 to-indigo-50">
-                    <CardHeader>
-                      <CardTitle className="text-xl font-bold text-gray-800">שינוי סיסמת מנהל</CardTitle>
-                      <CardDescription>הזן את הסיסמה הנוכחית והסיסמה החדשה</CardDescription>
-                    </CardHeader>
-                    <CardContent>
-                      <form onSubmit={handleChangePassword} className="space-y-4">
-                        <div className="space-y-2">
-                          <label className="block text-sm font-semibold text-gray-700">🔑 סיסמה נוכחית</label>
-                          <div className="relative">
-                            <Input
-                              type={showPasswordFields.current ? "text" : "password"}
-                              value={changePasswordForm.currentPassword}
-                              onChange={(e) => setChangePasswordForm({ ...changePasswordForm, currentPassword: e.target.value })}
-                              placeholder="הזן סיסמה נוכחית"
-                              className="h-12 border-2 border-gray-200 rounded-xl focus:border-blue-500 transition-colors pr-12"
-                              required
-                            />
-                            <button
-                              type="button"
-                              onClick={() => setShowPasswordFields({ ...showPasswordFields, current: !showPasswordFields.current })}
-                              className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-500 hover:text-gray-700 transition-colors"
-                              tabIndex={-1}
-                            >
-                              {showPasswordFields.current ? '👁️' : '👁️‍🗨️'}
-                            </button>
-                          </div>
-                        </div>
-                        <div className="space-y-2">
-                          <label className="block text-sm font-semibold text-gray-700">🆕 סיסמה חדשה</label>
-                          <div className="relative">
-                            <Input
-                              type={showPasswordFields.new ? "text" : "password"}
-                              value={changePasswordForm.newPassword}
-                              onChange={(e) => setChangePasswordForm({ ...changePasswordForm, newPassword: e.target.value })}
-                              placeholder="הזן סיסמה חדשה"
-                              className="h-12 border-2 border-gray-200 rounded-xl focus:border-blue-500 transition-colors pr-12"
-                              required
-                            />
-                            <button
-                              type="button"
-                              onClick={() => setShowPasswordFields({ ...showPasswordFields, new: !showPasswordFields.new })}
-                              className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-500 hover:text-gray-700 transition-colors"
-                              tabIndex={-1}
-                            >
-                              {showPasswordFields.new ? '👁️' : '👁️‍🗨️'}
-                            </button>
-                          </div>
-                        </div>
-                        <div className="space-y-2">
-                          <label className="block text-sm font-semibold text-gray-700">✅ אימות סיסמה חדשה</label>
-                          <div className="relative">
-                            <Input
-                              type={showPasswordFields.confirm ? "text" : "password"}
-                              value={changePasswordForm.confirmPassword}
-                              onChange={(e) => setChangePasswordForm({ ...changePasswordForm, confirmPassword: e.target.value })}
-                              placeholder="הזן שוב את הסיסמה החדשה"
-                              className="h-12 border-2 border-gray-200 rounded-xl focus:border-blue-500 transition-colors pr-12"
-                              required
-                            />
-                            <button
-                              type="button"
-                              onClick={() => setShowPasswordFields({ ...showPasswordFields, confirm: !showPasswordFields.confirm })}
-                              className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-500 hover:text-gray-700 transition-colors"
-                              tabIndex={-1}
-                            >
-                              {showPasswordFields.confirm ? '👁️' : '👁️‍🗨️'}
-                            </button>
-                          </div>
-                        </div>
-                        <div className="flex gap-3 pt-2">
-                          <Button
-                            type="submit"
-                            disabled={loading}
-                            className="flex-1 h-12 bg-gradient-to-r from-green-500 to-emerald-500 hover:from-green-600 hover:to-emerald-600 text-white font-bold rounded-xl shadow-md hover:shadow-lg transition-all"
-                          >
-                            {loading ? '⏳ משנה...' : '✅ שמור סיסמה חדשה'}
-                          </Button>
-                          <Button
-                            type="button"
-                            onClick={() => {
-                              setShowChangePassword(false)
-                              setChangePasswordForm({ currentPassword: '', newPassword: '', confirmPassword: '' })
-                            }}
-                            className="flex-1 h-12 bg-white border-2 border-gray-400 text-gray-700 hover:bg-gray-50 font-semibold rounded-xl transition-all"
-                          >
-                            ❌ ביטול
-                          </Button>
-                        </div>
-                      </form>
-                    </CardContent>
-                  </Card>
-                  )
-                )}
-
-                <div className="bg-gradient-to-r from-yellow-50 to-amber-50 rounded-xl p-6 border-2 border-yellow-200">
-                  <div className="flex items-start gap-3">
-                    <span className="text-2xl">⚠️</span>
-                    <div>
-                      <h3 className="font-bold text-gray-800 mb-2">הערות אבטחה חשובות</h3>
-                      <ul className="text-sm text-gray-700 space-y-1">
-                        <li>• הסיסמה נשמרת במסד הנתונים Supabase</li>
-                        <li>• ודא שהסיסמה מכילה לפחות 4 תווים</li>
-                        <li>• שמור את הסיסמה במקום בטוח</li>
-                        <li>• שנה סיסמה באופן קבוע לאבטחה מירבית</li>
-                      </ul>
-                    </div>
-                  </div>
-                </div>
               </div>
             </CardContent>
           </Card>
