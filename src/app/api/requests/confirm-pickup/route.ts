@@ -118,16 +118,19 @@ export async function POST(request: NextRequest) {
       }
     }
 
-    // 3. Delete the request and token after successful pickup
-    const { error: deleteRequestError } = await supabase
+    // 3. Update request status to picked_up instead of deleting
+    const { error: updateRequestError } = await supabase
       .from('equipment_requests')
-      .delete()
+      .update({
+        status: 'picked_up',
+        picked_up_at: new Date().toISOString()
+      })
       .eq('id', equipmentRequest.id)
 
-    if (deleteRequestError) {
-      console.error('Error deleting request:', deleteRequestError)
+    if (updateRequestError) {
+      console.error('Error updating request:', updateRequestError)
       return NextResponse.json(
-        { error: 'שגיאה במחיקת הבקשה' },
+        { error: 'שגיאה בעדכון הבקשה' },
         { status: 500 }
       )
     }

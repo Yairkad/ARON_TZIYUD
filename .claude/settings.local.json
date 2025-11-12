@@ -32,7 +32,9 @@
       "Bash(cmd /c \"rmdir /S /Q \"\"C:\\Users\\יאיר קדוש\\ARON_TZIYUD\\src\\app\\api\\user\"\"\")",
       "Bash(git rm:*)",
       "Bash(cmd /c \"npx vercel list\")",
-      "Bash(cmd /c \"type \"\"c:\\Users\\יאיר קדוש\\ARON_TZIYUD\\src\\app\\api\\city\\change-password\\route.ts\"\"\")"
+      "Bash(cmd /c \"type \"\"c:\\Users\\יאיר קדוש\\ARON_TZIYUD\\src\\app\\api\\city\\change-password\\route.ts\"\"\")",
+      "Bash(cmd /c \"node check-requests-vs-history.js\")",
+      "Bash(node check-requests-vs-history.js:*)"
     ],
     "deny": [],
     "ask": []
