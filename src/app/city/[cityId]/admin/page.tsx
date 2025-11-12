@@ -403,8 +403,8 @@ export default function CityAdminPage() {
         headers: {
           'Content-Type': 'application/json',
         },
+        credentials: 'include',
         body: JSON.stringify({
-          cityId: cityId,
           currentPassword: changePasswordForm.currentPassword,
           newPassword: changePasswordForm.newPassword,
         }),
@@ -1346,36 +1346,34 @@ export default function CityAdminPage() {
                           </div>
                         </div>
                       ) : (
-                        <div>
-                          <div className="flex justify-between items-center mb-2">
-                            <div className="flex-1 min-w-0">
-                              <p className="font-bold text-sm text-gray-800 truncate">{item.name}</p>
-                              <div className="flex items-center gap-2 mt-0.5">
-                                <span className={`text-base font-bold ${item.quantity > 0 ? 'text-green-600' : 'text-red-600'}`}>
-                                  {item.quantity}
+                        <div className="flex items-start gap-3">
+                          <div className="flex-1 min-w-0">
+                            <p className="font-bold text-sm text-gray-800 truncate">{item.name}</p>
+                            <div className="flex items-center gap-2 mt-0.5">
+                              <span className={`text-base font-bold ${item.quantity > 0 ? 'text-green-600' : 'text-red-600'}`}>
+                                {item.quantity}
+                              </span>
+                              <span className={`text-[10px] font-semibold ${item.equipment_status === 'working' ? 'text-green-600' : 'text-orange-600'}`}>
+                                {item.equipment_status === 'working' ? '✅' : '⚠️'}
+                              </span>
+                              {item.is_consumable && (
+                                <span className="text-[10px] font-semibold text-purple-600">
+                                  🔄
                                 </span>
-                                <span className={`text-[10px] font-semibold ${item.equipment_status === 'working' ? 'text-green-600' : 'text-orange-600'}`}>
-                                  {item.equipment_status === 'working' ? '✅' : '⚠️'}
-                                </span>
-                                {item.is_consumable && (
-                                  <span className="text-[10px] font-semibold text-purple-600">
-                                    🔄
-                                  </span>
-                                )}
-                              </div>
+                              )}
                             </div>
                           </div>
-                          <div className="flex gap-1.5">
+                          <div className="flex flex-col gap-1">
                             <Button
                               onClick={() => setEditingEquipment({ id: item.id, name: item.name, quantity: item.quantity, equipment_status: item.equipment_status, is_consumable: item.is_consumable })}
-                              className="flex-1 h-8 border border-blue-500 text-blue-600 hover:bg-blue-50 bg-white rounded-lg text-xs font-medium"
+                              className="h-6 px-2 border border-blue-500 text-blue-600 hover:bg-blue-50 bg-white rounded text-[10px] font-medium whitespace-nowrap"
                             >
                               ✏️ ערוך
                             </Button>
                             <Button
                               onClick={() => handleDeleteEquipment(item.id)}
                               disabled={loading}
-                              className="flex-1 h-8 bg-gradient-to-r from-red-500 to-rose-500 hover:from-red-600 hover:to-rose-600 text-white rounded-lg text-xs font-medium"
+                              className="h-6 px-2 bg-gradient-to-r from-red-500 to-rose-500 hover:from-red-600 hover:to-rose-600 text-white rounded text-[10px] font-medium whitespace-nowrap"
                             >
                               🗑️ מחק
                             </Button>

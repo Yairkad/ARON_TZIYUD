@@ -189,3 +189,13 @@ export interface CreateManagerForm {
   phone: string
   temporary_password: string
 }
+
+export interface UserCity {
+  id: string
+  user_id: string
+  city_id: string
+  manager_role?: 'manager1' | 'manager2'
+  created_at: string
+  updated_at: string
+  city?: City  // Include city details when needed
+}

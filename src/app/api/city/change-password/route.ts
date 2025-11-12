@@ -1,66 +1,75 @@
 import { NextRequest, NextResponse } from 'next/server'
-import { supabaseServer } from '@/lib/supabase-server'
-import bcrypt from 'bcryptjs'
+import { createServiceClient } from '@/lib/supabase-server'
 
 export async function POST(request: NextRequest) {
   try {
-    const { cityId, currentPassword, newPassword } = await request.json()
+    const supabase = createServiceClient()
+    const { currentPassword, newPassword } = await request.json()
 
-    if (!cityId || !currentPassword || !newPassword) {
+    if (!currentPassword || !newPassword) {
       return NextResponse.json(
         { error: 'נדרשים כל השדות' },
         { status: 400 }
       )
     }
 
-    if (newPassword.length < 4) {
+    if (newPassword.length < 6) {
       return NextResponse.json(
-        { error: 'הסיסמה החדשה חייבת להכיל לפחות 4 תווים' },
+        { error: 'הסיסמה החדשה חייבת להכיל לפחות 6 תווים' },
         { status: 400 }
       )
     }
 
-    // שליפת נתוני העיר
-    const { data: city, error } = await supabaseServer
-      .from('cities')
-      .select('id, password')
-      .eq('id', cityId)
-      .single()
+    // Get authenticated user from access token
+    const accessToken = request.cookies.get('sb-access-token')?.value
 
-    if (error || !city) {
-      console.error('Error fetching city:', error)
+    if (!accessToken) {
       return NextResponse.json(
-        { error: 'עיר לא נמצאה' },
-        { status: 404 }
+        { error: 'לא מורשה - נדרשת התחברות' },
+        { status: 401 }
       )
     }
 
-    // בדיקת הסיסמה הנוכחית
-    let isPasswordValid = false
+    const { data: { user }, error: authError } = await supabase.auth.getUser(accessToken)
 
-    if (city.password.startsWith('$2a$') || city.password.startsWith('$2b$')) {
-      // סיסמה מוצפנת
-      isPasswordValid = await bcrypt.compare(currentPassword, city.password)
-    } else {
-      // סיסמה ישנה בטקסט גלוי
-      isPasswordValid = currentPassword === city.password
+    if (authError || !user) {
+      return NextResponse.json(
+        { error: 'לא מורשה - נדרשת התחברות' },
+        { status: 401 }
+      )
     }
 
-    if (!isPasswordValid) {
+    // Get user profile
+    const { data: userProfile, error: profileError } = await supabase
+      .from('users')
+      .select('email, is_active')
+      .eq('id', user.id)
+      .single()
+
+    if (profileError || !userProfile || !userProfile.is_active) {
+      return NextResponse.json(
+        { error: 'משתמש לא נמצא או לא פעיל' },
+        { status: 403 }
+      )
+    }
+
+    // Verify current password by trying to sign in
+    const { error: signInError } = await supabase.auth.signInWithPassword({
+      email: userProfile.email,
+      password: currentPassword
+    })
+
+    if (signInError) {
       return NextResponse.json(
         { error: 'הסיסמה הנוכחית שגויה' },
         { status: 401 }
       )
     }
 
-    // הצפנת הסיסמה החדשה
-    const hashedPassword = await bcrypt.hash(newPassword, 10)
-
-    // עדכון הסיסמה
-    const { error: updateError } = await supabaseServer
-      .from('cities')
-      .update({ password: hashedPassword })
-      .eq('id', cityId)
+    // Update password in Supabase Auth
+    const { error: updateError } = await supabase.auth.updateUser({
+      password: newPassword
+    })
 
     if (updateError) {
       console.error('Error updating password:', updateError)
