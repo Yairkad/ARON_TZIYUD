@@ -10,19 +10,34 @@ import { createServiceClient } from '@/lib/supabase-server'
 
 export const dynamic = 'force-dynamic'
 
-// Global counter for admin emails
-let adminCounter = 1
+async function getNextAdminNumber(supabase: any): Promise<number> {
+  // Get all existing admin emails to find the highest number
+  const { data: existingUsers } = await supabase
+    .from('users')
+    .select('email')
+    .like('email', 'admin%@aron.local')
 
-function createEmailForManager(): string {
-  // Create simple sequential email: admin1@aron.local, admin2@aron.local, etc.
-  const email = `admin${adminCounter}@aron.local`
-  adminCounter++
-  return email
+  if (!existingUsers || existingUsers.length === 0) {
+    return 1
+  }
+
+  // Extract numbers from emails like "admin5@aron.local" and find the max
+  const numbers = existingUsers
+    .map((u: any) => {
+      const match = u.email.match(/^admin(\d+)@aron\.local$/)
+      return match ? parseInt(match[1], 10) : 0
+    })
+    .filter((n: number) => n > 0)
+
+  return numbers.length > 0 ? Math.max(...numbers) + 1 : 1
 }
 
 export async function GET() {
   try {
     const supabase = createServiceClient()
+
+    // Get the next available admin number
+    let adminCounter = await getNextAdminNumber(supabase)
 
     // Get all cities with managers
     const { data: cities, error: citiesError } = await supabase
@@ -53,9 +68,10 @@ export async function GET() {
           name: city.manager1_name,
           phone: city.manager1_phone,
           role: 'manager1',
-          email_will_be: createEmailForManager(),
+          email_will_be: `admin${adminCounter}@aron.local`,
           password_will_be: '123456'
         })
+        adminCounter++
         totalManagers++
       }
 
@@ -65,9 +81,10 @@ export async function GET() {
           name: city.manager2_name,
           phone: city.manager2_phone,
           role: 'manager2',
-          email_will_be: createEmailForManager(),
+          email_will_be: `admin${adminCounter}@aron.local`,
           password_will_be: '123456'
         })
+        adminCounter++
         totalManagers++
       }
 
