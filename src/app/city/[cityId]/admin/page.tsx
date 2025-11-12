@@ -919,7 +919,7 @@ export default function CityAdminPage() {
                   📚 מדריך מנהל
                 </Button>
               </a>
-              {pushSupported && city?.request_mode === 'request' && (
+              {pushSupported && city?.request_mode === 'request' && city?.enable_push_notifications && (
                 <Button
                   onClick={handleTogglePushNotifications}
                   disabled={enablingPush}
@@ -978,8 +978,8 @@ export default function CityAdminPage() {
               📚 מדריך מנהל עיר
             </Button>
           </a>
-          {/* Push Notifications - Only in request mode */}
-          {pushSupported && city?.request_mode === 'request' && (
+          {/* Push Notifications - Only in request mode and if enabled by city */}
+          {pushSupported && city?.request_mode === 'request' && city?.enable_push_notifications && (
             <Button
               onClick={handleTogglePushNotifications}
               disabled={enablingPush}
@@ -2040,6 +2040,55 @@ export default function CityAdminPage() {
                       }`}
                     >
                       {city?.hide_navigation ? 'ON' : 'OFF'}
+                    </button>
+                  </div>
+                </div>
+
+                {/* Enable Push Notifications Toggle */}
+                <div className="bg-gradient-to-r from-blue-50 to-indigo-50 rounded-xl p-6 border-2 border-blue-200">
+                  <h3 className="text-lg font-bold text-gray-800 mb-4">🔔 התראות דחיפה (Push Notifications)</h3>
+                  <div className="flex items-center justify-between p-4 bg-white rounded-xl">
+                    <div>
+                      <div className="font-semibold text-gray-800">אפשר התראות דחיפה עבור העיר</div>
+                      <div className="text-sm text-gray-500">כאשר מופעל, מנהלי העיר יוכלו להירשם להתראות על בקשות חדשות</div>
+                    </div>
+                    <button
+                      onClick={async () => {
+                        const newValue = !city?.enable_push_notifications
+
+                        // Update local state immediately for instant feedback
+                        setCity({ ...city!, enable_push_notifications: newValue })
+
+                        try {
+                          const response = await fetch('/api/city/update-details', {
+                            method: 'POST',
+                            headers: { 'Content-Type': 'application/json' },
+                            body: JSON.stringify({
+                              cityId,
+                              enable_push_notifications: newValue
+                            })
+                          })
+
+                          if (response.ok) {
+                            alert(newValue ? '✅ התראות הופעלו' : '✅ התראות כובו')
+                          } else {
+                            // Revert on error
+                            alert('שגיאה בעדכון')
+                            fetchCity()
+                          }
+                        } catch (error) {
+                          console.error('Error updating enable_push_notifications:', error)
+                          alert('שגיאה בעדכון')
+                          fetchCity() // Revert to server value
+                        }
+                      }}
+                      className={`px-6 py-2 rounded-xl font-semibold transition-all ${
+                        city?.enable_push_notifications
+                          ? 'bg-green-500 text-white'
+                          : 'bg-gray-300 text-gray-600'
+                      }`}
+                    >
+                      {city?.enable_push_notifications ? 'ON' : 'OFF'}
                     </button>
                   </div>
                 </div>

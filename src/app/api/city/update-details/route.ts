@@ -21,7 +21,8 @@ export async function POST(request: NextRequest) {
       request_mode,
       cabinet_code,
       require_call_id,
-      hide_navigation
+      hide_navigation,
+      enable_push_notifications
     } = await request.json()
 
     if (!cityId) {
@@ -116,6 +117,9 @@ export async function POST(request: NextRequest) {
     if (hide_navigation !== undefined) {
       updateData.hide_navigation = hide_navigation
     }
+    if (enable_push_notifications !== undefined) {
+      updateData.enable_push_notifications = enable_push_notifications
+    }
 
     // עדכון העיר
     const { error: updateError } = await supabase
@@ -145,6 +149,7 @@ export async function POST(request: NextRequest) {
     if (updateData.cabinet_code !== undefined && city.cabinet_code !== updateData.cabinet_code) changedFields.push('קוד ארון')
     if (updateData.require_call_id !== undefined && city.require_call_id !== updateData.require_call_id) changedFields.push('דרישת מזהה קריאה')
     if (updateData.hide_navigation !== undefined && city.hide_navigation !== updateData.hide_navigation) changedFields.push('הצגת ניווט')
+    if (updateData.enable_push_notifications !== undefined && city.enable_push_notifications !== updateData.enable_push_notifications) changedFields.push('הת ראות דחיפה')
 
     if (changedFields.length > 0) {
       const { error: notificationError } = await supabase

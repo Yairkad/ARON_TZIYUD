@@ -19,6 +19,7 @@ export interface City {
   cabinet_code?: string | null
   require_call_id?: boolean
   hide_navigation?: boolean
+  enable_push_notifications?: boolean
   admin_emails?: string[] | null
   created_at: string
   updated_at: string
