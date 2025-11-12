@@ -30,11 +30,18 @@ export default function RequestsTab({ cityId, cityName, managerName, onRequestsU
   const fetchRequests = async () => {
     setLoading(true)
     try {
+      console.log('📡 Fetching requests for cityId:', cityId)
       const response = await fetch(`/api/requests/manage?cityId=${cityId}`)
       const data = await response.json()
 
+      console.log('📦 Received data:', data)
+      console.log('📊 Number of requests:', data.requests?.length || 0)
+
       if (data.success) {
         setRequests(data.requests || [])
+        console.log('✅ Requests set to state:', data.requests?.length || 0)
+      } else {
+        console.error('❌ API returned error:', data.error)
       }
     } catch (error) {
       console.error('Error fetching requests:', error)
