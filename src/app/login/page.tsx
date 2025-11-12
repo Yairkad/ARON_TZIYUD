@@ -13,6 +13,7 @@ export default function UnifiedLoginPage() {
   const router = useRouter()
   const [email, setEmail] = useState('')
   const [password, setPassword] = useState('')
+  const [showPassword, setShowPassword] = useState(false)
   const [rememberMe, setRememberMe] = useState(false)
   const [loading, setLoading] = useState(false)
   const [error, setError] = useState('')
@@ -40,9 +41,7 @@ export default function UnifiedLoginPage() {
       if (response.ok && data.success) {
         // Login successful, use hard navigation to force fresh page load
         console.log('Login successful, redirecting to:', data.redirectPath)
-        // Add cache buster to force fresh page load
-        const cacheBuster = `?t=${Date.now()}`
-        window.location.href = data.redirectPath + cacheBuster
+        window.location.href = data.redirectPath
       } else {
         setError(data.error || 'שגיאה בהתחברות')
       }
@@ -121,15 +120,25 @@ export default function UnifiedLoginPage() {
 
             <div className="space-y-2">
               <label className="block text-sm font-semibold text-gray-700">🔑 סיסמה</label>
-              <Input
-                type="password"
-                value={password}
-                onChange={(e) => setPassword(e.target.value)}
-                placeholder="••••••••"
-                className="h-12 border-2 border-gray-200 rounded-xl focus:border-purple-500 transition-colors"
-                required
-                disabled={loading}
-              />
+              <div className="relative">
+                <Input
+                  type={showPassword ? "text" : "password"}
+                  value={password}
+                  onChange={(e) => setPassword(e.target.value)}
+                  placeholder="••••••••"
+                  className="h-12 border-2 border-gray-200 rounded-xl focus:border-purple-500 transition-colors pr-12"
+                  required
+                  disabled={loading}
+                />
+                <button
+                  type="button"
+                  onClick={() => setShowPassword(!showPassword)}
+                  className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-500 hover:text-gray-700 transition-colors"
+                  tabIndex={-1}
+                >
+                  {showPassword ? '👁️' : '👁️‍🗨️'}
+                </button>
+              </div>
             </div>
 
             <div className="flex items-center">
