@@ -66,7 +66,7 @@ export async function GET(request: NextRequest) {
   try {
     const supabase = createServiceClient()
 
-    // Get all users with city information
+    // Get all users with city information (exclude super_admin users)
     const { data: users, error: usersError } = await supabase
       .from('users')
       .select(`
@@ -77,6 +77,7 @@ export async function GET(request: NextRequest) {
           is_active
         )
       `)
+      .eq('role', 'city_manager') // Only show city managers
       .order('created_at', { ascending: false })
 
     if (usersError) {

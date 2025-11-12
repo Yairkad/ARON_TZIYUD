@@ -1351,38 +1351,11 @@ export default function SuperAdminPage() {
                 {showAddUser ? '❌ ביטול' : '➕ הוספת משתמש חדש'}
               </Button>
 
-              {/* Filter */}
-              <div className="flex gap-2">
-                <Button
-                  onClick={() => setUserFilter('all')}
-                  className={`px-4 py-2 rounded-lg font-semibold transition-all ${
-                    userFilter === 'all'
-                      ? 'bg-gradient-to-r from-purple-600 to-pink-600 text-white shadow-md'
-                      : 'bg-white text-gray-600 border-2 border-gray-200 hover:border-purple-300'
-                  }`}
-                >
-                  הכל ({users.length})
-                </Button>
-                <Button
-                  onClick={() => setUserFilter('city_manager')}
-                  className={`px-4 py-2 rounded-lg font-semibold transition-all ${
-                    userFilter === 'city_manager'
-                      ? 'bg-gradient-to-r from-purple-600 to-pink-600 text-white shadow-md'
-                      : 'bg-white text-gray-600 border-2 border-gray-200 hover:border-purple-300'
-                  }`}
-                >
-                  מנהלי ערים ({users.filter(u => u.role === 'city_manager').length})
-                </Button>
-                <Button
-                  onClick={() => setUserFilter('super_admin')}
-                  className={`px-4 py-2 rounded-lg font-semibold transition-all ${
-                    userFilter === 'super_admin'
-                      ? 'bg-gradient-to-r from-purple-600 to-pink-600 text-white shadow-md'
-                      : 'bg-white text-gray-600 border-2 border-gray-200 hover:border-purple-300'
-                  }`}
-                >
-                  מנהלים ראשיים ({users.filter(u => u.role === 'super_admin').length})
-                </Button>
+              {/* User count - only city managers shown */}
+              <div className="px-4 py-2 bg-gradient-to-r from-purple-50 to-pink-50 rounded-lg border-2 border-purple-200">
+                <span className="text-gray-700 font-semibold">
+                  סה"כ מנהלי ערים: <span className="text-purple-600">{users.length}</span>
+                </span>
               </div>
             </div>
 
