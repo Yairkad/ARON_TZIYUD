@@ -11,9 +11,20 @@ import { requireSuperAdmin } from '@/lib/auth-middleware'
 import { createServiceClient } from '@/lib/supabase-server'
 
 export async function GET(request: NextRequest) {
+  console.log('===== LIST USERS API CALLED =====')
+  console.log('Request headers:', Object.fromEntries(request.headers))
+  console.log('Cookies:', request.cookies.getAll())
+
   // Require super admin authentication
-  const { error: authError } = await requireSuperAdmin(request)
-  if (authError) return authError
+  const { user, error: authError } = await requireSuperAdmin(request)
+  console.log('Auth check result:', { user: user?.email, hasError: !!authError })
+
+  if (authError) {
+    console.log('Auth failed, returning error')
+    return authError
+  }
+
+  console.log('Auth success, fetching users...')
 
   try {
     const supabase = createServiceClient()
