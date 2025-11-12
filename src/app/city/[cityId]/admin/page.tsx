@@ -1826,6 +1826,12 @@ export default function CityAdminPage() {
                     {/* Direct Mode */}
                     <button
                       onClick={async () => {
+                        // Check permissions
+                        if (currentUser?.permissions === 'view_only') {
+                          alert('אין לך הרשאה לבצע פעולה זו - הרשאת צפיה בלבד')
+                          return
+                        }
+
                         if (city?.request_mode === 'direct') {
                           alert('המערכת כבר במצב השאלה ישירה')
                           return
@@ -1838,11 +1844,6 @@ export default function CityAdminPage() {
                               headers: { 'Content-Type': 'application/json' },
                               body: JSON.stringify({
                                 cityId,
-                                manager1_name: city?.manager1_name,
-                                manager1_phone: city?.manager1_phone,
-                                manager2_name: city?.manager2_name,
-                                manager2_phone: city?.manager2_phone,
-                                location_url: city?.location_url,
                                 request_mode: 'direct'
                               })
                             })
@@ -1881,6 +1882,12 @@ export default function CityAdminPage() {
                     {/* Request Mode */}
                     <button
                       onClick={async () => {
+                        // Check permissions
+                        if (currentUser?.permissions === 'view_only') {
+                          alert('אין לך הרשאה לבצע פעולה זו - הרשאת צפיה בלבד')
+                          return
+                        }
+
                         if (city?.request_mode === 'request') {
                           alert('המערכת כבר במצב בקשות')
                           return
@@ -1893,11 +1900,6 @@ export default function CityAdminPage() {
                               headers: { 'Content-Type': 'application/json' },
                               body: JSON.stringify({
                                 cityId,
-                                manager1_name: city?.manager1_name,
-                                manager1_phone: city?.manager1_phone,
-                                manager2_name: city?.manager2_name,
-                                manager2_phone: city?.manager2_phone,
-                                location_url: city?.location_url,
                                 request_mode: 'request'
                               })
                             })
@@ -1990,6 +1992,12 @@ export default function CityAdminPage() {
                         </div>
                         <button
                           onClick={async () => {
+                            // Check permissions
+                            if (currentUser?.permissions === 'view_only') {
+                              alert('אין לך הרשאה לבצע פעולה זו - הרשאת צפיה בלבד')
+                              return
+                            }
+
                             const newValue = !city.require_call_id
 
                             // Update local state immediately for instant feedback
@@ -2001,17 +2009,13 @@ export default function CityAdminPage() {
                                 headers: { 'Content-Type': 'application/json' },
                                 body: JSON.stringify({
                                   cityId,
-                                  manager1_name: city?.manager1_name,
-                                  manager1_phone: city?.manager1_phone,
-                                  manager2_name: city?.manager2_name,
-                                  manager2_phone: city?.manager2_phone,
-                                  location_url: city?.location_url,
                                   require_call_id: newValue
                                 })
                               })
 
                               if (response.ok) {
                                 alert(newValue ? '✅ מזהה קריאה חובה' : '❌ מזהה קריאה אופציונלי')
+                                fetchCity() // Refresh to ensure sync
                               } else {
                                 // Revert on error
                                 alert('שגיאה בעדכון')
@@ -2046,7 +2050,14 @@ export default function CityAdminPage() {
                     </div>
                     <button
                       onClick={async () => {
+                        // Check permissions
+                        if (currentUser?.permissions === 'view_only') {
+                          alert('אין לך הרשאה לבצע פעולה זו - הרשאת צפיה בלבד')
+                          return
+                        }
+
                         const newValue = !city?.hide_navigation
+                        console.log('🔄 Toggling hide_navigation:', { current: city?.hide_navigation, new: newValue, cityId })
 
                         // Update local state immediately for instant feedback
                         setCity({ ...city!, hide_navigation: newValue })
@@ -2061,15 +2072,20 @@ export default function CityAdminPage() {
                             })
                           })
 
+                          const data = await response.json()
+                          console.log('📡 Server response:', { status: response.status, data })
+
                           if (response.ok) {
                             alert(newValue ? '✅ ניווט הוסתר' : '✅ ניווט מוצג')
+                            fetchCity() // Refresh to ensure sync
                           } else {
                             // Revert on error
-                            alert('שגיאה בעדכון')
+                            console.error('❌ Update failed:', data)
+                            alert(`שגיאה בעדכון: ${data.error || 'שגיאה לא ידועה'}`)
                             fetchCity()
                           }
                         } catch (error) {
-                          console.error('Error updating hide_navigation:', error)
+                          console.error('❌ Error updating hide_navigation:', error)
                           alert('שגיאה בעדכון')
                           fetchCity() // Revert to server value
                         }
