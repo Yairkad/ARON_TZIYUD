@@ -7,24 +7,61 @@
  */
 
 import { NextRequest, NextResponse } from 'next/server'
-import { requireSuperAdmin } from '@/lib/auth-middleware'
 import { createServiceClient } from '@/lib/supabase-server'
 
 export async function GET(request: NextRequest) {
-  console.log('===== LIST USERS API CALLED =====')
-  console.log('Request headers:', Object.fromEntries(request.headers))
-  console.log('Cookies:', request.cookies.getAll())
+  // Authenticate user using the same method as /api/auth/me
+  const supabase = createServiceClient()
 
-  // Require super admin authentication
-  const { user, error: authError } = await requireSuperAdmin(request)
-  console.log('Auth check result:', { user: user?.email, hasError: !!authError })
+  // Get access token from cookies
+  const accessToken = request.cookies.get('sb-access-token')?.value
 
-  if (authError) {
-    console.log('Auth failed, returning error')
-    return authError
+  if (!accessToken) {
+    return NextResponse.json(
+      { success: false, error: 'לא מורשה - נדרשת התחברות' },
+      { status: 401 }
+    )
   }
 
-  console.log('Auth success, fetching users...')
+  // Get user from token
+  const { data: { user }, error: authError } = await supabase.auth.getUser(accessToken)
+
+  if (authError || !user) {
+    return NextResponse.json(
+      { success: false, error: 'לא מורשה - נדרשת התחברות' },
+      { status: 401 }
+    )
+  }
+
+  // Get user profile from users table to check role
+  const { data: userProfile, error: profileError } = await supabase
+    .from('users')
+    .select('role, is_active')
+    .eq('id', user.id)
+    .single()
+
+  if (profileError || !userProfile) {
+    return NextResponse.json(
+      { success: false, error: 'משתמש לא נמצא במערכת' },
+      { status: 404 }
+    )
+  }
+
+  // Check if user is super admin
+  if (userProfile.role !== 'super_admin') {
+    return NextResponse.json(
+      { success: false, error: 'אין הרשאה - נדרשת הרשאת מנהל ראשי' },
+      { status: 403 }
+    )
+  }
+
+  // Check if user is active
+  if (!userProfile.is_active) {
+    return NextResponse.json(
+      { success: false, error: 'המשתמש לא פעיל' },
+      { status: 403 }
+    )
+  }
 
   try {
     const supabase = createServiceClient()
