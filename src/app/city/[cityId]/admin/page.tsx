@@ -1740,7 +1740,7 @@ export default function CityAdminPage() {
           <RequestsTab
             cityId={cityId}
             cityName={city.name}
-            managerName={city.manager1_name}
+            managerName={currentUser?.full_name || currentUser?.email || city.manager1_name}
             onRequestsUpdate={fetchPendingRequestsCount}
           />
         )}
