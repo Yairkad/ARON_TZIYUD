@@ -42,7 +42,7 @@ async function handleDelete(request: NextRequest) {
   // Check if user is super admin
   const { data: adminProfile } = await supabase
     .from('users')
-    .select('role, is_active, full_name, email')
+    .select('id, role, is_active, full_name, email')
     .eq('id', authUser.id)
     .single()
 
