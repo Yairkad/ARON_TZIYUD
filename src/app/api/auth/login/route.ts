@@ -149,7 +149,7 @@ export async function POST(request: NextRequest) {
     if (userRole === 'super_admin') {
       redirectPath = '/super-admin'
     } else if (userRole === 'city_manager' && cityId) {
-      redirectPath = `/city/${cityId}`
+      redirectPath = `/city/${cityId}/admin`
     }
 
     // Create response with user data
