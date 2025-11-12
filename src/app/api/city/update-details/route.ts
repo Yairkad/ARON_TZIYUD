@@ -24,20 +24,22 @@ export async function POST(request: NextRequest) {
       hide_navigation
     } = await request.json()
 
-    if (!cityId || !manager1_name || !manager1_phone) {
+    if (!cityId) {
       return NextResponse.json(
-        { error: 'שם וטלפון מנהל ראשון הם שדות חובה' },
+        { error: 'מזהה עיר הוא שדה חובה' },
         { status: 400 }
       )
     }
 
-    if (manager1_phone.length !== 10 || !/^05\d{8}$/.test(manager1_phone)) {
+    // Validate manager1 phone only if provided
+    if (manager1_phone && (manager1_phone.length !== 10 || !/^05\d{8}$/.test(manager1_phone))) {
       return NextResponse.json(
         { error: 'מספר טלפון מנהל ראשון חייב להיות בן 10 ספרות ולהתחיל ב-05' },
         { status: 400 }
       )
     }
 
+    // Validate manager2 phone only if provided
     if (manager2_phone && (manager2_phone.length !== 10 || !/^05\d{8}$/.test(manager2_phone))) {
       return NextResponse.json(
         { error: 'מספר טלפון מנהל שני חייב להיות בן 10 ספרות ולהתחיל ב-05' },
@@ -61,12 +63,23 @@ export async function POST(request: NextRequest) {
     }
 
     // הכנת נתוני העדכון
-    const updateData: any = {
-      manager1_name: manager1_name.trim(),
-      manager1_phone: manager1_phone.trim(),
-      manager2_name: manager2_name ? manager2_name.trim() : null,
-      manager2_phone: manager2_phone ? manager2_phone.trim() : null,
-      location_url: location_url ? location_url.trim() : null
+    const updateData: any = {}
+
+    // Update manager details only if provided
+    if (manager1_name !== undefined) {
+      updateData.manager1_name = manager1_name.trim()
+    }
+    if (manager1_phone !== undefined) {
+      updateData.manager1_phone = manager1_phone.trim()
+    }
+    if (manager2_name !== undefined) {
+      updateData.manager2_name = manager2_name ? manager2_name.trim() : null
+    }
+    if (manager2_phone !== undefined) {
+      updateData.manager2_phone = manager2_phone ? manager2_phone.trim() : null
+    }
+    if (location_url !== undefined) {
+      updateData.location_url = location_url ? location_url.trim() : null
     }
 
     // הוספת שדות אופציונליים רק אם הם סופקו
@@ -120,11 +133,11 @@ export async function POST(request: NextRequest) {
 
     // יצירת התראה למנהל על
     const changedFields = []
-    if (city.manager1_name !== updateData.manager1_name) changedFields.push('שם מנהל ראשון')
-    if (city.manager1_phone !== updateData.manager1_phone) changedFields.push('טלפון מנהל ראשון')
-    if (city.manager2_name !== updateData.manager2_name) changedFields.push('שם מנהל שני')
-    if (city.manager2_phone !== updateData.manager2_phone) changedFields.push('טלפון מנהל שני')
-    if (city.location_url !== updateData.location_url) changedFields.push('כתובת ארון בדף ראשי')
+    if (updateData.manager1_name !== undefined && city.manager1_name !== updateData.manager1_name) changedFields.push('שם מנהל ראשון')
+    if (updateData.manager1_phone !== undefined && city.manager1_phone !== updateData.manager1_phone) changedFields.push('טלפון מנהל ראשון')
+    if (updateData.manager2_name !== undefined && city.manager2_name !== updateData.manager2_name) changedFields.push('שם מנהל שני')
+    if (updateData.manager2_phone !== undefined && city.manager2_phone !== updateData.manager2_phone) changedFields.push('טלפון מנהל שני')
+    if (updateData.location_url !== undefined && city.location_url !== updateData.location_url) changedFields.push('כתובת ארון בדף ראשי')
     if (updateData.token_location_url !== undefined && city.token_location_url !== updateData.token_location_url) changedFields.push('כתובת ארון בטוקן')
     if (updateData.request_mode !== undefined && city.request_mode !== updateData.request_mode) {
       changedFields.push(updateData.request_mode === 'direct' ? 'שונה למצב השאלה ישירה' : 'שונה למצב בקשות')

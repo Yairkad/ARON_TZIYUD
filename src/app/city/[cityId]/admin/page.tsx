@@ -2018,11 +2018,6 @@ export default function CityAdminPage() {
                             headers: { 'Content-Type': 'application/json' },
                             body: JSON.stringify({
                               cityId,
-                              manager1_name: city?.manager1_name,
-                              manager1_phone: city?.manager1_phone,
-                              manager2_name: city?.manager2_name,
-                              manager2_phone: city?.manager2_phone,
-                              location_url: city?.location_url,
                               hide_navigation: newValue
                             })
                           })
