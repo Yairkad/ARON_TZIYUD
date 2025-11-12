@@ -548,9 +548,13 @@ export default function SuperAdminPage() {
     try {
       const updateData: any = {
         user_id: editingUser.id,
+        email: userForm.email,
         full_name: userForm.full_name,
         permissions: userForm.permissions,
         phone: userForm.phone || null,
+        role: userForm.role,
+        city_id: userForm.role === 'city_manager' ? userForm.city_id : null,
+        manager_role: userForm.role === 'city_manager' ? userForm.manager_role : null,
       }
 
       // Only include password if it was changed
@@ -1448,13 +1452,12 @@ export default function SuperAdminPage() {
                       </div>
 
                       <div className="space-y-2">
-                        <label className="block text-sm font-semibold text-gray-700">👔 תפקיד</label>
+                        <label className="block text-sm font-semibold text-gray-700">👔 תפקיד {editingUser && '(ניתן לשנות)'}</label>
                         <select
                           value={userForm.role}
                           onChange={(e) => setUserForm({ ...userForm, role: e.target.value as 'city_manager' | 'super_admin' })}
                           className="w-full h-12 border-2 border-gray-200 rounded-xl focus:border-purple-500 transition-colors px-3"
                           required
-                          disabled={!!editingUser}
                         >
                           <option value="city_manager">מנהל עיר</option>
                           <option value="super_admin">מנהל ראשי</option>
@@ -1464,13 +1467,12 @@ export default function SuperAdminPage() {
                       {userForm.role === 'city_manager' && (
                         <>
                           <div className="space-y-2">
-                            <label className="block text-sm font-semibold text-gray-700">🏙️ עיר</label>
+                            <label className="block text-sm font-semibold text-gray-700">🏙️ עיר {editingUser && '(ניתן לשנות)'}</label>
                             <select
                               value={userForm.city_id}
                               onChange={(e) => setUserForm({ ...userForm, city_id: e.target.value })}
                               className="w-full h-12 border-2 border-gray-200 rounded-xl focus:border-purple-500 transition-colors px-3"
                               required={userForm.role === 'city_manager'}
-                              disabled={!!editingUser}
                             >
                               <option value="">בחר עיר</option>
                               {cities.map(city => (
@@ -1480,12 +1482,11 @@ export default function SuperAdminPage() {
                           </div>
 
                           <div className="space-y-2">
-                            <label className="block text-sm font-semibold text-gray-700">👔 תפקיד מנהל</label>
+                            <label className="block text-sm font-semibold text-gray-700">👔 תפקיד מנהל {editingUser && '(ניתן לשנות)'}</label>
                             <select
                               value={userForm.manager_role}
                               onChange={(e) => setUserForm({ ...userForm, manager_role: e.target.value as '' | 'manager1' | 'manager2' })}
                               className="w-full h-12 border-2 border-gray-200 rounded-xl focus:border-purple-500 transition-colors px-3"
-                              disabled={!!editingUser}
                             >
                               <option value="">בחר תפקיד מנהל</option>
                               <option value="manager1">מנהל ראשון</option>

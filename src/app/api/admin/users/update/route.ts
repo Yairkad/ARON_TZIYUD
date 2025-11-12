@@ -17,6 +17,9 @@ interface UpdateUserBody {
   phone?: string
   is_active?: boolean
   password?: string // Optional password change
+  role?: 'city_manager' | 'super_admin'
+  city_id?: string
+  manager_role?: 'manager1' | 'manager2'
 }
 
 export async function PUT(request: NextRequest) {
@@ -109,6 +112,9 @@ async function handleUpdate(request: NextRequest) {
     if (body.permissions !== undefined) updateData.permissions = body.permissions
     if (body.phone !== undefined) updateData.phone = body.phone
     if (body.is_active !== undefined) updateData.is_active = body.is_active
+    if (body.role !== undefined) updateData.role = body.role
+    if (body.city_id !== undefined) updateData.city_id = body.city_id
+    if (body.manager_role !== undefined) updateData.manager_role = body.manager_role
 
     // Update email in Auth if provided (must be done before updating public.users)
     if (body.email && body.email !== existingUser.email) {
@@ -170,6 +176,34 @@ async function handleUpdate(request: NextRequest) {
           { success: false, error: 'שגיאה בעדכון סיסמה' },
           { status: 500 }
         )
+      }
+    }
+
+    // Update city manager details if this is a city manager with manager_role
+    const finalCityId = body.city_id !== undefined ? body.city_id : updatedUser.city_id
+    const finalManagerRole = body.manager_role !== undefined ? body.manager_role : updatedUser.manager_role
+    const finalFullName = body.full_name !== undefined ? body.full_name : updatedUser.full_name
+    const finalPhone = body.phone !== undefined ? body.phone : updatedUser.phone
+
+    if (finalCityId && finalManagerRole && (updatedUser.role === 'city_manager' || body.role === 'city_manager')) {
+      const cityUpdateData: any = {}
+
+      if (finalManagerRole === 'manager1') {
+        cityUpdateData.manager1_name = finalFullName
+        cityUpdateData.manager1_phone = finalPhone || null
+      } else if (finalManagerRole === 'manager2') {
+        cityUpdateData.manager2_name = finalFullName
+        cityUpdateData.manager2_phone = finalPhone || null
+      }
+
+      const { error: cityUpdateError } = await supabase
+        .from('cities')
+        .update(cityUpdateData)
+        .eq('id', finalCityId)
+
+      if (cityUpdateError) {
+        console.error('Error updating city manager details:', cityUpdateError)
+        // Don't fail the user update, just log the error
       }
     }
 
