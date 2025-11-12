@@ -2506,22 +2506,24 @@ export default function CityAdminPage() {
                   </CardContent>
                 </Card>
 
-                {!showChangePassword ? (
-                  <div className="bg-gradient-to-r from-blue-50 to-indigo-50 rounded-xl p-6 border-2 border-blue-200">
-                    <div className="flex justify-between items-center">
-                      <div>
-                        <h3 className="text-lg font-bold text-gray-800 mb-1">🔐 סיסמת מנהל</h3>
-                        <p className="text-sm text-gray-600">שנה את סיסמת הכניסה לפאנל הניהול</p>
+                {/* Hide password change for super admin - they should use "Reset Password" in super admin panel */}
+                {currentUser?.role !== 'super_admin' && (
+                  !showChangePassword ? (
+                    <div className="bg-gradient-to-r from-blue-50 to-indigo-50 rounded-xl p-6 border-2 border-blue-200">
+                      <div className="flex justify-between items-center">
+                        <div>
+                          <h3 className="text-lg font-bold text-gray-800 mb-1">🔐 סיסמת מנהל</h3>
+                          <p className="text-sm text-gray-600">שנה את סיסמת הכניסה לפאנל הניהול</p>
+                        </div>
+                        <Button
+                          onClick={() => setShowChangePassword(true)}
+                          className="bg-gradient-to-r from-blue-600 to-indigo-600 hover:from-blue-700 hover:to-indigo-700 text-white font-semibold px-6 py-3 rounded-xl transition-all duration-200 hover:scale-105"
+                        >
+                          שנה סיסמה
+                        </Button>
                       </div>
-                      <Button
-                        onClick={() => setShowChangePassword(true)}
-                        className="bg-gradient-to-r from-blue-600 to-indigo-600 hover:from-blue-700 hover:to-indigo-700 text-white font-semibold px-6 py-3 rounded-xl transition-all duration-200 hover:scale-105"
-                      >
-                        שנה סיסמה
-                      </Button>
                     </div>
-                  </div>
-                ) : (
+                  ) : (
                   <Card className="border-2 border-blue-200 bg-gradient-to-r from-blue-50 to-indigo-50">
                     <CardHeader>
                       <CardTitle className="text-xl font-bold text-gray-800">שינוי סיסמת מנהל</CardTitle>
@@ -2614,6 +2616,7 @@ export default function CityAdminPage() {
                       </form>
                     </CardContent>
                   </Card>
+                  )
                 )}
 
                 <div className="bg-gradient-to-r from-yellow-50 to-amber-50 rounded-xl p-6 border-2 border-yellow-200">

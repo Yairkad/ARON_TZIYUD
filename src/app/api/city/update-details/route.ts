@@ -85,13 +85,13 @@ export async function POST(request: NextRequest) {
 
     // הוספת שדות אופציונליים רק אם הם סופקו
     if (token_location_url !== undefined) {
-      updateData.token_location_url = token_location_url ? token_location_url.trim() : null
+      updateData.token_location_url = token_location_url && typeof token_location_url === 'string' ? token_location_url.trim() : null
     }
     if (location_description !== undefined) {
-      updateData.location_description = location_description ? location_description.trim() : null
+      updateData.location_description = location_description && typeof location_description === 'string' ? location_description.trim() : null
     }
     if (location_image_url !== undefined) {
-      updateData.location_image_url = location_image_url ? location_image_url.trim() : null
+      updateData.location_image_url = location_image_url && typeof location_image_url === 'string' ? location_image_url.trim() : null
     }
     if (lat !== undefined) {
       updateData.lat = lat
