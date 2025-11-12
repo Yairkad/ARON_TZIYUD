@@ -87,31 +87,52 @@ export async function getCurrentUser() {
  * Returns null if not authenticated
  */
 export async function getCurrentUserProfile() {
-  const supabase = await createServerClient()
+  try {
+    const supabase = await createServerClient()
 
-  const {
-    data: { user },
-    error: authError,
-  } = await supabase.auth.getUser()
+    const {
+      data: { user },
+      error: authError,
+    } = await supabase.auth.getUser()
 
-  if (authError || !user) {
+    if (authError) {
+      console.error('getCurrentUserProfile - Auth error:', authError.message)
+      return null
+    }
+
+    if (!user) {
+      console.log('getCurrentUserProfile - No user found in session')
+      return null
+    }
+
+    console.log('getCurrentUserProfile - User found:', user.id, user.email)
+
+    // Fetch user profile from public.users table
+    const { data: profile, error: profileError } = await supabase
+      .from('users')
+      .select('*, cities(*)')
+      .eq('id', user.id)
+      .single()
+
+    if (profileError) {
+      console.error('getCurrentUserProfile - Profile error:', profileError.message)
+      return null
+    }
+
+    if (!profile) {
+      console.log('getCurrentUserProfile - No profile found for user:', user.id)
+      return null
+    }
+
+    console.log('getCurrentUserProfile - Profile found:', profile.email, profile.role)
+
+    return {
+      ...user,
+      ...profile,
+    }
+  } catch (error) {
+    console.error('getCurrentUserProfile - Exception:', error)
     return null
-  }
-
-  // Fetch user profile from public.users table
-  const { data: profile, error: profileError } = await supabase
-    .from('users')
-    .select('*, cities(*)')
-    .eq('id', user.id)
-    .single()
-
-  if (profileError || !profile) {
-    return null
-  }
-
-  return {
-    ...user,
-    ...profile,
   }
 }
 
