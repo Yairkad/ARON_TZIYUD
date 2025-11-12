@@ -113,7 +113,7 @@ export async function POST(request: Request) {
             .select('id, email')
             .eq('city_id', city.id)
             .eq('manager_role', manager.role)
-            .single()
+            .maybeSingle()
 
           if (existingUser) {
             results.processed.push({
