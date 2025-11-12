@@ -71,9 +71,10 @@ export default function RequestsTab({ cityId, cityName, managerName, onRequestsU
         throw new Error(data.error || 'שגיאה בעדכון בקשה')
       }
 
-      if (action === 'regenerate' && data.newToken) {
+      if ((action === 'regenerate' || action === 'approve') && data.newToken) {
         setRegeneratedToken({ requestId, token: data.newToken })
       } else if (action === 'approve') {
+        // Fallback if no token returned (shouldn't happen with new API)
         setApprovedRequest(requestId)
       } else {
         alert(getSuccessMessage(action))
