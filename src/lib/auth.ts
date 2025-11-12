@@ -7,7 +7,7 @@ export interface SessionData {
 }
 
 // בדיקת אימות בצד הלקוח
-export async function checkAuth(): Promise<{ authenticated: boolean; userId?: string; userType?: string }> {
+export async function checkAuth(): Promise<{ authenticated: boolean; userId?: string; userType?: string; cityId?: string }> {
   try {
     const response = await fetch('/api/auth/me', {
       method: 'GET',
@@ -20,7 +20,8 @@ export async function checkAuth(): Promise<{ authenticated: boolean; userId?: st
         return {
           authenticated: true,
           userId: data.user.id,
-          userType: data.user.role === 'super_admin' ? 'super' : 'city'
+          userType: data.user.role === 'super_admin' ? 'super' : 'city',
+          cityId: data.user.city_id || undefined
         }
       }
     }
