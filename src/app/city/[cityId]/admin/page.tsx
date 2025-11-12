@@ -1,7 +1,7 @@
 'use client'
 
 import { useState, useEffect } from 'react'
-import { useParams } from 'next/navigation'
+import { useParams, useRouter } from 'next/navigation'
 import Link from 'next/link'
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card'
 import { Button } from '@/components/ui/button'
@@ -86,6 +86,7 @@ async function extractCoordinatesFromUrl(url: string): Promise<{ lat: number; ln
 
 export default function CityAdminPage() {
   const params = useParams()
+  const router = useRouter()
   const cityId = params.cityId as string
 
   const [city, setCity] = useState<City | null>(null)
@@ -958,7 +959,7 @@ export default function CityAdminPage() {
               <Button
                 onClick={async () => {
                   await logout()
-                  setIsAuthenticated(false)
+                  router.push(`/city/${cityId}`)
                 }}
                 className="bg-gradient-to-r from-red-500 to-rose-500 hover:from-red-600 hover:to-rose-600 text-white font-semibold px-6 py-2 rounded-xl transition-all duration-200 hover:scale-105"
               >
@@ -1017,7 +1018,7 @@ export default function CityAdminPage() {
             <Button
               onClick={async () => {
                 await logout()
-                setIsAuthenticated(false)
+                router.push(`/city/${cityId}`)
               }}
               className="flex-1 h-14 rounded-xl bg-gradient-to-r from-red-500 to-rose-500 hover:from-red-600 hover:to-rose-600 text-white font-semibold text-lg transition-all"
             >

@@ -29,7 +29,8 @@
       "Bash(del \"C:\\Users\\יאיר קדוש\\ARON_TZIYUD\\src\\app\\select-city\\page.tsx\")",
       "Bash(cmd /c \"del /F /Q \"\"C:\\Users\\יאיר קדוש\\ARON_TZIYUD\\src\\app\\select-city\\page.tsx\"\"\")",
       "Bash(cmd /c \"rmdir /S /Q \"\"C:\\Users\\יאיר קדוש\\ARON_TZIYUD\\src\\app\\select-city\"\"\")",
-      "Bash(cmd /c \"rmdir /S /Q \"\"C:\\Users\\יאיר קדוש\\ARON_TZIYUD\\src\\app\\api\\user\"\"\")"
+      "Bash(cmd /c \"rmdir /S /Q \"\"C:\\Users\\יאיר קדוש\\ARON_TZIYUD\\src\\app\\api\\user\"\"\")",
+      "Bash(git rm:*)"
     ],
     "deny": [],
     "ask": []
