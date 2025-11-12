@@ -39,3 +39,10 @@ yarn-error.log*
 # typescript
 *.tsbuildinfo
 next-env.d.ts
+
+# temporary debug files
+*.sql
+check-*.js
+create-super-admin*.js
+fix-super-admin*.js
+nul
