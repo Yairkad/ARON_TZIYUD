@@ -457,7 +457,9 @@ export default function SuperAdminPage() {
   // Users Management Functions
   const fetchUsers = async () => {
     try {
-      const response = await fetch('/api/admin/users/list')
+      const response = await fetch('/api/admin/users/list', {
+        credentials: 'include' // Important: send cookies for authentication
+      })
       const data = await response.json()
 
       if (!response.ok) {
@@ -497,6 +499,7 @@ export default function SuperAdminPage() {
         headers: {
           'Content-Type': 'application/json',
         },
+        credentials: 'include', // Important: send cookies for authentication
         body: JSON.stringify(userForm),
       })
 
@@ -557,6 +560,7 @@ export default function SuperAdminPage() {
         headers: {
           'Content-Type': 'application/json',
         },
+        credentials: 'include', // Important: send cookies for authentication
         body: JSON.stringify(updateData),
       })
 
@@ -598,6 +602,7 @@ export default function SuperAdminPage() {
         headers: {
           'Content-Type': 'application/json',
         },
+        credentials: 'include', // Important: send cookies for authentication
         body: JSON.stringify({
           user_id: user.id
         }),
