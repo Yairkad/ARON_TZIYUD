@@ -707,6 +707,13 @@ export default function SuperAdminPage() {
                   ↩️ חזרה לדף הבית
                 </Button>
               </Link>
+              <Link href="/super-admin/migrate">
+                <Button
+                  className="bg-gradient-to-r from-blue-500 to-cyan-500 hover:from-blue-600 hover:to-cyan-600 text-white font-semibold px-4 py-1.5 text-sm rounded-lg transition-all duration-200 hover:scale-105"
+                >
+                  🔄 מיגרציית משתמשים
+                </Button>
+              </Link>
               <Button
                 onClick={async () => {
                   await logout()
