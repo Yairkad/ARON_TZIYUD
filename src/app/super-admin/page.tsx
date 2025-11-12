@@ -45,6 +45,7 @@ export default function SuperAdminPage() {
     manager_role: '' as '' | 'manager1' | 'manager2',
   })
   const [userFilter, setUserFilter] = useState<'all' | 'city_manager' | 'super_admin'>('all')
+  const [currentUser, setCurrentUser] = useState<any>(null)
 
   // Password visibility state for all password fields
   const [showNewCityPassword, setShowNewCityPassword] = useState(false)
@@ -58,14 +59,16 @@ export default function SuperAdminPage() {
   useEffect(() => {
     const verifyAuth = async () => {
       console.log('🔐 Checking authentication...')
-      const { authenticated, userType } = await checkAuth()
-      console.log('🔐 Auth result:', { authenticated, userType })
+      const { authenticated, userType, user } = await checkAuth()
+      console.log('🔐 Auth result:', { authenticated, userType, user })
 
       if (authenticated && userType === 'super') {
         setIsAuthenticated(true)
+        setCurrentUser(user)
         console.log('✅ User is authenticated as super admin')
       } else {
         setIsAuthenticated(false)
+        setCurrentUser(null)
         console.log('❌ User is not authenticated or not super admin')
       }
 
