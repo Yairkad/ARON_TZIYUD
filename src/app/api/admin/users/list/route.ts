@@ -66,18 +66,11 @@ export async function GET(request: NextRequest) {
   try {
     const supabase = createServiceClient()
 
-    // Get all users with city information (exclude super_admin users)
+    // Get all users (city managers only)
     const { data: users, error: usersError } = await supabase
       .from('users')
-      .select(`
-        *,
-        cities (
-          id,
-          name,
-          is_active
-        )
-      `)
-      .eq('role', 'city_manager') // Only show city managers
+      .select('*')
+      .eq('role', 'city_manager')
       .order('created_at', { ascending: false })
 
     if (usersError) {
@@ -88,24 +81,44 @@ export async function GET(request: NextRequest) {
       )
     }
 
+    // Get all cities to find which cities each user manages
+    const { data: cities, error: citiesError } = await supabase
+      .from('cities')
+      .select('id, name, is_active, manager1_user_id, manager2_user_id')
+
+    if (citiesError) {
+      console.error('Error fetching cities:', citiesError)
+    }
+
     // Transform data for frontend
-    const transformedUsers = users.map(user => ({
-      id: user.id,
-      email: user.email,
-      full_name: user.full_name,
-      role: user.role,
-      permissions: user.permissions,
-      phone: user.phone,
-      is_active: user.is_active,
-      city: user.cities ? {
-        id: user.cities.id,
-        name: user.cities.name,
-        is_active: user.cities.is_active,
-      } : null,
-      last_login_at: user.last_login_at,
-      created_at: user.created_at,
-      updated_at: user.updated_at,
-    }))
+    const transformedUsers = users.map(user => {
+      // Find all cities managed by this user
+      const managedCities = cities?.filter(city =>
+        city.manager1_user_id === user.id || city.manager2_user_id === user.id
+      ) || []
+
+      // Use the first managed city as the primary city for backwards compatibility
+      const primaryCity = managedCities[0] || null
+
+      return {
+        id: user.id,
+        email: user.email,
+        full_name: user.full_name,
+        role: user.role,
+        permissions: user.permissions,
+        phone: user.phone,
+        is_active: user.is_active,
+        city: primaryCity ? {
+          id: primaryCity.id,
+          name: primaryCity.name,
+          is_active: primaryCity.is_active,
+        } : null,
+        managed_cities: managedCities.map(c => ({ id: c.id, name: c.name })),
+        last_login_at: user.last_login_at,
+        created_at: user.created_at,
+        updated_at: user.updated_at,
+      }
+    })
 
     return NextResponse.json({
       success: true,

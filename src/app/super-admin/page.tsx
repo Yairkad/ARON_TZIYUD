@@ -1090,27 +1090,34 @@ export default function SuperAdminPage() {
                           <span className="hidden sm:inline">🚪 כניסה לניהול</span>
                           <span className="sm:hidden">🚪 ניהול</span>
                         </Button>
-                        <Button
-                          onClick={() => setEditingCity(city)}
-                          className="bg-blue-500 hover:bg-blue-600 text-sm md:text-base h-10 md:h-auto"
-                        >
-                          ✏️ ערוך
-                        </Button>
-                        <Button
-                          onClick={() => handleToggleActive(city)}
-                          disabled={loading}
-                          className={`text-sm md:text-base h-10 md:h-auto ${city.is_active ? 'bg-orange-500 hover:bg-orange-600' : 'bg-green-500 hover:bg-green-600'}`}
-                        >
-                          <span className="hidden sm:inline">{city.is_active ? '🔴 השבת' : '🟢 הפעל'}</span>
-                          <span className="sm:hidden">{city.is_active ? '🔴' : '🟢'}</span>
-                        </Button>
-                        <Button
-                          onClick={() => handleDeleteCity(city)}
-                          disabled={loading}
-                          className="bg-red-500 hover:bg-red-600 text-sm md:text-base h-10 md:h-auto"
-                        >
-                          🗑️ מחק
-                        </Button>
+                        {currentUser?.permissions !== 'view_only' && (
+                          <>
+                            <Button
+                              onClick={() => setEditingCity(city)}
+                              className="bg-blue-500 hover:bg-blue-600 text-sm md:text-base h-10 md:h-auto"
+                            >
+                              ✏️ ערוך
+                            </Button>
+                            <Button
+                              onClick={() => handleToggleActive(city)}
+                              disabled={loading}
+                              className={`text-sm md:text-base h-10 md:h-auto ${city.is_active ? 'bg-orange-500 hover:bg-orange-600' : 'bg-green-500 hover:bg-green-600'}`}
+                            >
+                              <span className="hidden sm:inline">{city.is_active ? '🔴 השבת' : '🟢 הפעל'}</span>
+                              <span className="sm:hidden">{city.is_active ? '🔴' : '🟢'}</span>
+                            </Button>
+                            <Button
+                              onClick={() => handleDeleteCity(city)}
+                              disabled={loading}
+                              className="bg-red-500 hover:bg-red-600 text-sm md:text-base h-10 md:h-auto"
+                            >
+                              🗑️ מחק
+                            </Button>
+                          </>
+                        )}
+                        {currentUser?.permissions === 'view_only' && (
+                          <span className="text-sm text-gray-500 italic">צפייה בלבד</span>
+                        )}
                       </div>
                     </div>
                   )}
