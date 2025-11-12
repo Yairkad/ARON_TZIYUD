@@ -8,13 +8,52 @@
  */
 
 import { NextRequest, NextResponse } from 'next/server'
-import { requireSuperAdmin } from '@/lib/auth-middleware'
 import { createServiceClient } from '@/lib/supabase-server'
 
 export async function DELETE(request: NextRequest) {
-  // Require super admin authentication
-  const { user: adminUser, error: authError } = await requireSuperAdmin(request)
-  if (authError) return authError
+  return handleDelete(request)
+}
+
+export async function POST(request: NextRequest) {
+  return handleDelete(request)
+}
+
+async function handleDelete(request: NextRequest) {
+  // Authenticate user using access token from cookies
+  const supabase = createServiceClient()
+  const accessToken = request.cookies.get('sb-access-token')?.value
+
+  if (!accessToken) {
+    return NextResponse.json(
+      { success: false, error: 'לא מורשה - נדרשת התחברות' },
+      { status: 401 }
+    )
+  }
+
+  const { data: { user: authUser }, error: authError } = await supabase.auth.getUser(accessToken)
+
+  if (authError || !authUser) {
+    return NextResponse.json(
+      { success: false, error: 'לא מורשה - נדרשת התחברות' },
+      { status: 401 }
+    )
+  }
+
+  // Check if user is super admin
+  const { data: adminProfile } = await supabase
+    .from('users')
+    .select('role, is_active, full_name, email')
+    .eq('id', authUser.id)
+    .single()
+
+  if (!adminProfile || adminProfile.role !== 'super_admin' || !adminProfile.is_active) {
+    return NextResponse.json(
+      { success: false, error: 'אין הרשאה - נדרשת הרשאת מנהל ראשי' },
+      { status: 403 }
+    )
+  }
+
+  const adminUser = adminProfile
 
   try {
     const body = await request.json()

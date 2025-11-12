@@ -707,20 +707,6 @@ export default function SuperAdminPage() {
                   ↩️ חזרה לדף הבית
                 </Button>
               </Link>
-              <Link href="/super-admin/cleanup">
-                <Button
-                  className="bg-gradient-to-r from-red-500 to-pink-500 hover:from-red-600 hover:to-pink-600 text-white font-semibold px-4 py-1.5 text-sm rounded-lg transition-all duration-200 hover:scale-105"
-                >
-                  🗑️ ניקוי משתמשים
-                </Button>
-              </Link>
-              <Link href="/super-admin/migrate">
-                <Button
-                  className="bg-gradient-to-r from-blue-500 to-cyan-500 hover:from-blue-600 hover:to-cyan-600 text-white font-semibold px-4 py-1.5 text-sm rounded-lg transition-all duration-200 hover:scale-105"
-                >
-                  🔄 מיגרציית משתמשים
-                </Button>
-              </Link>
               <Button
                 onClick={async () => {
                   await logout()
@@ -1645,13 +1631,24 @@ export default function SuperAdminPage() {
 
                           <div className="flex gap-2">
                             <Button
-                              onClick={() => handleEditUser(user)}
+                              type="button"
+                              onClick={(e) => {
+                                e.preventDefault()
+                                e.stopPropagation()
+                                handleEditUser(user)
+                                setShowAddUser(false)
+                              }}
                               className="bg-gradient-to-r from-blue-500 to-cyan-500 hover:from-blue-600 hover:to-cyan-600 text-white font-semibold px-4 py-2 rounded-lg transition-all duration-200 hover:scale-105"
                             >
                               ✏️ ערוך
                             </Button>
                             <Button
-                              onClick={() => handleDeleteUser(user)}
+                              type="button"
+                              onClick={(e) => {
+                                e.preventDefault()
+                                e.stopPropagation()
+                                handleDeleteUser(user)
+                              }}
                               className="bg-gradient-to-r from-red-500 to-rose-500 hover:from-red-600 hover:to-rose-600 text-white font-semibold px-4 py-2 rounded-lg transition-all duration-200 hover:scale-105"
                             >
                               🗑️ מחק

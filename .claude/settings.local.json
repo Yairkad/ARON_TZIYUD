@@ -23,7 +23,9 @@
       "Bash(cmd /c \"if exist check-supabase.js del check-supabase.js\")",
       "Bash(start http://localhost:3000/api/debug/preview-migration)",
       "Bash(start migrate-managers.html)",
-      "Bash(cmd /c \"if exist nul del /F nul\")"
+      "Bash(cmd /c \"if exist nul del /F nul\")",
+      "Bash(start https://aron-tziyud.vercel.app/api/debug/check-db)",
+      "Bash(start cleanup-users.html)"
     ],
     "deny": [],
     "ask": []
