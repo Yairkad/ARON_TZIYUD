@@ -1278,66 +1278,68 @@ export default function CityAdminPage() {
                   </div>
                 ) : (
                   <>
-                    {/* Mobile View */}
-                    <div className="block md:hidden space-y-4">
+                    {/* Mobile View - Compact */}
+                    <div className="block md:hidden space-y-2">
                       {equipment.filter(item =>
                         item.name.toLowerCase().includes(equipmentSearchQuery.toLowerCase())
                       ).map(item => (
-                    <div key={item.id} className="bg-gradient-to-r from-blue-50 to-indigo-50 rounded-xl p-4 border-2 border-blue-200">
+                    <div key={item.id} className="bg-gradient-to-r from-blue-50 to-indigo-50 rounded-lg p-3 border border-blue-200">
                       {editingEquipment?.id === item.id ? (
-                        <div className="space-y-3">
+                        <div className="space-y-2">
                           <div>
-                            <label className="block text-xs font-semibold text-gray-600 mb-1">🎯 שם הציוד</label>
+                            <label className="block text-xs font-medium text-gray-600 mb-1">🎯 שם</label>
                             <Input
                               value={editingEquipment.name}
                               onChange={(e) => setEditingEquipment({ ...editingEquipment, name: e.target.value })}
-                              className="w-full h-12 border-2 border-blue-300 rounded-lg text-base"
+                              className="w-full h-9 border border-blue-300 rounded-lg text-sm"
                             />
                           </div>
-                          <div>
-                            <label className="block text-xs font-semibold text-gray-600 mb-1">🔢 כמות</label>
-                            <Input
-                              type="number"
-                              value={editingEquipment.quantity}
-                              onChange={(e) => setEditingEquipment({ ...editingEquipment, quantity: parseInt(e.target.value) || 0 })}
-                              className="w-full h-12 border-2 border-blue-300 rounded-lg text-base"
-                            />
+                          <div className="grid grid-cols-2 gap-2">
+                            <div>
+                              <label className="block text-xs font-medium text-gray-600 mb-1">🔢 כמות</label>
+                              <Input
+                                type="number"
+                                value={editingEquipment.quantity}
+                                onChange={(e) => setEditingEquipment({ ...editingEquipment, quantity: parseInt(e.target.value) || 0 })}
+                                className="w-full h-9 border border-blue-300 rounded-lg text-sm"
+                              />
+                            </div>
+                            <div>
+                              <label className="block text-xs font-medium text-gray-600 mb-1">🔧 סטטוס</label>
+                              <select
+                                value={editingEquipment.equipment_status}
+                                onChange={(e) => setEditingEquipment({ ...editingEquipment, equipment_status: e.target.value as 'working' | 'faulty' })}
+                                className="w-full h-9 border border-blue-300 rounded-lg px-2 text-xs font-medium"
+                              >
+                                <option value="working">✅ תקין</option>
+                                <option value="faulty">⚠️ תקול</option>
+                              </select>
+                            </div>
                           </div>
-                          <div>
-                            <label className="block text-xs font-semibold text-gray-600 mb-1">🔧 סטטוס</label>
-                            <select
-                              value={editingEquipment.equipment_status}
-                              onChange={(e) => setEditingEquipment({ ...editingEquipment, equipment_status: e.target.value as 'working' | 'faulty' })}
-                              className="w-full h-12 border-2 border-blue-300 rounded-lg px-3 text-base font-medium"
-                            >
-                              <option value="working">✅ תקין</option>
-                              <option value="faulty">⚠️ תקול</option>
-                            </select>
-                          </div>
-                          <div className="flex items-center gap-2 pr-2">
+                          <div className="flex items-center gap-1.5">
                             <input
                               type="checkbox"
                               id={`edit_consumable_${item.id}`}
                               checked={editingEquipment.is_consumable}
                               onChange={(e) => setEditingEquipment({ ...editingEquipment, is_consumable: e.target.checked })}
-                              className="w-5 h-5 rounded border-2 border-blue-300 text-blue-600 focus:ring-blue-500"
+                              className="w-4 h-4 rounded border border-blue-300 text-blue-600 focus:ring-blue-500"
                             />
-                            <label htmlFor={`edit_consumable_${item.id}`} className="text-sm font-semibold text-gray-700 cursor-pointer">
-                              🔄 ציוד מתכלה
+                            <label htmlFor={`edit_consumable_${item.id}`} className="text-xs font-medium text-gray-700 cursor-pointer">
+                              🔄 מתכלה
                             </label>
                           </div>
                           <div className="flex gap-2">
                             <Button
                               onClick={() => handleUpdateEquipment(item.id, editingEquipment.name, editingEquipment.quantity, editingEquipment.equipment_status, editingEquipment.is_consumable)}
                               disabled={loading}
-                              className="flex-1 h-12 bg-gradient-to-r from-green-500 to-emerald-500 hover:from-green-600 hover:to-emerald-600 text-white rounded-lg"
+                              className="flex-1 h-9 bg-gradient-to-r from-green-500 to-emerald-500 hover:from-green-600 hover:to-emerald-600 text-white rounded-lg text-xs"
                             >
                               ✅ שמור
                             </Button>
                             <Button
                               variant="outline"
                               onClick={() => setEditingEquipment(null)}
-                              className="flex-1 h-12 border-2 border-gray-400 rounded-lg"
+                              className="flex-1 h-9 border border-gray-400 rounded-lg text-xs"
                             >
                               ❌ ביטול
                             </Button>
@@ -1345,33 +1347,35 @@ export default function CityAdminPage() {
                         </div>
                       ) : (
                         <div>
-                          <div className="flex justify-between items-start mb-3">
-                            <div>
-                              <p className="font-bold text-lg text-gray-800">{item.name}</p>
-                              <p className={`text-2xl font-bold mt-1 ${item.quantity > 0 ? 'text-green-600' : 'text-red-600'}`}>
-                                {item.quantity} יחידות
-                              </p>
-                              <p className={`text-sm font-semibold mt-1 ${item.equipment_status === 'working' ? 'text-green-600' : 'text-orange-600'}`}>
-                                {item.equipment_status === 'working' ? '✅ תקין' : '⚠️ תקול'}
-                              </p>
-                              {item.is_consumable && (
-                                <p className="text-xs font-semibold mt-1 text-purple-600">
-                                  🔄 ציוד מתכלה
-                                </p>
-                              )}
+                          <div className="flex justify-between items-center mb-2">
+                            <div className="flex-1 min-w-0">
+                              <p className="font-bold text-sm text-gray-800 truncate">{item.name}</p>
+                              <div className="flex items-center gap-2 mt-0.5">
+                                <span className={`text-base font-bold ${item.quantity > 0 ? 'text-green-600' : 'text-red-600'}`}>
+                                  {item.quantity}
+                                </span>
+                                <span className={`text-[10px] font-semibold ${item.equipment_status === 'working' ? 'text-green-600' : 'text-orange-600'}`}>
+                                  {item.equipment_status === 'working' ? '✅' : '⚠️'}
+                                </span>
+                                {item.is_consumable && (
+                                  <span className="text-[10px] font-semibold text-purple-600">
+                                    🔄
+                                  </span>
+                                )}
+                              </div>
                             </div>
                           </div>
-                          <div className="flex gap-2">
+                          <div className="flex gap-1.5">
                             <Button
                               onClick={() => setEditingEquipment({ id: item.id, name: item.name, quantity: item.quantity, equipment_status: item.equipment_status, is_consumable: item.is_consumable })}
-                              className="flex-1 h-11 border-2 border-blue-500 text-blue-600 hover:bg-blue-50 bg-white rounded-lg"
+                              className="flex-1 h-8 border border-blue-500 text-blue-600 hover:bg-blue-50 bg-white rounded-lg text-xs font-medium"
                             >
                               ✏️ ערוך
                             </Button>
                             <Button
                               onClick={() => handleDeleteEquipment(item.id)}
                               disabled={loading}
-                              className="flex-1 h-11 bg-gradient-to-r from-red-500 to-rose-500 hover:from-red-600 hover:to-rose-600 text-white rounded-lg"
+                              className="flex-1 h-8 bg-gradient-to-r from-red-500 to-rose-500 hover:from-red-600 hover:to-rose-600 text-white rounded-lg text-xs font-medium"
                             >
                               🗑️ מחק
                             </Button>
@@ -1991,6 +1995,60 @@ export default function CityAdminPage() {
                       </div>
                     </div>
                   )}
+                </div>
+
+                {/* Hide Navigation Toggle */}
+                <div className="bg-gradient-to-r from-amber-50 to-orange-50 rounded-xl p-6 border-2 border-amber-200">
+                  <h3 className="text-lg font-bold text-gray-800 mb-4">🗺️ הצגת ניווט בדף השאלות</h3>
+                  <div className="flex items-center justify-between p-4 bg-white rounded-xl">
+                    <div>
+                      <div className="font-semibold text-gray-800">הסתר כפתורי ניווט (Google Maps / Waze)</div>
+                      <div className="text-sm text-gray-500">הסתר אפשרויות ניווט מדף השאלות - פרטי המנהלים יישארו גלויים</div>
+                    </div>
+                    <button
+                      onClick={async () => {
+                        const newValue = !city?.hide_navigation
+
+                        // Update local state immediately for instant feedback
+                        setCity({ ...city!, hide_navigation: newValue })
+
+                        try {
+                          const response = await fetch('/api/city/update-details', {
+                            method: 'POST',
+                            headers: { 'Content-Type': 'application/json' },
+                            body: JSON.stringify({
+                              cityId,
+                              manager1_name: city?.manager1_name,
+                              manager1_phone: city?.manager1_phone,
+                              manager2_name: city?.manager2_name,
+                              manager2_phone: city?.manager2_phone,
+                              location_url: city?.location_url,
+                              hide_navigation: newValue
+                            })
+                          })
+
+                          if (response.ok) {
+                            alert(newValue ? '✅ ניווט הוסתר' : '✅ ניווט מוצג')
+                          } else {
+                            // Revert on error
+                            alert('שגיאה בעדכון')
+                            fetchCity()
+                          }
+                        } catch (error) {
+                          console.error('Error updating hide_navigation:', error)
+                          alert('שגיאה בעדכון')
+                          fetchCity() // Revert to server value
+                        }
+                      }}
+                      className={`px-6 py-2 rounded-xl font-semibold transition-all ${
+                        city?.hide_navigation
+                          ? 'bg-green-500 text-white'
+                          : 'bg-gray-300 text-gray-600'
+                      }`}
+                    >
+                      {city?.hide_navigation ? 'ON' : 'OFF'}
+                    </button>
+                  </div>
                 </div>
 
                 {/* Copy Equipment Section */}

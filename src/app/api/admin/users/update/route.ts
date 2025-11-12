@@ -11,6 +11,7 @@ import { createServiceClient } from '@/lib/supabase-server'
 
 interface UpdateUserBody {
   user_id: string
+  email?: string
   full_name?: string
   permissions?: 'view_only' | 'approve_requests' | 'full_access'
   phone?: string
@@ -103,10 +104,42 @@ async function handleUpdate(request: NextRequest) {
       updated_at: new Date().toISOString(),
     }
 
+    if (body.email !== undefined) updateData.email = body.email
     if (body.full_name !== undefined) updateData.full_name = body.full_name
     if (body.permissions !== undefined) updateData.permissions = body.permissions
     if (body.phone !== undefined) updateData.phone = body.phone
     if (body.is_active !== undefined) updateData.is_active = body.is_active
+
+    // Update email in Auth if provided (must be done before updating public.users)
+    if (body.email && body.email !== existingUser.email) {
+      // Check if new email already exists
+      const { data: existingEmailUser } = await supabase
+        .from('users')
+        .select('id')
+        .eq('email', body.email)
+        .neq('id', body.user_id)
+        .single()
+
+      if (existingEmailUser) {
+        return NextResponse.json(
+          { success: false, error: 'כתובת המייל כבר בשימוש' },
+          { status: 400 }
+        )
+      }
+
+      const { error: emailError } = await supabase.auth.admin.updateUserById(
+        body.user_id,
+        { email: body.email }
+      )
+
+      if (emailError) {
+        console.error('Error updating email:', emailError)
+        return NextResponse.json(
+          { success: false, error: 'שגיאה בעדכון כתובת המייל' },
+          { status: 500 }
+        )
+      }
+    }
 
     // Update user in public.users table
     const { data: updatedUser, error: updateError } = await supabase

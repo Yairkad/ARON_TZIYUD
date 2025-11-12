@@ -515,7 +515,7 @@ export default function CityPage() {
             )}
 
             {/* Navigation Links */}
-            {((city.lat && city.lng) || city.location_url) && (
+            {!city.hide_navigation && ((city.lat && city.lng) || city.location_url) && (
               <div>
                 <h3 className="text-lg font-semibold text-gray-800 mb-3 flex items-center gap-2">
                   <span className="text-xl">🗺️</span>

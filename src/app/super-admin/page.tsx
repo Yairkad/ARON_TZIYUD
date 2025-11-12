@@ -1394,7 +1394,9 @@ export default function SuperAdminPage() {
                       </div>
 
                       <div className="space-y-2">
-                        <label className="block text-sm font-semibold text-gray-700">📧 כתובת מייל</label>
+                        <label className="block text-sm font-semibold text-gray-700">
+                          📧 כתובת מייל {editingUser && '(ניתן לשנות)'}
+                        </label>
                         <Input
                           type="email"
                           value={userForm.email}
@@ -1402,8 +1404,12 @@ export default function SuperAdminPage() {
                           placeholder="email@example.com"
                           className="h-12 border-2 border-gray-200 rounded-xl focus:border-purple-500 transition-colors"
                           required
-                          disabled={!!editingUser}
                         />
+                        {editingUser && (
+                          <p className="text-xs text-amber-600">
+                            ⚠️ שינוי המייל ישנה את המייל שבו המשתמש מתחבר למערכת
+                          </p>
+                        )}
                       </div>
 
                       <div className="space-y-2">
