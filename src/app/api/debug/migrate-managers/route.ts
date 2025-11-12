@@ -107,15 +107,29 @@ export async function POST(request: Request) {
           const email = `admin${adminCounter}@aron.local`
           const password = DEFAULT_PASSWORD
 
+          console.log(`Processing: ${city.name} - ${manager.name} -> ${email}`)
+
           // Check if user already exists in users table
-          const { data: existingUser } = await supabase
+          const { data: existingUser, error: checkError } = await supabase
             .from('users')
             .select('id, email')
             .eq('city_id', city.id)
             .eq('manager_role', manager.role)
             .maybeSingle()
 
+          if (checkError) {
+            console.error(`Error checking existing user for ${email}:`, checkError)
+            results.errors.push({
+              city: city.name,
+              manager: manager.name,
+              error: `Error checking user: ${checkError.message}`
+            })
+            results.summary.failed++
+            continue
+          }
+
           if (existingUser) {
+            console.log(`User already exists: ${existingUser.email}`)
             results.processed.push({
               city: city.name,
               manager: manager.name,
@@ -127,6 +141,8 @@ export async function POST(request: Request) {
             results.summary.skipped++
             continue
           }
+
+          console.log(`Creating user in Auth: ${email}`)
 
           // Create user in Supabase Auth
           const { data: authData, error: authError } = await supabase.auth.admin.createUser({
@@ -144,6 +160,7 @@ export async function POST(request: Request) {
           })
 
           if (authError) {
+            console.error(`Auth error for ${email}:`, authError)
             results.errors.push({
               city: city.name,
               manager: manager.name,
@@ -152,6 +169,8 @@ export async function POST(request: Request) {
             results.summary.failed++
             continue
           }
+
+          console.log(`User created in Auth: ${authData.user.id}`)
 
           // Wait a bit for the trigger to create user in public.users
           await new Promise(resolve => setTimeout(resolve, 500))
