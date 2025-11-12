@@ -645,6 +645,14 @@ export default function SuperAdminPage() {
       phone: user.phone || '',
       manager_role: user.manager_role || '',
     })
+
+    // Scroll to the form
+    setTimeout(() => {
+      const formElement = document.querySelector('[data-edit-user-form]')
+      if (formElement) {
+        formElement.scrollIntoView({ behavior: 'smooth', block: 'start' })
+      }
+    }, 100)
   }
 
   const filteredUsers = users.filter(user => {
@@ -1361,7 +1369,7 @@ export default function SuperAdminPage() {
 
             {/* Add/Edit User Form */}
             {(showAddUser || editingUser) && (
-              <Card className="mb-6 border-2 border-purple-200 bg-gradient-to-r from-purple-50 to-pink-50 shadow-lg">
+              <Card className="mb-6 border-2 border-purple-200 bg-gradient-to-r from-purple-50 to-pink-50 shadow-lg" data-edit-user-form>
                 <CardHeader>
                   <CardTitle className="text-2xl font-bold text-gray-800">
                     {editingUser ? '✏️ עריכת משתמש' : '➕ הוספת משתמש חדש'}
