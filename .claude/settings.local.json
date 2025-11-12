@@ -25,7 +25,11 @@
       "Bash(start migrate-managers.html)",
       "Bash(cmd /c \"if exist nul del /F nul\")",
       "Bash(start https://aron-tziyud.vercel.app/api/debug/check-db)",
-      "Bash(start cleanup-users.html)"
+      "Bash(start cleanup-users.html)",
+      "Bash(del \"C:\\Users\\יאיר קדוש\\ARON_TZIYUD\\src\\app\\select-city\\page.tsx\")",
+      "Bash(cmd /c \"del /F /Q \"\"C:\\Users\\יאיר קדוש\\ARON_TZIYUD\\src\\app\\select-city\\page.tsx\"\"\")",
+      "Bash(cmd /c \"rmdir /S /Q \"\"C:\\Users\\יאיר קדוש\\ARON_TZIYUD\\src\\app\\select-city\"\"\")",
+      "Bash(cmd /c \"rmdir /S /Q \"\"C:\\Users\\יאיר קדוש\\ARON_TZIYUD\\src\\app\\api\\user\"\"\")"
     ],
     "deny": [],
     "ask": []
