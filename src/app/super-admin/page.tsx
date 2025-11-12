@@ -17,6 +17,7 @@ export default function SuperAdminPage() {
   const [notifications, setNotifications] = useState<AdminNotification[]>([])
   const [unreadCount, setUnreadCount] = useState(0)
   const [isAuthenticated, setIsAuthenticated] = useState(false)
+  const [isCheckingAuth, setIsCheckingAuth] = useState(true) // Add loading state for auth check
   const [email, setEmail] = useState('')
   const [password, setPassword] = useState('')
   const [rememberMe, setRememberMe] = useState(false)
@@ -48,12 +49,19 @@ export default function SuperAdminPage() {
   // Check authentication on mount
   useEffect(() => {
     const verifyAuth = async () => {
+      console.log('🔐 Checking authentication...')
       const { authenticated, userType } = await checkAuth()
+      console.log('🔐 Auth result:', { authenticated, userType })
+
       if (authenticated && userType === 'super') {
         setIsAuthenticated(true)
+        console.log('✅ User is authenticated as super admin')
       } else {
         setIsAuthenticated(false)
+        console.log('❌ User is not authenticated or not super admin')
       }
+
+      setIsCheckingAuth(false) // Auth check complete
     }
     verifyAuth()
   }, [])
@@ -638,9 +646,22 @@ export default function SuperAdminPage() {
     }
   }, [isAuthenticated, activeTab])
 
-  // Redirect to unified login if not authenticated
+  // Show loading while checking authentication
+  if (isCheckingAuth) {
+    return (
+      <div className="min-h-screen content-wrapper flex items-center justify-center">
+        <div className="text-center">
+          <div className="text-4xl mb-4">⏳</div>
+          <p className="text-gray-600">בודק הרשאות...</p>
+        </div>
+      </div>
+    )
+  }
+
+  // Redirect to unified login if not authenticated (only after check is complete)
   if (!isAuthenticated) {
     if (typeof window !== 'undefined') {
+      console.log('🔄 Not authenticated, redirecting to /login')
       window.location.href = '/login'
     }
     return (
