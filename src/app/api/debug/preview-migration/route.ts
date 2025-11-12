@@ -10,17 +10,14 @@ import { createServiceClient } from '@/lib/supabase-server'
 
 export const dynamic = 'force-dynamic'
 
-function createEmailForManager(cityName: string, cityId: string, managerRole: 'manager1' | 'manager2'): string {
-  // Create unique email using city name: beitshemesh-manager1@aron.local
-  const cleanName = cityName
-    .toLowerCase()
-    .replace(/\s+/g, '')  // Remove spaces
-    .replace(/[^\u0590-\u05FFa-z0-9]/g, '')  // Keep only Hebrew, English, and numbers
-    .substring(0, 20)  // Limit length
+// Global counter for admin emails
+let adminCounter = 1
 
-  // Add first 8 chars of UUID to ensure uniqueness
-  const shortId = cityId.substring(0, 8)
-  return `${cleanName}-${shortId}-${managerRole}@aron.local`
+function createEmailForManager(): string {
+  // Create simple sequential email: admin1@aron.local, admin2@aron.local, etc.
+  const email = `admin${adminCounter}@aron.local`
+  adminCounter++
+  return email
 }
 
 export async function GET() {
