@@ -116,12 +116,12 @@ export default function RequestPage({ params }: { params: Promise<{ token: strin
         return
       }
 
-      // Success - redirect to city page for equipment return
+      // Success - redirect directly to return page
       alert('✅ הציוד נלקח בהצלחה! המלאי עודכן.\n\nעכשיו תועבר לעמוד ההחזרה.')
 
-      // Redirect to city page after short delay
+      // Redirect to return page after short delay
       setTimeout(() => {
-        router.push(`/city/${data.city_id}`)
+        router.push(`/city/${data.city_id}/return`)
       }, 1500)
     } catch (error) {
       console.error('Confirm pickup error:', error)
