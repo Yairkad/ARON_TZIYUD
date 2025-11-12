@@ -53,7 +53,7 @@ export async function GET() {
           name: city.manager1_name,
           phone: city.manager1_phone,
           role: 'manager1',
-          email_will_be: createEmailForManager(city.name, city.id, 'manager1'),
+          email_will_be: createEmailForManager(),
           password_will_be: '123456'
         })
         totalManagers++
@@ -65,7 +65,7 @@ export async function GET() {
           name: city.manager2_name,
           phone: city.manager2_phone,
           role: 'manager2',
-          email_will_be: createEmailForManager(city.name, city.id, 'manager2'),
+          email_will_be: createEmailForManager(),
           password_will_be: '123456'
         })
         totalManagers++
