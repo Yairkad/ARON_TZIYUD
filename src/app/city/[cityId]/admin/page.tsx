@@ -360,9 +360,16 @@ export default function CityAdminPage() {
   // בדיקת אימות בטעינת הדף
   useEffect(() => {
     const verifyAuth = async () => {
-      const { authenticated, userId } = await checkAuth()
-      if (authenticated && userId === cityId) {
+      const { authenticated, userId, userType } = await checkAuth()
+
+      // Allow access if:
+      // 1. Logged in as super admin (can access any city)
+      // 2. Logged in as city manager for this specific city
+      if (authenticated && (userType === 'super' || userId === cityId)) {
+        console.log('✅ Access granted:', userType === 'super' ? 'Super Admin' : 'City Manager')
         setIsAuthenticated(true)
+      } else {
+        console.log('❌ Access denied - not authenticated or wrong city')
       }
     }
     verifyAuth()
