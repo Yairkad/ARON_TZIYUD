@@ -68,10 +68,10 @@ export async function POST(request: NextRequest) {
 
     // Update manager details only if provided
     if (manager1_name !== undefined) {
-      updateData.manager1_name = manager1_name.trim()
+      updateData.manager1_name = manager1_name ? manager1_name.trim() : null
     }
     if (manager1_phone !== undefined) {
-      updateData.manager1_phone = manager1_phone.trim()
+      updateData.manager1_phone = manager1_phone ? manager1_phone.trim() : null
     }
     if (manager2_name !== undefined) {
       updateData.manager2_name = manager2_name ? manager2_name.trim() : null

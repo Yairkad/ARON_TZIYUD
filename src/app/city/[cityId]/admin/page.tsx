@@ -134,6 +134,7 @@ export default function CityAdminPage() {
   const [enablingPush, setEnablingPush] = useState(false)
   const [isCityDetailsExpanded, setIsCityDetailsExpanded] = useState(false)
   const [equipmentSearchQuery, setEquipmentSearchQuery] = useState('')
+  const [currentUser, setCurrentUser] = useState<any>(null)
 
   useEffect(() => {
     if (cityId) {
@@ -362,7 +363,7 @@ export default function CityAdminPage() {
   // בדיקת אימות בטעינת הדף
   useEffect(() => {
     const verifyAuth = async () => {
-      const { authenticated, userId, userType, cityId: userCityId } = await checkAuth()
+      const { authenticated, userId, userType, cityId: userCityId, user } = await checkAuth()
 
       // Allow access if:
       // 1. Logged in as super admin (can access any city)
@@ -370,8 +371,10 @@ export default function CityAdminPage() {
       if (authenticated && (userType === 'super' || userCityId === cityId)) {
         console.log('✅ Access granted:', userType === 'super' ? 'Super Admin' : 'City Manager', { userId, userCityId, cityId })
         setIsAuthenticated(true)
+        setCurrentUser(user)
       } else {
         console.log('❌ Access denied - not authenticated or wrong city', { authenticated, userType, userCityId, cityId })
+        setCurrentUser(null)
       }
 
       setIsCheckingAuth(false) // Auth check complete
@@ -381,6 +384,12 @@ export default function CityAdminPage() {
 
   const handleChangePassword = async (e: React.FormEvent) => {
     e.preventDefault()
+
+    // Check permissions
+    if (currentUser?.permissions === 'view_only') {
+      alert('אין לך הרשאה לבצע פעולה זו - הרשאת צפיה בלבד')
+      return
+    }
 
     if (!city) {
       alert('שגיאה בטעינת נתוני העיר')
@@ -432,6 +441,13 @@ export default function CityAdminPage() {
 
   const handleAddEquipment = async (e: React.FormEvent) => {
     e.preventDefault()
+
+    // Check permissions
+    if (currentUser?.permissions === 'view_only') {
+      alert('אין לך הרשאה לבצע פעולה זו - הרשאת צפיה בלבד')
+      return
+    }
+
     if (!newEquipment.name || newEquipment.quantity < 0) {
       alert('אנא מלא שם וכמות תקינים')
       return
@@ -463,6 +479,12 @@ export default function CityAdminPage() {
   }
 
   const handleUpdateEquipment = async (id: string, name: string, quantity: number, equipment_status: 'working' | 'faulty', is_consumable: boolean) => {
+    // Check permissions
+    if (currentUser?.permissions === 'view_only') {
+      alert('אין לך הרשאה לבצע פעולה זו - הרשאת צפיה בלבד')
+      return
+    }
+
     if (!name || quantity < 0) {
       alert('אנא מלא שם וכמות תקינים')
       return
@@ -489,6 +511,12 @@ export default function CityAdminPage() {
   }
 
   const handleDeleteEquipment = async (id: string) => {
+    // Check permissions
+    if (currentUser?.permissions === 'view_only') {
+      alert('אין לך הרשאה לבצע פעולה זו - הרשאת צפיה בלבד')
+      return
+    }
+
     if (!confirm('האם אתה בטוח שברצונך למחוק פריט זה?')) return
 
     setLoading(true)
@@ -625,6 +653,12 @@ export default function CityAdminPage() {
 
   // Print functionality
   const handleDeleteHistory = async (id: string) => {
+    // Check permissions
+    if (currentUser?.permissions === 'view_only') {
+      alert('אין לך הרשאה לבצע פעולה זו - הרשאת צפיה בלבד')
+      return
+    }
+
     if (!confirm('האם אתה בטוח שברצונך למחוק רשומה זו?')) return
 
     setLoading(true)
@@ -649,6 +683,12 @@ export default function CityAdminPage() {
   const handleUpdateCityDetails = async (e: React.FormEvent) => {
     e.preventDefault()
     if (!city) return
+
+    // Check permissions
+    if (currentUser?.permissions === 'view_only') {
+      alert('אין לך הרשאה לבצע פעולה זו - הרשאת צפיה בלבד')
+      return
+    }
 
     // Validation
     if (!editCityForm.manager1_name.trim() || !editCityForm.manager1_phone.trim()) {
