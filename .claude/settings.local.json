@@ -17,7 +17,13 @@
       "Bash(node check-user-status.js:*)",
       "Bash(del add-to-public-users.sql check-user-status.js create-super-admin-sql.sql fix-super-admin-user.js preview-home-design.html)",
       "Bash(cmd /c \"del add-to-public-users.sql check-user-status.js create-super-admin-sql.sql fix-super-admin-user.js preview-home-design.html nul 2>nul\")",
-      "Bash(cmd /c \"node create-super-admin-properly.js\")"
+      "Bash(cmd /c \"node create-super-admin-properly.js\")",
+      "Bash(cmd /c \"set NEXT_PUBLIC_SUPABASE_URL=https://jgkmcsxrtovrdiguhwyv.supabase.co && set SUPABASE_SERVICE_ROLE_KEY=eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Impna21jc3hydG92cmRpZ3Vod3l2Iiwicm9sZSI6InNlcnZpY2Vfcm9sZSIsImlhdCI6MTc2MjEwNzExMiwiZXhwIjoyMDc3NjgzMTEyfQ.yTAJKE4koX56lJ8ZA0utYf9x2Ytj_mLHwIOzt-xpYxY && node create-super-admin-properly.js\")",
+      "Bash(if exist check-supabase.js del check-supabase.js)",
+      "Bash(cmd /c \"if exist check-supabase.js del check-supabase.js\")",
+      "Bash(start http://localhost:3000/api/debug/preview-migration)",
+      "Bash(start migrate-managers.html)",
+      "Bash(cmd /c \"if exist nul del /F nul\")"
     ],
     "deny": [],
     "ask": []
