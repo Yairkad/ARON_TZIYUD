@@ -1041,30 +1041,32 @@ export default function SuperAdminPage() {
                           {city.is_active ? '✅ פעילה' : '❌ לא פעילה'}
                         </div>
                       </div>
-                      <div className="flex gap-2">
+                      <div className="grid grid-cols-2 md:grid-cols-4 gap-2">
                         <Button
                           onClick={() => router.push(`/city/${city.id}/admin`)}
-                          className="flex-1 bg-gradient-to-r from-purple-600 to-pink-600 hover:from-purple-700 hover:to-pink-700 text-white font-bold"
+                          className="bg-gradient-to-r from-purple-600 to-pink-600 hover:from-purple-700 hover:to-pink-700 text-white font-bold text-sm md:text-base h-10 md:h-auto"
                         >
-                          🚪 כניסה לניהול
+                          <span className="hidden sm:inline">🚪 כניסה לניהול</span>
+                          <span className="sm:hidden">🚪 ניהול</span>
                         </Button>
                         <Button
                           onClick={() => setEditingCity(city)}
-                          className="flex-1 bg-blue-500 hover:bg-blue-600"
+                          className="bg-blue-500 hover:bg-blue-600 text-sm md:text-base h-10 md:h-auto"
                         >
                           ✏️ ערוך
                         </Button>
                         <Button
                           onClick={() => handleToggleActive(city)}
                           disabled={loading}
-                          className={`flex-1 ${city.is_active ? 'bg-orange-500 hover:bg-orange-600' : 'bg-green-500 hover:bg-green-600'}`}
+                          className={`text-sm md:text-base h-10 md:h-auto ${city.is_active ? 'bg-orange-500 hover:bg-orange-600' : 'bg-green-500 hover:bg-green-600'}`}
                         >
-                          {city.is_active ? '🔴 השבת' : '🟢 הפעל'}
+                          <span className="hidden sm:inline">{city.is_active ? '🔴 השבת' : '🟢 הפעל'}</span>
+                          <span className="sm:hidden">{city.is_active ? '🔴' : '🟢'}</span>
                         </Button>
                         <Button
                           onClick={() => handleDeleteCity(city)}
                           disabled={loading}
-                          className="flex-1 bg-red-500 hover:bg-red-600"
+                          className="bg-red-500 hover:bg-red-600 text-sm md:text-base h-10 md:h-auto"
                         >
                           🗑️ מחק
                         </Button>
