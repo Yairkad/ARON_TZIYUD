@@ -31,7 +31,8 @@
       "Bash(cmd /c \"rmdir /S /Q \"\"C:\\Users\\יאיר קדוש\\ARON_TZIYUD\\src\\app\\select-city\"\"\")",
       "Bash(cmd /c \"rmdir /S /Q \"\"C:\\Users\\יאיר קדוש\\ARON_TZIYUD\\src\\app\\api\\user\"\"\")",
       "Bash(git rm:*)",
-      "Bash(cmd /c \"npx vercel list\")"
+      "Bash(cmd /c \"npx vercel list\")",
+      "Bash(cmd /c \"type \"\"c:\\Users\\יאיר קדוש\\ARON_TZIYUD\\src\\app\\api\\city\\change-password\\route.ts\"\"\")"
     ],
     "deny": [],
     "ask": []

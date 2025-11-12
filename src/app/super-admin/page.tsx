@@ -1085,7 +1085,7 @@ export default function SuperAdminPage() {
                           {city.is_active ? '✅ פעילה' : '❌ לא פעילה'}
                         </div>
                       </div>
-                      <div className="grid grid-cols-2 md:grid-cols-4 gap-2">
+                      <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-5 gap-2">
                         <Button
                           onClick={() => router.push(`/city/${city.id}/admin`)}
                           className="bg-gradient-to-r from-purple-600 to-pink-600 hover:from-purple-700 hover:to-pink-700 text-white font-bold text-sm md:text-base h-10 md:h-auto"
@@ -1100,6 +1100,49 @@ export default function SuperAdminPage() {
                               className="bg-blue-500 hover:bg-blue-600 text-sm md:text-base h-10 md:h-auto"
                             >
                               ✏️ ערוך
+                            </Button>
+                            <Button
+                              onClick={async () => {
+                                const newPassword = prompt('הזן סיסמה חדשה לעיר (השאר ריק עבור 123456):') ?? '123456'
+
+                                if (newPassword.length < 4) {
+                                  alert('הסיסמה חייבת להכיל לפחות 4 תווים')
+                                  return
+                                }
+
+                                if (!confirm(`האם לאפס את הסיסמה של העיר ${city.name}?\nסיסמה חדשה: ${newPassword}`)) return
+
+                                setLoading(true)
+                                try {
+                                  const response = await fetch('/api/admin/cities/reset-password', {
+                                    method: 'POST',
+                                    headers: { 'Content-Type': 'application/json' },
+                                    credentials: 'include',
+                                    body: JSON.stringify({
+                                      city_id: city.id,
+                                      new_password: newPassword
+                                    }),
+                                  })
+
+                                  const data = await response.json()
+
+                                  if (!response.ok) {
+                                    alert(data.error || 'שגיאה באיפוס סיסמה')
+                                    return
+                                  }
+
+                                  alert(data.message)
+                                } catch (error) {
+                                  console.error('Error resetting city password:', error)
+                                  alert('אירעה שגיאה באיפוס הסיסמה')
+                                } finally {
+                                  setLoading(false)
+                                }
+                              }}
+                              disabled={loading}
+                              className="bg-gradient-to-r from-amber-500 to-orange-500 hover:from-amber-600 hover:to-orange-600 text-sm md:text-base h-10 md:h-auto"
+                            >
+                              🔑 אפס סיסמה
                             </Button>
                             <Button
                               onClick={() => handleToggleActive(city)}
@@ -1627,7 +1670,7 @@ export default function SuperAdminPage() {
                             </div>
                           </div>
 
-                          <div className="flex gap-2">
+                          <div className="flex gap-2 flex-wrap">
                             <Button
                               type="button"
                               onClick={(e) => {
@@ -1639,6 +1682,52 @@ export default function SuperAdminPage() {
                               className="bg-gradient-to-r from-blue-500 to-cyan-500 hover:from-blue-600 hover:to-cyan-600 text-white font-semibold px-4 py-2 rounded-lg transition-all duration-200 hover:scale-105"
                             >
                               ✏️ ערוך
+                            </Button>
+                            <Button
+                              type="button"
+                              onClick={async (e) => {
+                                e.preventDefault()
+                                e.stopPropagation()
+
+                                const newPassword = prompt('הזן סיסמה חדשה (השאר ריק עבור 123456):') ?? '123456'
+
+                                if (newPassword.length < 4) {
+                                  alert('הסיסמה חייבת להכיל לפחות 4 תווים')
+                                  return
+                                }
+
+                                if (!confirm(`האם לאפס את הסיסמה של ${user.full_name}?\nסיסמה חדשה: ${newPassword}`)) return
+
+                                setLoading(true)
+                                try {
+                                  const response = await fetch('/api/admin/users/reset-password', {
+                                    method: 'POST',
+                                    headers: { 'Content-Type': 'application/json' },
+                                    credentials: 'include',
+                                    body: JSON.stringify({
+                                      user_id: user.id,
+                                      new_password: newPassword
+                                    }),
+                                  })
+
+                                  const data = await response.json()
+
+                                  if (!response.ok) {
+                                    alert(data.error || 'שגיאה באיפוס סיסמה')
+                                    return
+                                  }
+
+                                  alert(data.message)
+                                } catch (error) {
+                                  console.error('Error resetting password:', error)
+                                  alert('אירעה שגיאה באיפוס הסיסמה')
+                                } finally {
+                                  setLoading(false)
+                                }
+                              }}
+                              className="bg-gradient-to-r from-amber-500 to-orange-500 hover:from-amber-600 hover:to-orange-600 text-white font-semibold px-4 py-2 rounded-lg transition-all duration-200 hover:scale-105"
+                            >
+                              🔑 אפס סיסמה
                             </Button>
                             <Button
                               type="button"
