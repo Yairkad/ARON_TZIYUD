@@ -2374,36 +2374,66 @@ export default function CityAdminPage() {
                       <form onSubmit={handleChangePassword} className="space-y-4">
                         <div className="space-y-2">
                           <label className="block text-sm font-semibold text-gray-700">🔑 סיסמה נוכחית</label>
-                          <Input
-                            type="password"
-                            value={changePasswordForm.currentPassword}
-                            onChange={(e) => setChangePasswordForm({ ...changePasswordForm, currentPassword: e.target.value })}
-                            placeholder="הזן סיסמה נוכחית"
-                            className="h-12 border-2 border-gray-200 rounded-xl focus:border-blue-500 transition-colors"
-                            required
-                          />
+                          <div className="relative">
+                            <Input
+                              type={showPasswordFields.current ? "text" : "password"}
+                              value={changePasswordForm.currentPassword}
+                              onChange={(e) => setChangePasswordForm({ ...changePasswordForm, currentPassword: e.target.value })}
+                              placeholder="הזן סיסמה נוכחית"
+                              className="h-12 border-2 border-gray-200 rounded-xl focus:border-blue-500 transition-colors pr-12"
+                              required
+                            />
+                            <button
+                              type="button"
+                              onClick={() => setShowPasswordFields({ ...showPasswordFields, current: !showPasswordFields.current })}
+                              className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-500 hover:text-gray-700 transition-colors"
+                              tabIndex={-1}
+                            >
+                              {showPasswordFields.current ? '👁️' : '👁️‍🗨️'}
+                            </button>
+                          </div>
                         </div>
                         <div className="space-y-2">
                           <label className="block text-sm font-semibold text-gray-700">🆕 סיסמה חדשה</label>
-                          <Input
-                            type="password"
-                            value={changePasswordForm.newPassword}
-                            onChange={(e) => setChangePasswordForm({ ...changePasswordForm, newPassword: e.target.value })}
-                            placeholder="הזן סיסמה חדשה"
-                            className="h-12 border-2 border-gray-200 rounded-xl focus:border-blue-500 transition-colors"
-                            required
-                          />
+                          <div className="relative">
+                            <Input
+                              type={showPasswordFields.new ? "text" : "password"}
+                              value={changePasswordForm.newPassword}
+                              onChange={(e) => setChangePasswordForm({ ...changePasswordForm, newPassword: e.target.value })}
+                              placeholder="הזן סיסמה חדשה"
+                              className="h-12 border-2 border-gray-200 rounded-xl focus:border-blue-500 transition-colors pr-12"
+                              required
+                            />
+                            <button
+                              type="button"
+                              onClick={() => setShowPasswordFields({ ...showPasswordFields, new: !showPasswordFields.new })}
+                              className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-500 hover:text-gray-700 transition-colors"
+                              tabIndex={-1}
+                            >
+                              {showPasswordFields.new ? '👁️' : '👁️‍🗨️'}
+                            </button>
+                          </div>
                         </div>
                         <div className="space-y-2">
                           <label className="block text-sm font-semibold text-gray-700">✅ אימות סיסמה חדשה</label>
-                          <Input
-                            type="password"
-                            value={changePasswordForm.confirmPassword}
-                            onChange={(e) => setChangePasswordForm({ ...changePasswordForm, confirmPassword: e.target.value })}
-                            placeholder="הזן שוב את הסיסמה החדשה"
-                            className="h-12 border-2 border-gray-200 rounded-xl focus:border-blue-500 transition-colors"
-                            required
-                          />
+                          <div className="relative">
+                            <Input
+                              type={showPasswordFields.confirm ? "text" : "password"}
+                              value={changePasswordForm.confirmPassword}
+                              onChange={(e) => setChangePasswordForm({ ...changePasswordForm, confirmPassword: e.target.value })}
+                              placeholder="הזן שוב את הסיסמה החדשה"
+                              className="h-12 border-2 border-gray-200 rounded-xl focus:border-blue-500 transition-colors pr-12"
+                              required
+                            />
+                            <button
+                              type="button"
+                              onClick={() => setShowPasswordFields({ ...showPasswordFields, confirm: !showPasswordFields.confirm })}
+                              className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-500 hover:text-gray-700 transition-colors"
+                              tabIndex={-1}
+                            >
+                              {showPasswordFields.confirm ? '👁️' : '👁️‍🗨️'}
+                            </button>
+                          </div>
                         </div>
                         <div className="flex gap-3 pt-2">
                           <Button

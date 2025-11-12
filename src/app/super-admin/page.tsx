@@ -46,6 +46,14 @@ export default function SuperAdminPage() {
   })
   const [userFilter, setUserFilter] = useState<'all' | 'city_manager' | 'super_admin'>('all')
 
+  // Password visibility state for all password fields
+  const [showNewCityPassword, setShowNewCityPassword] = useState(false)
+  const [showEditCityPassword, setShowEditCityPassword] = useState(false)
+  const [showChangePasswordCurrent, setShowChangePasswordCurrent] = useState(false)
+  const [showChangePasswordNew, setShowChangePasswordNew] = useState(false)
+  const [showChangePasswordConfirm, setShowChangePasswordConfirm] = useState(false)
+  const [showUserFormPassword, setShowUserFormPassword] = useState(false)
+
   // Check authentication on mount
   useEffect(() => {
     const verifyAuth = async () => {
@@ -870,14 +878,24 @@ export default function SuperAdminPage() {
                   </div>
                   <div className="space-y-2">
                     <label className="block text-sm font-semibold text-gray-700">🔐 סיסמת העיר</label>
-                    <Input
-                      type="password"
-                      value={newCity.password}
-                      onChange={(e) => setNewCity({ ...newCity, password: e.target.value })}
-                      placeholder="הזן סיסמה"
-                      className="h-12"
-                      required
-                    />
+                    <div className="relative">
+                      <Input
+                        type={showNewCityPassword ? "text" : "password"}
+                        value={newCity.password}
+                        onChange={(e) => setNewCity({ ...newCity, password: e.target.value })}
+                        placeholder="הזן סיסמה"
+                        className="h-12 pr-12"
+                        required
+                      />
+                      <button
+                        type="button"
+                        onClick={() => setShowNewCityPassword(!showNewCityPassword)}
+                        className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-500 hover:text-gray-700 transition-colors"
+                        tabIndex={-1}
+                      >
+                        {showNewCityPassword ? '👁️' : '👁️‍🗨️'}
+                      </button>
+                    </div>
                   </div>
                 </div>
                 <Button
@@ -981,13 +999,24 @@ export default function SuperAdminPage() {
                             placeholder="📍 קישור Google Maps (אופציונלי)"
                           />
                         </div>
-                        <Input
-                          type="password"
-                          value={editingCity.password}
-                          onChange={(e) => setEditingCity({ ...editingCity, password: e.target.value })}
-                          placeholder="סיסמה"
-                          required
-                        />
+                        <div className="relative">
+                          <Input
+                            type={showEditCityPassword ? "text" : "password"}
+                            value={editingCity.password}
+                            onChange={(e) => setEditingCity({ ...editingCity, password: e.target.value })}
+                            placeholder="סיסמה"
+                            required
+                            className="pr-12"
+                          />
+                          <button
+                            type="button"
+                            onClick={() => setShowEditCityPassword(!showEditCityPassword)}
+                            className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-500 hover:text-gray-700 transition-colors"
+                            tabIndex={-1}
+                          >
+                            {showEditCityPassword ? '👁️' : '👁️‍🗨️'}
+                          </button>
+                        </div>
                       </div>
                       <div className="flex gap-2">
                         <Button type="submit" disabled={loading} className="flex-1 bg-green-500 hover:bg-green-600">
@@ -1196,36 +1225,66 @@ export default function SuperAdminPage() {
                       <form onSubmit={handleChangePassword} className="space-y-4">
                         <div className="space-y-2">
                           <label className="block text-sm font-semibold text-gray-700">🔑 סיסמה נוכחית</label>
-                          <Input
-                            type="password"
-                            value={changePasswordForm.currentPassword}
-                            onChange={(e) => setChangePasswordForm({ ...changePasswordForm, currentPassword: e.target.value })}
-                            placeholder="הזן סיסמה נוכחית"
-                            className="h-12 border-2 border-gray-200 rounded-xl focus:border-purple-500 transition-colors"
-                            required
-                          />
+                          <div className="relative">
+                            <Input
+                              type={showChangePasswordCurrent ? "text" : "password"}
+                              value={changePasswordForm.currentPassword}
+                              onChange={(e) => setChangePasswordForm({ ...changePasswordForm, currentPassword: e.target.value })}
+                              placeholder="הזן סיסמה נוכחית"
+                              className="h-12 border-2 border-gray-200 rounded-xl focus:border-purple-500 transition-colors pr-12"
+                              required
+                            />
+                            <button
+                              type="button"
+                              onClick={() => setShowChangePasswordCurrent(!showChangePasswordCurrent)}
+                              className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-500 hover:text-gray-700 transition-colors"
+                              tabIndex={-1}
+                            >
+                              {showChangePasswordCurrent ? '👁️' : '👁️‍🗨️'}
+                            </button>
+                          </div>
                         </div>
                         <div className="space-y-2">
                           <label className="block text-sm font-semibold text-gray-700">🆕 סיסמה חדשה</label>
-                          <Input
-                            type="password"
-                            value={changePasswordForm.newPassword}
-                            onChange={(e) => setChangePasswordForm({ ...changePasswordForm, newPassword: e.target.value })}
-                            placeholder="הזן סיסמה חדשה"
-                            className="h-12 border-2 border-gray-200 rounded-xl focus:border-purple-500 transition-colors"
-                            required
-                          />
+                          <div className="relative">
+                            <Input
+                              type={showChangePasswordNew ? "text" : "password"}
+                              value={changePasswordForm.newPassword}
+                              onChange={(e) => setChangePasswordForm({ ...changePasswordForm, newPassword: e.target.value })}
+                              placeholder="הזן סיסמה חדשה"
+                              className="h-12 border-2 border-gray-200 rounded-xl focus:border-purple-500 transition-colors pr-12"
+                              required
+                            />
+                            <button
+                              type="button"
+                              onClick={() => setShowChangePasswordNew(!showChangePasswordNew)}
+                              className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-500 hover:text-gray-700 transition-colors"
+                              tabIndex={-1}
+                            >
+                              {showChangePasswordNew ? '👁️' : '👁️‍🗨️'}
+                            </button>
+                          </div>
                         </div>
                         <div className="space-y-2">
                           <label className="block text-sm font-semibold text-gray-700">✅ אימות סיסמה חדשה</label>
-                          <Input
-                            type="password"
-                            value={changePasswordForm.confirmPassword}
-                            onChange={(e) => setChangePasswordForm({ ...changePasswordForm, confirmPassword: e.target.value })}
-                            placeholder="הזן שוב את הסיסמה החדשה"
-                            className="h-12 border-2 border-gray-200 rounded-xl focus:border-purple-500 transition-colors"
-                            required
-                          />
+                          <div className="relative">
+                            <Input
+                              type={showChangePasswordConfirm ? "text" : "password"}
+                              value={changePasswordForm.confirmPassword}
+                              onChange={(e) => setChangePasswordForm({ ...changePasswordForm, confirmPassword: e.target.value })}
+                              placeholder="הזן שוב את הסיסמה החדשה"
+                              className="h-12 border-2 border-gray-200 rounded-xl focus:border-purple-500 transition-colors pr-12"
+                              required
+                            />
+                            <button
+                              type="button"
+                              onClick={() => setShowChangePasswordConfirm(!showChangePasswordConfirm)}
+                              className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-500 hover:text-gray-700 transition-colors"
+                              tabIndex={-1}
+                            >
+                              {showChangePasswordConfirm ? '👁️' : '👁️‍🗨️'}
+                            </button>
+                          </div>
                         </div>
                         <div className="flex gap-3 pt-2">
                           <Button
@@ -1370,14 +1429,24 @@ export default function SuperAdminPage() {
                         <label className="block text-sm font-semibold text-gray-700">
                           🔐 סיסמה {editingUser && '(השאר ריק אם לא רוצה לשנות)'}
                         </label>
-                        <Input
-                          type="password"
-                          value={userForm.password}
-                          onChange={(e) => setUserForm({ ...userForm, password: e.target.value })}
-                          placeholder={editingUser ? 'סיסמה חדשה (אופציונלי)' : 'סיסמה (לפחות 6 תווים)'}
-                          className="h-12 border-2 border-gray-200 rounded-xl focus:border-purple-500 transition-colors"
-                          required={!editingUser}
-                        />
+                        <div className="relative">
+                          <Input
+                            type={showUserFormPassword ? "text" : "password"}
+                            value={userForm.password}
+                            onChange={(e) => setUserForm({ ...userForm, password: e.target.value })}
+                            placeholder={editingUser ? 'סיסמה חדשה (אופציונלי)' : 'סיסמה (לפחות 6 תווים)'}
+                            className="h-12 border-2 border-gray-200 rounded-xl focus:border-purple-500 transition-colors pr-12"
+                            required={!editingUser}
+                          />
+                          <button
+                            type="button"
+                            onClick={() => setShowUserFormPassword(!showUserFormPassword)}
+                            className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-500 hover:text-gray-700 transition-colors"
+                            tabIndex={-1}
+                          >
+                            {showUserFormPassword ? '👁️' : '👁️‍🗨️'}
+                          </button>
+                        </div>
                       </div>
 
                       <div className="space-y-2">
