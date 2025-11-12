@@ -92,6 +92,7 @@ export default function CityAdminPage() {
   const [equipment, setEquipment] = useState<Equipment[]>([])
   const [borrowHistory, setBorrowHistory] = useState<BorrowHistory[]>([])
   const [isAuthenticated, setIsAuthenticated] = useState(false)
+  const [isCheckingAuth, setIsCheckingAuth] = useState(true) // Add loading state for auth check
   const [password, setPassword] = useState('')
   const [loading, setLoading] = useState(false)
   const [activeTab, setActiveTab] = useState<'equipment' | 'history' | 'requests' | 'settings'>('equipment')
@@ -371,6 +372,8 @@ export default function CityAdminPage() {
       } else {
         console.log('❌ Access denied - not authenticated or wrong city')
       }
+
+      setIsCheckingAuth(false) // Auth check complete
     }
     verifyAuth()
   }, [cityId])
@@ -818,6 +821,18 @@ export default function CityAdminPage() {
     } finally {
       setEnablingPush(false)
     }
+  }
+
+  // Show loading while checking authentication
+  if (isCheckingAuth) {
+    return (
+      <div className="min-h-screen content-wrapper flex items-center justify-center">
+        <div className="text-center">
+          <div className="text-4xl mb-4">⏳</div>
+          <p className="text-gray-600">בודק הרשאות...</p>
+        </div>
+      </div>
+    )
   }
 
   if (!isAuthenticated) {
