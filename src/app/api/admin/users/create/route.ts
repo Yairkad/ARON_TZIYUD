@@ -44,7 +44,7 @@ export async function POST(request: NextRequest) {
   // Check if user is super admin
   const { data: adminProfile } = await supabase
     .from('users')
-    .select('role, is_active')
+    .select('role, is_active, full_name, email')
     .eq('id', authUser.id)
     .single()
 
@@ -54,6 +54,8 @@ export async function POST(request: NextRequest) {
       { status: 403 }
     )
   }
+
+  const adminUser = adminProfile
 
   try {
     const body: CreateUserBody = await request.json()
