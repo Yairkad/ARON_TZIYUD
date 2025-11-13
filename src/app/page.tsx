@@ -248,6 +248,13 @@ export default function HomePage() {
                 </div>
               </div>
             </div>
+            <div className="flex justify-center mt-6">
+              <Link href="/user-guide">
+                <Button className="gap-2 bg-purple-600 hover:bg-purple-700 text-white">
+                  📖 מדריך מלא ומפורט
+                </Button>
+              </Link>
+            </div>
           </CardContent>
         </Card>
       </div>

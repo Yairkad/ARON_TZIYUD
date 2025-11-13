@@ -892,14 +892,14 @@ export default function CityAdminPage() {
               <p className="text-gray-600 text-lg">ניהול ציוד והיסטוריית השאלות</p>
             </div>
             <div className="hidden sm:flex gap-3">
-              <a href="/user-guide-city-admin.html" target="_blank" rel="noopener noreferrer">
+              <Link href="/manager-guide">
                 <Button
                   variant="outline"
                   className="border-2 border-purple-500 text-purple-600 hover:bg-purple-50 font-semibold px-6 py-2 rounded-xl transition-all duration-200 hover:scale-105"
                 >
                   📚 מדריך מנהל
                 </Button>
-              </a>
+              </Link>
               {pushSupported && city?.request_mode === 'request' && city?.enable_push_notifications && (
                 <Button
                   onClick={handleTogglePushNotifications}
@@ -951,14 +951,14 @@ export default function CityAdminPage() {
 
         {/* Mobile Navigation Buttons - Below Header */}
         <div className="sm:hidden flex flex-col gap-3 mb-6">
-          <a href="/user-guide-city-admin.html" target="_blank" rel="noopener noreferrer" className="w-full">
+          <Link href="/manager-guide" className="w-full">
             <Button
               variant="outline"
               className="w-full h-14 rounded-xl border-2 border-purple-200 hover:border-purple-300 hover:bg-purple-50 text-purple-600 font-semibold text-lg transition-all"
             >
               📚 מדריך מנהל עיר
             </Button>
-          </a>
+          </Link>
           {/* Push Notifications - Only in request mode and if enabled by city */}
           {pushSupported && city?.request_mode === 'request' && city?.enable_push_notifications && (
             <Button
