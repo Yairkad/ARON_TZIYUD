@@ -1067,27 +1067,30 @@ export default function CityAdminPage() {
                       value={newEquipment.name}
                       onChange={(e) => setNewEquipment({ ...newEquipment, name: e.target.value })}
                       placeholder="שם הציוד"
-                      className="flex-1 h-12 border-2 border-gray-200 rounded-xl focus:border-blue-500 transition-colors"
+                      disabled={currentUser?.permissions !== 'full_access'}
+                      className="flex-1 h-12 border-2 border-gray-200 rounded-xl focus:border-blue-500 transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
                     />
                     <Input
                       type="number"
                       value={newEquipment.quantity}
                       onChange={(e) => setNewEquipment({ ...newEquipment, quantity: parseInt(e.target.value) || 0 })}
                       placeholder="כמות"
-                      className="w-full sm:w-20 h-12 border-2 border-gray-200 rounded-xl focus:border-blue-500 transition-colors"
+                      disabled={currentUser?.permissions !== 'full_access'}
+                      className="w-full sm:w-20 h-12 border-2 border-gray-200 rounded-xl focus:border-blue-500 transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
                     />
                     <select
                       value={newEquipment.equipment_status}
                       onChange={(e) => setNewEquipment({ ...newEquipment, equipment_status: e.target.value as 'working' | 'faulty' })}
-                      className="w-full sm:w-32 h-12 border-2 border-gray-200 rounded-xl focus:border-blue-500 transition-colors px-3 text-sm font-medium"
+                      disabled={currentUser?.permissions !== 'full_access'}
+                      className="w-full sm:w-32 h-12 border-2 border-gray-200 rounded-xl focus:border-blue-500 transition-colors px-3 text-sm font-medium disabled:opacity-50 disabled:cursor-not-allowed"
                     >
                       <option value="working">✅ תקין</option>
                       <option value="faulty">⚠️ תקול</option>
                     </select>
                     <Button
                       type="submit"
-                      disabled={loading}
-                      className="h-12 px-8 bg-gradient-to-r from-green-500 to-emerald-500 hover:from-green-600 hover:to-emerald-600 text-white font-bold rounded-xl shadow-md hover:shadow-lg transition-all"
+                      disabled={loading || currentUser?.permissions !== 'full_access'}
+                      className="h-12 px-8 bg-gradient-to-r from-green-500 to-emerald-500 hover:from-green-600 hover:to-emerald-600 text-white font-bold rounded-xl shadow-md hover:shadow-lg transition-all disabled:opacity-50 disabled:cursor-not-allowed"
                     >
                       ✅ הוסף
                     </Button>
@@ -1098,9 +1101,10 @@ export default function CityAdminPage() {
                       id="is_consumable"
                       checked={newEquipment.is_consumable}
                       onChange={(e) => setNewEquipment({ ...newEquipment, is_consumable: e.target.checked })}
-                      className="w-5 h-5 rounded border-2 border-gray-300 text-blue-600 focus:ring-blue-500"
+                      disabled={currentUser?.permissions !== 'full_access'}
+                      className="w-5 h-5 rounded border-2 border-gray-300 text-blue-600 focus:ring-blue-500 disabled:opacity-50 disabled:cursor-not-allowed"
                     />
-                    <label htmlFor="is_consumable" className="text-sm font-semibold text-gray-700 cursor-pointer">
+                    <label htmlFor="is_consumable" className={`text-sm font-semibold cursor-pointer ${currentUser?.permissions !== 'full_access' ? 'text-gray-400' : 'text-gray-700'}`}>
                       🔄 ציוד מתכלה (לא דורש החזרה)
                     </label>
                   </div>
