@@ -32,7 +32,7 @@ function addCorsHeaders(response: NextResponse) {
 
 export async function POST(request: NextRequest) {
   try {
-    const { email, name } = await request.json()
+    const { email, name, message } = await request.json()
 
     if (!email) {
       const response = NextResponse.json(
@@ -43,6 +43,7 @@ export async function POST(request: NextRequest) {
     }
 
     const recipientName = name || 'משתמש'
+    const customMessage = message || 'זהו מייל בדיקה אוטומטי ממערכת ארון ציוד.'
 
     console.log('📧 Sending test email to:', email)
 
@@ -126,8 +127,7 @@ export async function POST(request: NextRequest) {
 
               <div class="info-box">
                 <strong>מערכת המיילים פועלת כראוי!</strong><br><br>
-                קיבלת מייל זה כי ביצעת בדיקת שליחת מייל מהמערכת.<br>
-                כל התצורה עובדת תקין ומיילים נשלחים בהצלחה.
+                ${customMessage}
               </div>
 
               <p style="text-align: center; color: #6c757d; margin-top: 30px;">

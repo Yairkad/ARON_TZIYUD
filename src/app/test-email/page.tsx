@@ -9,6 +9,7 @@ import { Alert, AlertDescription } from '@/components/ui/alert'
 export default function TestEmailPage() {
   const [email, setEmail] = useState('')
   const [name, setName] = useState('')
+  const [message, setMessage] = useState('')
   const [loading, setLoading] = useState(false)
   const [result, setResult] = useState<{ type: 'success' | 'error', message: string } | null>(null)
 
@@ -32,6 +33,7 @@ export default function TestEmailPage() {
         body: JSON.stringify({
           email,
           name: name || undefined,
+          message: message || undefined,
         }),
       })
 
@@ -44,6 +46,7 @@ export default function TestEmailPage() {
         })
         setEmail('')
         setName('')
+        setMessage('')
       } else {
         setResult({
           type: 'error',
@@ -102,6 +105,21 @@ export default function TestEmailPage() {
                 placeholder="השם שלך"
                 disabled={loading}
                 className="h-12 text-base"
+              />
+            </div>
+
+            <div className="space-y-2">
+              <label htmlFor="message" className="text-sm font-medium text-gray-700">
+                הודעה מותאמת אישית (אופציונלי):
+              </label>
+              <textarea
+                id="message"
+                value={message}
+                onChange={(e) => setMessage(e.target.value)}
+                rows={4}
+                placeholder="הזן כאן את ההודעה שתרצה לשלוח במייל..."
+                disabled={loading}
+                className="w-full px-4 py-3 text-base border-2 border-gray-200 rounded-lg focus:border-purple-500 focus:outline-none disabled:opacity-50 disabled:cursor-not-allowed resize-none"
               />
             </div>
 

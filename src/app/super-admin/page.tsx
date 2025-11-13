@@ -1780,6 +1780,7 @@ export default function SuperAdminPage() {
                     const formData = new FormData(e.currentTarget)
                     const testEmail = formData.get('testEmail') as string
                     const testName = formData.get('testName') as string
+                    const testMessage = formData.get('testMessage') as string
 
                     if (!testEmail) {
                       alert('אנא הזן כתובת מייל')
@@ -1796,6 +1797,7 @@ export default function SuperAdminPage() {
                         body: JSON.stringify({
                           email: testEmail,
                           name: testName || undefined,
+                          message: testMessage || undefined,
                         }),
                       })
 
@@ -1843,6 +1845,20 @@ export default function SuperAdminPage() {
                       placeholder="השם שלך"
                       disabled={loading}
                       className="h-14 text-base border-2"
+                    />
+                  </div>
+
+                  <div className="space-y-2">
+                    <label htmlFor="testMessage" className="block text-sm font-semibold text-gray-700">
+                      הודעה מותאמת אישית (אופציונלי):
+                    </label>
+                    <textarea
+                      id="testMessage"
+                      name="testMessage"
+                      rows={4}
+                      placeholder="הזן כאן את ההודעה שתרצה לשלוח במייל..."
+                      disabled={loading}
+                      className="w-full px-4 py-3 text-base border-2 border-gray-200 rounded-lg focus:border-blue-500 focus:outline-none disabled:opacity-50 disabled:cursor-not-allowed resize-none"
                     />
                   </div>
 
