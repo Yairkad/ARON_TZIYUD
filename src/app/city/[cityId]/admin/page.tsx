@@ -1941,8 +1941,8 @@ export default function CityAdminPage() {
                         <button
                           onClick={async () => {
                             // Check permissions
-                            if (currentUser?.permissions === 'view_only') {
-                              alert('אין לך הרשאה לבצע פעולה זו - הרשאת צפיה בלבד')
+                            if (!canEdit) {
+                              alert('אין לך הרשאה לבצע פעולה זו - נדרשת הרשאת עריכה מלאה')
                               return
                             }
 
@@ -1999,8 +1999,8 @@ export default function CityAdminPage() {
                     <button
                       onClick={async () => {
                         // Check permissions
-                        if (currentUser?.permissions === 'view_only') {
-                          alert('אין לך הרשאה לבצע פעולה זו - הרשאת צפיה בלבד')
+                        if (!canEdit) {
+                          alert('אין לך הרשאה לבצע פעולה זו - נדרשת הרשאת עריכה מלאה')
                           return
                         }
 
