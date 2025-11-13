@@ -39,7 +39,7 @@ export async function GET(request: NextRequest) {
     // Get user data from public.users table (more reliable than metadata)
     const { data: userData, error: userError } = await supabase
       .from('users')
-      .select('role, city_id, full_name, is_active')
+      .select('role, city_id, full_name, is_active, permissions')
       .eq('id', user.id)
       .single()
 
@@ -47,6 +47,7 @@ export async function GET(request: NextRequest) {
     let userRole: string | null = null
     let cityId: string | null = null
     let fullName = user.email || ''
+    let permissions: string = 'full_access'
 
     if (userError || !userData) {
       console.error('❌ User not found in users table:', userError)
@@ -55,11 +56,13 @@ export async function GET(request: NextRequest) {
       userRole = userMetadata.role || null
       cityId = userMetadata.city_id || null
       fullName = userMetadata.full_name || user.email || ''
+      permissions = userMetadata.permissions || 'full_access'
     } else {
       // Use data from users table
       userRole = userData.role
       cityId = userData.city_id || null
       fullName = userData.full_name || user.email || ''
+      permissions = userData.permissions || 'full_access'
     }
 
     const response = NextResponse.json({
@@ -70,6 +73,7 @@ export async function GET(request: NextRequest) {
         full_name: fullName,
         role: userRole,
         city_id: cityId,
+        permissions: permissions,
       },
     })
 

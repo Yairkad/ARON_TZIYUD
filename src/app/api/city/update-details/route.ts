@@ -1,5 +1,6 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { createServiceClient } from '@/lib/supabase-server'
+import { requireFullAccess } from '@/lib/auth-middleware'
 
 export async function POST(request: NextRequest) {
   const supabase = createServiceClient()
@@ -30,6 +31,12 @@ export async function POST(request: NextRequest) {
         { error: 'מזהה עיר הוא שדה חובה' },
         { status: 400 }
       )
+    }
+
+    // Check permissions - require full access for the city
+    const { user, error: authError } = await requireFullAccess(request, cityId)
+    if (authError) {
+      return authError
     }
 
     // Validate manager1 phone only if provided

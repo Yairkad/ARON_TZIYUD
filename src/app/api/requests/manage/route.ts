@@ -2,6 +2,7 @@ import { NextRequest, NextResponse } from 'next/server'
 import { supabaseServer } from '@/lib/supabase-server'
 import { createRequestToken } from '@/lib/token'
 import { logActivity, ActivityActions } from '@/lib/activity-logger'
+import { requireApprovePermission } from '@/lib/auth-middleware'
 
 /**
  * PATCH /api/requests/manage
@@ -22,6 +23,12 @@ export async function PATCH(request: NextRequest) {
         { error: 'חסרים פרטים נדרשים' },
         { status: 400 }
       )
+    }
+
+    // Check permissions - require approve permission for the city
+    const { user, error: authError } = await requireApprovePermission(request, cityId)
+    if (authError) {
+      return authError
     }
 
     // Valid actions

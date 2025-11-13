@@ -34,7 +34,12 @@
       "Bash(cmd /c \"npx vercel list\")",
       "Bash(cmd /c \"type \"\"c:\\Users\\יאיר קדוש\\ARON_TZIYUD\\src\\app\\api\\city\\change-password\\route.ts\"\"\")",
       "Bash(cmd /c \"node check-requests-vs-history.js\")",
-      "Bash(node check-requests-vs-history.js:*)"
+      "Bash(node check-requests-vs-history.js:*)",
+      "Bash(dir /B /S \"c:\\Users\\יאיר קדוש\\ARON_TZIYUD\\src\\app\\api\")",
+      "Bash(findstr:*)",
+      "Bash(cmd /c \"dir /B /S \"\"c:\\Users\\יאיר קדוש\\ARON_TZIYUD\\src\\app\\api\\*route.ts\"\"\")",
+      "Bash(git add:*)",
+      "Bash(git commit -m \"$(cat <<''EOF''\nFix: Add permissions enforcement and email notifications\n\n- Add permissions field to /api/auth/me response\n- Enforce approve_requests permission on request management\n- Enforce full_access permission on city details update\n- Add welcome email sending when creating new users\n\nThis fixes the issue where users with \"view_only\" permission\ncould still perform edit actions.\n\n🤖 Generated with [Claude Code](https://claude.com/claude-code)\n\nCo-Authored-By: Claude <noreply@anthropic.com>\nEOF\n)\")"
     ],
     "deny": [],
     "ask": []
