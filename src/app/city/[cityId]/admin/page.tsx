@@ -129,6 +129,10 @@ export default function CityAdminPage() {
   const [equipmentSearchQuery, setEquipmentSearchQuery] = useState('')
   const [currentUser, setCurrentUser] = useState<any>(null)
 
+  // Permission helpers
+  const canEdit = currentUser?.permissions === 'full_access'
+  const canApprove = currentUser?.permissions === 'approve_requests' || currentUser?.permissions === 'full_access'
+
   useEffect(() => {
     if (cityId) {
       fetchCity()
@@ -379,8 +383,8 @@ export default function CityAdminPage() {
     e.preventDefault()
 
     // Check permissions
-    if (currentUser?.permissions === 'view_only') {
-      alert('אין לך הרשאה לבצע פעולה זו - הרשאת צפיה בלבד')
+    if (!canEdit) {
+      alert('אין לך הרשאה לבצע פעולה זו - נדרשת הרשאת עריכה מלאה')
       return
     }
 
@@ -416,8 +420,8 @@ export default function CityAdminPage() {
 
   const handleUpdateEquipment = async (id: string, name: string, quantity: number, equipment_status: 'working' | 'faulty', is_consumable: boolean) => {
     // Check permissions
-    if (currentUser?.permissions === 'view_only') {
-      alert('אין לך הרשאה לבצע פעולה זו - הרשאת צפיה בלבד')
+    if (!canEdit) {
+      alert('אין לך הרשאה לבצע פעולה זו - נדרשת הרשאת עריכה מלאה')
       return
     }
 
@@ -448,8 +452,8 @@ export default function CityAdminPage() {
 
   const handleDeleteEquipment = async (id: string) => {
     // Check permissions
-    if (currentUser?.permissions === 'view_only') {
-      alert('אין לך הרשאה לבצע פעולה זו - הרשאת צפיה בלבד')
+    if (!canEdit) {
+      alert('אין לך הרשאה לבצע פעולה זו - נדרשת הרשאת עריכה מלאה')
       return
     }
 
@@ -590,8 +594,8 @@ export default function CityAdminPage() {
   // Print functionality
   const handleDeleteHistory = async (id: string) => {
     // Check permissions
-    if (currentUser?.permissions === 'view_only') {
-      alert('אין לך הרשאה לבצע פעולה זו - הרשאת צפיה בלבד')
+    if (!canEdit) {
+      alert('אין לך הרשאה לבצע פעולה זו - נדרשת הרשאת עריכה מלאה')
       return
     }
 
@@ -621,8 +625,8 @@ export default function CityAdminPage() {
     if (!city) return
 
     // Check permissions
-    if (currentUser?.permissions === 'view_only') {
-      alert('אין לך הרשאה לבצע פעולה זו - הרשאת צפיה בלבד')
+    if (!canEdit) {
+      alert('אין לך הרשאה לבצע פעולה זו - נדרשת הרשאת עריכה מלאה')
       return
     }
 
@@ -1067,7 +1071,7 @@ export default function CityAdminPage() {
                       value={newEquipment.name}
                       onChange={(e) => setNewEquipment({ ...newEquipment, name: e.target.value })}
                       placeholder="שם הציוד"
-                      disabled={currentUser?.permissions !== 'full_access'}
+                      disabled={!canEdit}
                       className="flex-1 h-12 border-2 border-gray-200 rounded-xl focus:border-blue-500 transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
                     />
                     <Input
@@ -1075,13 +1079,13 @@ export default function CityAdminPage() {
                       value={newEquipment.quantity}
                       onChange={(e) => setNewEquipment({ ...newEquipment, quantity: parseInt(e.target.value) || 0 })}
                       placeholder="כמות"
-                      disabled={currentUser?.permissions !== 'full_access'}
+                      disabled={!canEdit}
                       className="w-full sm:w-20 h-12 border-2 border-gray-200 rounded-xl focus:border-blue-500 transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
                     />
                     <select
                       value={newEquipment.equipment_status}
                       onChange={(e) => setNewEquipment({ ...newEquipment, equipment_status: e.target.value as 'working' | 'faulty' })}
-                      disabled={currentUser?.permissions !== 'full_access'}
+                      disabled={!canEdit}
                       className="w-full sm:w-32 h-12 border-2 border-gray-200 rounded-xl focus:border-blue-500 transition-colors px-3 text-sm font-medium disabled:opacity-50 disabled:cursor-not-allowed"
                     >
                       <option value="working">✅ תקין</option>
@@ -1089,7 +1093,7 @@ export default function CityAdminPage() {
                     </select>
                     <Button
                       type="submit"
-                      disabled={loading || currentUser?.permissions !== 'full_access'}
+                      disabled={loading || !canEdit}
                       className="h-12 px-8 bg-gradient-to-r from-green-500 to-emerald-500 hover:from-green-600 hover:to-emerald-600 text-white font-bold rounded-xl shadow-md hover:shadow-lg transition-all disabled:opacity-50 disabled:cursor-not-allowed"
                     >
                       ✅ הוסף
@@ -1101,10 +1105,10 @@ export default function CityAdminPage() {
                       id="is_consumable"
                       checked={newEquipment.is_consumable}
                       onChange={(e) => setNewEquipment({ ...newEquipment, is_consumable: e.target.checked })}
-                      disabled={currentUser?.permissions !== 'full_access'}
+                      disabled={!canEdit}
                       className="w-5 h-5 rounded border-2 border-gray-300 text-blue-600 focus:ring-blue-500 disabled:opacity-50 disabled:cursor-not-allowed"
                     />
-                    <label htmlFor="is_consumable" className={`text-sm font-semibold cursor-pointer ${currentUser?.permissions !== 'full_access' ? 'text-gray-400' : 'text-gray-700'}`}>
+                    <label htmlFor="is_consumable" className={`text-sm font-semibold cursor-pointer ${!canEdit ? 'text-gray-400' : 'text-gray-700'}`}>
                       🔄 ציוד מתכלה (לא דורש החזרה)
                     </label>
                   </div>
@@ -1347,14 +1351,15 @@ export default function CityAdminPage() {
                           <div className="flex flex-col gap-1">
                             <Button
                               onClick={() => setEditingEquipment({ id: item.id, name: item.name, quantity: item.quantity, equipment_status: item.equipment_status, is_consumable: item.is_consumable })}
-                              className="h-6 px-2 border border-blue-500 text-blue-600 hover:bg-blue-50 bg-white rounded text-[10px] font-medium whitespace-nowrap"
+                              disabled={!canEdit}
+                              className="h-6 px-2 border border-blue-500 text-blue-600 hover:bg-blue-50 bg-white rounded text-[10px] font-medium whitespace-nowrap disabled:opacity-50 disabled:cursor-not-allowed"
                             >
                               ✏️ ערוך
                             </Button>
                             <Button
                               onClick={() => handleDeleteEquipment(item.id)}
-                              disabled={loading}
-                              className="h-6 px-2 bg-gradient-to-r from-red-500 to-rose-500 hover:from-red-600 hover:to-rose-600 text-white rounded text-[10px] font-medium whitespace-nowrap"
+                              disabled={loading || !canEdit}
+                              className="h-6 px-2 bg-gradient-to-r from-red-500 to-rose-500 hover:from-red-600 hover:to-rose-600 text-white rounded text-[10px] font-medium whitespace-nowrap disabled:opacity-50 disabled:cursor-not-allowed"
                             >
                               🗑️ מחק
                             </Button>
@@ -1468,7 +1473,8 @@ export default function CityAdminPage() {
                                     size="sm"
                                     variant="outline"
                                     onClick={() => setEditingEquipment({ id: item.id, name: item.name, quantity: item.quantity, equipment_status: item.equipment_status, is_consumable: item.is_consumable })}
-                                    className="border-2 border-blue-500 text-blue-600 hover:bg-blue-50 rounded-lg"
+                                    disabled={!canEdit}
+                                    className="border-2 border-blue-500 text-blue-600 hover:bg-blue-50 rounded-lg disabled:opacity-50 disabled:cursor-not-allowed"
                                   >
                                     ✏️ ערוך
                                   </Button>
@@ -1476,8 +1482,8 @@ export default function CityAdminPage() {
                                     size="sm"
                                     variant="destructive"
                                     onClick={() => handleDeleteEquipment(item.id)}
-                                    disabled={loading}
-                                    className="bg-gradient-to-r from-red-500 to-rose-500 hover:from-red-600 hover:to-rose-600 rounded-lg"
+                                    disabled={loading || !canEdit}
+                                    className="bg-gradient-to-r from-red-500 to-rose-500 hover:from-red-600 hover:to-rose-600 rounded-lg disabled:opacity-50 disabled:cursor-not-allowed"
                                   >
                                     🗑️ מחק
                                   </Button>
@@ -1598,8 +1604,8 @@ export default function CityAdminPage() {
                                         e.stopPropagation()
                                         handleDeleteHistory(item.id)
                                       }}
-                                      disabled={loading}
-                                      className="h-8 px-2 bg-red-500 hover:bg-red-600"
+                                      disabled={loading || !canEdit}
+                                      className="h-8 px-2 bg-red-500 hover:bg-red-600 disabled:opacity-50 disabled:cursor-not-allowed"
                                     >
                                       🗑️
                                     </Button>
@@ -1706,8 +1712,8 @@ export default function CityAdminPage() {
                                     size="sm"
                                     variant="ghost"
                                     onClick={() => handleDeleteHistory(item.id)}
-                                    disabled={loading}
-                                    className="h-8 w-8 p-0 hover:bg-red-100 hover:text-red-600 text-gray-400"
+                                    disabled={loading || !canEdit}
+                                    className="h-8 w-8 p-0 hover:bg-red-100 hover:text-red-600 text-gray-400 disabled:opacity-50 disabled:cursor-not-allowed"
                                     title={`מחק: ${item.equipment_name}`}
                                   >
                                     🗑️
@@ -1767,8 +1773,8 @@ export default function CityAdminPage() {
                     <button
                       onClick={async () => {
                         // Check permissions
-                        if (currentUser?.permissions === 'view_only') {
-                          alert('אין לך הרשאה לבצע פעולה זו - הרשאת צפיה בלבד')
+                        if (!canEdit) {
+                          alert('אין לך הרשאה לבצע פעולה זו - נדרשת הרשאת עריכה מלאה')
                           return
                         }
 
@@ -1803,11 +1809,12 @@ export default function CityAdminPage() {
                           }
                         }
                       }}
+                      disabled={!canEdit}
                       className={`p-6 rounded-xl border-2 font-semibold transition-all text-right ${
                         city?.request_mode === 'direct'
                           ? 'bg-green-100 border-green-500 shadow-lg scale-105'
                           : 'bg-white border-gray-300 hover:border-green-300'
-                      }`}
+                      } disabled:opacity-50 disabled:cursor-not-allowed`}
                     >
                       <div className="text-4xl mb-2">⚡</div>
                       <div className="text-xl font-bold mb-2">השאלה ישירה</div>
@@ -1823,8 +1830,8 @@ export default function CityAdminPage() {
                     <button
                       onClick={async () => {
                         // Check permissions
-                        if (currentUser?.permissions === 'view_only') {
-                          alert('אין לך הרשאה לבצע פעולה זו - הרשאת צפיה בלבד')
+                        if (!canEdit) {
+                          alert('אין לך הרשאה לבצע פעולה זו - נדרשת הרשאת עריכה מלאה')
                           return
                         }
 
@@ -1859,11 +1866,12 @@ export default function CityAdminPage() {
                           }
                         }
                       }}
+                      disabled={!canEdit}
                       className={`p-6 rounded-xl border-2 font-semibold transition-all text-right ${
                         city?.request_mode === 'request'
                           ? 'bg-purple-100 border-purple-500 shadow-lg scale-105'
                           : 'bg-white border-gray-300 hover:border-purple-300'
-                      }`}
+                      } disabled:opacity-50 disabled:cursor-not-allowed`}
                     >
                       <div className="text-4xl mb-2">📝</div>
                       <div className="text-xl font-bold mb-2">מצב בקשות</div>
