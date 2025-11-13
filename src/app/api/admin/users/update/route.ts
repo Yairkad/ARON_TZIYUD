@@ -69,9 +69,11 @@ async function handleUpdate(request: NextRequest) {
 
   try {
     const body: UpdateUserBody = await request.json()
+    console.log('📝 Update user request:', { user_id: body.user_id, fields: Object.keys(body) })
 
     // Validation
     if (!body.user_id) {
+      console.error('❌ Missing user_id in request')
       return NextResponse.json(
         { success: false, error: 'חסר user_id' },
         { status: 400 }
@@ -88,11 +90,14 @@ async function handleUpdate(request: NextRequest) {
       .single()
 
     if (fetchError || !existingUser) {
+      console.error('❌ User not found:', body.user_id, fetchError)
       return NextResponse.json(
         { success: false, error: 'משתמש לא נמצא' },
         { status: 404 }
       )
     }
+
+    console.log('✅ Found user to update:', existingUser.email)
 
     // Prevent changing super_admin permissions
     if (existingUser.role === 'super_admin' && body.permissions && body.permissions !== 'full_access') {
@@ -118,6 +123,8 @@ async function handleUpdate(request: NextRequest) {
 
     // Update email in Auth if provided (must be done before updating public.users)
     if (body.email && body.email !== existingUser.email) {
+      console.log('📧 Updating email from', existingUser.email, 'to', body.email)
+
       // Check if new email already exists
       const { data: existingEmailUser } = await supabase
         .from('users')
@@ -127,6 +134,7 @@ async function handleUpdate(request: NextRequest) {
         .single()
 
       if (existingEmailUser) {
+        console.error('❌ Email already in use:', body.email)
         return NextResponse.json(
           { success: false, error: 'כתובת המייל כבר בשימוש' },
           { status: 400 }
@@ -139,15 +147,18 @@ async function handleUpdate(request: NextRequest) {
       )
 
       if (emailError) {
-        console.error('Error updating email:', emailError)
+        console.error('❌ Error updating email in Supabase Auth:', emailError)
         return NextResponse.json(
           { success: false, error: 'שגיאה בעדכון כתובת המייל' },
           { status: 500 }
         )
       }
+
+      console.log('✅ Email updated in Supabase Auth')
     }
 
     // Update user in public.users table
+    console.log('💾 Updating user in database:', updateData)
     const { data: updatedUser, error: updateError } = await supabase
       .from('users')
       .update(updateData)
@@ -156,27 +167,32 @@ async function handleUpdate(request: NextRequest) {
       .single()
 
     if (updateError) {
-      console.error('Error updating user:', updateError)
+      console.error('❌ Error updating user in database:', updateError)
       return NextResponse.json(
         { success: false, error: 'שגיאה בעדכון משתמש' },
         { status: 500 }
       )
     }
 
+    console.log('✅ User updated in database')
+
     // Update password in Auth if provided
     if (body.password) {
+      console.log('🔐 Updating password in Supabase Auth')
       const { error: passwordError } = await supabase.auth.admin.updateUserById(
         body.user_id,
         { password: body.password }
       )
 
       if (passwordError) {
-        console.error('Error updating password:', passwordError)
+        console.error('❌ Error updating password in Supabase Auth:', passwordError)
         return NextResponse.json(
           { success: false, error: 'שגיאה בעדכון סיסמה' },
           { status: 500 }
         )
       }
+
+      console.log('✅ Password updated in Supabase Auth')
     }
 
     // Update city manager details if this is a city manager with manager_role
@@ -186,6 +202,7 @@ async function handleUpdate(request: NextRequest) {
     const finalPhone = body.phone !== undefined ? body.phone : updatedUser.phone
 
     if (finalCityId && finalManagerRole && (updatedUser.role === 'city_manager' || body.role === 'city_manager')) {
+      console.log('🏙️ Updating city manager details for city:', finalCityId)
       const cityUpdateData: any = {}
 
       if (finalManagerRole === 'manager1') {
@@ -202,24 +219,32 @@ async function handleUpdate(request: NextRequest) {
         .eq('id', finalCityId)
 
       if (cityUpdateError) {
-        console.error('Error updating city manager details:', cityUpdateError)
+        console.error('⚠️ Error updating city manager details (non-critical):', cityUpdateError)
         // Don't fail the user update, just log the error
+      } else {
+        console.log('✅ City manager details updated')
       }
     }
 
-    // Log the activity
-    await supabase
-      .from('activity_logs')
-      .insert({
-        city_id: existingUser.city_id || null,
-        manager_name: adminUser?.full_name || adminUser?.email || 'System',
-        action: 'user_updated',
-        details: {
-          updated_user_email: existingUser.email,
-          changes: updateData,
-          password_changed: !!body.password,
-        },
-      })
+    // Log the activity (non-blocking - don't fail if logging fails)
+    try {
+      await supabase
+        .from('activity_logs')
+        .insert({
+          city_id: existingUser.city_id || null,
+          manager_name: adminUser?.full_name || adminUser?.email || 'System',
+          action: 'user_updated',
+          details: {
+            updated_user_email: existingUser.email,
+            changes: updateData,
+            password_changed: !!body.password,
+          },
+        })
+    } catch (logError) {
+      console.error('⚠️ Failed to log activity (non-critical):', logError)
+    }
+
+    console.log('✅ User updated successfully:', updatedUser.email)
 
     return NextResponse.json({
       success: true,
@@ -227,9 +252,15 @@ async function handleUpdate(request: NextRequest) {
     })
 
   } catch (error) {
-    console.error('Error in update user API:', error)
+    console.error('❌ Error in update user API:', error)
+    const errorMessage = error instanceof Error ? error.message : 'Unknown error'
+    console.error('❌ Error details:', errorMessage)
     return NextResponse.json(
-      { success: false, error: 'שגיאת שרת פנימית' },
+      {
+        success: false,
+        error: 'שגיאת שרת פנימית',
+        details: process.env.NODE_ENV === 'development' ? errorMessage : undefined
+      },
       { status: 500 }
     )
   }
