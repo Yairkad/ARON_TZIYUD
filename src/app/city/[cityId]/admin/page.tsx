@@ -693,6 +693,12 @@ export default function CityAdminPage() {
   }
 
   const handleCopyEquipmentFromCity = async () => {
+    // Check permissions
+    if (!canEdit) {
+      alert('אין לך הרשאה לבצע פעולה זו - נדרשת הרשאת עריכה מלאה')
+      return
+    }
+
     if (!selectedCityToCopy) {
       alert('אנא בחר עיר להעתקת הציוד ממנה')
       return
@@ -2113,10 +2119,14 @@ export default function CityAdminPage() {
                       <div>
                         <h3 className="text-lg font-bold text-gray-800 mb-1">📋 העתק ציוד מעיר אחרת</h3>
                         <p className="text-sm text-gray-600">טען רשימת ציוד מוכנה מעיר קיימת - חיסכון בזמן לערים חדשות</p>
+                        {!canEdit && (
+                          <p className="text-xs text-red-600 mt-1">⚠️ נדרשת הרשאת עריכה מלאה</p>
+                        )}
                       </div>
                       <Button
                         onClick={() => setShowCopyEquipment(true)}
-                        className="bg-gradient-to-r from-purple-600 to-pink-600 hover:from-purple-700 hover:to-pink-700 text-white font-semibold px-6 py-3 rounded-xl transition-all duration-200 hover:scale-105"
+                        disabled={!canEdit}
+                        className="bg-gradient-to-r from-purple-600 to-pink-600 hover:from-purple-700 hover:to-pink-700 text-white font-semibold px-6 py-3 rounded-xl transition-all duration-200 hover:scale-105 disabled:opacity-50 disabled:cursor-not-allowed disabled:hover:scale-100"
                       >
                         📥 העתק ציוד
                       </Button>
