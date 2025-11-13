@@ -44,7 +44,9 @@
       "Bash(git commit:*)",
       "Bash(git check-ignore:*)",
       "Bash(cmd /c:*)",
-      "Bash(start test-email.html)"
+      "Bash(start test-email.html)",
+      "Bash(start https://vercel.com/yairkads-projects/aron-tziyud/settings/environment-variables)",
+      "Bash(start https://resend.com/api-keys)"
     ],
     "deny": [],
     "ask": []
