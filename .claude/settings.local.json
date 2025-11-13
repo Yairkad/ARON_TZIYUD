@@ -43,7 +43,8 @@
       "Bash(git push)",
       "Bash(git commit:*)",
       "Bash(git check-ignore:*)",
-      "Bash(cmd /c:*)"
+      "Bash(cmd /c:*)",
+      "Bash(start test-email.html)"
     ],
     "deny": [],
     "ask": []

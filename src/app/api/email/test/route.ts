@@ -10,15 +10,36 @@ import { Resend } from 'resend'
 
 const resend = new Resend(process.env.RESEND_API_KEY)
 
+// Handle OPTIONS request for CORS preflight
+export async function OPTIONS() {
+  return new NextResponse(null, {
+    status: 200,
+    headers: {
+      'Access-Control-Allow-Origin': '*',
+      'Access-Control-Allow-Methods': 'POST, OPTIONS',
+      'Access-Control-Allow-Headers': 'Content-Type',
+    },
+  })
+}
+
+// Helper function to add CORS headers to response
+function addCorsHeaders(response: NextResponse) {
+  response.headers.set('Access-Control-Allow-Origin', '*')
+  response.headers.set('Access-Control-Allow-Methods', 'POST, OPTIONS')
+  response.headers.set('Access-Control-Allow-Headers', 'Content-Type')
+  return response
+}
+
 export async function POST(request: NextRequest) {
   try {
     const { email, name } = await request.json()
 
     if (!email) {
-      return NextResponse.json(
+      const response = NextResponse.json(
         { error: 'חסרה כתובת מייל' },
         { status: 400 }
       )
+      return addCorsHeaders(response)
     }
 
     const recipientName = name || 'משתמש'
@@ -128,7 +149,7 @@ export async function POST(request: NextRequest) {
 
     if (error) {
       console.error('❌ Resend error:', error)
-      return NextResponse.json(
+      const response = NextResponse.json(
         {
           success: false,
           error: 'שגיאה בשליחת המייל',
@@ -136,19 +157,21 @@ export async function POST(request: NextRequest) {
         },
         { status: 500 }
       )
+      return addCorsHeaders(response)
     }
 
     console.log('✅ Test email sent successfully:', data)
 
-    return NextResponse.json({
+    const response = NextResponse.json({
       success: true,
       messageId: data?.id,
       message: 'המייל נשלח בהצלחה',
       sentTo: email,
     })
+    return addCorsHeaders(response)
   } catch (error) {
     console.error('❌ Test email error:', error)
-    return NextResponse.json(
+    const response = NextResponse.json(
       {
         success: false,
         error: 'שגיאה בתהליך שליחת המייל',
@@ -156,5 +179,6 @@ export async function POST(request: NextRequest) {
       },
       { status: 500 }
     )
+    return addCorsHeaders(response)
   }
 }
