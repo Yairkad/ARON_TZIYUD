@@ -10,9 +10,11 @@ interface RequestsTabProps {
   cityName: string
   managerName: string
   onRequestsUpdate?: () => void
+  canApprove: boolean
+  canEdit: boolean
 }
 
-export default function RequestsTab({ cityId, cityName, managerName, onRequestsUpdate }: RequestsTabProps) {
+export default function RequestsTab({ cityId, cityName, managerName, onRequestsUpdate, canApprove, canEdit }: RequestsTabProps) {
   const [requests, setRequests] = useState<EquipmentRequestWithItems[]>([])
   const [loading, setLoading] = useState(false)
   const [filter, setFilter] = useState<'all' | 'pending' | 'approved' | 'rejected' | 'expired'>('all')
@@ -407,16 +409,28 @@ ${locationUrl ? `\n📍 מיקום הארון:\n${locationUrl}` : ''}
                   {request.status === 'pending' && (
                     <>
                       <Button
-                        onClick={() => handleManageRequest(request.id, 'approve')}
-                        disabled={loading}
-                        className="bg-gradient-to-r from-green-600 to-emerald-600 hover:from-green-700 hover:to-emerald-700 text-white font-semibold rounded-xl shadow-md"
+                        onClick={() => {
+                          if (!canApprove) {
+                            alert('אין לך הרשאה לאשר בקשות - נדרשת הרשאת אישור בקשות')
+                            return
+                          }
+                          handleManageRequest(request.id, 'approve')
+                        }}
+                        disabled={loading || !canApprove}
+                        className="bg-gradient-to-r from-green-600 to-emerald-600 hover:from-green-700 hover:to-emerald-700 text-white font-semibold rounded-xl shadow-md disabled:opacity-50 disabled:cursor-not-allowed"
                       >
                         ✅ אשר בקשה
                       </Button>
                       <Button
-                        onClick={() => setRejectReason({ requestId: request.id, reason: '' })}
-                        disabled={loading}
-                        className="bg-gradient-to-r from-red-600 to-rose-600 hover:from-red-700 hover:to-rose-700 text-white font-semibold rounded-xl shadow-md"
+                        onClick={() => {
+                          if (!canApprove) {
+                            alert('אין לך הרשאה לדחות בקשות - נדרשת הרשאת אישור בקשות')
+                            return
+                          }
+                          setRejectReason({ requestId: request.id, reason: '' })
+                        }}
+                        disabled={loading || !canApprove}
+                        className="bg-gradient-to-r from-red-600 to-rose-600 hover:from-red-700 hover:to-rose-700 text-white font-semibold rounded-xl shadow-md disabled:opacity-50 disabled:cursor-not-allowed"
                       >
                         ❌ דחה בקשה
                       </Button>
@@ -426,30 +440,54 @@ ${locationUrl ? `\n📍 מיקום הארון:\n${locationUrl}` : ''}
                   {request.status === 'approved' && new Date(request.expires_at) > new Date() && (
                     <>
                       <Button
-                        onClick={() => handleExtendToken(request.id, 10)}
-                        disabled={loading}
-                        className="bg-gradient-to-r from-purple-600 to-violet-600 hover:from-purple-700 hover:to-violet-700 text-white font-semibold rounded-xl shadow-md"
+                        onClick={() => {
+                          if (!canApprove) {
+                            alert('אין לך הרשאה להאריך טוקנים - נדרשת הרשאת אישור בקשות')
+                            return
+                          }
+                          handleExtendToken(request.id, 10)
+                        }}
+                        disabled={loading || !canApprove}
+                        className="bg-gradient-to-r from-purple-600 to-violet-600 hover:from-purple-700 hover:to-violet-700 text-white font-semibold rounded-xl shadow-md disabled:opacity-50 disabled:cursor-not-allowed"
                       >
                         ⏱️ +10 דק'
                       </Button>
                       <Button
-                        onClick={() => handleExtendToken(request.id, 20)}
-                        disabled={loading}
-                        className="bg-gradient-to-r from-purple-600 to-violet-600 hover:from-purple-700 hover:to-violet-700 text-white font-semibold rounded-xl shadow-md"
+                        onClick={() => {
+                          if (!canApprove) {
+                            alert('אין לך הרשאה להאריך טוקנים - נדרשת הרשאת אישור בקשות')
+                            return
+                          }
+                          handleExtendToken(request.id, 20)
+                        }}
+                        disabled={loading || !canApprove}
+                        className="bg-gradient-to-r from-purple-600 to-violet-600 hover:from-purple-700 hover:to-violet-700 text-white font-semibold rounded-xl shadow-md disabled:opacity-50 disabled:cursor-not-allowed"
                       >
                         ⏱️ +20 דק'
                       </Button>
                       <Button
-                        onClick={() => handleExtendToken(request.id, 30)}
-                        disabled={loading}
-                        className="bg-gradient-to-r from-purple-600 to-violet-600 hover:from-purple-700 hover:to-violet-700 text-white font-semibold rounded-xl shadow-md"
+                        onClick={() => {
+                          if (!canApprove) {
+                            alert('אין לך הרשאה להאריך טוקנים - נדרשת הרשאת אישור בקשות')
+                            return
+                          }
+                          handleExtendToken(request.id, 30)
+                        }}
+                        disabled={loading || !canApprove}
+                        className="bg-gradient-to-r from-purple-600 to-violet-600 hover:from-purple-700 hover:to-violet-700 text-white font-semibold rounded-xl shadow-md disabled:opacity-50 disabled:cursor-not-allowed"
                       >
                         ⏱️ +30 דק'
                       </Button>
                       <Button
-                        onClick={() => handleExtendToken(request.id, 60)}
-                        disabled={loading}
-                        className="bg-gradient-to-r from-purple-600 to-violet-600 hover:from-purple-700 hover:to-violet-700 text-white font-semibold rounded-xl shadow-md"
+                        onClick={() => {
+                          if (!canApprove) {
+                            alert('אין לך הרשאה להאריך טוקנים - נדרשת הרשאת אישור בקשות')
+                            return
+                          }
+                          handleExtendToken(request.id, 60)
+                        }}
+                        disabled={loading || !canApprove}
+                        className="bg-gradient-to-r from-purple-600 to-violet-600 hover:from-purple-700 hover:to-violet-700 text-white font-semibold rounded-xl shadow-md disabled:opacity-50 disabled:cursor-not-allowed"
                       >
                         ⏱️ +60 דק'
                       </Button>
@@ -458,9 +496,15 @@ ${locationUrl ? `\n📍 מיקום הארון:\n${locationUrl}` : ''}
 
                   {(request.status === 'expired' || request.status === 'approved') && (
                     <Button
-                      onClick={() => handleManageRequest(request.id, 'regenerate')}
-                      disabled={loading}
-                      className="bg-gradient-to-r from-blue-600 to-indigo-600 hover:from-blue-700 hover:to-indigo-700 text-white font-semibold rounded-xl shadow-md"
+                      onClick={() => {
+                        if (!canApprove) {
+                          alert('אין לך הרשאה ליצור טוקן חדש - נדרשת הרשאת אישור בקשות')
+                          return
+                        }
+                        handleManageRequest(request.id, 'regenerate')
+                      }}
+                      disabled={loading || !canApprove}
+                      className="bg-gradient-to-r from-blue-600 to-indigo-600 hover:from-blue-700 hover:to-indigo-700 text-white font-semibold rounded-xl shadow-md disabled:opacity-50 disabled:cursor-not-allowed"
                     >
                       🔄 צור טוקן חדש
                     </Button>
@@ -468,10 +512,16 @@ ${locationUrl ? `\n📍 מיקום הארון:\n${locationUrl}` : ''}
 
                   {(request.status === 'pending' || request.status === 'approved') && (
                     <Button
-                      onClick={() => handleManageRequest(request.id, 'cancel')}
-                      disabled={loading}
+                      onClick={() => {
+                        if (!canApprove) {
+                          alert('אין לך הרשאה לבטל בקשות - נדרשת הרשאת אישור בקשות')
+                          return
+                        }
+                        handleManageRequest(request.id, 'cancel')
+                      }}
+                      disabled={loading || !canApprove}
                       variant="outline"
-                      className="border-2 border-gray-300 text-gray-700 hover:bg-gray-100 rounded-xl"
+                      className="border-2 border-gray-300 text-gray-700 hover:bg-gray-100 rounded-xl disabled:opacity-50 disabled:cursor-not-allowed"
                     >
                       🚫 בטל בקשה
                     </Button>

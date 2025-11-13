@@ -420,6 +420,7 @@ export default function CityPage() {
 
         {/* Header */}
         <header className="bg-white/90 backdrop-blur-lg border border-gray-200/50 rounded-2xl shadow-xl p-4 sm:p-8 mb-6 sm:mb-8 sm:relative">
+          {/* Desktop - Back button absolute positioned */}
           <Link href="/" className="hidden sm:block absolute left-6 top-6">
             <Button
               variant="ghost"
@@ -430,6 +431,20 @@ export default function CityPage() {
               ↩️ חזור לבחירת עיר
             </Button>
           </Link>
+
+          {/* Mobile - Back button at top */}
+          <div className="sm:hidden mb-4">
+            <Link href="/">
+              <Button
+                variant="outline"
+                size="sm"
+                className="h-9 px-3 rounded-full hover:bg-blue-50 text-blue-600 transition-all duration-200 hover:scale-105 border-2 border-blue-200"
+              >
+                ↩️ חזור
+              </Button>
+            </Link>
+          </div>
+
           <div className="text-center">
             <h1 className="text-4xl font-bold bg-gradient-to-r from-blue-600 to-indigo-600 bg-clip-text text-transparent mb-2">
               ארון ציוד ידידים - {city.name}
@@ -579,15 +594,6 @@ export default function CityPage() {
             </CardContent>
           </Card>
         )}
-
-        {/* Mobile Navigation */}
-        <div className="sm:hidden flex gap-3 mb-6">
-          <Link href="/" className="w-full">
-            <Button variant="outline" className="w-full h-14 rounded-xl border-2 border-blue-200 hover:border-blue-300 hover:bg-blue-50 text-blue-600 font-semibold text-lg transition-all">
-              ↩️ חזור לבחירת עיר
-            </Button>
-          </Link>
-        </div>
 
         {/* Tab Navigation */}
         <div className="flex gap-3 mb-8">

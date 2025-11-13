@@ -939,7 +939,7 @@ export default function CityAdminPage() {
               <Button
                 onClick={async () => {
                   await logout()
-                  router.push(`/city/${cityId}`)
+                  router.push('/')
                 }}
                 className="bg-gradient-to-r from-red-500 to-rose-500 hover:from-red-600 hover:to-rose-600 text-white font-semibold px-6 py-2 rounded-xl transition-all duration-200 hover:scale-105"
               >
@@ -1752,6 +1752,8 @@ export default function CityAdminPage() {
             cityName={city.name}
             managerName={currentUser?.full_name || currentUser?.email || city.manager1_name}
             onRequestsUpdate={fetchPendingRequestsCount}
+            canApprove={canApprove}
+            canEdit={canEdit}
           />
         )}
 
@@ -1891,16 +1893,22 @@ export default function CityAdminPage() {
 
                       {/* Cabinet Code */}
                       <div className="space-y-2">
-                        <label className="block text-sm font-semibold text-gray-700">🔐 קוד ארון (אופציונלי)</label>
+                        <label className={`block text-sm font-semibold ${!canEdit ? 'text-gray-400' : 'text-gray-700'}`}>🔐 קוד ארון (אופציונלי)</label>
                         <p className="text-xs text-gray-500 mb-2">קוד זה יוצג למבקש רק לאחר שהבקשה אושרה</p>
                         <Input
                           type="text"
                           value={city.cabinet_code || ''}
+                          disabled={!canEdit}
                           onChange={(e) => {
+                            if (!canEdit) {
+                              alert('אין לך הרשאה לערוך קוד ארון - נדרשת הרשאת עריכה מלאה')
+                              return
+                            }
                             // Update local state immediately
                             setCity({ ...city, cabinet_code: e.target.value })
                           }}
                           onBlur={async (e) => {
+                            if (!canEdit) return
                             // Save to server when user finishes editing
                             try {
                               const response = await fetch('/api/city/update-details', {

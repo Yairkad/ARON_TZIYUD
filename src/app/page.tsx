@@ -44,17 +44,18 @@ export default function HomePage() {
   }
 
   return (
-    <div className="min-h-screen content-wrapper flex flex-col items-center justify-center p-4 pt-20 sm:pt-4 relative">
-      {/* Admin Login Button - Small, top corner */}
-      <div className="absolute top-4 left-4 z-10">
+    <div className="min-h-screen content-wrapper flex flex-col items-center justify-center p-4 pt-16 sm:pt-4 relative">
+      {/* Admin Login Button - Responsive positioning */}
+      <div className="absolute top-2 left-2 sm:top-4 sm:left-4 z-10">
         <Button
           onClick={() => router.push('/login')}
           variant="ghost"
           size="sm"
-          className="h-9 px-3 rounded-full hover:bg-blue-50 text-blue-600 text-sm font-medium transition-all duration-200 hover:scale-105 border border-blue-200"
+          className="h-8 sm:h-9 px-2 sm:px-3 rounded-full hover:bg-blue-50 text-blue-600 text-xs sm:text-sm font-medium transition-all duration-200 hover:scale-105 border border-blue-200 shadow-sm"
           title="כניסת מנהל"
         >
-          🔐 כניסת מנהל
+          <span className="hidden sm:inline">🔐 כניסת מנהל</span>
+          <span className="sm:hidden">🔐 מנהל</span>
         </Button>
       </div>
 
