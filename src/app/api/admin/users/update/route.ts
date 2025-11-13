@@ -115,11 +115,11 @@ async function handleUpdate(request: NextRequest) {
     if (body.email !== undefined) updateData.email = body.email
     if (body.full_name !== undefined) updateData.full_name = body.full_name
     if (body.permissions !== undefined) updateData.permissions = body.permissions
-    if (body.phone !== undefined) updateData.phone = body.phone
+    if (body.phone !== undefined) updateData.phone = body.phone || null
     if (body.is_active !== undefined) updateData.is_active = body.is_active
     if (body.role !== undefined) updateData.role = body.role
-    if (body.city_id !== undefined) updateData.city_id = body.city_id
-    if (body.manager_role !== undefined) updateData.manager_role = body.manager_role
+    if (body.city_id !== undefined) updateData.city_id = body.city_id || null
+    if (body.manager_role !== undefined) updateData.manager_role = body.manager_role || null
 
     // Update email in Auth if provided (must be done before updating public.users)
     if (body.email && body.email !== existingUser.email) {

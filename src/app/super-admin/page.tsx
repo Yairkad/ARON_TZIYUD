@@ -505,13 +505,21 @@ export default function SuperAdminPage() {
 
     setLoading(true)
     try {
+      // Clean up empty strings to null for proper database constraints
+      const cleanedForm = {
+        ...userForm,
+        phone: userForm.phone || null,
+        manager_role: userForm.role === 'city_manager' ? (userForm.manager_role || null) : null,
+        city_id: userForm.role === 'city_manager' ? userForm.city_id : null,
+      }
+
       const response = await fetch('/api/admin/users/create', {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
         },
         credentials: 'include', // Important: send cookies for authentication
-        body: JSON.stringify(userForm),
+        body: JSON.stringify(cleanedForm),
       })
 
       const data = await response.json()
@@ -557,7 +565,7 @@ export default function SuperAdminPage() {
         phone: userForm.phone || null,
         role: userForm.role,
         city_id: userForm.role === 'city_manager' ? userForm.city_id : null,
-        manager_role: userForm.role === 'city_manager' ? userForm.manager_role : null,
+        manager_role: userForm.role === 'city_manager' ? (userForm.manager_role || null) : null,
       }
 
       // Only include password if it was changed
