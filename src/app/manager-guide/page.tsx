@@ -16,8 +16,11 @@ export default function ManagerGuidePage() {
   useEffect(() => {
     async function loadUserInfo() {
       try {
-        const { data: { user } } = await supabase.auth.getUser()
-        console.log('👤 Manager guide - User from auth:', user?.id, user?.email)
+        // Use getSession instead of getUser for client-side
+        const { data: { session } } = await supabase.auth.getSession()
+        const user = session?.user
+
+        console.log('👤 Manager guide - Session:', !!session, 'User:', user?.id, user?.email)
 
         if (!user) {
           console.log('❌ No user found in manager guide')
