@@ -16,29 +16,26 @@ export default function ManagerGuidePage() {
   useEffect(() => {
     async function loadUserInfo() {
       try {
-        // Use getSession instead of getUser for client-side
-        const { data: { session } } = await supabase.auth.getSession()
-        const user = session?.user
+        // Use API route to get user profile (has RLS bypass)
+        const response = await fetch('/api/auth/me', {
+          credentials: 'include'
+        })
 
-        console.log('👤 Manager guide - Session:', !!session, 'User:', user?.id, user?.email)
+        console.log('👤 Manager guide - API response:', response.ok, response.status)
 
-        if (!user) {
-          console.log('❌ No user found in manager guide')
+        if (!response.ok) {
+          console.log('❌ Failed to get user profile')
           return
         }
 
-        const { data: userProfile, error } = await supabase
-          .from('users')
-          .select('city_id, role')
-          .eq('id', user.id)
-          .single()
+        const data = await response.json()
 
-        console.log('📋 Manager guide - Profile:', userProfile, 'Error:', error)
+        console.log('📋 Manager guide - User data:', data)
 
-        if (userProfile) {
-          setCityId(userProfile.city_id)
-          setRole(userProfile.role)
-          console.log('✅ Manager guide - Set role:', userProfile.role, 'cityId:', userProfile.city_id)
+        if (data.user) {
+          setCityId(data.user.city_id)
+          setRole(data.user.role)
+          console.log('✅ Manager guide - Set role:', data.user.role, 'cityId:', data.user.city_id)
         }
       } catch (error) {
         console.error('❌ Error loading user info:', error)

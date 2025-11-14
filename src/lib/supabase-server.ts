@@ -131,7 +131,7 @@ export async function getCurrentUserProfile(accessToken?: string) {
     // Fetch user profile from public.users table
     const { data: profile, error: profileError } = await supabase
       .from('users')
-      .select('*, cities(*)')
+      .select('*')
       .eq('id', user.id)
       .single()
 
