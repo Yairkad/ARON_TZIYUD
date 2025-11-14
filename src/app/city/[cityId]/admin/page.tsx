@@ -785,13 +785,20 @@ export default function CityAdminPage() {
         alert('✅ התראות כבויות')
       } else {
         // Enable push notifications
-        // Always request permission (browser will skip if already granted)
+        // Check current permission status
         console.log('📱 Requesting notification permission...')
+        console.log('📱 Current Notification.permission:', Notification?.permission)
+
         const granted = await requestNotificationPermission()
         console.log('📱 Permission result:', granted ? 'granted' : 'denied')
 
         if (!granted) {
-          alert('❌ נדרשת הרשאה כדי להפעיל התראות. אנא אפשר התראות בהגדרות הדפדפן.')
+          // Check if blocked
+          if (Notification?.permission === 'denied') {
+            alert('❌ התראות חסומות בדפדפן.\n\nכדי להפעיל התראות:\n1. לחץ על סמל המנעול/מידע ליד כתובת האתר\n2. מצא "הודעות" או "Notifications"\n3. שנה ל-"אפשר" או "Allow"\n4. רענן את הדף ונסה שוב')
+          } else {
+            alert('❌ נדרשת הרשאה כדי להפעיל התראות. אנא אפשר התראות בהגדרות הדפדפן.')
+          }
           setEnablingPush(false)
           return
         }

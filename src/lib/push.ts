@@ -33,7 +33,25 @@ export async function requestNotificationPermission(): Promise<boolean> {
     throw new Error('Push notifications are not supported in this browser')
   }
 
+  console.log('📱 Current permission:', Notification.permission)
+
+  // If already granted, return true
+  if (Notification.permission === 'granted') {
+    console.log('📱 Permission already granted')
+    return true
+  }
+
+  // If denied, can't request again - user must enable manually
+  if (Notification.permission === 'denied') {
+    console.log('📱 Permission denied - user must enable in browser settings')
+    return false
+  }
+
+  // Request permission
+  console.log('📱 Requesting permission...')
   const permission = await Notification.requestPermission()
+  console.log('📱 Permission response:', permission)
+
   return permission === 'granted'
 }
 
