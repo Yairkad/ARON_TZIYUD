@@ -163,32 +163,32 @@ export default function HomePage() {
         </div>
 
         {/* Feature Cards */}
-        <div className="grid grid-cols-1 md:grid-cols-3 gap-6 mt-8">
-          <Card className="border-2 border-blue-200 bg-gradient-to-br from-blue-50 to-indigo-50 shadow-lg hover:shadow-xl transition-all duration-200 hover:scale-105">
-            <CardContent className="p-3 text-center">
-              <div className="text-4xl mb-2">⚡</div>
-              <h3 className="text-lg font-bold text-gray-800 mb-1">פשוט ומהיר</h3>
-              <p className="text-sm text-gray-600">
+        <div className="grid grid-cols-3 gap-3 mt-8">
+          <Card className="border border-blue-200 bg-gradient-to-br from-blue-50 to-indigo-50 shadow-md hover:shadow-lg transition-all duration-200 hover:scale-105">
+            <CardContent className="p-2 text-center">
+              <div className="text-2xl mb-1">⚡</div>
+              <h3 className="text-xs font-bold text-gray-800 mb-0.5">פשוט ומהיר</h3>
+              <p className="text-[10px] text-gray-600 leading-tight">
                 תהליך השאלה מהיר וקל - בחר ציוד, מלא פרטים, וקבל אישור
               </p>
             </CardContent>
           </Card>
 
-          <Card className="border-2 border-green-200 bg-gradient-to-br from-green-50 to-teal-50 shadow-lg hover:shadow-xl transition-all duration-200 hover:scale-105">
-            <CardContent className="p-3 text-center">
-              <div className="text-4xl mb-2">🎯</div>
-              <h3 className="text-lg font-bold text-gray-800 mb-1">זמין תמיד</h3>
-              <p className="text-sm text-gray-600">
+          <Card className="border border-green-200 bg-gradient-to-br from-green-50 to-teal-50 shadow-md hover:shadow-lg transition-all duration-200 hover:scale-105">
+            <CardContent className="p-2 text-center">
+              <div className="text-2xl mb-1">🎯</div>
+              <h3 className="text-xs font-bold text-gray-800 mb-0.5">זמין תמיד</h3>
+              <p className="text-[10px] text-gray-600 leading-tight">
                 גישה למערכת 24/7 לביצוע בקשות והצגת היסטוריית השאלות
               </p>
             </CardContent>
           </Card>
 
-          <Card className="border-2 border-orange-200 bg-gradient-to-br from-orange-50 to-amber-50 shadow-lg hover:shadow-xl transition-all duration-200 hover:scale-105">
-            <CardContent className="p-3 text-center">
-              <div className="text-4xl mb-2">✅</div>
-              <h3 className="text-lg font-bold text-gray-800 mb-1">ציוד מגוון</h3>
-              <p className="text-sm text-gray-600">
+          <Card className="border border-orange-200 bg-gradient-to-br from-orange-50 to-amber-50 shadow-md hover:shadow-lg transition-all duration-200 hover:scale-105">
+            <CardContent className="p-2 text-center">
+              <div className="text-2xl mb-1">✅</div>
+              <h3 className="text-xs font-bold text-gray-800 mb-0.5">ציוד מגוון</h3>
+              <p className="text-[10px] text-gray-600 leading-tight">
                 מגוון רחב של ציוד זמין להשאלה - כל מה שאתה צריך במקום אחד
               </p>
             </CardContent>

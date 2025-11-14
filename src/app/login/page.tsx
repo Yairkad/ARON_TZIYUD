@@ -89,17 +89,6 @@ export default function UnifiedLoginPage() {
 
   return (
     <div className="min-h-screen content-wrapper flex flex-col items-center justify-center p-4 gap-8 relative">
-      {/* Back Button */}
-      <Link href={backUrl} className="absolute top-4 left-4">
-        <Button
-          variant="ghost"
-          size="sm"
-          className="h-9 px-3 rounded-full hover:bg-blue-50 text-blue-600 transition-all duration-200 hover:scale-105 border border-blue-200"
-        >
-          ↩️ {backUrl === '/' ? 'חזור לדף הבית' : 'חזור לעמוד הניהול'}
-        </Button>
-      </Link>
-
       {/* Logo Section */}
       <div className="w-full max-w-md">
         <div className="flex flex-col items-center justify-center gap-2 mb-4">
@@ -196,6 +185,16 @@ export default function UnifiedLoginPage() {
             >
               {loading ? '⏳ מתחבר...' : '🚀 התחבר'}
             </Button>
+
+            {/* Back Button */}
+            <Link href={backUrl} className="block mt-4">
+              <Button
+                variant="ghost"
+                className="w-full h-12 hover:bg-blue-50 text-blue-600 transition-all duration-200 hover:scale-105 border border-blue-200"
+              >
+                ↩️ {backUrl === '/' ? 'חזור לדף הבית' : 'חזור לעמוד הניהול'}
+              </Button>
+            </Link>
           </form>
 
           <div className="mt-6 text-center">
