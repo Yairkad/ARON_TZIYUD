@@ -653,6 +653,7 @@ export default function CityAdminPage() {
         headers: {
           'Content-Type': 'application/json',
         },
+        credentials: 'include',
         body: JSON.stringify({
           cityId: cityId,
           manager1_name: editCityForm.manager1_name.trim(),
@@ -777,17 +778,15 @@ export default function CityAdminPage() {
         alert('✅ התראות כבויות')
       } else {
         // Enable push notifications
-        // First, check if permission is already granted
-        const hasPermission = hasNotificationPermission()
+        // Always request permission (browser will skip if already granted)
+        console.log('📱 Requesting notification permission...')
+        const granted = await requestNotificationPermission()
+        console.log('📱 Permission result:', granted ? 'granted' : 'denied')
 
-        if (!hasPermission) {
-          // Request permission
-          const granted = await requestNotificationPermission()
-          if (!granted) {
-            alert('❌ נדרשת הרשאה כדי להפעיל התראות. אנא אפשר התראות בהגדרות הדפדפן.')
-            setEnablingPush(false)
-            return
-          }
+        if (!granted) {
+          alert('❌ נדרשת הרשאה כדי להפעיל התראות. אנא אפשר התראות בהגדרות הדפדפן.')
+          setEnablingPush(false)
+          return
         }
 
         // Subscribe to push notifications
@@ -1796,6 +1795,7 @@ export default function CityAdminPage() {
                             const response = await fetch('/api/city/update-details', {
                               method: 'POST',
                               headers: { 'Content-Type': 'application/json' },
+                              credentials: 'include',
                               body: JSON.stringify({
                                 cityId,
                                 request_mode: 'direct'
@@ -1853,6 +1853,7 @@ export default function CityAdminPage() {
                             const response = await fetch('/api/city/update-details', {
                               method: 'POST',
                               headers: { 'Content-Type': 'application/json' },
+                              credentials: 'include',
                               body: JSON.stringify({
                                 cityId,
                                 request_mode: 'request'
@@ -1920,6 +1921,7 @@ export default function CityAdminPage() {
                               const response = await fetch('/api/city/update-details', {
                                 method: 'POST',
                                 headers: { 'Content-Type': 'application/json' },
+                                credentials: 'include',
                                 body: JSON.stringify({
                                   cityId,
                                   manager1_name: city?.manager1_name,
@@ -1969,6 +1971,7 @@ export default function CityAdminPage() {
                               const response = await fetch('/api/city/update-details', {
                                 method: 'POST',
                                 headers: { 'Content-Type': 'application/json' },
+                                credentials: 'include',
                                 body: JSON.stringify({
                                   cityId,
                                   require_call_id: newValue
@@ -2028,6 +2031,7 @@ export default function CityAdminPage() {
                           const response = await fetch('/api/city/update-details', {
                             method: 'POST',
                             headers: { 'Content-Type': 'application/json' },
+                            credentials: 'include',
                             body: JSON.stringify({
                               cityId,
                               hide_navigation: newValue
@@ -2082,6 +2086,7 @@ export default function CityAdminPage() {
                           const response = await fetch('/api/city/update-details', {
                             method: 'POST',
                             headers: { 'Content-Type': 'application/json' },
+                            credentials: 'include',
                             body: JSON.stringify({
                               cityId,
                               enable_push_notifications: newValue
