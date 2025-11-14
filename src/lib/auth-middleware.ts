@@ -26,8 +26,21 @@ export interface AuthenticatedUser {
 export async function requireAuth(
   request: NextRequest
 ): Promise<{ user: AuthenticatedUser | null; error: NextResponse | null }> {
-  // Get access token from cookies
-  const accessToken = request.cookies.get('sb-access-token')?.value
+  // Get access token from Authorization header (preferred) or cookies (fallback)
+  const authHeader = request.headers.get('authorization')
+  let accessToken = authHeader?.startsWith('Bearer ') ? authHeader.substring(7) : null
+
+  // Fallback to cookies if no Authorization header
+  if (!accessToken) {
+    accessToken = request.cookies.get('sb-access-token')?.value || null
+  }
+
+  console.log('🔐 Auth check:', {
+    hasAuthHeader: !!authHeader,
+    hasCookie: !!request.cookies.get('sb-access-token'),
+    hasToken: !!accessToken,
+    url: request.url
+  })
 
   if (!accessToken) {
     return {

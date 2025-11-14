@@ -648,10 +648,17 @@ export default function CityAdminPage() {
 
     setLoading(true)
     try {
+      // Get access token from Supabase session
+      const { data: { session } } = await supabase.auth.getSession()
+      const accessToken = session?.access_token
+
+      console.log('🔑 Sending request with token:', !!accessToken)
+
       const response = await fetch('/api/city/update-details', {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
+          ...(accessToken && { 'Authorization': `Bearer ${accessToken}` }),
         },
         credentials: 'include',
         body: JSON.stringify({

@@ -17,20 +17,28 @@ export default function ManagerGuidePage() {
     async function loadUserInfo() {
       try {
         const { data: { user } } = await supabase.auth.getUser()
-        if (!user) return
+        console.log('👤 Manager guide - User from auth:', user?.id, user?.email)
 
-        const { data: userProfile } = await supabase
+        if (!user) {
+          console.log('❌ No user found in manager guide')
+          return
+        }
+
+        const { data: userProfile, error } = await supabase
           .from('users')
           .select('city_id, role')
           .eq('id', user.id)
           .single()
 
+        console.log('📋 Manager guide - Profile:', userProfile, 'Error:', error)
+
         if (userProfile) {
           setCityId(userProfile.city_id)
           setRole(userProfile.role)
+          console.log('✅ Manager guide - Set role:', userProfile.role, 'cityId:', userProfile.city_id)
         }
       } catch (error) {
-        console.error('Error loading user info:', error)
+        console.error('❌ Error loading user info:', error)
       }
     }
     loadUserInfo()
