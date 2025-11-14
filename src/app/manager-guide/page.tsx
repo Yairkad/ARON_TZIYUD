@@ -5,12 +5,11 @@ import { Button } from "@/components/ui/button"
 import { ArrowRight, Shield } from "lucide-react"
 import { useRouter } from "next/navigation"
 import { useEffect, useState } from "react"
-import { createClientComponentClient } from "@supabase/auth-helpers-nextjs"
+import { supabase } from "@/lib/supabase"
 
 export default function ManagerGuidePage() {
   const router = useRouter()
   const [cityId, setCityId] = useState<string | null>(null)
-  const supabase = createClientComponentClient()
 
   useEffect(() => {
     async function loadUserCityId() {
@@ -32,7 +31,7 @@ export default function ManagerGuidePage() {
       }
     }
     loadUserCityId()
-  }, [supabase])
+  }, [])
 
   const handleBackClick = () => {
     if (cityId) {

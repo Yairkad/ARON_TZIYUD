@@ -47,7 +47,10 @@
       "Bash(start test-email.html)",
       "Bash(start https://vercel.com/yairkads-projects/aron-tziyud/settings/environment-variables)",
       "Bash(start https://resend.com/api-keys)",
-      "Bash(npm run build:*)"
+      "Bash(npm run build:*)",
+      "Bash(tree:*)",
+      "Bash(cd:*)",
+      "Bash(\"c:\\Users\\יאיר קדוש\\ARON_TZIYUD\\SRS_DOCUMENT.md\")"
     ],
     "deny": [],
     "ask": []

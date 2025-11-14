@@ -8,7 +8,7 @@ import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
 import Logo from '@/components/Logo'
 import { checkAuth } from '@/lib/auth'
-import { createClientComponentClient } from '@supabase/auth-helpers-nextjs'
+import { supabase } from '@/lib/supabase'
 
 export default function UnifiedLoginPage() {
   const router = useRouter()
@@ -19,7 +19,6 @@ export default function UnifiedLoginPage() {
   const [loading, setLoading] = useState(false)
   const [error, setError] = useState('')
   const [backUrl, setBackUrl] = useState('/')
-  const supabase = createClientComponentClient()
   // Note: We don't check auth here to avoid redirect loops
   // Users will be redirected after successful login
 
@@ -53,7 +52,7 @@ export default function UnifiedLoginPage() {
       }
     }
     checkCurrentUser()
-  }, [supabase])
+  }, [])
 
   const handleLogin = async (e: React.FormEvent) => {
     e.preventDefault()
