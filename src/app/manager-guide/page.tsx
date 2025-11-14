@@ -88,7 +88,7 @@ export default function ManagerGuidePage() {
               </li>
               <li className="flex items-start gap-2">
                 <span className="text-purple-600 font-bold text-xl">✓</span>
-                <span><strong>הגדרות מערכת:</strong> שינוי מצב עבודה, סיסמאות, הודעות פוש</span>
+                <span><strong>הגדרות מערכת:</strong> שינוי מצב עבודה, קוד ארון, הודעות פוש</span>
               </li>
               <li className="flex items-start gap-2">
                 <span className="text-purple-600 font-bold text-xl">✓</span>
@@ -346,14 +346,6 @@ export default function ManagerGuidePage() {
                 <p className="text-gray-700 mb-2">
                   בטאב "הגדרות" תוכל להחליף בין "גישה חופשית" ל-"אישור דרוש". השינוי משפיע מיידית על כל המשתמשים.
                 </p>
-              </div>
-
-              <div>
-                <h4 className="font-bold text-gray-800 mb-2">שינוי סיסמאות</h4>
-                <ul className="list-disc list-inside space-y-2 text-gray-700 mr-4">
-                  <li><strong>סיסמת מנהל:</strong> סיסמה אישית שלך (Supabase Auth) - שנה דרך "הגדרות החשבון"</li>
-                  <li><strong>סיסמת העיר:</strong> סיסמה משותפת לכניסה ישירה דרך דף העיר - שנה בטאב "הגדרות"</li>
-                </ul>
               </div>
 
               <div>
