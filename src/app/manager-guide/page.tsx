@@ -11,31 +11,35 @@ import Link from "next/link"
 export default function ManagerGuidePage() {
   const router = useRouter()
   const [cityId, setCityId] = useState<string | null>(null)
+  const [role, setRole] = useState<string | null>(null)
 
   useEffect(() => {
-    async function loadUserCityId() {
+    async function loadUserInfo() {
       try {
         const { data: { user } } = await supabase.auth.getUser()
         if (!user) return
 
         const { data: userProfile } = await supabase
           .from('users')
-          .select('city_id')
+          .select('city_id, role')
           .eq('id', user.id)
           .single()
 
-        if (userProfile?.city_id) {
+        if (userProfile) {
           setCityId(userProfile.city_id)
+          setRole(userProfile.role)
         }
       } catch (error) {
-        console.error('Error loading user city:', error)
+        console.error('Error loading user info:', error)
       }
     }
-    loadUserCityId()
+    loadUserInfo()
   }, [])
 
   const handleBackClick = () => {
-    if (cityId) {
+    if (role === 'super_admin') {
+      router.push('/super-admin')
+    } else if (cityId) {
       router.push(`/city/${cityId}/admin`)
     } else {
       router.push('/')
@@ -58,7 +62,7 @@ export default function ManagerGuidePage() {
         <div className="mb-6">
           <Button onClick={handleBackClick} variant="outline" className="gap-2">
             <ArrowRight className="h-4 w-4" />
-            {cityId ? 'חזרה לעמוד הניהול' : 'חזרה לדף הבית'}
+            חזרה לניהול
           </Button>
         </div>
 
