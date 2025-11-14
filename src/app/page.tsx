@@ -165,30 +165,30 @@ export default function HomePage() {
         {/* Feature Cards */}
         <div className="grid grid-cols-1 md:grid-cols-3 gap-6 mt-8">
           <Card className="border-2 border-blue-200 bg-gradient-to-br from-blue-50 to-indigo-50 shadow-lg hover:shadow-xl transition-all duration-200 hover:scale-105">
-            <CardContent className="p-6 text-center">
-              <div className="text-6xl mb-4">⚡</div>
-              <h3 className="text-xl font-bold text-gray-800 mb-2">פשוט ומהיר</h3>
-              <p className="text-gray-600">
+            <CardContent className="p-3 text-center">
+              <div className="text-4xl mb-2">⚡</div>
+              <h3 className="text-lg font-bold text-gray-800 mb-1">פשוט ומהיר</h3>
+              <p className="text-sm text-gray-600">
                 תהליך השאלה מהיר וקל - בחר ציוד, מלא פרטים, וקבל אישור
               </p>
             </CardContent>
           </Card>
 
           <Card className="border-2 border-green-200 bg-gradient-to-br from-green-50 to-teal-50 shadow-lg hover:shadow-xl transition-all duration-200 hover:scale-105">
-            <CardContent className="p-6 text-center">
-              <div className="text-6xl mb-4">🎯</div>
-              <h3 className="text-xl font-bold text-gray-800 mb-2">זמין תמיד</h3>
-              <p className="text-gray-600">
+            <CardContent className="p-3 text-center">
+              <div className="text-4xl mb-2">🎯</div>
+              <h3 className="text-lg font-bold text-gray-800 mb-1">זמין תמיד</h3>
+              <p className="text-sm text-gray-600">
                 גישה למערכת 24/7 לביצוע בקשות והצגת היסטוריית השאלות
               </p>
             </CardContent>
           </Card>
 
           <Card className="border-2 border-orange-200 bg-gradient-to-br from-orange-50 to-amber-50 shadow-lg hover:shadow-xl transition-all duration-200 hover:scale-105">
-            <CardContent className="p-6 text-center">
-              <div className="text-6xl mb-4">✅</div>
-              <h3 className="text-xl font-bold text-gray-800 mb-2">ציוד מגוון</h3>
-              <p className="text-gray-600">
+            <CardContent className="p-3 text-center">
+              <div className="text-4xl mb-2">✅</div>
+              <h3 className="text-lg font-bold text-gray-800 mb-1">ציוד מגוון</h3>
+              <p className="text-sm text-gray-600">
                 מגוון רחב של ציוד זמין להשאלה - כל מה שאתה צריך במקום אחד
               </p>
             </CardContent>
