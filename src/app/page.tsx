@@ -154,33 +154,30 @@ export default function HomePage() {
                       <p className="text-gray-500">אין ערים זמינות כרגע</p>
                     </div>
                   ) : (
-                    <div className="max-h-96 overflow-y-auto space-y-2">
+                    <div className="max-h-96 overflow-y-auto space-y-3">
                       {cities.map((city) => (
                         <div
                           key={city.id}
-                          className="w-full text-right p-4 rounded-xl bg-white border-2 border-gray-200 hover:border-blue-400 transition-all duration-200 hover:shadow-md group flex items-center justify-between"
+                          className="w-full p-4 rounded-xl bg-white border-2 border-gray-200 hover:border-blue-400 transition-all duration-200 hover:shadow-md group"
                         >
-                          <div className="flex items-center gap-3">
-                            <span className="text-2xl group-hover:scale-110 transition-transform">
+                          <div className="text-center space-y-2">
+                            <div className="text-3xl group-hover:scale-110 transition-transform">
                               🏙️
-                            </span>
-                            <div className="text-right">
-                              <h4 className="font-bold text-lg text-gray-800">
-                                {city.name}
-                              </h4>
-                              <p className="text-sm text-gray-600">
-                                {city.manager1_name}
-                                {city.manager2_name && ` • ${city.manager2_name}`}
-                              </p>
                             </div>
+                            <h4 className="font-bold text-lg text-gray-800">
+                              {city.name}
+                            </h4>
+                            <p className="text-sm text-gray-600">
+                              {city.manager1_name}
+                              {city.manager2_name && ` • ${city.manager2_name}`}
+                            </p>
+                            <Button
+                              onClick={() => handleCitySelect(city)}
+                              className="w-full mt-3 bg-gradient-to-r from-blue-600 to-indigo-600 hover:from-blue-700 hover:to-indigo-700 text-white font-semibold py-2 rounded-lg transition-all duration-200 hover:scale-105"
+                            >
+                              בחירה
+                            </Button>
                           </div>
-                          <Button
-                            onClick={() => handleCitySelect(city)}
-                            size="sm"
-                            className="bg-gradient-to-r from-blue-600 to-indigo-600 hover:from-blue-700 hover:to-indigo-700 text-white font-semibold px-4 py-2 rounded-lg transition-all duration-200 hover:scale-105"
-                          >
-                            בחירה
-                          </Button>
                         </div>
                       ))}
                     </div>
