@@ -78,6 +78,7 @@ export async function subscribeToPush(
   const response = await fetch('/api/push/subscribe', {
     method: 'POST',
     headers: { 'Content-Type': 'application/json' },
+    credentials: 'include',
     body: JSON.stringify({
       cityId,
       subscription: subscription.toJSON()
@@ -85,7 +86,8 @@ export async function subscribeToPush(
   })
 
   if (!response.ok) {
-    throw new Error('Failed to save push subscription')
+    const data = await response.json().catch(() => ({}))
+    throw new Error(data.error || 'Failed to save push subscription')
   }
 
   return subscription

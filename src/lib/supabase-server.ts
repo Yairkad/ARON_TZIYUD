@@ -85,15 +85,36 @@ export async function getCurrentUser() {
 /**
  * Get the current user's profile with role and city information
  * Returns null if not authenticated
+ *
+ * This function reads the access token from cookies and uses it to get the user.
+ * It works in both Server Components (via cookies()) and API Routes (via request.cookies)
  */
-export async function getCurrentUserProfile() {
+export async function getCurrentUserProfile(accessToken?: string) {
   try {
-    const supabase = await createServerClient()
+    // If no access token provided, try to get it from cookies() (Server Components)
+    if (!accessToken) {
+      try {
+        const cookieStore = await cookies()
+        accessToken = cookieStore.get('sb-access-token')?.value
+      } catch (e) {
+        // cookies() doesn't work in API routes, accessToken must be provided
+        console.error('getCurrentUserProfile - cookies() not available, accessToken must be provided')
+        return null
+      }
+    }
+
+    if (!accessToken) {
+      console.log('getCurrentUserProfile - No access token found')
+      return null
+    }
+
+    // Create a service client to query the user
+    const supabase = createServiceClient()
 
     const {
       data: { user },
       error: authError,
-    } = await supabase.auth.getUser()
+    } = await supabase.auth.getUser(accessToken)
 
     if (authError) {
       console.error('getCurrentUserProfile - Auth error:', authError.message)

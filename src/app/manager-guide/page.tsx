@@ -37,11 +37,15 @@ export default function ManagerGuidePage() {
   }, [])
 
   const handleBackClick = () => {
+    console.log('🔙 Back button clicked:', { role, cityId })
     if (role === 'super_admin') {
+      console.log('→ Navigating to super-admin')
       router.push('/super-admin')
     } else if (cityId) {
+      console.log('→ Navigating to city admin:', `/city/${cityId}/admin`)
       router.push(`/city/${cityId}/admin`)
     } else {
+      console.log('→ Navigating to home')
       router.push('/')
     }
   }

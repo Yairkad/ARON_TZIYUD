@@ -26,7 +26,20 @@ export interface AuthenticatedUser {
 export async function requireAuth(
   request: NextRequest
 ): Promise<{ user: AuthenticatedUser | null; error: NextResponse | null }> {
-  const profile = await getCurrentUserProfile()
+  // Get access token from cookies
+  const accessToken = request.cookies.get('sb-access-token')?.value
+
+  if (!accessToken) {
+    return {
+      user: null,
+      error: NextResponse.json(
+        { success: false, error: 'לא מורשה - נדרשת התחברות' },
+        { status: 401 }
+      ),
+    }
+  }
+
+  const profile = await getCurrentUserProfile(accessToken)
 
   if (!profile) {
     return {

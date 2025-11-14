@@ -10,6 +10,8 @@ export async function POST(request: NextRequest) {
   try {
     const { cityId, subscription } = await request.json()
 
+    console.log('📱 Push subscribe request:', { cityId, hasSubscription: !!subscription })
+
     if (!cityId || !subscription) {
       return NextResponse.json(
         { error: 'חסרים פרטים נדרשים' },
@@ -20,6 +22,8 @@ export async function POST(request: NextRequest) {
     // Extract subscription details
     const { endpoint, keys } = subscription
     const { p256dh, auth } = keys
+
+    console.log('📱 Subscription details:', { endpoint: endpoint?.substring(0, 50), hasKeys: !!keys })
 
     // Get user agent for tracking
     const userAgent = request.headers.get('user-agent') || 'Unknown'
@@ -40,12 +44,14 @@ export async function POST(request: NextRequest) {
       })
 
     if (error) {
-      console.error('Error saving push subscription:', error)
+      console.error('❌ Error saving push subscription:', error)
       return NextResponse.json(
-        { error: 'שגיאה בשמירת ההרשמה להתראות' },
+        { error: `שגיאה בשמירת ההרשמה להתראות: ${error.message}` },
         { status: 500 }
       )
     }
+
+    console.log('✅ Push subscription saved successfully')
 
     return NextResponse.json({
       success: true,
