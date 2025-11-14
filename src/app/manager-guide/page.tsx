@@ -106,17 +106,13 @@ export default function ManagerGuidePage() {
                 <ol className="list-decimal list-inside space-y-3 text-gray-700 mr-4">
                   <li>
                     <strong>התחברות כמנהל עיר (Supabase Auth):</strong>
-                    <p className="mr-6 mt-1 text-sm">השתמש במייל וסיסמה שקיבלת. אם שכחת את הסיסמה, לחץ על "שכחתי סיסמה" בעמוד ההתחברות.</p>
-                  </li>
-                  <li>
-                    <strong>התחברות דרך דף העיר (סיסמת העיר):</strong>
-                    <p className="mr-6 mt-1 text-sm">בחר את העיר ולחץ על "מנהלים - התחברו כאן", הזן את סיסמת העיר.</p>
+                    <p className="mr-6 mt-1 text-sm">השתמש במייל וסיסמה שקיבלת. אם שכחת את הסיסמה, פנה למנהל ראשי לאיפוס.</p>
                   </li>
                 </ol>
               </div>
               <div className="p-4 bg-blue-50 border border-blue-200 rounded-lg">
                 <p className="text-sm text-blue-800">
-                  <strong>💡 טיפ:</strong> מומלץ להשתמש בהתחברות כמנהל עיר (אופציה 1) - היא מאובטחת יותר וכוללת אימות דוא"ל ואיפוס סיסמה.
+               
                 </p>
               </div>
             </CardContent>
@@ -214,7 +210,7 @@ export default function ManagerGuidePage() {
                 <h4 className="font-bold text-gray-800 mb-2">ציוד מתכלה vs. ציוד רגיל</h4>
                 <ul className="list-disc list-inside space-y-2 text-gray-700 mr-4">
                   <li>
-                    <strong>ציוד מתכלה:</strong> מסומן ב-"😉 אין צורך להחזיר". משתמשים לא צריכים להחזיר אותו. כשנלקח, המלאי מתעדכן ונוצרת רשומת החזרה אוטומטית.
+                    <strong>ציוד מתכלה:</strong> מסומן ב-"אין צורך להחזיר". משתמשים לא צריכים להחזיר אותו. כשנלקח, המלאי מתעדכן ונוצרת רשומת החזרה אוטומטית.
                   </li>
                   <li>
                     <strong>ציוד רגיל:</strong> ציוד שצריך להחזיר תוך 48 שעות. המלאי מתעדכן כשנלקח ושוב כשמוחזר.
@@ -280,7 +276,7 @@ export default function ManagerGuidePage() {
 
               <div className="p-4 bg-blue-50 border border-blue-200 rounded-lg">
                 <p className="text-sm text-blue-800">
-                  <strong>💡 טיפ:</strong> תוקף קישור ברירת מחדל הוא 7 ימים. אחרי זה המשתמש לא יוכל להשתמש בו ותצטרך ליצור קישור חדש.
+                  <strong>💡 טיפ:</strong> תוקף קישור ברירת מחדל הוא חצי שעה. אחרי זה המשתמש לא יוכל להשתמש בו ותצטרך ליצור קישור חדש.
                 </p>
               </div>
             </CardContent>
