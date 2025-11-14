@@ -512,12 +512,10 @@ export default function ManagerGuidePage() {
 
         {/* Bottom Navigation */}
         <div className="mt-8 flex justify-center">
-          <Link href="/">
-            <Button className="gap-2 bg-purple-600 hover:bg-purple-700">
-              <Home className="h-4 w-4" />
-              חזרה לדף הבית
-            </Button>
-          </Link>
+          <Button onClick={handleBackClick} className="gap-2 bg-purple-600 hover:bg-purple-700">
+            <ArrowRight className="h-4 w-4" />
+            חזרה לניהול
+          </Button>
         </div>
       </div>
     </div>
