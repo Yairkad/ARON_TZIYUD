@@ -137,7 +137,7 @@ export default function UserGuidePage() {
               </div>
               <div className="p-4 bg-amber-50 border border-amber-200 rounded-lg">
                 <p className="text-sm text-amber-800">
-                  <strong>⚠️ חשוב:</strong> הקישור תקף לזמן מוגבל (בדרך כלל 7 ימים). לאחר תום התוקף יהיה צורך לבקש קישור חדש מהמנהל.
+                  <strong>⚠️ חשוב:</strong> הקישור תקף לזמן מוגבל (חצי שעה). לאחר תום התוקף יהיה צורך לבקש קישור חדש מהמנהל.
                 </p>
               </div>
             </CardContent>
@@ -154,17 +154,18 @@ export default function UserGuidePage() {
                 <ul className="list-disc list-inside space-y-2 text-gray-700 mr-4">
                   <li>יש להחזיר את הציוד <strong>מיד עם סיום הטיפול בקריאה</strong></li>
                   <li>לא יאוחר מ-<strong>48 שעות</strong> מרגע הלקיחה</li>
-                  <li>ציוד מתכלה (מסומן "אין צורך להחזיר" 😉) לא צריך להחזיר</li>
+                  <li>ציוד מתכלה (מסומן "אין צורך להחזיר") לא צריך להחזיר</li>
                 </ul>
               </div>
               <div>
                 <h4 className="font-bold text-gray-800 mb-2">איך מחזירים?</h4>
                 <ol className="list-decimal list-inside space-y-2 text-gray-700 mr-4">
                   <li>היכנס לדף העיר או השתמש בקישור הישיר לעמוד "החזרת ציוד"</li>
+                  <li>הזן את מס' הטלפון איתו ביצעת השאלה, המערכת תזהה לבד אילו פריטים נמצאים אצלך<li>
                   <li>בחר את הציוד שאתה מחזיר מהרשימה</li>
                   <li>ציין את מצב הציוד (תקין/תקלה)</li>
-                  <li>הזן את מספר הטלפון שלך (לאימות)</li>
                   <li>לחץ על "החזר ציוד"</li>
+                  <li>חובה! לצלם את המיוד מונח במקומו בארון בטרם תאושר ההחזרה.<li>
                 </ol>
               </div>
               <div className="p-4 bg-red-50 border border-red-200 rounded-lg">
@@ -190,7 +191,7 @@ export default function UserGuidePage() {
               <div>
                 <h4 className="font-bold text-gray-800 mb-2">ציוד רגיל (ציוד שאילה)</h4>
                 <p className="text-gray-700 mb-2">
-                  ציוד שצריך להחזיר לאחר השימוש. לדוגמה: מנשא, סולם, כלי עבודה מיוחדים, ציוד חילוץ וכו'.
+                  ציוד שצריך להחזיר לאחר השימוש. לדוגמה: ג'ק, קומפרסור, ערכת פתיחה, בוקסות וכו'.
                 </p>
                 <p className="text-sm text-gray-600">
                   ⏰ יש להחזיר תוך 48 שעות מרגע הלקיחה
@@ -202,7 +203,7 @@ export default function UserGuidePage() {
                   ציוד שמיועד לשימוש חד-פעמי או שנצרך במהלך השימוש. מסומן ב-"😉 אין צורך להחזיר".
                 </p>
                 <p className="text-sm text-gray-600">
-                  💡 דוגמאות: תחבושות, מסכות, כפפות, סוללות, וכו'
+                  💡 דוגמאות: ונטילים, ברגי סיליקון, גומיות יוניט ברקס, וכו'
                 </p>
               </div>
             </CardContent>
@@ -258,7 +259,7 @@ export default function UserGuidePage() {
                 </li>
                 <li className="flex items-start gap-2">
                   <span className="text-teal-600 font-bold">✓</span>
-                  <span>אם אתה יודע שתזדקק לציוד באופן קבוע, תאם מראש עם המנהל</span>
+                  <span>אם אתה יודע שתזדקק לציוד באופן קבוע, הזמן אותו מאתר ידידים לשימושך...</span>
                 </li>
               </ul>
             </CardContent>
