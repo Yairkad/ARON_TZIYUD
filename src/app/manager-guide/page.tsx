@@ -102,17 +102,8 @@ export default function ManagerGuidePage() {
             </CardHeader>
             <CardContent className="pt-6 space-y-4">
               <div>
-                <h4 className="font-bold text-gray-800 mb-2">שתי דרכי התחברות:</h4>
-                <ol className="list-decimal list-inside space-y-3 text-gray-700 mr-4">
-                  <li>
-                    <strong>התחברות כמנהל עיר (Supabase Auth):</strong>
-                    <p className="mr-6 mt-1 text-sm">השתמש במייל וסיסמה שקיבלת. אם שכחת את הסיסמה, פנה למנהל ראשי לאיפוס.</p>
-                  </li>
-                </ol>
-              </div>
-              <div className="p-4 bg-blue-50 border border-blue-200 rounded-lg">
-                <p className="text-sm text-blue-800">
-               
+                <p className="text-gray-700 mb-2">
+                  <strong>התחברות למערכת:</strong> השתמש במייל וסיסמה שקיבלת. אם שכחת את הסיסמה, פנה למנהל ראשי לאיפוס.
                 </p>
               </div>
             </CardContent>
