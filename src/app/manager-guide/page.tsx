@@ -2,10 +2,11 @@
 
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card"
 import { Button } from "@/components/ui/button"
-import { ArrowRight, Shield } from "lucide-react"
+import { ArrowRight, Shield, Home } from "lucide-react"
 import { useRouter } from "next/navigation"
 import { useEffect, useState } from "react"
 import { supabase } from "@/lib/supabase"
+import Link from "next/link"
 
 export default function ManagerGuidePage() {
   const router = useRouter()
