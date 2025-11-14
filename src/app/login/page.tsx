@@ -8,6 +8,7 @@ import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
 import Logo from '@/components/Logo'
 import { checkAuth } from '@/lib/auth'
+import { createClientComponentClient } from '@supabase/auth-helpers-nextjs'
 
 export default function UnifiedLoginPage() {
   const router = useRouter()
@@ -17,8 +18,42 @@ export default function UnifiedLoginPage() {
   const [rememberMe, setRememberMe] = useState(false)
   const [loading, setLoading] = useState(false)
   const [error, setError] = useState('')
+  const [backUrl, setBackUrl] = useState('/')
+  const supabase = createClientComponentClient()
   // Note: We don't check auth here to avoid redirect loops
   // Users will be redirected after successful login
+
+  useEffect(() => {
+    async function checkCurrentUser() {
+      try {
+        const { data: { user } } = await supabase.auth.getUser()
+        if (!user) {
+          setBackUrl('/')
+          return
+        }
+
+        const { data: userProfile } = await supabase
+          .from('users')
+          .select('role, city_id')
+          .eq('id', user.id)
+          .single()
+
+        if (userProfile) {
+          if (userProfile.role === 'super_admin') {
+            setBackUrl('/super-admin')
+          } else if (userProfile.role === 'city_manager' && userProfile.city_id) {
+            setBackUrl(`/city/${userProfile.city_id}/admin`)
+          } else {
+            setBackUrl('/')
+          }
+        }
+      } catch (error) {
+        console.error('Error checking user:', error)
+        setBackUrl('/')
+      }
+    }
+    checkCurrentUser()
+  }, [supabase])
 
   const handleLogin = async (e: React.FormEvent) => {
     e.preventDefault()
@@ -55,14 +90,14 @@ export default function UnifiedLoginPage() {
 
   return (
     <div className="min-h-screen content-wrapper flex flex-col items-center justify-center p-4 gap-8 relative">
-      {/* Back to Home Button */}
-      <Link href="/" className="absolute top-4 left-4">
+      {/* Back Button */}
+      <Link href={backUrl} className="absolute top-4 left-4">
         <Button
           variant="ghost"
           size="sm"
           className="h-9 px-3 rounded-full hover:bg-blue-50 text-blue-600 transition-all duration-200 hover:scale-105 border border-blue-200"
         >
-          ↩️ חזור לדף הבית
+          ↩️ {backUrl === '/' ? 'חזור לדף הבית' : 'חזור לעמוד הניהול'}
         </Button>
       </Link>
 
@@ -167,7 +202,7 @@ export default function UnifiedLoginPage() {
           <div className="mt-6 text-center">
             <div className="bg-gradient-to-r from-purple-50 to-pink-50 rounded-xl p-4 border-2 border-purple-200">
               <p className="text-sm text-gray-600">
-                <span className="font-semibold">💡 טיפ:</span> עמוד זה משמש לכל סוגי המשתמשים במערכת
+                <span className="font-semibold">💡</span> עמוד זה משמש לכל סוגי המשתמשים במערכת
               </p>
             </div>
           </div>

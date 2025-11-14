@@ -2,10 +2,46 @@
 
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card"
 import { Button } from "@/components/ui/button"
-import { Home, Shield } from "lucide-react"
-import Link from "next/link"
+import { ArrowRight, Shield } from "lucide-react"
+import { useRouter } from "next/navigation"
+import { useEffect, useState } from "react"
+import { createClientComponentClient } from "@supabase/auth-helpers-nextjs"
 
 export default function ManagerGuidePage() {
+  const router = useRouter()
+  const [cityId, setCityId] = useState<string | null>(null)
+  const supabase = createClientComponentClient()
+
+  useEffect(() => {
+    async function loadUserCityId() {
+      try {
+        const { data: { user } } = await supabase.auth.getUser()
+        if (!user) return
+
+        const { data: userProfile } = await supabase
+          .from('users')
+          .select('city_id')
+          .eq('id', user.id)
+          .single()
+
+        if (userProfile?.city_id) {
+          setCityId(userProfile.city_id)
+        }
+      } catch (error) {
+        console.error('Error loading user city:', error)
+      }
+    }
+    loadUserCityId()
+  }, [supabase])
+
+  const handleBackClick = () => {
+    if (cityId) {
+      router.push(`/city/${cityId}/admin`)
+    } else {
+      router.push('/')
+    }
+  }
+
   return (
     <div className="min-h-screen bg-gradient-to-br from-blue-50 via-purple-50 to-pink-50">
       <div className="container mx-auto px-4 py-8 max-w-5xl">
@@ -18,14 +54,12 @@ export default function ManagerGuidePage() {
           <p className="text-lg text-purple-600">ניהול מערכת ארון הציוד - מדריך מקיף</p>
         </div>
 
-        {/* Back to Home Button */}
+        {/* Back Button */}
         <div className="mb-6">
-          <Link href="/">
-            <Button variant="outline" className="gap-2">
-              <Home className="h-4 w-4" />
-              חזרה לדף הבית
-            </Button>
-          </Link>
+          <Button onClick={handleBackClick} variant="outline" className="gap-2">
+            <ArrowRight className="h-4 w-4" />
+            {cityId ? 'חזרה לעמוד הניהול' : 'חזרה לדף הבית'}
+          </Button>
         </div>
 
         {/* Quick Overview */}
