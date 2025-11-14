@@ -16,10 +16,39 @@ export default function HomePage() {
   const [loading, setLoading] = useState(true)
   const [showCityDropdown, setShowCityDropdown] = useState(false)
   const [selectedCity, setSelectedCity] = useState<City | null>(null)
+  const [adminUrl, setAdminUrl] = useState<string | null>(null)
 
   useEffect(() => {
     fetchCities()
+    checkAdminStatus()
   }, [])
+
+  const checkAdminStatus = async () => {
+    try {
+      const { data: { user } } = await supabase.auth.getUser()
+      if (!user) {
+        setAdminUrl(null)
+        return
+      }
+
+      const { data: userProfile } = await supabase
+        .from('users')
+        .select('role, city_id')
+        .eq('id', user.id)
+        .single()
+
+      if (userProfile) {
+        if (userProfile.role === 'super_admin') {
+          setAdminUrl('/super-admin')
+        } else if (userProfile.role === 'city_manager' && userProfile.city_id) {
+          setAdminUrl(`/city/${userProfile.city_id}/admin`)
+        }
+      }
+    } catch (error) {
+      console.error('Error checking admin status:', error)
+      setAdminUrl(null)
+    }
+  }
 
   const fetchCities = async () => {
     setLoading(true)
@@ -48,14 +77,14 @@ export default function HomePage() {
       {/* Admin Login Button - Responsive positioning */}
       <div className="absolute top-2 left-2 sm:top-4 sm:left-4 z-10">
         <Button
-          onClick={() => router.push('/login')}
+          onClick={() => router.push(adminUrl || '/login')}
           variant="ghost"
           size="sm"
           className="h-8 sm:h-9 px-2 sm:px-3 rounded-full hover:bg-blue-50 text-blue-600 text-xs sm:text-sm font-medium transition-all duration-200 hover:scale-105 border border-blue-200 shadow-sm"
-          title="כניסת מנהל"
+          title={adminUrl ? "עבור לעמוד הניהול" : "כניסת מנהל"}
         >
-          <span className="hidden sm:inline">🔐 כניסת מנהל</span>
-          <span className="sm:hidden">🔐 מנהל</span>
+          <span className="hidden sm:inline">{adminUrl ? '⚙️ עמוד ניהול' : '🔐 כניסת מנהל'}</span>
+          <span className="sm:hidden">{adminUrl ? '⚙️' : '🔐'}</span>
         </Button>
       </div>
 
