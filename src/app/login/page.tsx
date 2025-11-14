@@ -38,12 +38,16 @@ export default function UnifiedLoginPage() {
           .single()
 
         if (userProfile) {
+          let redirectUrl = '/'
           if (userProfile.role === 'super_admin') {
-            setBackUrl('/super-admin')
+            redirectUrl = '/super-admin'
           } else if (userProfile.role === 'city_manager' && userProfile.city_id) {
-            setBackUrl(`/city/${userProfile.city_id}/admin`)
-          } else {
-            setBackUrl('/')
+            redirectUrl = `/city/${userProfile.city_id}/admin`
+          }
+          setBackUrl(redirectUrl)
+          // Auto-redirect if already logged in
+          if (redirectUrl !== '/') {
+            router.push(redirectUrl)
           }
         }
       } catch (error) {
@@ -52,7 +56,7 @@ export default function UnifiedLoginPage() {
       }
     }
     checkCurrentUser()
-  }, [])
+  }, [router])
 
   const handleLogin = async (e: React.FormEvent) => {
     e.preventDefault()

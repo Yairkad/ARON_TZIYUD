@@ -182,6 +182,33 @@ export default function SuperAdminPage() {
     }
   }
 
+  const deleteAllNotifications = async () => {
+    if (!confirm('האם אתה בטוח שברצונך למחוק את כל ההתראות?')) {
+      return
+    }
+
+    try {
+      const response = await fetch('/api/super-admin/delete-all-notifications', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+      })
+
+      const data = await response.json()
+
+      if (!response.ok) {
+        alert(data.error || 'שגיאה במחיקת ההתראות')
+        return
+      }
+
+      fetchNotifications()
+    } catch (error) {
+      console.error('Error deleting all notifications:', error)
+      alert('שגיאה במחיקת ההתראות')
+    }
+  }
+
   const deleteNotification = async (notificationId: string) => {
     try {
       const response = await fetch('/api/super-admin/delete-notification', {
@@ -1196,18 +1223,31 @@ export default function SuperAdminPage() {
         {activeTab === 'notifications' && (
           <Card className="border-0 shadow-2xl rounded-2xl overflow-hidden bg-white">
             <CardHeader className="bg-gradient-to-r from-blue-50 to-indigo-50 pb-6">
-              <div className="flex justify-between items-center">
+              <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-3">
                 <div>
                   <CardTitle className="text-2xl font-bold text-gray-800">🔔 התראות מערכת</CardTitle>
                   <CardDescription className="text-gray-600">התראות על שינויים בערים במערכת</CardDescription>
                 </div>
-                {unreadCount > 0 && (
-                  <Button
-                    onClick={markAllAsRead}
-                    className="bg-gradient-to-r from-blue-600 to-indigo-600 hover:from-blue-700 hover:to-indigo-700 text-white font-semibold px-6 py-3 rounded-xl transition-all duration-200 hover:scale-105"
-                  >
-                    ✅ סמן הכל כנקרא
-                  </Button>
+                {notifications.length > 0 && (
+                  <div className="flex gap-2 w-full sm:w-auto">
+                    {unreadCount > 0 && (
+                      <Button
+                        onClick={markAllAsRead}
+                        size="sm"
+                        className="flex-1 sm:flex-none bg-gradient-to-r from-blue-600 to-indigo-600 hover:from-blue-700 hover:to-indigo-700 text-white font-semibold px-3 sm:px-4 py-2 rounded-lg transition-all duration-200 hover:scale-105 text-xs sm:text-sm"
+                      >
+                        ✅ סמן הכל כנקרא
+                      </Button>
+                    )}
+                    <Button
+                      onClick={deleteAllNotifications}
+                      size="sm"
+                      variant="destructive"
+                      className="flex-1 sm:flex-none bg-gradient-to-r from-red-600 to-rose-600 hover:from-red-700 hover:to-rose-700 text-white font-semibold px-3 sm:px-4 py-2 rounded-lg transition-all duration-200 hover:scale-105 text-xs sm:text-sm"
+                    >
+                      🗑️ מחק הכל
+                    </Button>
+                  </div>
                 )}
               </div>
             </CardHeader>

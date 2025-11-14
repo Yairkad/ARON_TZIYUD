@@ -169,12 +169,12 @@ export async function requireFullAccess(
     return { user: null, error }
   }
 
-  // Super admin always has full access
+  // Super admin always has full access to all cities
   if (user?.role === 'super_admin') {
     return { user, error: null }
   }
 
-  // Check city access if cityId provided
+  // For city managers, check city access if cityId provided
   if (cityId && user?.city_id !== cityId) {
     return {
       user: null,
@@ -185,7 +185,7 @@ export async function requireFullAccess(
     }
   }
 
-  // Check full access permission
+  // Check full access permission for city managers
   if (user?.permissions !== 'full_access') {
     return {
       user: null,

@@ -154,16 +154,13 @@ export default function HomePage() {
                       <p className="text-gray-500">אין ערים זמינות כרגע</p>
                     </div>
                   ) : (
-                    <div className="max-h-96 overflow-y-auto space-y-3">
+                    <div className="max-h-96 overflow-y-auto space-y-2">
                       {cities.map((city) => (
                         <div
                           key={city.id}
-                          className="w-full p-4 rounded-xl bg-white border-2 border-gray-200 hover:border-blue-400 transition-all duration-200 hover:shadow-md group"
+                          className="w-full p-3 rounded-xl bg-white border-2 border-gray-200 hover:border-blue-400 transition-all duration-200 hover:shadow-md group"
                         >
-                          <div className="text-center space-y-2">
-                            <div className="text-3xl group-hover:scale-110 transition-transform">
-                              🏙️
-                            </div>
+                          <div className="text-center space-y-1.5">
                             <h4 className="font-bold text-lg text-gray-800">
                               {city.name}
                             </h4>
@@ -173,7 +170,7 @@ export default function HomePage() {
                             </p>
                             <Button
                               onClick={() => handleCitySelect(city)}
-                              className="w-full mt-3 bg-gradient-to-r from-blue-600 to-indigo-600 hover:from-blue-700 hover:to-indigo-700 text-white font-semibold py-2 rounded-lg transition-all duration-200 hover:scale-105"
+                              className="w-full mt-2 bg-gradient-to-r from-blue-600 to-indigo-600 hover:from-blue-700 hover:to-indigo-700 text-white font-semibold py-1.5 rounded-lg transition-all duration-200 hover:scale-105"
                             >
                               בחירה
                             </Button>
@@ -221,65 +218,42 @@ export default function HomePage() {
           </Card>
         </div>
 
-        {/* User Guide */}
-        <Card className="border-2 border-purple-200 bg-gradient-to-br from-purple-50 to-pink-50 shadow-lg mt-12">
-          <CardHeader>
-            <CardTitle className="text-2xl text-center text-purple-800">📖 מדריך למשתמש</CardTitle>
-            <CardDescription className="text-center text-purple-600">איך להשתמש במערכת ארון הציוד</CardDescription>
-          </CardHeader>
-          <CardContent className="space-y-6">
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-              <div className="space-y-4">
-                <div className="flex items-start gap-3">
-                  <div className="text-3xl">1️⃣</div>
-                  <div>
-                    <h5 className="font-bold text-gray-800 mb-1">בחר את העיר שלך</h5>
-                    <p className="text-sm text-gray-600">לחץ על "התחל" ובחר את העיר שלך מהרשימה</p>
-                  </div>
-                </div>
-                <div className="flex items-start gap-3">
-                  <div className="text-3xl">2️⃣</div>
-                  <div>
-                    <h5 className="font-bold text-gray-800 mb-1">בחר ציוד</h5>
-                    <p className="text-sm text-gray-600">עיין ברשימת הציוד הזמין ובחר מה שאתה צריך</p>
-                  </div>
-                </div>
-                <div className="flex items-start gap-3">
-                  <div className="text-3xl">3️⃣</div>
-                  <div>
-                    <h5 className="font-bold text-gray-800 mb-1">הזן פרטים</h5>
-                    <p className="text-sm text-gray-600">מלא את הפרטים האישיים שלך ושלח בקשה</p>
-                  </div>
-                </div>
+        {/* User Guide - Compact */}
+        <Card className="border-2 border-purple-200 bg-gradient-to-br from-purple-50 to-pink-50 shadow-lg mt-8">
+          <CardContent className="p-4">
+            <div className="text-center mb-3">
+              <h3 className="text-lg font-bold text-purple-800">📖 איך זה עובד?</h3>
+            </div>
+            <div className="grid grid-cols-2 md:grid-cols-3 gap-2 mb-3">
+              <div className="bg-white/60 rounded-lg p-2 text-center">
+                <div className="text-xl mb-1">1️⃣</div>
+                <p className="text-xs font-semibold text-gray-800">בחר עיר</p>
               </div>
-              <div className="space-y-4">
-                <div className="flex items-start gap-3">
-                  <div className="text-3xl">4️⃣</div>
-                  <div>
-                    <h5 className="font-bold text-gray-800 mb-1">קבל אישור</h5>
-                    <p className="text-sm text-gray-600">המנהל יאשר את הבקשה ותקבל הודעה</p>
-                  </div>
-                </div>
-                <div className="flex items-start gap-3">
-                  <div className="text-3xl">5️⃣</div>
-                  <div>
-                    <h5 className="font-bold text-gray-800 mb-1">קבל את הציוד</h5>
-                    <p className="text-sm text-gray-600">בוא לארון בזמן שסוכם וקבל את הציוד</p>
-                  </div>
-                </div>
-                <div className="flex items-start gap-3">
-                  <div className="text-3xl">6️⃣</div>
-                  <div>
-                    <h5 className="font-bold text-gray-800 mb-1">החזר בזמן</h5>
-                    <p className="text-sm text-gray-600">יש להחזיר את הציוד המושאל מיד עם סיום הטיפול בקריאה ולא יאוחר מ-48 שעות. אין צורך להחזיר ציוד מתכלה (ציוד שכתוב לידו "אין צורך להחזיר" 😉)</p>
-                  </div>
-                </div>
+              <div className="bg-white/60 rounded-lg p-2 text-center">
+                <div className="text-xl mb-1">2️⃣</div>
+                <p className="text-xs font-semibold text-gray-800">בחר ציוד</p>
+              </div>
+              <div className="bg-white/60 rounded-lg p-2 text-center">
+                <div className="text-xl mb-1">3️⃣</div>
+                <p className="text-xs font-semibold text-gray-800">הזן פרטים</p>
+              </div>
+              <div className="bg-white/60 rounded-lg p-2 text-center">
+                <div className="text-xl mb-1">4️⃣</div>
+                <p className="text-xs font-semibold text-gray-800">קבל אישור</p>
+              </div>
+              <div className="bg-white/60 rounded-lg p-2 text-center">
+                <div className="text-xl mb-1">5️⃣</div>
+                <p className="text-xs font-semibold text-gray-800">קבל ציוד</p>
+              </div>
+              <div className="bg-white/60 rounded-lg p-2 text-center">
+                <div className="text-xl mb-1">6️⃣</div>
+                <p className="text-xs font-semibold text-gray-800">החזר בזמן</p>
               </div>
             </div>
-            <div className="flex justify-center mt-6">
+            <div className="flex justify-center">
               <Link href="/user-guide">
-                <Button className="gap-2 bg-purple-600 hover:bg-purple-700 text-white">
-                  📖 מדריך מלא ומפורט
+                <Button size="sm" className="gap-1 bg-purple-600 hover:bg-purple-700 text-white text-xs">
+                  📖 מדריך מפורט
                 </Button>
               </Link>
             </div>
