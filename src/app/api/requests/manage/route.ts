@@ -100,16 +100,11 @@ export async function PATCH(request: NextRequest) {
           }
         }
 
-        // Generate a new token for the approved request (so it can be sent to user)
-        const approvalTokenData = createRequestToken()
-        newToken = approvalTokenData.token
-
+        // Just approve the request - keep the original token
         updateData = {
           status: 'approved',
           approved_by: managerName,
-          approved_at: new Date().toISOString(),
-          token_hash: approvalTokenData.tokenHash,
-          expires_at: approvalTokenData.expiresAt
+          approved_at: new Date().toISOString()
         }
 
         activityAction = ActivityActions.REQUEST_APPROVED
