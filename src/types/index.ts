@@ -100,11 +100,12 @@ export interface EquipmentRequest {
   requester_phone: string
   call_id?: string | null
   token_hash: string
-  status: 'pending' | 'approved' | 'rejected' | 'cancelled' | 'expired'
+  status: 'pending' | 'approved' | 'rejected' | 'cancelled' | 'expired' | 'picked_up'
   expires_at: string
   approved_by?: string | null
   approved_at?: string | null
   rejected_reason?: string | null
+  picked_up_at?: string | null
   created_at: string
   updated_at: string
 }
