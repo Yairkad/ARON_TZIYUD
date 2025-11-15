@@ -4,7 +4,7 @@ import { hashToken, isTokenExpired } from '@/lib/token'
 
 /**
  * POST /api/requests/verify
- * Verifies a token and returns request details
+ * Verifies a token and returns request details with full request information
  */
 export async function POST(request: NextRequest) {
   try {
