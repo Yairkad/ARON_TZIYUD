@@ -30,16 +30,16 @@ export default function RequestPage({ params }: { params: Promise<{ token: strin
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [])
 
-  // Auto-refresh every 10 seconds when status is pending
+  // Auto-refresh every 10 seconds when status is pending (but not if pickup confirmed)
   useEffect(() => {
-    if (request?.status === 'pending') {
+    if (request?.status === 'pending' && !pickupConfirmed) {
       const interval = setInterval(() => {
         verifyToken()
       }, 10000)
 
       return () => clearInterval(interval)
     }
-  }, [request?.status])
+  }, [request?.status, pickupConfirmed])
 
   const verifyToken = async () => {
     setLoading(true)
@@ -78,7 +78,8 @@ export default function RequestPage({ params }: { params: Promise<{ token: strin
       approved: 'אושרה',
       rejected: 'נדחתה',
       cancelled: 'בוטלה',
-      expired: 'פג תוקף'
+      expired: 'פג תוקף',
+      picked_up: 'הציוד נלקח'
     }
     return statusMap[status] || status
   }
@@ -89,7 +90,8 @@ export default function RequestPage({ params }: { params: Promise<{ token: strin
       approved: 'bg-green-100 text-green-800',
       rejected: 'bg-red-100 text-red-800',
       cancelled: 'bg-gray-100 text-gray-800',
-      expired: 'bg-orange-100 text-orange-800'
+      expired: 'bg-orange-100 text-orange-800',
+      picked_up: 'bg-blue-100 text-blue-800'
     }
     return colorMap[status] || 'bg-gray-100 text-gray-800'
   }
@@ -100,6 +102,7 @@ export default function RequestPage({ params }: { params: Promise<{ token: strin
     }
 
     setConfirmingPickup(true)
+    setPickupConfirmed(true) // Mark as confirmed to prevent auto-refresh
 
     try {
       const response = await fetch('/api/requests/confirm-pickup', {
@@ -113,20 +116,18 @@ export default function RequestPage({ params }: { params: Promise<{ token: strin
       if (!response.ok) {
         alert(`שגיאה: ${data.error}`)
         setConfirmingPickup(false)
+        setPickupConfirmed(false)
         return
       }
 
-      // Success - redirect directly to return page
-      alert('✅ הציוד נלקח בהצלחה! המלאי עודכן.\n\nעכשיו תועבר לעמוד ההחזרה.')
-
-      // Redirect to return page after short delay
-      setTimeout(() => {
-        router.push(`/city/${data.city_id}/return`)
-      }, 1500)
+      // Success - redirect directly to return page WITHOUT showing alert
+      // Just redirect immediately
+      router.push(`/city/${data.city_id}/return`)
     } catch (error) {
       console.error('Confirm pickup error:', error)
       alert('שגיאה באישור לקיחת הציוד')
       setConfirmingPickup(false)
+      setPickupConfirmed(false)
     }
   }
 
@@ -400,6 +401,27 @@ export default function RequestPage({ params }: { params: Promise<{ token: strin
               <p className="text-yellow-800">
                 הבקשה נשלחה בהצלחה ונמצאת בטיפול
               </p>
+            </div>
+          </div>
+        )}
+
+        {/* Picked Up Section */}
+        {request.status === 'picked_up' && (
+          <div className="bg-blue-50 border-2 border-blue-200 rounded-lg shadow-lg p-6 mb-6">
+            <div className="text-center">
+              <div className="text-blue-500 text-6xl mb-4">✓</div>
+              <h2 className="text-2xl font-bold text-blue-900 mb-2">
+                הציוד נלקח בהצלחה
+              </h2>
+              <p className="text-blue-800 mb-4">
+                המלאי עודכן ונוצרה רשומת השאלה
+              </p>
+              <Button
+                onClick={() => router.push(`/city/${request.city_id}/return`)}
+                className="bg-blue-600 hover:bg-blue-700 text-white px-8 py-3 text-lg"
+              >
+                לדף החזרת ציוד
+              </Button>
             </div>
           </div>
         )}
