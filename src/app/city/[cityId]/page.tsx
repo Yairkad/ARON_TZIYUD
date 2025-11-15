@@ -1,7 +1,7 @@
 'use client'
 
 import { useState, useEffect } from 'react'
-import { useParams } from 'next/navigation'
+import { useParams, useSearchParams } from 'next/navigation'
 import Link from 'next/link'
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card'
 import { Button } from '@/components/ui/button'
@@ -14,12 +14,16 @@ import { Phone, MessageCircle } from 'lucide-react'
 
 export default function CityPage() {
   const params = useParams()
+  const searchParams = useSearchParams()
   const cityId = params.cityId as string
+
+  // Check if we should open return tab from URL
+  const initialTab = searchParams.get('tab') === 'return' ? 'return' : 'borrow'
 
   const [city, setCity] = useState<City | null>(null)
   const [equipment, setEquipment] = useState<Equipment[]>([])
   const [borrowHistory, setBorrowHistory] = useState<BorrowHistory[]>([])
-  const [activeTab, setActiveTab] = useState<'borrow' | 'return'>('borrow')
+  const [activeTab, setActiveTab] = useState<'borrow' | 'return'>(initialTab)
   const [borrowForm, setBorrowForm] = useState<BorrowForm>({ name: '', phone: '', equipment_id: '' })
   const [returnForm, setReturnForm] = useState<ReturnForm>({ phone: '' })
   const [userBorrows, setUserBorrows] = useState<BorrowHistory[]>([])

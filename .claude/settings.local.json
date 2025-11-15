@@ -50,7 +50,8 @@
       "Bash(npm run build:*)",
       "Bash(tree:*)",
       "Bash(cd:*)",
-      "Bash(\"c:\\Users\\יאיר קדוש\\ARON_TZIYUD\\SRS_DOCUMENT.md\")"
+      "Bash(\"c:\\Users\\יאיר קדוש\\ARON_TZIYUD\\SRS_DOCUMENT.md\")",
+      "Bash(dir /B /S \"c:\\Users\\יאיר קדוש\\ARON_TZIYUD\\src\\app\")"
     ],
     "deny": [],
     "ask": []

@@ -120,9 +120,9 @@ export default function RequestPage({ params }: { params: Promise<{ token: strin
         return
       }
 
-      // Success - redirect directly to return page WITHOUT showing alert
+      // Success - redirect directly to return tab WITHOUT showing alert
       // Just redirect immediately
-      router.push(`/city/${data.city_id}/return`)
+      router.push(`/city/${data.city_id}?tab=return`)
     } catch (error) {
       console.error('Confirm pickup error:', error)
       alert('שגיאה באישור לקיחת הציוד')
@@ -417,7 +417,7 @@ export default function RequestPage({ params }: { params: Promise<{ token: strin
                 המלאי עודכן ונוצרה רשומת השאלה
               </p>
               <Button
-                onClick={() => router.push(`/city/${request.city_id}/return`)}
+                onClick={() => router.push(`/city/${request.city_id}?tab=return`)}
                 className="bg-blue-600 hover:bg-blue-700 text-white px-8 py-3 text-lg"
               >
                 לדף החזרת ציוד
