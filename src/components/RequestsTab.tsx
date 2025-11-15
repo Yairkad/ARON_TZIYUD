@@ -17,7 +17,7 @@ interface RequestsTabProps {
 export default function RequestsTab({ cityId, cityName, managerName, onRequestsUpdate, canApprove, canEdit }: RequestsTabProps) {
   const [requests, setRequests] = useState<EquipmentRequestWithItems[]>([])
   const [loading, setLoading] = useState(false)
-  const [filter, setFilter] = useState<'all' | 'pending' | 'approved' | 'rejected' | 'expired'>('all')
+  const [filter, setFilter] = useState<'all' | 'pending' | 'approved' | 'rejected' | 'expired' | 'picked_up'>('all')
   const [search, setSearch] = useState('')
   const [rejectReason, setRejectReason] = useState<{ requestId: string; reason: string } | null>(null)
   const [regeneratedToken, setRegeneratedToken] = useState<{ requestId: string; token: string } | null>(null)
@@ -298,6 +298,7 @@ ${locationUrl ? `\n📍 מיקום הארון:\n${locationUrl}` : ''}
             { value: 'all', label: 'הכל', count: requests.length },
             { value: 'pending', label: 'ממתינות', count: requests.filter(r => r.status === 'pending').length },
             { value: 'approved', label: 'מאושרות', count: requests.filter(r => r.status === 'approved').length },
+            { value: 'picked_up', label: 'נאספו', count: requests.filter(r => r.status === 'picked_up').length },
             { value: 'rejected', label: 'נדחו', count: requests.filter(r => r.status === 'rejected').length },
             { value: 'expired', label: 'פג תוקף', count: requests.filter(r => r.status === 'expired').length }
           ].map(({ value, label, count }) => (
