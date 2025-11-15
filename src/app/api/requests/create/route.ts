@@ -123,6 +123,7 @@ export async function POST(request: NextRequest) {
         requester_name: body.requester_name,
         requester_phone: body.requester_phone,
         call_id: body.call_id || null,
+        token: token,  // Store original token for sharing
         token_hash: tokenHash,
         expires_at: expiresAt,
         status: 'pending'

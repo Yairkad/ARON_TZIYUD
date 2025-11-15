@@ -167,6 +167,7 @@ export async function PATCH(request: NextRequest) {
         newToken = token
 
         updateData = {
+          token: token,  // Store original token for sharing
           token_hash: tokenHash,
           expires_at: expiresAt,
           status: existingRequest.status === 'expired' ? 'pending' : 'approved'

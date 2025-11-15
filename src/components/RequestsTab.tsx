@@ -210,7 +210,7 @@ ${locationUrl ? `\n📍 מיקום הארון:\n${locationUrl}` : ''}
   const handleSendApprovalWhatsApp = (request: EquipmentRequestWithItems) => {
     const phone = request.requester_phone.replace(/\D/g, '')
     const internationalPhone = phone.startsWith('0') ? '972' + phone.slice(1) : phone
-    const tokenUrl = getRequestUrl(request.token_hash)
+    const tokenUrl = getRequestUrl(request.token)
 
     // Build equipment list
     const equipmentList = request.items.map(item => `• ${item.equipment.name} - כמות: ${item.quantity}`).join('\n')
@@ -590,7 +590,7 @@ ${locationUrl ? `\n📍 מיקום הארון:\n${locationUrl}` : ''}
                       שלח אישור ב-WhatsApp
                     </Button>
                     <Button
-                      onClick={() => handleCopyLink(request.token_hash, request)}
+                      onClick={() => handleCopyLink(request.token, request)}
                       variant="outline"
                       className="border-2 border-blue-400 text-blue-700 hover:bg-blue-50 rounded-xl"
                     >

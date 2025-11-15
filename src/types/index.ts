@@ -98,7 +98,8 @@ export interface EquipmentRequest {
   requester_name: string
   requester_phone: string
   call_id?: string | null
-  token_hash: string
+  token: string  // Original token for sharing
+  token_hash: string  // Hashed token for verification
   status: 'pending' | 'approved' | 'rejected' | 'cancelled' | 'expired' | 'picked_up'
   expires_at: string
   approved_by?: string | null

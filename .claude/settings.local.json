@@ -51,7 +51,8 @@
       "Bash(tree:*)",
       "Bash(cd:*)",
       "Bash(\"c:\\Users\\יאיר קדוש\\ARON_TZIYUD\\SRS_DOCUMENT.md\")",
-      "Bash(dir /B /S \"c:\\Users\\יאיר קדוש\\ARON_TZIYUD\\src\\app\")"
+      "Bash(dir /B /S \"c:\\Users\\יאיר קדוש\\ARON_TZIYUD\\src\\app\")",
+      "Bash(dir /B /S \"c:\\Users\\יאיר קדוש\\ARON_TZIYUD\\src\\app\\api\\requests\")"
     ],
     "deny": [],
     "ask": []
