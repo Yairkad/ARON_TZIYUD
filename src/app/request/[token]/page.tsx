@@ -212,6 +212,26 @@ export default function RequestPage({ params }: { params: Promise<{ token: strin
                   {new Date(request.expires_at).toLocaleString('he-IL')}
                 </p>
               </div>
+              {request.approved_by && request.approved_at && (
+                <>
+                  <div>
+                    <p className="text-sm text-gray-600">אושר על ידי</p>
+                    <p className="font-semibold text-green-700">{request.approved_by}</p>
+                  </div>
+                  <div>
+                    <p className="text-sm text-gray-600">תאריך ושעת אישור</p>
+                    <p className="font-semibold text-green-700">
+                      {new Date(request.approved_at).toLocaleString('he-IL', {
+                        year: 'numeric',
+                        month: '2-digit',
+                        day: '2-digit',
+                        hour: '2-digit',
+                        minute: '2-digit'
+                      })}
+                    </p>
+                  </div>
+                </>
+              )}
             </div>
           </div>
         </div>

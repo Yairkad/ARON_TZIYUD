@@ -397,9 +397,9 @@ ${locationUrl ? `\n📍 מיקום הארון:\n${locationUrl}` : ''}
                 </div>
 
                 {/* Approval Info */}
-                {request.status === 'approved' && (
-                  <div className="bg-green-50 border-2 border-green-200 rounded-lg p-4">
-                    <p className="text-sm text-green-800">
+                {(request.status === 'approved' || request.status === 'picked_up') && request.approved_by && (
+                  <div className={`${request.status === 'picked_up' ? 'bg-blue-50 border-2 border-blue-200' : 'bg-green-50 border-2 border-green-200'} rounded-lg p-4`}>
+                    <p className={`text-sm ${request.status === 'picked_up' ? 'text-blue-800' : 'text-green-800'}`}>
                       ✅ <span className="font-semibold">אושר על ידי:</span> {request.approved_by}
                       {request.approved_at && ` ב-${new Date(request.approved_at).toLocaleString('he-IL')}`}
                     </p>

@@ -1574,17 +1574,6 @@ export default function CityAdminPage() {
                                 }`}>
                                   <div className="flex-1">
                                     <p className="font-semibold text-gray-800">{item.equipment_name}</p>
-                                    {item.status === 'returned' && item.return_image_url && (
-                                      <a
-                                        href={item.return_image_url}
-                                        target="_blank"
-                                        rel="noopener noreferrer"
-                                        className="text-xs text-blue-600 hover:text-blue-800 flex items-center gap-1 mt-1"
-                                        onClick={(e) => e.stopPropagation()}
-                                      >
-                                        📸 תמונת החזרה
-                                      </a>
-                                    )}
                                   </div>
                                   <div className="flex gap-2 items-center">
                                     {item.status === 'returned' && item.return_image_url && (
