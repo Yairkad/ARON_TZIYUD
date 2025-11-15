@@ -279,18 +279,6 @@ export default function RequestPage({ params }: { params: Promise<{ token: strin
                   </div>
                 )}
 
-                {/* Location Description */}
-                {request.city?.location_description && (
-                  <div className="bg-white rounded-lg p-6 mb-4">
-                    <h3 className="text-lg font-bold text-gray-900 mb-3 text-center">
-                      📝 הוראות מציאת הארון
-                    </h3>
-                    <p className="text-gray-700 whitespace-pre-wrap text-center leading-relaxed">
-                      {request.city.location_description}
-                    </p>
-                  </div>
-                )}
-
                 {/* Location Image */}
                 {request.city?.location_image && (
                   <div className="bg-white rounded-lg p-6 mb-4">
