@@ -106,6 +106,7 @@ export default function CityAdminPage() {
     manager2_phone: '',
     location_url: '',
     token_location_url: '',
+    location_image: null as string | null,
     lat: null as number | null,
     lng: null as number | null,
     token_lat: null as number | null,
@@ -208,6 +209,7 @@ export default function CityAdminPage() {
           manager2_phone: data.manager2_phone || '',
           location_url: data.location_url || '',
           token_location_url: data.token_location_url || '',
+          location_image: data.location_image || null,
           lat: data.lat || null,
           lng: data.lng || null,
           token_lat: data.token_lat || null,
@@ -665,6 +667,7 @@ export default function CityAdminPage() {
           manager2_phone: editCityForm.manager2_phone.trim() || null,
           location_url: editCityForm.location_url.trim() || null,
           token_location_url: editCityForm.token_location_url?.trim() || null,
+          location_image: editCityForm.location_image,
           lat: editCityForm.lat,
           lng: editCityForm.lng,
           token_lat: editCityForm.token_lat,
@@ -2423,7 +2426,60 @@ export default function CityAdminPage() {
                             <p className="text-xs text-purple-600">יוצג רק בדף הטוקן לאחר אישור בקשה (אופציונלי)</p>
                           </div>
 
-                          {/* These fields removed - not in database schema yet */}
+                          {/* Location Image Upload */}
+                          <div className="space-y-2">
+                            <label className="block text-sm font-semibold text-gray-700">🖼️ תמונת מיקום הארון</label>
+                            <div className="space-y-3">
+                              {editCityForm.location_image && (
+                                <div className="relative">
+                                  <img
+                                    src={editCityForm.location_image}
+                                    alt="תמונת מיקום הארון"
+                                    className="w-full max-w-md rounded-lg border-2 border-gray-200"
+                                  />
+                                  {isEditingLocation && (
+                                    <button
+                                      type="button"
+                                      onClick={() => setEditCityForm({ ...editCityForm, location_image: null })}
+                                      className="absolute top-2 right-2 bg-red-500 hover:bg-red-600 text-white rounded-full p-2 shadow-lg"
+                                    >
+                                      🗑️ הסר תמונה
+                                    </button>
+                                  )}
+                                </div>
+                              )}
+                              <input
+                                type="file"
+                                accept="image/*"
+                                disabled={!isEditingLocation}
+                                onChange={async (e) => {
+                                  if (!isEditingLocation) return
+                                  const file = e.target.files?.[0]
+                                  if (!file) return
+
+                                  // Check file size (max 2MB)
+                                  if (file.size > 2 * 1024 * 1024) {
+                                    alert('הקובץ גדול מדי. גודל מקסימלי: 2MB')
+                                    return
+                                  }
+
+                                  // Convert to base64
+                                  const reader = new FileReader()
+                                  reader.onloadend = () => {
+                                    const base64 = reader.result as string
+                                    setEditCityForm({ ...editCityForm, location_image: base64 })
+                                  }
+                                  reader.readAsDataURL(file)
+                                }}
+                                className={`block w-full text-sm border-2 rounded-xl file:mr-4 file:py-2 file:px-4 file:rounded-lg file:border-0 file:text-sm file:font-semibold ${
+                                  isEditingLocation
+                                    ? 'file:bg-indigo-50 file:text-indigo-700 hover:file:bg-indigo-100 border-gray-200 cursor-pointer'
+                                    : 'file:bg-gray-100 file:text-gray-400 border-gray-100 cursor-not-allowed'
+                                }`}
+                              />
+                              <p className="text-xs text-gray-500">תמונה של הארון - תוצג בדף הטוקן (עד 2MB, אופציונלי)</p>
+                            </div>
+                          </div>
                         </div>
                       </div>
 

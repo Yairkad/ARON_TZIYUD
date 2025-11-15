@@ -13,8 +13,7 @@ export async function POST(request: NextRequest) {
       manager2_phone,
       location_url,
       token_location_url,
-      location_description,
-      location_image_url,
+      location_image,
       lat,
       lng,
       token_lat,
@@ -94,14 +93,9 @@ export async function POST(request: NextRequest) {
     if (token_location_url !== undefined) {
       updateData.token_location_url = token_location_url && typeof token_location_url === 'string' ? token_location_url.trim() : null
     }
-    // Note: location_description and location_image_url columns don't exist in DB yet
-    // Skip these fields until we add them to the database schema
-    // if (location_description !== undefined) {
-    //   updateData.location_description = location_description && typeof location_description === 'string' ? location_description.trim() : null
-    // }
-    // if (location_image_url !== undefined) {
-    //   updateData.location_image_url = location_image_url && typeof location_image_url === 'string' ? location_image_url.trim() : null
-    // }
+    if (location_image !== undefined) {
+      updateData.location_image = location_image && typeof location_image === 'string' ? location_image : null
+    }
     if (lat !== undefined) {
       updateData.lat = lat
     }
