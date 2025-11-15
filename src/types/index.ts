@@ -7,8 +7,6 @@ export interface City {
   manager2_phone?: string | null
   location_url?: string | null
   token_location_url?: string | null
-  location_description?: string | null
-  location_image_url?: string | null
   lat?: number | null
   lng?: number | null
   token_lat?: number | null
