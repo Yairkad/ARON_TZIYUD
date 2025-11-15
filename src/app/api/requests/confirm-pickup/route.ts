@@ -122,8 +122,7 @@ export async function POST(request: NextRequest) {
     const { error: updateRequestError } = await supabase
       .from('equipment_requests')
       .update({
-        status: 'picked_up',
-        picked_up_at: new Date().toISOString()
+        status: 'picked_up'
       })
       .eq('id', equipmentRequest.id)
 

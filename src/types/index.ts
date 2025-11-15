@@ -105,7 +105,6 @@ export interface EquipmentRequest {
   approved_by?: string | null
   approved_at?: string | null
   rejected_reason?: string | null
-  picked_up_at?: string | null
   created_at: string
   updated_at: string
 }
