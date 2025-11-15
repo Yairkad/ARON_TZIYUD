@@ -29,6 +29,16 @@ export default function RequestsTab({ cityId, cityName, managerName, onRequestsU
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [cityId])
 
+  // Auto-refresh every 30 seconds to check for new requests
+  useEffect(() => {
+    const interval = setInterval(() => {
+      console.log('🔄 Auto-refreshing requests...')
+      fetchRequests()
+    }, 30000) // 30 seconds
+
+    return () => clearInterval(interval)
+  }, [cityId])
+
   const fetchRequests = async () => {
     setLoading(true)
     try {
