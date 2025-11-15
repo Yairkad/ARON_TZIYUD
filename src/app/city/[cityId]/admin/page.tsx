@@ -2457,19 +2457,58 @@ export default function CityAdminPage() {
                                   const file = e.target.files?.[0]
                                   if (!file) return
 
-                                  // Check file size (max 2MB)
-                                  if (file.size > 2 * 1024 * 1024) {
-                                    alert('הקובץ גדול מדי. גודל מקסימלי: 2MB')
-                                    return
-                                  }
+                                  try {
+                                    setLoading(true)
+                                    // Compress and convert image
+                                    const compressedBase64 = await new Promise<string>((resolve, reject) => {
+                                      const reader = new FileReader()
+                                      reader.onload = (event) => {
+                                        const img = new Image()
+                                        img.onload = () => {
+                                          const canvas = document.createElement('canvas')
+                                          let width = img.width
+                                          let height = img.height
 
-                                  // Convert to base64
-                                  const reader = new FileReader()
-                                  reader.onloadend = () => {
-                                    const base64 = reader.result as string
-                                    setEditCityForm({ ...editCityForm, location_image: base64 })
+                                          // Resize if larger than 1920px
+                                          const maxSize = 1920
+                                          if (width > height && width > maxSize) {
+                                            height = (height * maxSize) / width
+                                            width = maxSize
+                                          } else if (height > maxSize) {
+                                            width = (width * maxSize) / height
+                                            height = maxSize
+                                          }
+
+                                          canvas.width = width
+                                          canvas.height = height
+                                          const ctx = canvas.getContext('2d')!
+                                          ctx.drawImage(img, 0, 0, width, height)
+
+                                          // Convert to JPEG with 85% quality
+                                          const compressed = canvas.toDataURL('image/jpeg', 0.85)
+
+                                          // Check final size (max 2MB after compression)
+                                          const sizeInMB = (compressed.length * 3) / 4 / (1024 * 1024)
+                                          if (sizeInMB > 2) {
+                                            reject(new Error('התמונה גדולה מדי גם אחרי דחיסה. נסה תמונה קטנה יותר.'))
+                                            return
+                                          }
+
+                                          resolve(compressed)
+                                        }
+                                        img.onerror = () => reject(new Error('שגיאה בטעינת התמונה'))
+                                        img.src = event.target!.result as string
+                                      }
+                                      reader.onerror = () => reject(new Error('שגיאה בקריאת הקובץ'))
+                                      reader.readAsDataURL(file)
+                                    })
+
+                                    setEditCityForm({ ...editCityForm, location_image: compressedBase64 })
+                                    setLoading(false)
+                                  } catch (error: any) {
+                                    setLoading(false)
+                                    alert(error.message || 'שגיאה בהעלאת התמונה')
                                   }
-                                  reader.readAsDataURL(file)
                                 }}
                                 className={`block w-full text-sm border-2 rounded-xl file:mr-4 file:py-2 file:px-4 file:rounded-lg file:border-0 file:text-sm file:font-semibold ${
                                   isEditingLocation
