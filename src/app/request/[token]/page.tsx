@@ -292,15 +292,15 @@ export default function RequestPage({ params }: { params: Promise<{ token: strin
                 )}
 
                 {/* Location Image */}
-                {request.city?.location_image_url && (
+                {request.city?.location_image && (
                   <div className="bg-white rounded-lg p-6 mb-4">
                     <h3 className="text-lg font-bold text-gray-900 mb-3 text-center">
-                      🖼️ תמונת מיקום הארון
+                      📸 תמונת הארון
                     </h3>
                     <img
-                      src={request.city.location_image_url}
+                      src={request.city.location_image}
                       alt="מיקום הארון"
-                      className="w-full rounded-lg shadow-md"
+                      className="w-full max-w-2xl mx-auto rounded-lg shadow-md border-2 border-gray-200"
                     />
                   </div>
                 )}
