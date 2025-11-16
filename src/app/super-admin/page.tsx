@@ -667,7 +667,20 @@ export default function SuperAdminPage() {
       const firstCity = user.managed_cities[0]
       detectedCityId = firstCity.id
       detectedManagerRole = firstCity.role || ''
+    } else if (user.role === 'city_manager' && user.city_id) {
+      // Fallback: use city_id from user table if managed_cities is empty
+      detectedCityId = user.city_id
+      detectedManagerRole = user.manager_role || ''
     }
+
+    console.log('📝 Editing user:', {
+      email: user.email,
+      managed_cities: user.managed_cities,
+      city_id: user.city_id,
+      manager_role: user.manager_role,
+      detected: { city_id: detectedCityId, manager_role: detectedManagerRole },
+      phone: user.phone
+    })
 
     setUserForm({
       email: user.email,
