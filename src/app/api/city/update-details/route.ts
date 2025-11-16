@@ -143,7 +143,7 @@ export async function POST(request: NextRequest) {
     }
 
     // Update user table if the logged-in user changed their own name/phone
-    if (city.manager1_user_id === user.id) {
+    if (user && city.manager1_user_id === user.id) {
       const userUpdateData: any = {}
       if (updateData.manager1_name !== undefined) userUpdateData.full_name = updateData.manager1_name
       if (updateData.manager1_phone !== undefined) userUpdateData.phone = updateData.manager1_phone
@@ -155,7 +155,7 @@ export async function POST(request: NextRequest) {
           .eq('id', user.id)
         console.log('✅ Updated user table for manager1')
       }
-    } else if (city.manager2_user_id === user.id) {
+    } else if (user && city.manager2_user_id === user.id) {
       const userUpdateData: any = {}
       if (updateData.manager2_name !== undefined) userUpdateData.full_name = updateData.manager2_name
       if (updateData.manager2_phone !== undefined) userUpdateData.phone = updateData.manager2_phone
