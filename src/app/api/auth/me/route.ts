@@ -66,7 +66,8 @@ export async function GET(request: NextRequest) {
       permissions = userData.permissions || 'full_access'
     }
 
-    // For city managers, also get data from city_managers table
+    // For city managers, also get data from city_managers table and all managed cities
+    let managedCities: any[] = []
     if (userRole === 'city_manager') {
       // Try to find by auth ID first, then by email
       const { data: managerByAuth } = await supabase
@@ -86,6 +87,22 @@ export async function GET(request: NextRequest) {
 
         manager = managerByEmail
       }
+
+      // Get all cities managed by this user
+      const { data: cities } = await supabase
+        .from('cities')
+        .select('id, name, is_active, manager1_user_id, manager2_user_id')
+        .or(`manager1_user_id.eq.${user.id},manager2_user_id.eq.${user.id}`)
+        .eq('is_active', true)
+        .order('name')
+
+      if (cities) {
+        managedCities = cities.map(city => ({
+          id: city.id,
+          name: city.name,
+          role: city.manager1_user_id === user.id ? 'manager1' : 'manager2'
+        }))
+      }
     }
 
     const response = NextResponse.json({
@@ -98,7 +115,8 @@ export async function GET(request: NextRequest) {
         city_id: cityId,
         permissions: permissions,
       },
-      manager: manager  // Include city_managers data if available
+      manager: manager,  // Include city_managers data if available
+      managed_cities: managedCities  // Include all managed cities for city managers
     })
 
     // Add no-cache headers

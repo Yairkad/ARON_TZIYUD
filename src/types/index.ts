@@ -8,6 +8,7 @@ export interface City {
   location_url?: string | null
   token_location_url?: string | null
   location_image?: string | null  // Base64 encoded image
+  location_description?: string | null  // Free text description for finding the cabinet
   lat?: number | null
   lng?: number | null
   token_lat?: number | null

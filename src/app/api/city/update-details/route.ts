@@ -14,6 +14,7 @@ export async function POST(request: NextRequest) {
       location_url,
       token_location_url,
       location_image,
+      location_description,
       lat,
       lng,
       token_lat,
@@ -95,6 +96,9 @@ export async function POST(request: NextRequest) {
     }
     if (location_image !== undefined) {
       updateData.location_image = location_image && typeof location_image === 'string' ? location_image : null
+    }
+    if (location_description !== undefined) {
+      updateData.location_description = location_description && typeof location_description === 'string' ? location_description.trim() : null
     }
     if (lat !== undefined) {
       updateData.lat = lat

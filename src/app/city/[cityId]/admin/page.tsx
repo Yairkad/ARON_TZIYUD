@@ -106,6 +106,7 @@ export default function CityAdminPage() {
     location_url: '',
     token_location_url: '',
     location_image: null as string | null,
+    location_description: '',
     lat: null as number | null,
     lng: null as number | null,
     token_lat: null as number | null,
@@ -208,6 +209,7 @@ export default function CityAdminPage() {
           location_url: data.location_url || '',
           token_location_url: data.token_location_url || '',
           location_image: data.location_image || null,
+          location_description: data.location_description || '',
           lat: data.lat || null,
           lng: data.lng || null,
           token_lat: data.token_lat || null,
@@ -643,6 +645,7 @@ export default function CityAdminPage() {
           location_url: editCityForm.location_url.trim() || null,
           token_location_url: editCityForm.token_location_url?.trim() || null,
           location_image: editCityForm.location_image,
+          location_description: editCityForm.location_description.trim() || null,
           lat: editCityForm.lat,
           lng: editCityForm.lng,
           token_lat: editCityForm.token_lat,
@@ -2436,6 +2439,28 @@ export default function CityAdminPage() {
                               />
                               <p className="text-xs text-gray-500">תמונה של הארון - תוצג בדף הטוקן (עד 2MB, אופציונלי)</p>
                             </div>
+                          </div>
+
+                          {/* Location Description */}
+                          <div className="space-y-2">
+                            <label className="block text-sm font-semibold text-gray-700">📝 תיאור מיקום הארון</label>
+                            <textarea
+                              value={editCityForm.location_description || ''}
+                              onChange={(e) => {
+                                if (isEditingLocation) {
+                                  setEditCityForm({ ...editCityForm, location_description: e.target.value })
+                                }
+                              }}
+                              placeholder="לדוגמה: הארון נמצא בכניסה הראשית, ליד דלפק הקבלה..."
+                              rows={4}
+                              className={`w-full p-3 border-2 rounded-xl transition-colors resize-none ${
+                                isEditingLocation
+                                  ? 'border-gray-200 focus:border-indigo-500 focus:ring-2 focus:ring-indigo-200'
+                                  : 'border-gray-100 bg-gray-50 cursor-not-allowed'
+                              }`}
+                              disabled={!isEditingLocation}
+                            />
+                            <p className="text-xs text-gray-500">תיאור טקסט חופשי למיקום המדויק - יוצג בדף הטוקן (אופציונלי)</p>
                           </div>
                         </div>
                       </div>

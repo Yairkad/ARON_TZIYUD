@@ -148,8 +148,10 @@ export async function POST(request: NextRequest) {
     let redirectPath = '/'
     if (userRole === 'super_admin') {
       redirectPath = '/super-admin'
-    } else if (userRole === 'city_manager' && cityId) {
-      redirectPath = `/city/${cityId}/admin`
+    } else if (userRole === 'city_manager') {
+      // City managers go to city selection page
+      // The select-city page will handle single vs multiple cities
+      redirectPath = '/select-city'
     }
 
     // Create response with user data
