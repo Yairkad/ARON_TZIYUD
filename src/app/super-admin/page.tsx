@@ -1726,10 +1726,12 @@ export default function SuperAdminPage() {
                                 </span>
                               </div>
 
-                              {user.city && (
+                              {user.managed_cities && user.managed_cities.length > 0 && (
                                 <div className="text-sm">
-                                  <span className="font-semibold text-gray-700">עיר:</span>{' '}
-                                  <span className="text-purple-600">{user.city.name}</span>
+                                  <span className="font-semibold text-gray-700">ערים מנוהלות:</span>{' '}
+                                  <span className="text-purple-600">
+                                    {user.managed_cities.map((c: any) => c.name).join(', ')}
+                                  </span>
                                 </div>
                               )}
 
