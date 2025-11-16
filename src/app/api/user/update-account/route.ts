@@ -85,6 +85,13 @@ export async function POST(request: NextRequest) {
     }
 
     // Update user data in public.users table
+    console.log('📝 Updating user in database:', {
+      user_id: user.id,
+      full_name,
+      phone,
+      email
+    })
+
     const { error: updateError } = await supabase
       .from('users')
       .update({
@@ -96,12 +103,14 @@ export async function POST(request: NextRequest) {
       .eq('id', user.id)
 
     if (updateError) {
-      console.error('Error updating user:', updateError)
+      console.error('❌ Error updating user:', updateError)
       return NextResponse.json(
         { success: false, error: 'שגיאה בעדכון הפרטים' },
         { status: 500 }
       )
     }
+
+    console.log('✅ User updated successfully in database')
 
     // If this is a city manager, update their name/phone in all managed cities
     if (user.role === 'city_manager') {
