@@ -60,6 +60,8 @@ export default function SelectCityPage() {
   }
 
   const handleCitySelect = (cityId: string) => {
+    // Update localStorage with selected city so auth checks work correctly
+    localStorage.setItem('userCityId', cityId)
     router.push(`/city/${cityId}/admin`)
   }
 
