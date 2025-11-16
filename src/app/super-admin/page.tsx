@@ -22,7 +22,7 @@ export default function SuperAdminPage() {
   const [password, setPassword] = useState('')
   const [rememberMe, setRememberMe] = useState(false)
   const [loading, setLoading] = useState(false)
-  const [activeTab, setActiveTab] = useState<'cities' | 'notifications' | 'settings' | 'users' | 'emails'>('cities')
+  const [activeTab, setActiveTab] = useState<'cities' | 'notifications' | 'settings' | 'users'>('cities')
   const [showAddCity, setShowAddCity] = useState(false)
   const [newCity, setNewCity] = useState<CityForm>({ name: '', manager1_name: '', manager1_phone: '', manager2_name: '', manager2_phone: '', location_url: '', token_location_url: '', password: '' })
   const [editingCity, setEditingCity] = useState<City | null>(null)
@@ -819,16 +819,6 @@ export default function SuperAdminPage() {
                 {unreadCount}
               </span>
             )}
-          </Button>
-          <Button
-            onClick={() => setActiveTab('emails')}
-            className={`py-6 rounded-xl font-semibold text-lg transition-all duration-300 ${
-              activeTab === 'emails'
-                ? 'bg-gradient-to-r from-purple-600 to-pink-600 text-white shadow-lg shadow-purple-500/50 scale-105'
-                : 'bg-white text-gray-600 border-2 border-gray-200 hover:border-purple-300 hover:bg-purple-50'
-            }`}
-          >
-            <span className="text-2xl ml-2">📧</span> מיילים
           </Button>
           <Button
             onClick={() => setActiveTab('settings')}
@@ -1969,158 +1959,6 @@ export default function SuperAdminPage() {
               </CardContent>
             </Card>
           </>
-        )}
-
-        {activeTab === 'emails' && (
-          <Card className="border-0 shadow-2xl rounded-2xl overflow-hidden bg-white">
-            <CardHeader className="bg-gradient-to-r from-blue-50 to-indigo-50 pb-4">
-              <CardTitle className="text-2xl font-bold text-gray-800 flex items-center gap-2">
-                <span className="text-3xl">📧</span>
-                בדיקת מערכת מיילים
-              </CardTitle>
-              <CardDescription className="text-gray-600 mt-2">
-                שלח מייל בדיקה לכל כתובת מייל כדי לוודא שמערכת המיילים פועלת תקין
-              </CardDescription>
-            </CardHeader>
-            <CardContent className="p-8">
-              <div className="max-w-2xl mx-auto">
-                <form
-                  onSubmit={async (e) => {
-                    e.preventDefault()
-                    const formData = new FormData(e.currentTarget)
-                    const testEmail = formData.get('testEmail') as string
-                    const testName = formData.get('testName') as string
-                    const testMessage = formData.get('testMessage') as string
-
-                    if (!testEmail) {
-                      alert('אנא הזן כתובת מייל')
-                      return
-                    }
-
-                    setLoading(true)
-                    try {
-                      const response = await fetch('/api/email/test', {
-                        method: 'POST',
-                        headers: {
-                          'Content-Type': 'application/json',
-                        },
-                        body: JSON.stringify({
-                          email: testEmail,
-                          name: testName || undefined,
-                          message: testMessage || undefined,
-                        }),
-                      })
-
-                      const data = await response.json()
-
-                      if (response.ok && data.success) {
-                        alert(`✅ המייל נשלח בהצלחה ל-${testEmail}!\n\nבדוק את תיבת המייל (גם בתיקיית spam).`)
-                        // Clear form
-                        e.currentTarget.reset()
-                      } else {
-                        alert(`❌ שגיאה: ${data.error || 'שליחת המייל נכשלה'}`)
-                      }
-                    } catch (error) {
-                      console.error('Error:', error)
-                      alert(`❌ שגיאת תקשורת: ${error instanceof Error ? error.message : 'Unknown error'}`)
-                    } finally {
-                      setLoading(false)
-                    }
-                  }}
-                  className="space-y-6"
-                >
-                  <div className="space-y-2">
-                    <label htmlFor="testEmail" className="block text-sm font-semibold text-gray-700">
-                      כתובת אימייל: <span className="text-red-500">*</span>
-                    </label>
-                    <Input
-                      id="testEmail"
-                      name="testEmail"
-                      type="email"
-                      placeholder="example@example.com"
-                      required
-                      disabled={loading}
-                      className="h-14 text-base border-2"
-                    />
-                  </div>
-
-                  <div className="space-y-2">
-                    <label htmlFor="testName" className="block text-sm font-semibold text-gray-700">
-                      שם (אופציונלי):
-                    </label>
-                    <Input
-                      id="testName"
-                      name="testName"
-                      type="text"
-                      placeholder="השם שלך"
-                      disabled={loading}
-                      className="h-14 text-base border-2"
-                    />
-                  </div>
-
-                  <div className="space-y-2">
-                    <label htmlFor="testMessage" className="block text-sm font-semibold text-gray-700">
-                      הודעה מותאמת אישית (אופציונלי):
-                    </label>
-                    <textarea
-                      id="testMessage"
-                      name="testMessage"
-                      rows={4}
-                      placeholder="הזן כאן את ההודעה שתרצה לשלוח במייל..."
-                      disabled={loading}
-                      className="w-full px-4 py-3 text-base border-2 border-gray-200 rounded-lg focus:border-blue-500 focus:outline-none disabled:opacity-50 disabled:cursor-not-allowed resize-none"
-                    />
-                  </div>
-
-                  <Button
-                    type="submit"
-                    disabled={loading}
-                    className="w-full h-14 text-lg font-bold bg-gradient-to-r from-blue-600 to-indigo-600 hover:from-blue-700 hover:to-indigo-700 text-white shadow-lg hover:shadow-xl transition-all duration-200"
-                  >
-                    {loading ? (
-                      <>
-                        <span className="inline-block w-5 h-5 border-2 border-white border-t-transparent rounded-full animate-spin ml-2"></span>
-                        שולח מייל...
-                      </>
-                    ) : (
-                      <>
-                        <span className="text-xl ml-2">📤</span>
-                        שלח מייל בדיקה
-                      </>
-                    )}
-                  </Button>
-                </form>
-
-                <div className="mt-8 p-6 bg-blue-50 border-2 border-blue-200 rounded-xl">
-                  <h3 className="font-bold text-gray-800 mb-3 flex items-center gap-2">
-                    <span className="text-xl">ℹ️</span>
-                    הוראות שימוש:
-                  </h3>
-                  <ol className="space-y-2 text-sm text-gray-700 list-decimal list-inside">
-                    <li>הזן את כתובת המייל שאליה תרצה לשלוח מייל בדיקה</li>
-                    <li>הזן את השם (אופציונלי) - יופיע במייל</li>
-                    <li>לחץ על &quot;שלח מייל בדיקה&quot;</li>
-                    <li>בדוק את תיבת המייל של הנמען (גם בתיקיית spam)</li>
-                    <li>המייל צריך להגיע תוך מספר שניות</li>
-                  </ol>
-                </div>
-
-                <div className="mt-6 p-6 bg-green-50 border-2 border-green-200 rounded-xl">
-                  <h3 className="font-bold text-gray-800 mb-3 flex items-center gap-2">
-                    <span className="text-xl">✅</span>
-                    מה מבדק המייל?
-                  </h3>
-                  <ul className="space-y-2 text-sm text-gray-700 list-disc list-inside">
-                    <li>חיבור לשרת Resend</li>
-                    <li>תקינות API Key</li>
-                    <li>יכולת שליחת מיילים</li>
-                    <li>תבנית המייל בעברית (RTL)</li>
-                    <li>עיצוב ומיתוג נכון</li>
-                  </ul>
-                </div>
-              </div>
-            </CardContent>
-          </Card>
         )}
       </div>
     </div>
