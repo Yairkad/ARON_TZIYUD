@@ -50,9 +50,9 @@ export async function POST(request: NextRequest) {
     }
 
     // Authenticate with Supabase
-    const supabase = createServiceClient()
+    const authClient = createServiceClient()
 
-    const { data: authData, error: authError } = await supabase.auth.signInWithPassword({
+    const { data: authData, error: authError } = await authClient.auth.signInWithPassword({
       email,
       password,
     })
@@ -66,8 +66,10 @@ export async function POST(request: NextRequest) {
       )
     }
 
-    // Get user data from public.users table (more reliable than metadata)
-    const { data: userData, error: userError } = await supabase
+    // Get user data from public.users table using a fresh service client (more reliable than metadata)
+    // Use a separate client to avoid RLS policy recursion issues
+    const dbClient = createServiceClient()
+    const { data: userData, error: userError } = await dbClient
       .from('users')
       .select('role, city_id, full_name, is_active')
       .eq('id', authData.user.id)
@@ -138,8 +140,8 @@ export async function POST(request: NextRequest) {
     // Clear failed login attempts
     loginAttempts.delete(clientId)
 
-    // Update last login timestamp
-    await supabase
+    // Update last login timestamp using the dedicated db client
+    await dbClient
       .from('users')
       .update({ last_login_at: new Date().toISOString() })
       .eq('id', authData.user.id)
