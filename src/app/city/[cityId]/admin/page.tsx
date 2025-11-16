@@ -94,7 +94,6 @@ export default function CityAdminPage() {
   const [borrowHistory, setBorrowHistory] = useState<BorrowHistory[]>([])
   const [isAuthenticated, setIsAuthenticated] = useState(false)
   const [isCheckingAuth, setIsCheckingAuth] = useState(true) // Add loading state for auth check
-  const [password, setPassword] = useState('')
   const [loading, setLoading] = useState(false)
   const [activeTab, setActiveTab] = useState<'equipment' | 'history' | 'requests' | 'settings'>('equipment')
   const [newEquipment, setNewEquipment] = useState({ name: '', quantity: 1, equipment_status: 'working' as 'working' | 'faulty', is_consumable: false })
@@ -114,7 +113,6 @@ export default function CityAdminPage() {
   })
   const [allCities, setAllCities] = useState<City[]>([])
   const [selectedCityToCopy, setSelectedCityToCopy] = useState<string>('')
-  const [showPassword, setShowPassword] = useState(false)
   const [showCopyEquipment, setShowCopyEquipment] = useState(false)
   const [dismissedAlerts, setDismissedAlerts] = useState<Set<string>>(new Set())
   const [pendingRequestsCount, setPendingRequestsCount] = useState(0)
@@ -810,62 +808,14 @@ export default function CityAdminPage() {
   }
 
   if (!isAuthenticated) {
+    // Redirect to login page
+    router.push('/login')
     return (
-      <div className="min-h-screen content-wrapper flex items-center justify-center p-4">
-        <div className="absolute top-4 left-1/2 transform -translate-x-1/2">
-          <Logo />
+      <div className="min-h-screen content-wrapper flex items-center justify-center">
+        <div className="text-center">
+          <div className="text-4xl mb-4">🔐</div>
+          <p className="text-gray-600">מעביר להתחברות...</p>
         </div>
-        <Card className="w-full max-w-md border-0 shadow-2xl rounded-2xl overflow-hidden">
-          <CardHeader className="bg-gradient-to-r from-blue-600 to-indigo-600 text-white pb-8">
-            <div className="text-center">
-              <div className="text-5xl mb-4">🔐</div>
-              <CardTitle className="text-3xl font-bold mb-2">כניסת מנהל - {city?.name}</CardTitle>
-              <CardDescription className="text-blue-100 text-base">הזן סיסמת מנהל לגישה לפאנל הניהול</CardDescription>
-            </div>
-          </CardHeader>
-          <CardContent className="p-8">
-            <form onSubmit={handleLogin} className="space-y-6">
-              <div className="space-y-2">
-                <label className="block text-sm font-semibold text-gray-700">🔑 סיסמת מנהל</label>
-                <div className="relative">
-                  <Input
-                    type={showPassword ? "text" : "password"}
-                    value={password}
-                    onChange={(e) => setPassword(e.target.value)}
-                    placeholder="הזן סיסמה"
-                    className="h-12 border-2 border-gray-200 rounded-xl focus:border-blue-500 transition-colors pr-12"
-                    required
-                  />
-                  <button
-                    type="button"
-                    onClick={() => setShowPassword(!showPassword)}
-                    className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-500 hover:text-gray-700 transition-colors"
-                  >
-                    {showPassword ? '👁️' : '👁️‍🗨️'}
-                  </button>
-                </div>
-              </div>
-              <div className="flex gap-3">
-                <Button
-                  type="submit"
-                  disabled={!city}
-                  className="flex-1 h-12 bg-gradient-to-r from-blue-600 to-indigo-600 hover:from-blue-700 hover:to-indigo-700 text-white font-bold text-lg rounded-xl shadow-lg hover:shadow-xl transition-all duration-200 hover:scale-105 disabled:opacity-50"
-                >
-                  ✅ כניסה למערכת
-                </Button>
-                <Link href={`/city/${cityId}`} className="flex-1">
-                  <Button
-                    type="button"
-                    variant="outline"
-                    className="w-full h-12 border-2 border-gray-300 text-gray-700 hover:bg-gray-50 font-semibold text-lg rounded-xl transition-all duration-200 hover:scale-105"
-                  >
-                    ↩️ חזור
-                  </Button>
-                </Link>
-              </div>
-            </form>
-          </CardContent>
-        </Card>
       </div>
     )
   }
