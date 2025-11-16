@@ -70,9 +70,14 @@ export async function POST(request: NextRequest) {
 
     // Update email in Supabase Auth if changed
     if (email !== user.email) {
+      // Update email with email confirmation required
+      // This will send a confirmation email to the new address
       const { error: emailError } = await supabase.auth.admin.updateUserById(
         user.id,
-        { email }
+        {
+          email,
+          email_confirm: false  // Require email confirmation
+        }
       )
 
       if (emailError) {
@@ -82,6 +87,8 @@ export async function POST(request: NextRequest) {
           { status: 500 }
         )
       }
+
+      console.log('📧 Email update requested - confirmation email sent to:', email)
     }
 
     // Update user data in public.users table

@@ -2607,6 +2607,9 @@ export default function CityAdminPage() {
                 onSubmit={async (e) => {
                   e.preventDefault()
 
+                  // Check if email is being changed - require password
+                  const isEmailChanged = accountForm.email !== currentUser?.email
+
                   // Validate passwords if user wants to change password
                   if (accountForm.new_password || accountForm.confirm_password) {
                     if (accountForm.new_password !== accountForm.confirm_password) {
@@ -2621,6 +2624,12 @@ export default function CityAdminPage() {
                       alert('יש להזין את הסיסמה הנוכחית כדי לשנות סיסמה')
                       return
                     }
+                  }
+
+                  // Require current password when changing email
+                  if (isEmailChanged && !accountForm.current_password) {
+                    alert('⚠️ יש להזין את הסיסמה הנוכחית כדי לשנות את כתובת המייל')
+                    return
                   }
 
                   setLoading(true)
@@ -2641,7 +2650,12 @@ export default function CityAdminPage() {
                     const data = await response.json()
 
                     if (data.success) {
-                      alert('✅ הפרטים עודכנו בהצלחה!')
+                      // Show different message based on whether email was changed
+                      if (isEmailChanged) {
+                        alert('✅ הפרטים עודכנו בהצלחה!\n\n📧 נשלח אימייל אימות לכתובת המייל החדשה.\nיש ללחוץ על הלינק באימייל כדי לאמת את כתובת המייל החדשה.\n\nעד לאימות, תישאר מחובר עם המייל הקודם.')
+                      } else {
+                        alert('✅ הפרטים עודכנו בהצלחה!')
+                      }
                       setShowAccountSettings(false)
 
                       // Refresh current user data
