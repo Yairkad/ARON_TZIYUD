@@ -658,22 +658,15 @@ export default function SuperAdminPage() {
   const handleEditUser = (user: any) => {
     setEditingUser(user)
 
-    // For manager_role, check all managed cities to find the role
-    let detectedManagerRole = user.manager_role || ''
-    let detectedCityId = user.city?.id || ''
+    // For city managers, get the first managed city
+    let detectedCityId = ''
+    let detectedManagerRole: '' | 'manager1' | 'manager2' = ''
 
-    // If user has managed_cities, use the first one to get city_id and role
-    if (user.managed_cities && user.managed_cities.length > 0) {
-      // Use the primary city (first in list) if no city.id is set
-      if (!detectedCityId) {
-        detectedCityId = user.managed_cities[0].id
-      }
-
-      // Find the role for the detected city
-      const cityInfo = user.managed_cities.find((c: any) => c.id === detectedCityId)
-      if (cityInfo && cityInfo.role) {
-        detectedManagerRole = cityInfo.role
-      }
+    if (user.role === 'city_manager' && user.managed_cities && user.managed_cities.length > 0) {
+      // Use the first managed city
+      const firstCity = user.managed_cities[0]
+      detectedCityId = firstCity.id
+      detectedManagerRole = firstCity.role || ''
     }
 
     setUserForm({
@@ -1576,27 +1569,9 @@ export default function SuperAdminPage() {
 
                       {userForm.role === 'city_manager' && (
                         <>
-                          {/* Show managed cities info for existing users */}
-                          {editingUser && editingUser.managed_cities && editingUser.managed_cities.length > 0 && (
-                            <div className="space-y-2">
-                              <label className="block text-sm font-semibold text-gray-700">🏙️ ערים מנוהלות כרגע</label>
-                              <div className="p-3 bg-blue-50 border-2 border-blue-200 rounded-xl">
-                                <div className="flex flex-wrap gap-2">
-                                  {editingUser.managed_cities.map((city: any) => (
-                                    <span key={city.id} className="px-3 py-1 bg-blue-600 text-white rounded-full text-sm font-medium">
-                                      {city.name}
-                                    </span>
-                                  ))}
-                                </div>
-                              </div>
-                            </div>
-                          )}
-
-                          {/* City selector - for both new and existing users */}
+                          {/* City selector */}
                           <div className="space-y-2">
-                            <label className="block text-sm font-semibold text-gray-700">
-                              🏙️ עיר {editingUser && '(הוסף/שנה)'}
-                            </label>
+                            <label className="block text-sm font-semibold text-gray-700">🏙️ עיר</label>
                             <select
                               value={userForm.city_id}
                               onChange={(e) => {
@@ -1623,11 +1598,6 @@ export default function SuperAdminPage() {
                                 <option key={city.id} value={city.id}>{city.name}</option>
                               ))}
                             </select>
-                            {editingUser && (
-                              <p className="text-xs text-gray-500">
-                                💡 שינוי עיר יגדיר את המשתמש כמנהל של העיר החדשה (בנוסף לערים הקיימות)
-                              </p>
-                            )}
                           </div>
 
                           <div className="space-y-2">
