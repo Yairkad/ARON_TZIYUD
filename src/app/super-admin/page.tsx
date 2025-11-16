@@ -673,13 +673,16 @@ export default function SuperAdminPage() {
       detectedManagerRole = user.manager_role || ''
     }
 
-    console.log('📝 Editing user:', {
+    console.log('📝 Editing user - FULL DATA:', {
       email: user.email,
+      full_name: user.full_name,
+      phone: user.phone,
+      role: user.role,
+      permissions: user.permissions,
       managed_cities: user.managed_cities,
       city_id: user.city_id,
       manager_role: user.manager_role,
-      detected: { city_id: detectedCityId, manager_role: detectedManagerRole },
-      phone: user.phone
+      detected: { city_id: detectedCityId, manager_role: detectedManagerRole }
     })
 
     setUserForm({
