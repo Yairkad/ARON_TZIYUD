@@ -52,7 +52,8 @@
       "Bash(cd:*)",
       "Bash(\"c:\\Users\\יאיר קדוש\\ARON_TZIYUD\\SRS_DOCUMENT.md\")",
       "Bash(dir /B /S \"c:\\Users\\יאיר קדוש\\ARON_TZIYUD\\src\\app\")",
-      "Bash(dir /B /S \"c:\\Users\\יאיר קדוש\\ARON_TZIYUD\\src\\app\\api\\requests\")"
+      "Bash(dir /B /S \"c:\\Users\\יאיר קדוש\\ARON_TZIYUD\\src\\app\\api\\requests\")",
+      "Bash(dir /B srcappapi 2)"
     ],
     "deny": [],
     "ask": []
