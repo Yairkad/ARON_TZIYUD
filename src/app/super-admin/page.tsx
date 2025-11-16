@@ -571,8 +571,8 @@ export default function SuperAdminPage() {
         permissions: userForm.permissions,
         phone: userForm.phone || null,
         role: userForm.role,
-        // Don't update city_id or manager_role for existing users - managed via Cities page
-        // This prevents accidentally removing city assignments
+        city_id: userForm.role === 'city_manager' ? (userForm.city_id || null) : null,
+        manager_role: userForm.role === 'city_manager' ? (userForm.manager_role || null) : null,
       }
 
       // Only include password if it was changed
@@ -1557,11 +1557,11 @@ export default function SuperAdminPage() {
 
                       {userForm.role === 'city_manager' && (
                         <>
-                          {/* Show managed cities for existing users with multiple cities */}
+                          {/* Show managed cities info for existing users */}
                           {editingUser && editingUser.managed_cities && editingUser.managed_cities.length > 0 && (
                             <div className="space-y-2">
-                              <label className="block text-sm font-semibold text-gray-700">🏙️ ערים מנוהלות</label>
-                              <div className="p-4 bg-blue-50 border-2 border-blue-200 rounded-xl">
+                              <label className="block text-sm font-semibold text-gray-700">🏙️ ערים מנוהלות כרגע</label>
+                              <div className="p-3 bg-blue-50 border-2 border-blue-200 rounded-xl">
                                 <div className="flex flex-wrap gap-2">
                                   {editingUser.managed_cities.map((city: any) => (
                                     <span key={city.id} className="px-3 py-1 bg-blue-600 text-white rounded-full text-sm font-medium">
@@ -1569,48 +1569,78 @@ export default function SuperAdminPage() {
                                     </span>
                                   ))}
                                 </div>
-                                <p className="text-xs text-blue-700 mt-3">
-                                  💡 לניהול ערים: לך לעמוד "ערים", בחר עיר, ושנה מנהלים
-                                </p>
                               </div>
                             </div>
                           )}
 
-                          {/* Show city selector only for new users */}
-                          {!editingUser && (
-                            <>
-                              <div className="space-y-2">
-                                <label className="block text-sm font-semibold text-gray-700">🏙️ עיר</label>
-                                <select
-                                  value={userForm.city_id}
-                                  onChange={(e) => setUserForm({ ...userForm, city_id: e.target.value })}
-                                  className="w-full h-12 border-2 border-gray-200 rounded-xl focus:border-purple-500 transition-colors px-3"
-                                  required={userForm.role === 'city_manager'}
-                                >
-                                  <option value="">בחר עיר</option>
-                                  {cities.map(city => (
-                                    <option key={city.id} value={city.id}>{city.name}</option>
-                                  ))}
-                                </select>
-                              </div>
+                          {/* City selector - for both new and existing users */}
+                          <div className="space-y-2">
+                            <label className="block text-sm font-semibold text-gray-700">
+                              🏙️ עיר {editingUser && '(הוסף/שנה)'}
+                            </label>
+                            <select
+                              value={userForm.city_id}
+                              onChange={(e) => {
+                                const selectedCity = cities.find(c => c.id === e.target.value)
+                                const newRole = userForm.manager_role
 
-                              <div className="space-y-2">
-                                <label className="block text-sm font-semibold text-gray-700">👔 תפקיד מנהל</label>
-                                <select
-                                  value={userForm.manager_role}
-                                  onChange={(e) => setUserForm({ ...userForm, manager_role: e.target.value as '' | 'manager1' | 'manager2' })}
-                                  className="w-full h-12 border-2 border-gray-200 rounded-xl focus:border-purple-500 transition-colors px-3"
-                                >
-                                  <option value="">בחר תפקיד מנהל</option>
-                                  <option value="manager1">מנהל ראשון</option>
-                                  <option value="manager2">מנהל שני</option>
-                                </select>
-                                <p className="text-xs text-gray-500">
-                                  כל עיר יכולה להיות עם עד 2 מנהלים - מנהל ראשון ומנהל שני
-                                </p>
-                              </div>
-                            </>
-                          )}
+                                // Auto-fill phone based on selected city and manager role
+                                let autoPhone = userForm.phone
+                                if (selectedCity && newRole) {
+                                  if (newRole === 'manager1' && selectedCity.manager1_phone) {
+                                    autoPhone = selectedCity.manager1_phone
+                                  } else if (newRole === 'manager2' && selectedCity.manager2_phone) {
+                                    autoPhone = selectedCity.manager2_phone
+                                  }
+                                }
+
+                                setUserForm({ ...userForm, city_id: e.target.value, phone: autoPhone })
+                              }}
+                              className="w-full h-12 border-2 border-gray-200 rounded-xl focus:border-purple-500 transition-colors px-3"
+                              required={userForm.role === 'city_manager'}
+                            >
+                              <option value="">בחר עיר</option>
+                              {cities.map(city => (
+                                <option key={city.id} value={city.id}>{city.name}</option>
+                              ))}
+                            </select>
+                            {editingUser && (
+                              <p className="text-xs text-gray-500">
+                                💡 שינוי עיר יגדיר את המשתמש כמנהל של העיר החדשה (בנוסף לערים הקיימות)
+                              </p>
+                            )}
+                          </div>
+
+                          <div className="space-y-2">
+                            <label className="block text-sm font-semibold text-gray-700">👔 תפקיד מנהל</label>
+                            <select
+                              value={userForm.manager_role}
+                              onChange={(e) => {
+                                const newRole = e.target.value as '' | 'manager1' | 'manager2'
+                                const selectedCity = cities.find(c => c.id === userForm.city_id)
+
+                                // Auto-fill phone based on role
+                                let autoPhone = userForm.phone
+                                if (selectedCity && newRole) {
+                                  if (newRole === 'manager1' && selectedCity.manager1_phone) {
+                                    autoPhone = selectedCity.manager1_phone
+                                  } else if (newRole === 'manager2' && selectedCity.manager2_phone) {
+                                    autoPhone = selectedCity.manager2_phone
+                                  }
+                                }
+
+                                setUserForm({ ...userForm, manager_role: newRole, phone: autoPhone })
+                              }}
+                              className="w-full h-12 border-2 border-gray-200 rounded-xl focus:border-purple-500 transition-colors px-3"
+                            >
+                              <option value="">בחר תפקיד מנהל</option>
+                              <option value="manager1">מנהל ראשון</option>
+                              <option value="manager2">מנהל שני</option>
+                            </select>
+                            <p className="text-xs text-gray-500">
+                              כל עיר יכולה להיות עם עד 2 מנהלים - מנהל ראשון ומנהל שני
+                            </p>
+                          </div>
                         </>
                       )}
 
