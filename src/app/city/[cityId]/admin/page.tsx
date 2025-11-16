@@ -881,6 +881,12 @@ export default function CityAdminPage() {
             <div className="hidden sm:flex gap-3">
               <Button
                 onClick={() => {
+                  console.log('📝 Opening account settings with currentUser:', {
+                    full_name: currentUser?.full_name,
+                    phone: currentUser?.phone,
+                    email: currentUser?.email
+                  })
+
                   setAccountForm({
                     full_name: currentUser?.full_name || '',
                     phone: currentUser?.phone || '',
@@ -2639,8 +2645,16 @@ export default function CityAdminPage() {
                       setShowAccountSettings(false)
 
                       // Refresh current user data
-                      const { user } = await checkAuth()
-                      setCurrentUser(user)
+                      const authResult = await checkAuth()
+                      console.log('🔄 Refreshed user data:', authResult.user)
+                      setCurrentUser(authResult.user)
+
+                      // Verify the update
+                      console.log('✅ Updated currentUser:', {
+                        full_name: authResult.user?.full_name,
+                        phone: authResult.user?.phone,
+                        email: authResult.user?.email
+                      })
                     } else {
                       alert(`❌ ${data.error || 'שגיאה בעדכון הפרטים'}`)
                     }
