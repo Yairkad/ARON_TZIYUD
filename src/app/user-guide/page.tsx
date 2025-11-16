@@ -92,17 +92,6 @@ export default function UserGuidePage() {
             </CardHeader>
             <CardContent className="pt-6 space-y-4">
               <div>
-                <h4 className="font-bold text-gray-800 mb-2">שני מצבי עבודה:</h4>
-                <ul className="list-disc list-inside space-y-2 text-gray-700 mr-4">
-                  <li>
-                    <strong>גישה חופשית:</strong> באפשרותך לקחת ציוד ישירות מהארון. מומלץ עדיין לבצע דיווח במערכת כדי לעדכן את המלאי
-                  </li>
-                  <li>
-                    <strong>אישור דרוש:</strong> עליך לשלוח בקשה ולהמתין לאישור מנהל העיר. לאחר האישור תקבל קישור לאיסוף הציוד
-                  </li>
-                </ul>
-              </div>
-              <div>
                 <h4 className="font-bold text-gray-800 mb-2">טיפים חשובים:</h4>
                 <ul className="list-disc list-inside space-y-2 text-gray-700 mr-4">
                   <li>בדוק את הכמות הזמינה לפני שאתה שולח בקשה</li>
