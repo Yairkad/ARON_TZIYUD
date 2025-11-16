@@ -1621,7 +1621,16 @@ export default function SuperAdminPage() {
                                             const data = await res.json()
                                             if (data.success) {
                                               alert('✅ העיר הוסרה בהצלחה')
-                                              fetchUsers()
+                                              await fetchUsers()
+                                              // Refresh the editing user to show updated cities
+                                              const res2 = await fetch('/api/admin/users/list')
+                                              const data2 = await res2.json()
+                                              if (data2.success) {
+                                                const updatedUser = data2.users.find((u: any) => u.id === editingUser.id)
+                                                if (updatedUser) {
+                                                  setEditingUser(updatedUser)
+                                                }
+                                              }
                                             } else {
                                               alert('❌ ' + (data.error || 'שגיאה בהסרת עיר'))
                                             }
@@ -1690,7 +1699,16 @@ export default function SuperAdminPage() {
                                       if (data.success) {
                                         alert('✅ העיר נוספה בהצלחה')
                                         setUserForm({ ...userForm, city_id: '', manager_role: '' })
-                                        fetchUsers()
+                                        await fetchUsers()
+                                        // Refresh the editing user to show updated cities
+                                        const res2 = await fetch('/api/admin/users/list')
+                                        const data2 = await res2.json()
+                                        if (data2.success) {
+                                          const updatedUser = data2.users.find((u: any) => u.id === editingUser.id)
+                                          if (updatedUser) {
+                                            setEditingUser(updatedUser)
+                                          }
+                                        }
                                       } else {
                                         alert('❌ ' + (data.error || 'שגיאה בהוספת עיר'))
                                       }
