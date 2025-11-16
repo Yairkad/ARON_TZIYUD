@@ -47,6 +47,7 @@ export interface BorrowHistory {
   return_date?: string
   status: 'borrowed' | 'pending_approval' | 'returned'
   equipment_status?: 'working' | 'faulty'
+  faulty_notes?: string | null
   return_image_url?: string | null
   return_image_uploaded_at?: string | null
   created_at: string
