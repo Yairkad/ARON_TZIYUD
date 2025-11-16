@@ -11,7 +11,7 @@ import { Equipment, BorrowHistory, City } from '@/types'
 import { ArrowRight, FileDown, Bell, BellOff } from 'lucide-react'
 import * as XLSX from 'xlsx'
 import Logo from '@/components/Logo'
-import { loginCity, checkAuth, logout } from '@/lib/auth'
+import { checkAuth, logout } from '@/lib/auth'
 import RequestsTab from '@/components/RequestsTab'
 import {
   isPushSupported,
@@ -331,29 +331,6 @@ export default function CityAdminPage() {
     }
   }
 
-  const handleLogin = async (e: React.FormEvent) => {
-    e.preventDefault()
-    if (!city) {
-      alert('שגיאה בטעינת נתוני העיר')
-      return
-    }
-
-    setLoading(true)
-    try {
-      const result = await loginCity(cityId, password)
-      if (result.success) {
-        setIsAuthenticated(true)
-        setPassword('')
-      } else {
-        alert(result.error || 'סיסמה שגויה')
-      }
-    } catch (error) {
-      console.error('Login error:', error)
-      alert('שגיאה בתהליך ההתחברות')
-    } finally {
-      setLoading(false)
-    }
-  }
 
   // בדיקת אימות בטעינת הדף
   useEffect(() => {
@@ -1670,18 +1647,6 @@ export default function CityAdminPage() {
                                         : 'bg-green-100 text-green-700 border border-green-300'
                                     }`}>
                                       {item.equipment_name}
-                                      {item.status === 'returned' && item.return_image_url && (
-                                        <a
-                                          href={item.return_image_url}
-                                          target="_blank"
-                                          rel="noopener noreferrer"
-                                          className="ml-1 hover:scale-110 transition-transform"
-                                          title="צפה בתמונת החזרה"
-                                          onClick={(e) => e.stopPropagation()}
-                                        >
-                                          📷
-                                        </a>
-                                      )}
                                       <button
                                         onClick={() => handleUpdateHistoryStatus(item.id, item.status === 'borrowed' ? 'returned' : 'borrowed')}
                                         className="ml-1 hover:scale-110 transition-transform"
@@ -1712,17 +1677,31 @@ export default function CityAdminPage() {
                             {isExpanded ? (
                               <div className="flex gap-2">
                                 {group.items.map(item => (
-                                  <Button
-                                    key={item.id}
-                                    size="sm"
-                                    variant="ghost"
-                                    onClick={() => handleDeleteHistory(item.id)}
-                                    disabled={loading || !canEdit}
-                                    className="h-8 w-8 p-0 hover:bg-red-100 hover:text-red-600 text-gray-400 disabled:opacity-50 disabled:cursor-not-allowed"
-                                    title={`מחק: ${item.equipment_name}`}
-                                  >
-                                    🗑️
-                                  </Button>
+                                  <div key={item.id} className="flex items-center gap-1">
+                                    {item.status === 'returned' && item.return_image_url && (
+                                      <a
+                                        href={item.return_image_url}
+                                        target="_blank"
+                                        rel="noopener noreferrer"
+                                        className="text-xl hover:scale-110 transition-transform"
+                                        title="צפה בתמונת החזרה"
+                                        onClick={(e) => e.stopPropagation()}
+                                      >
+                                        📷
+                                      </a>
+                                    )}
+                                    <Button
+                                      key={item.id}
+                                      size="sm"
+                                      variant="ghost"
+                                      onClick={() => handleDeleteHistory(item.id)}
+                                      disabled={loading || !canEdit}
+                                      className="h-8 w-8 p-0 hover:bg-red-100 hover:text-red-600 text-gray-400 disabled:opacity-50 disabled:cursor-not-allowed"
+                                      title={`מחק: ${item.equipment_name}`}
+                                    >
+                                      🗑️
+                                    </Button>
+                                  </div>
                                 ))}
                               </div>
                             ) : (

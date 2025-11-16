@@ -53,7 +53,11 @@
       "Bash(\"c:\\Users\\יאיר קדוש\\ARON_TZIYUD\\SRS_DOCUMENT.md\")",
       "Bash(dir /B /S \"c:\\Users\\יאיר קדוש\\ARON_TZIYUD\\src\\app\")",
       "Bash(dir /B /S \"c:\\Users\\יאיר קדוש\\ARON_TZIYUD\\src\\app\\api\\requests\")",
-      "Bash(dir /B srcappapi 2)"
+      "Bash(dir /B srcappapi 2)",
+      "Bash(rm:*)",
+      "Bash(set NEXT_TURBOPACK_EXPERIMENTAL_USE_SYSTEM_TLS_CERTS=1)",
+      "Bash(dir /B 'c:\\Users\\יאיר קדוש\\ARON_TZIYUD' 2)",
+      "Bash(npx tsc:*)"
     ],
     "deny": [],
     "ask": []

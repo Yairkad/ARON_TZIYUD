@@ -9,7 +9,7 @@ import { Input } from '@/components/ui/input'
 import { supabase } from '@/lib/supabase'
 import { City, CityForm, AdminNotification } from '@/types'
 import Logo from '@/components/Logo'
-import { loginSuperAdmin, checkAuth, logout } from '@/lib/auth'
+import { checkAuth, logout } from '@/lib/auth'
 
 export default function SuperAdminPage() {
   const router = useRouter()
@@ -233,26 +233,6 @@ export default function SuperAdminPage() {
     }
   }
 
-  const handleLogin = async (e: React.FormEvent) => {
-    e.preventDefault()
-
-    setLoading(true)
-    try {
-      const result = await loginSuperAdmin(email, password, rememberMe)
-      if (result.success) {
-        setIsAuthenticated(true)
-        setEmail('')
-        setPassword('')
-      } else {
-        alert(result.error || 'מייל או סיסמה שגויים')
-      }
-    } catch (error) {
-      console.error('Login error:', error)
-      alert('שגיאה בתהליך ההתחברות')
-    } finally {
-      setLoading(false)
-    }
-  }
 
   // בדיקת אימות בטעינת הדף
   useEffect(() => {
