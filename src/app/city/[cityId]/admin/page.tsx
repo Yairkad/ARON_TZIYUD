@@ -1735,18 +1735,6 @@ export default function CityAdminPage() {
                                     <p className="font-semibold text-gray-800">{item.equipment_name}</p>
                                   </div>
                                   <div className="flex gap-2 items-center">
-                                    {item.status === 'returned' && item.return_image_url && (
-                                      <a
-                                        href={item.return_image_url}
-                                        target="_blank"
-                                        rel="noopener noreferrer"
-                                        className="text-xl hover:scale-110 transition-transform"
-                                        title="צפה בתמונת החזרה"
-                                        onClick={(e) => e.stopPropagation()}
-                                      >
-                                        📷
-                                      </a>
-                                    )}
                                     {item.status !== 'pending_approval' && (
                                       <Button
                                         size="sm"
@@ -1772,6 +1760,19 @@ export default function CityAdminPage() {
                                       <span className="inline-block px-3 py-1 bg-yellow-500 text-white text-xs font-semibold rounded-lg">
                                         ⏳ ממתין לאישור
                                       </span>
+                                    )}
+                                    {(item.status === 'returned' || item.status === 'pending_approval') && item.return_image_url && (
+                                      <Button
+                                        size="sm"
+                                        onClick={(e) => {
+                                          e.stopPropagation()
+                                          window.open(item.return_image_url!, '_blank')
+                                        }}
+                                        className="h-8 px-3 text-xs font-semibold rounded-lg bg-blue-500 hover:bg-blue-600 text-white transition-all"
+                                        title="צפה בתמונת החזרה"
+                                      >
+                                        📷 תמונה
+                                      </Button>
                                     )}
                                     <Button
                                       size="sm"
@@ -1839,26 +1840,38 @@ export default function CityAdminPage() {
                                       <span className="text-xs font-medium text-gray-700">
                                         {item.equipment_name}
                                       </span>
-                                      {item.status !== 'pending_approval' && (
-                                        <Button
-                                          size="sm"
-                                          onClick={() => handleUpdateHistoryStatus(item.id, item.status === 'borrowed' ? 'returned' : 'borrowed')}
-                                          disabled={loading}
-                                          className={`h-7 px-2 text-xs font-semibold rounded transition-all ${
-                                            item.status === 'borrowed'
-                                              ? 'bg-orange-500 hover:bg-orange-600 text-white'
-                                              : 'bg-green-500 hover:bg-green-600 text-white'
-                                          }`}
-                                          title={item.status === 'borrowed' ? 'סמן כהוחזר' : 'סמן כהושאל'}
-                                        >
-                                          {item.status === 'borrowed' ? '⏳ מושאל' : '✅ הוחזר'}
-                                        </Button>
-                                      )}
-                                      {item.status === 'pending_approval' && (
-                                        <span className="inline-block px-2 py-1 bg-yellow-500 text-white text-xs font-semibold rounded">
-                                          ⏳ ממתין
-                                        </span>
-                                      )}
+                                      <div className="flex gap-1 items-center">
+                                        {item.status !== 'pending_approval' && (
+                                          <Button
+                                            size="sm"
+                                            onClick={() => handleUpdateHistoryStatus(item.id, item.status === 'borrowed' ? 'returned' : 'borrowed')}
+                                            disabled={loading}
+                                            className={`h-7 px-2 text-xs font-semibold rounded transition-all ${
+                                              item.status === 'borrowed'
+                                                ? 'bg-orange-500 hover:bg-orange-600 text-white'
+                                                : 'bg-green-500 hover:bg-green-600 text-white'
+                                            }`}
+                                            title={item.status === 'borrowed' ? 'סמן כהוחזר' : 'סמן כהושאל'}
+                                          >
+                                            {item.status === 'borrowed' ? '⏳ מושאל' : '✅ הוחזר'}
+                                          </Button>
+                                        )}
+                                        {item.status === 'pending_approval' && (
+                                          <span className="inline-block px-2 py-1 bg-yellow-500 text-white text-xs font-semibold rounded">
+                                            ⏳ ממתין
+                                          </span>
+                                        )}
+                                        {(item.status === 'returned' || item.status === 'pending_approval') && item.return_image_url && (
+                                          <Button
+                                            size="sm"
+                                            onClick={() => window.open(item.return_image_url!, '_blank')}
+                                            className="h-7 px-2 text-xs font-semibold rounded bg-blue-500 hover:bg-blue-600 text-white transition-all"
+                                            title="צפה בתמונת החזרה"
+                                          >
+                                            📷
+                                          </Button>
+                                        )}
+                                      </div>
                                     </div>
                                     {idx < group.items.length - 1 && <span className="text-gray-400">•</span>}
                                   </div>
