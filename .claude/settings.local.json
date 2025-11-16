@@ -57,7 +57,8 @@
       "Bash(rm:*)",
       "Bash(set NEXT_TURBOPACK_EXPERIMENTAL_USE_SYSTEM_TLS_CERTS=1)",
       "Bash(dir /B 'c:\\Users\\יאיר קדוש\\ARON_TZIYUD' 2)",
-      "Bash(npx tsc:*)"
+      "Bash(npx tsc:*)",
+      "Bash(node -e:*)"
     ],
     "deny": [],
     "ask": []

@@ -685,7 +685,7 @@ export default function SuperAdminPage() {
       detected: { city_id: detectedCityId, manager_role: detectedManagerRole }
     })
 
-    setUserForm({
+    const formData = {
       email: user.email,
       password: '', // Don't pre-fill password
       full_name: user.full_name,
@@ -694,7 +694,12 @@ export default function SuperAdminPage() {
       permissions: user.permissions,
       phone: user.phone || '',
       manager_role: detectedManagerRole,
-    })
+    }
+
+    console.log('📋 Setting form with data:', formData)
+    console.log('⚠️ PHONE VALUE:', user.phone, 'Type:', typeof user.phone, 'Will set as:', formData.phone)
+
+    setUserForm(formData)
 
     // Scroll to the form
     setTimeout(() => {
