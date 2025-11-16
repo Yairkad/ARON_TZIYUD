@@ -571,8 +571,8 @@ export default function SuperAdminPage() {
         permissions: userForm.permissions,
         phone: userForm.phone || null,
         role: userForm.role,
-        city_id: userForm.role === 'city_manager' ? (userForm.city_id || null) : null,
-        manager_role: userForm.role === 'city_manager' ? (userForm.manager_role || null) : null,
+        // Don't send city_id and manager_role for existing users
+        // Cities are managed via the manage-cities API instead
       }
 
       // Only include password if it was changed

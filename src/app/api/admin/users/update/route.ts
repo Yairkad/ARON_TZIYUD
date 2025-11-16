@@ -118,8 +118,11 @@ async function handleUpdate(request: NextRequest) {
     if (body.phone !== undefined) updateData.phone = body.phone || null
     if (body.is_active !== undefined) updateData.is_active = body.is_active
     if (body.role !== undefined) updateData.role = body.role
-    if (body.city_id !== undefined) updateData.city_id = body.city_id || null
-    if (body.manager_role !== undefined) updateData.manager_role = body.manager_role || null
+
+    // Only update city_id and manager_role for NEW users or when explicitly adding first city
+    // For existing users with multiple cities, use the manage-cities API instead
+    // We skip updating these fields to avoid violating the city_manager_has_city constraint
+    // when the user manages multiple cities (city_id should remain null in that case)
 
     // Update email in Auth if provided (must be done before updating public.users)
     if (body.email && body.email !== existingUser.email) {
@@ -195,36 +198,42 @@ async function handleUpdate(request: NextRequest) {
       console.log('✅ Password updated in Supabase Auth')
     }
 
-    // Update city manager details if this is a city manager with manager_role
-    const finalCityId = body.city_id !== undefined ? body.city_id : updatedUser.city_id
-    const finalManagerRole = body.manager_role !== undefined ? body.manager_role : updatedUser.manager_role
-    const finalFullName = body.full_name !== undefined ? body.full_name : updatedUser.full_name
-    const finalPhone = body.phone !== undefined ? body.phone : updatedUser.phone
+    // Update manager name/phone in ALL cities this user manages
+    if ((updatedUser.role === 'city_manager' || body.role === 'city_manager') && (body.full_name !== undefined || body.phone !== undefined)) {
+      const finalFullName = body.full_name !== undefined ? body.full_name : updatedUser.full_name
+      const finalPhone = body.phone !== undefined ? body.phone : updatedUser.phone
 
-    if (finalCityId && finalManagerRole && (updatedUser.role === 'city_manager' || body.role === 'city_manager')) {
-      console.log('🏙️ Updating city manager details for city:', finalCityId, 'role:', finalManagerRole)
-      const cityUpdateData: any = {}
-
-      if (finalManagerRole === 'manager1') {
-        cityUpdateData.manager1_name = finalFullName
-        cityUpdateData.manager1_phone = finalPhone || null
-        cityUpdateData.manager1_user_id = body.user_id  // Link user to city
-      } else if (finalManagerRole === 'manager2') {
-        cityUpdateData.manager2_name = finalFullName
-        cityUpdateData.manager2_phone = finalPhone || null
-        cityUpdateData.manager2_user_id = body.user_id  // Link user to city
-      }
-
-      const { error: cityUpdateError } = await supabase
+      // Get all cities managed by this user
+      const { data: managedCities } = await supabase
         .from('cities')
-        .update(cityUpdateData)
-        .eq('id', finalCityId)
+        .select('id, manager1_user_id, manager2_user_id')
+        .or(`manager1_user_id.eq.${body.user_id},manager2_user_id.eq.${body.user_id}`)
 
-      if (cityUpdateError) {
-        console.error('⚠️ Error updating city manager details (non-critical):', cityUpdateError)
-        // Don't fail the user update, just log the error
-      } else {
-        console.log('✅ City manager details updated, user linked to city')
+      if (managedCities && managedCities.length > 0) {
+        console.log(`🏙️ Updating manager details in ${managedCities.length} cities`)
+
+        // Update each city
+        for (const city of managedCities) {
+          const cityUpdateData: any = {}
+
+          if (city.manager1_user_id === body.user_id) {
+            cityUpdateData.manager1_name = finalFullName
+            cityUpdateData.manager1_phone = finalPhone || null
+          }
+          if (city.manager2_user_id === body.user_id) {
+            cityUpdateData.manager2_name = finalFullName
+            cityUpdateData.manager2_phone = finalPhone || null
+          }
+
+          if (Object.keys(cityUpdateData).length > 0) {
+            await supabase
+              .from('cities')
+              .update(cityUpdateData)
+              .eq('id', city.id)
+          }
+        }
+
+        console.log('✅ Manager details updated in all managed cities')
       }
     }
 
