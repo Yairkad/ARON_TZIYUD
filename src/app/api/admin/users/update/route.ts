@@ -202,15 +202,17 @@ async function handleUpdate(request: NextRequest) {
     const finalPhone = body.phone !== undefined ? body.phone : updatedUser.phone
 
     if (finalCityId && finalManagerRole && (updatedUser.role === 'city_manager' || body.role === 'city_manager')) {
-      console.log('🏙️ Updating city manager details for city:', finalCityId)
+      console.log('🏙️ Updating city manager details for city:', finalCityId, 'role:', finalManagerRole)
       const cityUpdateData: any = {}
 
       if (finalManagerRole === 'manager1') {
         cityUpdateData.manager1_name = finalFullName
         cityUpdateData.manager1_phone = finalPhone || null
+        cityUpdateData.manager1_user_id = body.user_id  // Link user to city
       } else if (finalManagerRole === 'manager2') {
         cityUpdateData.manager2_name = finalFullName
         cityUpdateData.manager2_phone = finalPhone || null
+        cityUpdateData.manager2_user_id = body.user_id  // Link user to city
       }
 
       const { error: cityUpdateError } = await supabase
@@ -222,7 +224,7 @@ async function handleUpdate(request: NextRequest) {
         console.error('⚠️ Error updating city manager details (non-critical):', cityUpdateError)
         // Don't fail the user update, just log the error
       } else {
-        console.log('✅ City manager details updated')
+        console.log('✅ City manager details updated, user linked to city')
       }
     }
 
