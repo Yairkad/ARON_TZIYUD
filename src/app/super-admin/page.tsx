@@ -571,8 +571,8 @@ export default function SuperAdminPage() {
         permissions: userForm.permissions,
         phone: userForm.phone || null,
         role: userForm.role,
-        city_id: userForm.role === 'city_manager' ? userForm.city_id : null,
-        manager_role: userForm.role === 'city_manager' ? (userForm.manager_role || null) : null,
+        // Don't update city_id or manager_role for existing users - managed via Cities page
+        // This prevents accidentally removing city assignments
       }
 
       // Only include password if it was changed
@@ -1557,36 +1557,60 @@ export default function SuperAdminPage() {
 
                       {userForm.role === 'city_manager' && (
                         <>
-                          <div className="space-y-2">
-                            <label className="block text-sm font-semibold text-gray-700">🏙️ עיר {editingUser && '(ניתן לשנות)'}</label>
-                            <select
-                              value={userForm.city_id}
-                              onChange={(e) => setUserForm({ ...userForm, city_id: e.target.value })}
-                              className="w-full h-12 border-2 border-gray-200 rounded-xl focus:border-purple-500 transition-colors px-3"
-                              required={userForm.role === 'city_manager'}
-                            >
-                              <option value="">בחר עיר</option>
-                              {cities.map(city => (
-                                <option key={city.id} value={city.id}>{city.name}</option>
-                              ))}
-                            </select>
-                          </div>
+                          {/* Show managed cities for existing users with multiple cities */}
+                          {editingUser && editingUser.managed_cities && editingUser.managed_cities.length > 0 && (
+                            <div className="space-y-2">
+                              <label className="block text-sm font-semibold text-gray-700">🏙️ ערים מנוהלות</label>
+                              <div className="p-4 bg-blue-50 border-2 border-blue-200 rounded-xl">
+                                <div className="flex flex-wrap gap-2">
+                                  {editingUser.managed_cities.map((city: any) => (
+                                    <span key={city.id} className="px-3 py-1 bg-blue-600 text-white rounded-full text-sm font-medium">
+                                      {city.name}
+                                    </span>
+                                  ))}
+                                </div>
+                                <p className="text-xs text-blue-700 mt-3">
+                                  💡 לניהול ערים: לך לעמוד "ערים", בחר עיר, ושנה מנהלים
+                                </p>
+                              </div>
+                            </div>
+                          )}
 
-                          <div className="space-y-2">
-                            <label className="block text-sm font-semibold text-gray-700">👔 תפקיד מנהל {editingUser && '(ניתן לשנות)'}</label>
-                            <select
-                              value={userForm.manager_role}
-                              onChange={(e) => setUserForm({ ...userForm, manager_role: e.target.value as '' | 'manager1' | 'manager2' })}
-                              className="w-full h-12 border-2 border-gray-200 rounded-xl focus:border-purple-500 transition-colors px-3"
-                            >
-                              <option value="">בחר תפקיד מנהל</option>
-                              <option value="manager1">מנהל ראשון</option>
-                              <option value="manager2">מנהל שני</option>
-                            </select>
-                            <p className="text-xs text-gray-500">
-                              כל עיר יכולה להיות עם עד 2 מנהלים - מנהל ראשון ומנהל שני
-                            </p>
-                          </div>
+                          {/* Show city selector only for new users */}
+                          {!editingUser && (
+                            <>
+                              <div className="space-y-2">
+                                <label className="block text-sm font-semibold text-gray-700">🏙️ עיר</label>
+                                <select
+                                  value={userForm.city_id}
+                                  onChange={(e) => setUserForm({ ...userForm, city_id: e.target.value })}
+                                  className="w-full h-12 border-2 border-gray-200 rounded-xl focus:border-purple-500 transition-colors px-3"
+                                  required={userForm.role === 'city_manager'}
+                                >
+                                  <option value="">בחר עיר</option>
+                                  {cities.map(city => (
+                                    <option key={city.id} value={city.id}>{city.name}</option>
+                                  ))}
+                                </select>
+                              </div>
+
+                              <div className="space-y-2">
+                                <label className="block text-sm font-semibold text-gray-700">👔 תפקיד מנהל</label>
+                                <select
+                                  value={userForm.manager_role}
+                                  onChange={(e) => setUserForm({ ...userForm, manager_role: e.target.value as '' | 'manager1' | 'manager2' })}
+                                  className="w-full h-12 border-2 border-gray-200 rounded-xl focus:border-purple-500 transition-colors px-3"
+                                >
+                                  <option value="">בחר תפקיד מנהל</option>
+                                  <option value="manager1">מנהל ראשון</option>
+                                  <option value="manager2">מנהל שני</option>
+                                </select>
+                                <p className="text-xs text-gray-500">
+                                  כל עיר יכולה להיות עם עד 2 מנהלים - מנהל ראשון ומנהל שני
+                                </p>
+                              </div>
+                            </>
+                          )}
                         </>
                       )}
 
