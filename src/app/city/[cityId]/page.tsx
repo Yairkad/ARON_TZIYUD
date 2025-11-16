@@ -220,7 +220,7 @@ export default function CityPage() {
 
     try {
       const updateData: any = {
-        status: 'returned',
+        status: 'pending_approval',
         return_date: new Date().toISOString(),
         equipment_status: equipmentStatus
       }
@@ -252,21 +252,10 @@ export default function CityPage() {
         throw new Error('שגיאה בהעלאת תמונת ההחזרה')
       }
 
-      const equipmentItem = equipment.find(eq => eq.id === equipmentId)
-      if (equipmentItem) {
-        // Update quantity and status
-        const { error: qtyUpdateError } = await supabase
-          .from('equipment')
-          .update({
-            quantity: equipmentItem.quantity + 1,
-            equipment_status: equipmentStatus
-          })
-          .eq('id', equipmentId)
+      // DON'T update equipment quantity here - wait for manager approval
+      // The equipment will remain borrowed until manager approves
 
-        if (qtyUpdateError) throw qtyUpdateError
-      }
-
-      alert(equipmentStatus === 'working' ? 'הציוד הוחזר בהצלחה!' : 'הציוד הוחזר ומסומן כתקול')
+      alert('תמונת ההחזרה נשלחה בהצלחה!\n\nהציוד ממתין לאישור מנהל העיר.\nלאחר האישור, הציוד יחזור למלאי הזמין.')
       setReturnStatus(null)
       setSelectedStatus('working')
       setFaultyNotes('')

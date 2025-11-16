@@ -45,7 +45,7 @@ export interface BorrowHistory {
   city_id: string
   borrow_date: string
   return_date?: string
-  status: 'borrowed' | 'returned'
+  status: 'borrowed' | 'pending_approval' | 'returned'
   equipment_status?: 'working' | 'faulty'
   return_image_url?: string | null
   return_image_uploaded_at?: string | null

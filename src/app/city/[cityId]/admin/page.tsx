@@ -554,6 +554,86 @@ export default function CityAdminPage() {
     }
   }
 
+  // Approve or reject return
+  const handleApproveReturn = async (id: string, approve: boolean) => {
+    if (!approve && !confirm('האם אתה בטוח שברצונך לדחות את ההחזרה? הציוד יישאר במצב "מושאל".')) {
+      return
+    }
+
+    setLoading(true)
+    try {
+      // Get the borrow record to find the equipment_id and status
+      const { data: borrowRecord, error: fetchError } = await supabase
+        .from('borrow_history')
+        .select('*')
+        .eq('id', id)
+        .single()
+
+      if (fetchError) throw fetchError
+
+      if (borrowRecord.status !== 'pending_approval') {
+        alert('רשומה זו אינה ממתינה לאישור')
+        return
+      }
+
+      if (approve) {
+        // Approve return - update status to 'returned' and restore quantity
+        const { error: updateError } = await supabase
+          .from('borrow_history')
+          .update({ status: 'returned' })
+          .eq('id', id)
+
+        if (updateError) throw updateError
+
+        // Restore equipment quantity and update status if needed
+        const equipmentItem = equipment.find(eq => eq.id === borrowRecord.equipment_id)
+        if (equipmentItem) {
+          const updateData: any = {
+            quantity: equipmentItem.quantity + 1
+          }
+
+          // Update equipment status if user reported it as faulty
+          if (borrowRecord.equipment_status === 'faulty') {
+            updateData.equipment_status = 'faulty'
+          }
+
+          const { error: qtyUpdateError } = await supabase
+            .from('equipment')
+            .update(updateData)
+            .eq('id', borrowRecord.equipment_id)
+
+          if (qtyUpdateError) throw qtyUpdateError
+        }
+
+        alert('ההחזרה אושרה והציוד חזר למלאי!')
+      } else {
+        // Reject return - revert status back to 'borrowed'
+        const { error: updateError } = await supabase
+          .from('borrow_history')
+          .update({
+            status: 'borrowed',
+            return_date: null,
+            equipment_status: null,
+            return_image_url: null,
+            return_image_uploaded_at: null
+          })
+          .eq('id', id)
+
+        if (updateError) throw updateError
+
+        alert('ההחזרה נדחתה. הציוד חזר למצב "מושאל".')
+      }
+
+      fetchHistory()
+      fetchEquipment() // Refresh equipment to show updated quantity
+    } catch (error) {
+      console.error('Error approving/rejecting return:', error)
+      alert('אירעה שגיאה בטיפול בהחזרה')
+    } finally {
+      setLoading(false)
+    }
+  }
+
   // Toggle group expansion
   const toggleGroupExpansion = (groupId: string) => {
     setExpandedGroups(prev => {
@@ -1514,12 +1594,95 @@ export default function CityAdminPage() {
         )}
 
         {activeTab === 'history' && (
-          <Card className="border-0 shadow-2xl rounded-2xl overflow-hidden bg-white/90 backdrop-blur-sm">
-            <CardHeader className="bg-gradient-to-r from-blue-50 to-indigo-50 pb-6">
-              <CardTitle className="text-2xl font-bold text-gray-800">📊 היסטוריית השאלות</CardTitle>
-            </CardHeader>
-            <CardContent className="p-3 md:p-6">
-              {/* Mobile View */}
+          <>
+            {/* Pending Approvals Section */}
+            {borrowHistory.filter(item => item.status === 'pending_approval').length > 0 && (
+              <Card className="border-0 shadow-2xl rounded-2xl overflow-hidden bg-gradient-to-br from-yellow-50 to-orange-50 mb-6">
+                <CardHeader className="bg-gradient-to-r from-yellow-100 to-orange-100 pb-4">
+                  <CardTitle className="text-xl font-bold text-gray-800 flex items-center gap-2">
+                    <span className="text-2xl">⏳</span>
+                    החזרות ממתינות לאישור ({borrowHistory.filter(item => item.status === 'pending_approval').length})
+                  </CardTitle>
+                  <CardDescription className="text-gray-700">
+                    אשר או דחה החזרות שצולמו על ידי המשתמשים
+                  </CardDescription>
+                </CardHeader>
+                <CardContent className="p-4">
+                  <div className="space-y-3">
+                    {borrowHistory
+                      .filter(item => item.status === 'pending_approval')
+                      .map(item => (
+                        <div key={item.id} className="bg-white rounded-xl p-4 border-2 border-orange-200 shadow-sm">
+                          <div className="flex flex-col md:flex-row md:items-center justify-between gap-4">
+                            <div className="flex-1">
+                              <div className="flex items-center gap-2 mb-2">
+                                <span className="text-lg font-bold text-gray-800">{item.equipment_name}</span>
+                                {item.equipment_status === 'faulty' && (
+                                  <span className="inline-block px-2 py-1 bg-red-100 text-red-700 rounded-full text-xs font-semibold">
+                                    ⚠️ דווח כתקול
+                                  </span>
+                                )}
+                              </div>
+                              <div className="text-sm text-gray-600 space-y-1">
+                                <p><span className="font-semibold">👤 שם:</span> {item.name}</p>
+                                <p><span className="font-semibold">📱 טלפון:</span> {item.phone}</p>
+                                <p><span className="font-semibold">🕐 הושאל:</span> {new Date(item.borrow_date).toLocaleString('he-IL')}</p>
+                                {item.return_date && (
+                                  <p><span className="font-semibold">🔙 הוחזר:</span> {new Date(item.return_date).toLocaleString('he-IL')}</p>
+                                )}
+                                {item.faulty_notes && (
+                                  <p className="bg-red-50 p-2 rounded border border-red-200 mt-2">
+                                    <span className="font-semibold text-red-800">⚠️ הערות:</span>
+                                    <span className="text-red-700"> {item.faulty_notes}</span>
+                                  </p>
+                                )}
+                              </div>
+                            </div>
+                            <div className="flex flex-col gap-2">
+                              {item.return_image_url && (
+                                <a
+                                  href={item.return_image_url}
+                                  target="_blank"
+                                  rel="noopener noreferrer"
+                                  className="inline-flex items-center justify-center gap-2 px-4 py-2 bg-blue-500 hover:bg-blue-600 text-white font-semibold rounded-lg transition-all"
+                                >
+                                  📷 צפה בתמונה
+                                </a>
+                              )}
+                              <div className="flex gap-2">
+                                <Button
+                                  onClick={() => handleApproveReturn(item.id, true)}
+                                  disabled={loading || !canEdit}
+                                  className="flex-1 bg-green-500 hover:bg-green-600 text-white font-semibold"
+                                  size="sm"
+                                >
+                                  ✅ אשר
+                                </Button>
+                                <Button
+                                  onClick={() => handleApproveReturn(item.id, false)}
+                                  disabled={loading || !canEdit}
+                                  className="flex-1 bg-red-500 hover:bg-red-600 text-white font-semibold"
+                                  size="sm"
+                                >
+                                  ❌ דחה
+                                </Button>
+                              </div>
+                            </div>
+                          </div>
+                        </div>
+                      ))}
+                  </div>
+                </CardContent>
+              </Card>
+            )}
+
+            {/* History Section */}
+            <Card className="border-0 shadow-2xl rounded-2xl overflow-hidden bg-white/90 backdrop-blur-sm">
+              <CardHeader className="bg-gradient-to-r from-blue-50 to-indigo-50 pb-6">
+                <CardTitle className="text-2xl font-bold text-gray-800">📊 היסטוריית השאלות</CardTitle>
+              </CardHeader>
+              <CardContent className="p-3 md:p-6">
+                {/* Mobile View */}
               <div className="block md:hidden space-y-4">
                 {groupedHistoryArray.map(group => {
                   const isExpanded = expandedGroups.has(group.id)
@@ -1564,6 +1727,8 @@ export default function CityAdminPage() {
                                 <div key={item.id} className={`flex justify-between items-center p-3 rounded-lg border-2 ${
                                   item.status === 'borrowed'
                                     ? 'bg-orange-50 border-orange-200'
+                                    : item.status === 'pending_approval'
+                                    ? 'bg-yellow-50 border-yellow-200'
                                     : 'bg-green-50 border-green-200'
                                 }`}>
                                   <div className="flex-1">
@@ -1582,20 +1747,32 @@ export default function CityAdminPage() {
                                         📷
                                       </a>
                                     )}
-                                    <button
-                                      onClick={(e) => {
-                                        e.stopPropagation()
-                                        handleUpdateHistoryStatus(
-                                          item.id,
-                                          item.status === 'borrowed' ? 'returned' : 'borrowed'
-                                        )
-                                      }}
-                                      disabled={loading}
-                                      className="text-2xl hover:scale-110 transition-transform"
-                                      title={item.status === 'borrowed' ? 'סמן כהוחזר' : 'סמן כהושאל'}
-                                    >
-                                      {item.status === 'borrowed' ? '🟠' : '🟢'}
-                                    </button>
+                                    {item.status !== 'pending_approval' && (
+                                      <Button
+                                        size="sm"
+                                        onClick={(e) => {
+                                          e.stopPropagation()
+                                          handleUpdateHistoryStatus(
+                                            item.id,
+                                            item.status === 'borrowed' ? 'returned' : 'borrowed'
+                                          )
+                                        }}
+                                        disabled={loading}
+                                        className={`h-8 px-3 text-xs font-semibold rounded-lg transition-all ${
+                                          item.status === 'borrowed'
+                                            ? 'bg-orange-500 hover:bg-orange-600 text-white'
+                                            : 'bg-green-500 hover:bg-green-600 text-white'
+                                        }`}
+                                        title={item.status === 'borrowed' ? 'סמן כהוחזר' : 'סמן כהושאל'}
+                                      >
+                                        {item.status === 'borrowed' ? '⏳ מושאל' : '✅ הוחזר'}
+                                      </Button>
+                                    )}
+                                    {item.status === 'pending_approval' && (
+                                      <span className="inline-block px-3 py-1 bg-yellow-500 text-white text-xs font-semibold rounded-lg">
+                                        ⏳ ממתין לאישור
+                                      </span>
+                                    )}
                                     <Button
                                       size="sm"
                                       variant="destructive"
@@ -1658,21 +1835,31 @@ export default function CityAdminPage() {
                               <div className="flex flex-wrap gap-1">
                                 {group.items.map((item, idx) => (
                                   <div key={item.id} className="flex items-center gap-1">
-                                    <span className={`inline-flex items-center px-2 py-1 rounded-lg text-xs font-medium ${
-                                      item.status === 'borrowed'
-                                        ? 'bg-orange-100 text-orange-700 border border-orange-300'
-                                        : 'bg-green-100 text-green-700 border border-green-300'
-                                    }`}>
-                                      {item.equipment_name}
-                                      <button
-                                        onClick={() => handleUpdateHistoryStatus(item.id, item.status === 'borrowed' ? 'returned' : 'borrowed')}
-                                        className="ml-1 hover:scale-110 transition-transform"
-                                        disabled={loading}
-                                        title={item.status === 'borrowed' ? 'סמן כהוחזר' : 'סמן כהושאל'}
-                                      >
-                                        {item.status === 'borrowed' ? '🟠' : '🟢'}
-                                      </button>
-                                    </span>
+                                    <div className="flex flex-col gap-1">
+                                      <span className="text-xs font-medium text-gray-700">
+                                        {item.equipment_name}
+                                      </span>
+                                      {item.status !== 'pending_approval' && (
+                                        <Button
+                                          size="sm"
+                                          onClick={() => handleUpdateHistoryStatus(item.id, item.status === 'borrowed' ? 'returned' : 'borrowed')}
+                                          disabled={loading}
+                                          className={`h-7 px-2 text-xs font-semibold rounded transition-all ${
+                                            item.status === 'borrowed'
+                                              ? 'bg-orange-500 hover:bg-orange-600 text-white'
+                                              : 'bg-green-500 hover:bg-green-600 text-white'
+                                          }`}
+                                          title={item.status === 'borrowed' ? 'סמן כהוחזר' : 'סמן כהושאל'}
+                                        >
+                                          {item.status === 'borrowed' ? '⏳ מושאל' : '✅ הוחזר'}
+                                        </Button>
+                                      )}
+                                      {item.status === 'pending_approval' && (
+                                        <span className="inline-block px-2 py-1 bg-yellow-500 text-white text-xs font-semibold rounded">
+                                          ⏳ ממתין
+                                        </span>
+                                      )}
+                                    </div>
                                     {idx < group.items.length - 1 && <span className="text-gray-400">•</span>}
                                   </div>
                                 ))}
@@ -1745,6 +1932,7 @@ export default function CityAdminPage() {
               </div>
             </CardContent>
           </Card>
+          </>
         )}
 
         {activeTab === 'requests' && city && (

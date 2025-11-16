@@ -33,9 +33,29 @@ export default function ManagerGuidePage() {
         console.log('📋 Manager guide - User data:', data)
 
         if (data.user) {
-          setCityId(data.user.city_id)
+          // For multi-city managers, get cityId from managed_cities or localStorage
+          let userCityId = data.user.city_id
+
+          // If no city_id in user data (multi-city manager), try other sources
+          if (!userCityId) {
+            // First, try to get from managed_cities array
+            if (data.managed_cities && data.managed_cities.length > 0) {
+              // Try to get from localStorage first (user's last selected city)
+              const storedCityId = localStorage.getItem('userCityId')
+              const isManagingStored = data.managed_cities.some((c: any) => c.id === storedCityId)
+
+              if (storedCityId && isManagingStored) {
+                userCityId = storedCityId
+              } else {
+                // Fall back to first managed city
+                userCityId = data.managed_cities[0].id
+              }
+            }
+          }
+
+          setCityId(userCityId)
           setRole(data.user.role)
-          console.log('✅ Manager guide - Set role:', data.user.role, 'cityId:', data.user.city_id)
+          console.log('✅ Manager guide - Set role:', data.user.role, 'cityId:', userCityId)
         }
       } catch (error) {
         console.error('❌ Error loading user info:', error)
