@@ -657,15 +657,34 @@ export default function SuperAdminPage() {
 
   const handleEditUser = (user: any) => {
     setEditingUser(user)
+
+    // For manager_role, check all managed cities to find the role
+    let detectedManagerRole = user.manager_role || ''
+    let detectedCityId = user.city?.id || ''
+
+    // If user has managed_cities, use the first one to get city_id and role
+    if (user.managed_cities && user.managed_cities.length > 0) {
+      // Use the primary city (first in list) if no city.id is set
+      if (!detectedCityId) {
+        detectedCityId = user.managed_cities[0].id
+      }
+
+      // Find the role for the detected city
+      const cityInfo = user.managed_cities.find((c: any) => c.id === detectedCityId)
+      if (cityInfo && cityInfo.role) {
+        detectedManagerRole = cityInfo.role
+      }
+    }
+
     setUserForm({
       email: user.email,
       password: '', // Don't pre-fill password
       full_name: user.full_name,
       role: user.role,
-      city_id: user.city?.id || '',
+      city_id: detectedCityId,
       permissions: user.permissions,
       phone: user.phone || '',
-      manager_role: user.manager_role || '',
+      manager_role: detectedManagerRole,
     })
 
     // Scroll to the form

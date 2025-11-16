@@ -113,7 +113,11 @@ export async function GET(request: NextRequest) {
           name: primaryCity.name,
           is_active: primaryCity.is_active,
         } : null,
-        managed_cities: managedCities.map(c => ({ id: c.id, name: c.name })),
+        managed_cities: managedCities.map(c => ({
+          id: c.id,
+          name: c.name,
+          role: c.manager1_user_id === user.id ? 'manager1' : 'manager2'
+        })),
         last_login_at: user.last_login_at,
         created_at: user.created_at,
         updated_at: user.updated_at,
