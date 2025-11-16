@@ -142,6 +142,33 @@ export async function POST(request: NextRequest) {
       )
     }
 
+    // Update user table if the logged-in user changed their own name/phone
+    if (city.manager1_user_id === user.id) {
+      const userUpdateData: any = {}
+      if (updateData.manager1_name !== undefined) userUpdateData.full_name = updateData.manager1_name
+      if (updateData.manager1_phone !== undefined) userUpdateData.phone = updateData.manager1_phone
+
+      if (Object.keys(userUpdateData).length > 0) {
+        await supabase
+          .from('users')
+          .update(userUpdateData)
+          .eq('id', user.id)
+        console.log('✅ Updated user table for manager1')
+      }
+    } else if (city.manager2_user_id === user.id) {
+      const userUpdateData: any = {}
+      if (updateData.manager2_name !== undefined) userUpdateData.full_name = updateData.manager2_name
+      if (updateData.manager2_phone !== undefined) userUpdateData.phone = updateData.manager2_phone
+
+      if (Object.keys(userUpdateData).length > 0) {
+        await supabase
+          .from('users')
+          .update(userUpdateData)
+          .eq('id', user.id)
+        console.log('✅ Updated user table for manager2')
+      }
+    }
+
     // יצירת התראה למנהל על
     const changedFields = []
     if (updateData.manager1_name !== undefined && city.manager1_name !== updateData.manager1_name) changedFields.push('שם מנהל ראשון')
