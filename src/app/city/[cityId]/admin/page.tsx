@@ -339,13 +339,45 @@ export default function CityAdminPage() {
 
       // Allow access if:
       // 1. Logged in as super admin (can access any city)
-      // 2. Logged in as city manager for this specific city
-      if (authenticated && (userType === 'super' || userCityId === cityId)) {
-        console.log('✅ Access granted:', userType === 'super' ? 'Super Admin' : 'City Manager', { userId, userCityId, cityId })
+      // 2. Logged in as city manager - check if they manage this specific city
+      if (authenticated && userType === 'super') {
+        console.log('✅ Access granted: Super Admin', { userId, cityId })
         setIsAuthenticated(true)
         setCurrentUser(user)
+        setIsCheckingAuth(false)
+        return
+      }
+
+      if (authenticated && userType === 'city') {
+        // For city managers, check if they manage this specific city
+        try {
+          const response = await fetch('/api/auth/my-cities', {
+            credentials: 'include'
+          })
+
+          if (response.ok) {
+            const data = await response.json()
+            const managedCities = data.cities || []
+            const managesThisCity = managedCities.some((c: any) => c.id === cityId)
+
+            if (managesThisCity) {
+              console.log('✅ Access granted: City Manager', { userId, cityId, managedCities: managedCities.length })
+              setIsAuthenticated(true)
+              setCurrentUser(user)
+            } else {
+              console.log('❌ Access denied - user does not manage this city', { authenticated, userType, cityId, managedCities })
+              setCurrentUser(null)
+            }
+          } else {
+            console.log('❌ Access denied - failed to fetch managed cities')
+            setCurrentUser(null)
+          }
+        } catch (error) {
+          console.error('❌ Error checking city access:', error)
+          setCurrentUser(null)
+        }
       } else {
-        console.log('❌ Access denied - not authenticated or wrong city', { authenticated, userType, userCityId, cityId })
+        console.log('❌ Access denied - not authenticated', { authenticated, userType, cityId })
         setCurrentUser(null)
       }
 
