@@ -134,9 +134,24 @@ export async function requireCityManager(
     return { user, error: null }
   }
 
-  // City managers can only access their own city
-  if (user?.role === 'city_manager' && user?.city_id === cityId) {
-    return { user, error: null }
+  // City managers can access cities they manage
+  // Check if user is manager of this specific city
+  if (user?.role === 'city_manager') {
+    const { createServiceClient } = await import('./supabase-server')
+    const supabase = createServiceClient()
+
+    const { data: city, error: cityError } = await supabase
+      .from('cities')
+      .select('manager1_user_id, manager2_user_id')
+      .eq('id', cityId)
+      .single()
+
+    if (!cityError && city) {
+      // Check if user is manager1 or manager2 of this city
+      if (city.manager1_user_id === user.id || city.manager2_user_id === user.id) {
+        return { user, error: null }
+      }
+    }
   }
 
   return {
@@ -201,13 +216,35 @@ export async function requireFullAccess(
   }
 
   // For city managers, check city access if cityId provided
-  if (cityId && user?.city_id !== cityId) {
-    return {
-      user: null,
-      error: NextResponse.json(
-        { success: false, error: 'אין הרשאה - לא ניתן לגשת לעיר זו' },
-        { status: 403 }
-      ),
+  if (cityId && user?.role === 'city_manager') {
+    const { createServiceClient } = await import('./supabase-server')
+    const supabase = createServiceClient()
+
+    const { data: city, error: cityError } = await supabase
+      .from('cities')
+      .select('manager1_user_id, manager2_user_id')
+      .eq('id', cityId)
+      .single()
+
+    if (cityError || !city) {
+      return {
+        user: null,
+        error: NextResponse.json(
+          { success: false, error: 'עיר לא נמצאה' },
+          { status: 404 }
+        ),
+      }
+    }
+
+    // Check if user is manager1 or manager2 of this city
+    if (city.manager1_user_id !== user.id && city.manager2_user_id !== user.id) {
+      return {
+        user: null,
+        error: NextResponse.json(
+          { success: false, error: 'אין הרשאה - לא ניתן לגשת לעיר זו' },
+          { status: 403 }
+        ),
+      }
     }
   }
 
@@ -245,13 +282,35 @@ export async function requireApprovePermission(
   }
 
   // Check city access if cityId provided
-  if (cityId && user?.city_id !== cityId) {
-    return {
-      user: null,
-      error: NextResponse.json(
-        { success: false, error: 'אין הרשאה - לא ניתן לגשת לעיר זו' },
-        { status: 403 }
-      ),
+  if (cityId && user?.role === 'city_manager') {
+    const { createServiceClient } = await import('./supabase-server')
+    const supabase = createServiceClient()
+
+    const { data: city, error: cityError } = await supabase
+      .from('cities')
+      .select('manager1_user_id, manager2_user_id')
+      .eq('id', cityId)
+      .single()
+
+    if (cityError || !city) {
+      return {
+        user: null,
+        error: NextResponse.json(
+          { success: false, error: 'עיר לא נמצאה' },
+          { status: 404 }
+        ),
+      }
+    }
+
+    // Check if user is manager1 or manager2 of this city
+    if (city.manager1_user_id !== user.id && city.manager2_user_id !== user.id) {
+      return {
+        user: null,
+        error: NextResponse.json(
+          { success: false, error: 'אין הרשאה - לא ניתן לגשת לעיר זו' },
+          { status: 403 }
+        ),
+      }
     }
   }
 
