@@ -48,6 +48,7 @@ export async function GET(request: NextRequest) {
     let cityId: string | null = null
     let fullName = user.email || ''
     let permissions: string = 'full_access'
+    let manager: any = null
 
     if (userError || !userData) {
       console.error('❌ User not found in users table:', userError)
@@ -65,6 +66,28 @@ export async function GET(request: NextRequest) {
       permissions = userData.permissions || 'full_access'
     }
 
+    // For city managers, also get data from city_managers table
+    if (userRole === 'city_manager') {
+      // Try to find by auth ID first, then by email
+      const { data: managerByAuth } = await supabase
+        .from('city_managers')
+        .select('*')
+        .eq('id', user.id)
+        .single()
+
+      if (managerByAuth) {
+        manager = managerByAuth
+      } else {
+        const { data: managerByEmail } = await supabase
+          .from('city_managers')
+          .select('*')
+          .eq('email', user.email)
+          .single()
+
+        manager = managerByEmail
+      }
+    }
+
     const response = NextResponse.json({
       success: true,
       user: {
@@ -75,6 +98,7 @@ export async function GET(request: NextRequest) {
         city_id: cityId,
         permissions: permissions,
       },
+      manager: manager  // Include city_managers data if available
     })
 
     // Add no-cache headers

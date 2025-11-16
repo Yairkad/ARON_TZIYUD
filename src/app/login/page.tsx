@@ -168,18 +168,23 @@ export default function UnifiedLoginPage() {
               </div>
             </div>
 
-            <div className="flex items-center">
-              <input
-                type="checkbox"
-                id="rememberMe"
-                checked={rememberMe}
-                onChange={(e) => setRememberMe(e.target.checked)}
-                className="w-4 h-4 text-purple-600 border-gray-300 rounded focus:ring-purple-500"
-                disabled={loading}
-              />
-              <label htmlFor="rememberMe" className="mr-2 text-sm text-gray-700 cursor-pointer">
-                זכור אותי (30 יום)
-              </label>
+            <div className="flex items-center justify-between">
+              <div className="flex items-center">
+                <input
+                  type="checkbox"
+                  id="rememberMe"
+                  checked={rememberMe}
+                  onChange={(e) => setRememberMe(e.target.checked)}
+                  className="w-4 h-4 text-purple-600 border-gray-300 rounded focus:ring-purple-500"
+                  disabled={loading}
+                />
+                <label htmlFor="rememberMe" className="mr-2 text-sm text-gray-700 cursor-pointer">
+                  זכור אותי (30 יום)
+                </label>
+              </div>
+              <Link href="/forgot-password" className="text-sm text-purple-600 hover:text-purple-800 font-medium">
+                שכחתי סיסמא
+              </Link>
             </div>
 
             <Button
