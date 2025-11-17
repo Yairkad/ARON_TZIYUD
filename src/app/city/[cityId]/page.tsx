@@ -1182,7 +1182,18 @@ export default function CityPage() {
                         }}
                         className="flex flex-col items-center gap-2 p-3 bg-white rounded-xl border-2 border-gray-200 hover:border-blue-400 hover:bg-blue-50 transition-all duration-200 hover:scale-105 shadow-sm hover:shadow-md"
                       >
-                        <div className="text-4xl sm:text-5xl">{icon}</div>
+                        {/* Display image or fallback icon */}
+                        <div className="w-16 h-16 sm:w-20 sm:h-20 flex items-center justify-center">
+                          {icon && icon.startsWith('http') ? (
+                            <img
+                              src={icon}
+                              alt={categoryName}
+                              className="w-full h-full object-contain"
+                            />
+                          ) : (
+                            <span className="text-4xl sm:text-5xl">{icon || '📦'}</span>
+                          )}
+                        </div>
                         <span className="text-[10px] sm:text-xs font-bold text-gray-700 text-center leading-tight">
                           {categoryName}
                         </span>
