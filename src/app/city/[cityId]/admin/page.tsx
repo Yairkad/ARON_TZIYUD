@@ -1450,6 +1450,31 @@ export default function CityAdminPage() {
                               </select>
                             </div>
                           </div>
+                          <div className="grid grid-cols-2 gap-2">
+                            <div>
+                              <label className="block text-xs font-medium text-gray-600 mb-1">📁 קטגוריה</label>
+                              <select
+                                value={editingEquipment.category_id || ''}
+                                onChange={(e) => setEditingEquipment({ ...editingEquipment, category_id: e.target.value })}
+                                className="w-full h-9 border border-blue-300 rounded-lg px-2 text-xs font-medium"
+                              >
+                                <option value="">ללא</option>
+                                {categories.map((cat: any) => (
+                                  <option key={cat.id} value={cat.id}>{cat.name}</option>
+                                ))}
+                              </select>
+                            </div>
+                            <div>
+                              <label className="block text-xs font-medium text-gray-600 mb-1">🎨 אימוג'י</label>
+                              <Input
+                                value={editingEquipment.image_url || ''}
+                                onChange={(e) => setEditingEquipment({ ...editingEquipment, image_url: e.target.value })}
+                                placeholder="🔧"
+                                maxLength={2}
+                                className="w-full h-9 border border-blue-300 rounded-lg text-center text-lg"
+                              />
+                            </div>
+                          </div>
                           <div className="flex items-center gap-1.5">
                             <input
                               type="checkbox"
@@ -1464,7 +1489,7 @@ export default function CityAdminPage() {
                           </div>
                           <div className="flex gap-2">
                             <Button
-                              onClick={() => handleUpdateEquipment(item.id, editingEquipment.name, editingEquipment.quantity, editingEquipment.equipment_status, editingEquipment.is_consumable)}
+                              onClick={() => handleUpdateEquipment(item.id, editingEquipment.name, editingEquipment.quantity, editingEquipment.equipment_status, editingEquipment.is_consumable, editingEquipment.category_id, editingEquipment.image_url)}
                               disabled={loading}
                               className="flex-1 h-9 bg-gradient-to-r from-green-500 to-emerald-500 hover:from-green-600 hover:to-emerald-600 text-white rounded-lg text-xs"
                             >
@@ -1482,8 +1507,16 @@ export default function CityAdminPage() {
                       ) : (
                         <div className="flex items-start gap-3">
                           <div className="flex-1 min-w-0">
-                            <p className="font-bold text-sm text-gray-800 truncate">{item.name}</p>
+                            <div className="flex items-center gap-2">
+                              <span className="text-lg">{(item as any).image_url || '📦'}</span>
+                              <p className="font-bold text-sm text-gray-800 truncate">{item.name}</p>
+                            </div>
                             <div className="flex items-center gap-2 mt-0.5">
+                              {(item as any).category && (
+                                <span className="text-[10px] font-semibold text-blue-600 bg-blue-100 px-1.5 py-0.5 rounded">
+                                  {(item as any).category.name}
+                                </span>
+                              )}
                               <span className={`text-base font-bold ${item.quantity > 0 ? 'text-green-600' : 'text-red-600'}`}>
                                 {item.quantity}
                               </span>
@@ -1499,7 +1532,15 @@ export default function CityAdminPage() {
                           </div>
                           <div className="flex flex-col gap-1">
                             <Button
-                              onClick={() => setEditingEquipment({ id: item.id, name: item.name, quantity: item.quantity, equipment_status: item.equipment_status, is_consumable: item.is_consumable })}
+                              onClick={() => setEditingEquipment({
+                                id: item.id,
+                                name: item.name,
+                                quantity: item.quantity,
+                                equipment_status: item.equipment_status,
+                                is_consumable: item.is_consumable,
+                                category_id: (item as any).category?.id,
+                                image_url: (item as any).image_url
+                              })}
                               disabled={!canEdit}
                               className="h-6 px-2 border border-blue-500 text-blue-600 hover:bg-blue-50 bg-white rounded text-[10px] font-medium whitespace-nowrap disabled:opacity-50 disabled:cursor-not-allowed"
                             >
