@@ -1,4 +1,4 @@
-import { createClient } from '@/utils/supabase/client'
+import { supabase } from '@/lib/supabase'
 
 /**
  * Upload an image file to Supabase Storage
@@ -8,7 +8,6 @@ import { createClient } from '@/utils/supabase/client'
  */
 export async function uploadImage(file: File, folder: string = 'equipment'): Promise<string | null> {
   try {
-    const supabase = createClient()
 
     // Generate a unique filename with timestamp
     const fileExt = file.name.split('.').pop()
@@ -46,7 +45,6 @@ export async function uploadImage(file: File, folder: string = 'equipment'): Pro
  */
 export async function deleteImage(imageUrl: string): Promise<boolean> {
   try {
-    const supabase = createClient()
 
     // Extract the file path from the URL
     // URL format: https://[project].supabase.co/storage/v1/object/public/equipment-images/[path]
