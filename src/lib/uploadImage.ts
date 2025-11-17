@@ -31,6 +31,7 @@ export async function uploadImage(file: File, folder: string = 'equipment'): Pro
       .from('equipment-images')
       .getPublicUrl(fileName)
 
+    console.log('✅ Image uploaded successfully:', publicUrl)
     return publicUrl
   } catch (error) {
     console.error('Error in uploadImage:', error)
