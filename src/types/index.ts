@@ -11,6 +11,8 @@ export interface City {
   location_description?: string | null  // Free text description for finding the cabinet
   lat?: number | null
   lng?: number | null
+  public_lat?: number | null  // Approximate location for map (shown to all users)
+  public_lng?: number | null  // Approximate location for map (shown to all users)
   token_lat?: number | null
   token_lng?: number | null
   password: string

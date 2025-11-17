@@ -185,8 +185,23 @@ export default function HomePage() {
           </Card>
         </div>
 
+        {/* Map Button - Prominent */}
+        <div className="mt-8">
+          <Link href="/cabinets-map">
+            <Card className="border-2 border-blue-300 bg-gradient-to-br from-blue-100 to-indigo-100 shadow-xl hover:shadow-2xl transition-all duration-200 hover:scale-105 cursor-pointer">
+              <CardContent className="p-6 text-center">
+                <div className="text-5xl mb-3">🗺️</div>
+                <h3 className="text-xl font-bold text-gray-800 mb-2">מפת ארונות</h3>
+                <p className="text-sm text-gray-700 leading-tight">
+                  מצא את הארון הקרוב אליך במפה ופתח בקשה ישירות
+                </p>
+              </CardContent>
+            </Card>
+          </Link>
+        </div>
+
         {/* Feature Cards */}
-        <div className="grid grid-cols-3 gap-3 mt-8">
+        <div className="grid grid-cols-3 gap-3 mt-6">
           <Card className="border border-blue-200 bg-gradient-to-br from-blue-50 to-indigo-50 shadow-md hover:shadow-lg transition-all duration-200 hover:scale-105">
             <CardContent className="p-2 text-center">
               <div className="text-2xl mb-1">⚡</div>
