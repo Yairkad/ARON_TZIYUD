@@ -1566,6 +1566,8 @@ export default function CityAdminPage() {
                     <thead>
                       <tr className="bg-gradient-to-r from-blue-100 to-indigo-100 border-b-2 border-blue-200">
                         <th className="text-center p-4 font-bold text-gray-700">🎯 שם הציוד</th>
+                        <th className="text-center p-4 font-bold text-gray-700">📁 קטגוריה</th>
+                        <th className="text-center p-4 font-bold text-gray-700">🎨 אימוג'י</th>
                         <th className="text-center p-4 font-bold text-gray-700">🔢 כמות</th>
                         <th className="text-center p-4 font-bold text-gray-700">🔧 סטטוס</th>
                         <th className="text-center p-4 font-bold text-gray-700">🔄 מתכלה</th>
@@ -1586,6 +1588,37 @@ export default function CityAdminPage() {
                               />
                             ) : (
                               <span className="font-medium text-gray-800">{item.name}</span>
+                            )}
+                          </td>
+                          <td className="p-4">
+                            {editingEquipment?.id === item.id ? (
+                              <select
+                                value={editingEquipment.category_id || ''}
+                                onChange={(e) => setEditingEquipment({ ...editingEquipment, category_id: e.target.value })}
+                                className="w-full h-10 border-2 border-blue-300 rounded-lg px-2 text-sm font-medium"
+                              >
+                                <option value="">ללא קטגוריה</option>
+                                {categories.map((cat: any) => (
+                                  <option key={cat.id} value={cat.id}>{cat.name}</option>
+                                ))}
+                              </select>
+                            ) : (
+                              <span className="text-sm font-medium text-blue-600">
+                                {(item as any).category?.name || '—'}
+                              </span>
+                            )}
+                          </td>
+                          <td className="p-4 text-center">
+                            {editingEquipment?.id === item.id ? (
+                              <Input
+                                value={editingEquipment.image_url || ''}
+                                onChange={(e) => setEditingEquipment({ ...editingEquipment, image_url: e.target.value })}
+                                placeholder="🔧"
+                                maxLength={2}
+                                className="w-16 h-10 border-2 border-blue-300 rounded-lg text-center text-xl"
+                              />
+                            ) : (
+                              <span className="text-xl">{(item as any).image_url || '📦'}</span>
                             )}
                           </td>
                           <td className="p-4">
@@ -1642,7 +1675,15 @@ export default function CityAdminPage() {
                                 <>
                                   <Button
                                     size="sm"
-                                    onClick={() => handleUpdateEquipment(item.id, editingEquipment.name, editingEquipment.quantity, editingEquipment.equipment_status, editingEquipment.is_consumable)}
+                                    onClick={() => handleUpdateEquipment(
+                                      item.id,
+                                      editingEquipment.name,
+                                      editingEquipment.quantity,
+                                      editingEquipment.equipment_status,
+                                      editingEquipment.is_consumable,
+                                      editingEquipment.category_id,
+                                      editingEquipment.image_url
+                                    )}
                                     disabled={loading}
                                     className="bg-gradient-to-r from-green-500 to-emerald-500 hover:from-green-600 hover:to-emerald-600 text-white rounded-lg"
                                   >
@@ -1662,7 +1703,15 @@ export default function CityAdminPage() {
                                   <Button
                                     size="sm"
                                     variant="outline"
-                                    onClick={() => setEditingEquipment({ id: item.id, name: item.name, quantity: item.quantity, equipment_status: item.equipment_status, is_consumable: item.is_consumable })}
+                                    onClick={() => setEditingEquipment({
+                                      id: item.id,
+                                      name: item.name,
+                                      quantity: item.quantity,
+                                      equipment_status: item.equipment_status,
+                                      is_consumable: item.is_consumable,
+                                      category_id: (item as any).category?.id,
+                                      image_url: (item as any).image_url
+                                    })}
                                     disabled={!canEdit}
                                     className="border-2 border-blue-500 text-blue-600 hover:bg-blue-50 rounded-lg disabled:opacity-50 disabled:cursor-not-allowed"
                                   >
