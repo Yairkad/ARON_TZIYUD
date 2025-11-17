@@ -1159,55 +1159,83 @@ export default function CityPage() {
             <CardDescription className="text-gray-600">סטטוס זמינות ציוד במערכת</CardDescription>
           </CardHeader>
           <CardContent className="p-4 sm:p-6">
-            {/* 3 cards per row on mobile, 4 on tablet, 5 on desktop */}
-            <div className="grid grid-cols-3 sm:grid-cols-4 lg:grid-cols-5 gap-2 sm:gap-3">
-              {equipment.map((item: any) => (
-                <div
-                  key={item.id}
-                  className="bg-gradient-to-br from-white to-gray-50 rounded-xl p-2 border-2 border-gray-200 hover:border-blue-400 hover:shadow-md transition-all duration-200"
-                >
-                  {/* Emoji */}
-                  <div className="text-center text-3xl sm:text-4xl mb-1">
-                    {item.image_url || '📦'}
-                  </div>
+            {/* Category Quick Navigation */}
+            <div className="mb-6 p-4 bg-gradient-to-r from-blue-50 to-indigo-50 rounded-xl">
+              <h3 className="text-sm font-bold text-gray-700 mb-3">קטגוריות ציוד:</h3>
+              <div className="flex flex-wrap gap-2">
+                {Array.from(new Set(equipment.map((item: any) => item.category?.name).filter(Boolean)))
+                  .sort()
+                  .map((categoryName) => (
+                    <button
+                      key={categoryName}
+                      onClick={() => {
+                        const element = document.getElementById(`category-${categoryName}`)
+                        element?.scrollIntoView({ behavior: 'smooth', block: 'start' })
+                      }}
+                      className="px-3 py-1.5 bg-white border-2 border-blue-300 text-blue-700 rounded-lg text-xs font-semibold hover:bg-blue-100 hover:border-blue-400 transition-all duration-200 hover:scale-105 shadow-sm"
+                    >
+                      {categoryName}
+                    </button>
+                  ))}
+              </div>
+            </div>
 
-                  {/* Item Name - BOLD */}
-                  <div className="text-center mb-1.5">
-                    <span className="font-bold text-gray-800 text-[10px] sm:text-xs leading-tight block">
-                      {item.name}
-                    </span>
-                  </div>
+            {/* Equipment by Category */}
+            {Array.from(new Set(equipment.map((item: any) => item.category?.name).filter(Boolean)))
+              .sort()
+              .map((categoryName) => (
+                <div key={categoryName} id={`category-${categoryName}`} className="mb-8 last:mb-0">
+                  <h3 className="text-lg font-bold text-gray-800 mb-3 pb-2 border-b-2 border-blue-200">
+                    {categoryName}
+                  </h3>
+                  <div className="grid grid-cols-3 sm:grid-cols-4 lg:grid-cols-5 gap-2 sm:gap-3">
+                    {equipment
+                      .filter((item: any) => item.category?.name === categoryName)
+                      .map((item: any) => {
+                        // Determine border color based on status
+                        let borderColor = 'border-red-500'
+                        if (item.equipment_status === 'faulty') {
+                          borderColor = 'border-orange-500'
+                        } else if (item.quantity > 0) {
+                          borderColor = 'border-green-500'
+                        }
 
-                  {/* Quantity */}
-                  <div className="flex justify-center mb-1">
-                    <span className={`inline-flex items-center justify-center min-w-[1.5rem] h-5 px-1.5 rounded-full text-[10px] font-bold ${
-                      item.quantity > 0
-                        ? 'bg-green-100 text-green-700'
-                        : 'bg-red-100 text-red-700'
-                    }`}>
-                      {item.quantity}
-                    </span>
-                  </div>
+                        return (
+                          <div
+                            key={item.id}
+                            className={`relative bg-gradient-to-br from-white to-gray-50 rounded-xl p-2 border-2 ${borderColor} hover:shadow-lg transition-all duration-200`}
+                          >
+                            {/* Category Badge - Top Left */}
+                            <div className="absolute top-1 left-1 bg-blue-600 text-white text-[8px] sm:text-[9px] px-1.5 py-0.5 rounded-md font-bold shadow-sm z-10">
+                              {item.category?.name}
+                            </div>
 
-                  {/* Status Badge */}
-                  <div className="flex justify-center">
-                    {item.equipment_status === 'faulty' ? (
-                      <span className="inline-flex items-center gap-0.5 px-1.5 py-0.5 bg-orange-100 text-orange-700 rounded-full text-[9px] font-medium">
-                        ⚠️
-                      </span>
-                    ) : item.quantity > 0 ? (
-                      <span className="inline-flex items-center gap-0.5 px-1.5 py-0.5 bg-green-100 text-green-700 rounded-full text-[9px] font-medium">
-                        ✅
-                      </span>
-                    ) : (
-                      <span className="inline-flex items-center gap-0.5 px-1.5 py-0.5 bg-red-100 text-red-700 rounded-full text-[9px] font-medium">
-                        ❌
-                      </span>
-                    )}
+                            {/* Emoji */}
+                            <div className="text-center text-3xl sm:text-4xl mb-1 mt-4">
+                              {item.image_url || '📦'}
+                            </div>
+
+                            {/* Item Name - BOLD */}
+                            <div className="text-center mb-1.5">
+                              <span className="font-bold text-gray-800 text-[10px] sm:text-xs leading-tight block">
+                                {item.name}
+                              </span>
+                            </div>
+
+                            {/* Quantity - Plain Text */}
+                            <div className="text-center">
+                              <span className={`text-sm font-bold ${
+                                item.quantity > 0 ? 'text-green-700' : 'text-red-700'
+                              }`}>
+                                כמות: {item.quantity}
+                              </span>
+                            </div>
+                          </div>
+                        )
+                      })}
                   </div>
                 </div>
               ))}
-            </div>
           </CardContent>
         </Card>
       </div>

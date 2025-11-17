@@ -150,13 +150,29 @@ export default function HomePage() {
                     </Button>
                   </div>
 
+                  {/* Search Input */}
+                  <div className="relative mb-4">
+                    <span className="absolute right-3 top-1/2 -translate-y-1/2 text-gray-400">
+                      🔍
+                    </span>
+                    <Input
+                      type="text"
+                      placeholder="חפש עיר..."
+                      value={searchTerm}
+                      onChange={(e) => setSearchTerm(e.target.value)}
+                      className="pr-10 h-12 border-2 border-gray-200 focus:border-blue-400"
+                    />
+                  </div>
+
                   {cities.length === 0 ? (
                     <div className="text-center py-8">
                       <p className="text-gray-500">אין ערים זמינות כרגע</p>
                     </div>
                   ) : (
                     <div className="max-h-96 overflow-y-auto space-y-2">
-                      {cities.map((city) => (
+                      {cities
+                        .filter(city => city.name.toLowerCase().includes(searchTerm.toLowerCase()))
+                        .map((city) => (
                         <button
                           key={city.id}
                           onClick={() => handleCitySelect(city)}
