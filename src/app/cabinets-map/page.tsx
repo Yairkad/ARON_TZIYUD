@@ -77,10 +77,10 @@ export default function CabinetsMapPage() {
                 <span className="font-semibold">🔴</span> נקודה אדומה = אתה
               </div>
               <div className="text-center">
-                <span className="font-semibold">👆</span> לחץ = פתח בקשה
+                <span className="font-semibold">💬</span> לחץ על עיגול = פרטים
               </div>
               <div className="text-center">
-                <span className="font-semibold">🗺️</span> ניווט לאחר אישור
+                <span className="font-semibold">🎒</span> כפתור בחלון = בקשה
               </div>
             </div>
           </CardContent>

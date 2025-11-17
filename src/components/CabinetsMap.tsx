@@ -245,28 +245,25 @@ export default function CabinetsMap({ onCabinetClick }: CabinetsMapProps) {
               fillOpacity: 0.3,
               weight: 2
             }}
-            eventHandlers={{
-              click: () => handleCircleClick(cabinet.id)
-            }}
           >
             <Popup>
-              <div className="text-center p-2 min-w-[200px]">
-                <h3 className="font-bold text-lg text-gray-800 mb-2">
+              <div className="text-center p-3 min-w-[220px]">
+                <h3 className="font-bold text-xl text-gray-800 mb-2">
                   🏙️ {cabinet.name}
                 </h3>
                 {cabinet.manager_name && (
-                  <p className="text-sm text-gray-600 mb-2">
+                  <p className="text-sm text-gray-600 mb-3">
                     👤 {cabinet.manager_name}
                   </p>
                 )}
-                <p className="text-xs text-gray-500 mb-3">
-                  📍 מיקום משוער (±750 מטר)
+                <p className="text-xs text-gray-500 mb-4 bg-yellow-50 p-2 rounded-lg border border-yellow-200">
+                  ⚠️ מיקום משוער בלבד (±750 מטר)
                 </p>
                 <button
                   onClick={() => handleCircleClick(cabinet.id)}
-                  className="w-full bg-gradient-to-r from-blue-600 to-indigo-600 hover:from-blue-700 hover:to-indigo-700 text-white font-semibold py-2 px-4 rounded-lg transition-all duration-200 hover:scale-105"
+                  className="w-full bg-gradient-to-r from-blue-600 to-indigo-600 hover:from-blue-700 hover:to-indigo-700 text-white font-bold py-3 px-4 rounded-xl transition-all duration-200 hover:scale-105 shadow-lg"
                 >
-                  🎒 פתח בקשה
+                  🎒 פתח בקשה לארון זה
                 </button>
               </div>
             </Popup>
