@@ -198,23 +198,39 @@ export default function CabinetsMap({ onCabinetClick }: CabinetsMapProps) {
 
         <MapCenterController userLocation={userLocation} cabinets={cabinets} />
 
-        {/* User location marker */}
+        {/* User location marker - Red pin style */}
         {userLocation && (
-          <Circle
-            center={userLocation}
-            radius={50}
-            pathOptions={{
-              color: 'blue',
-              fillColor: 'blue',
-              fillOpacity: 0.6
-            }}
-          >
-            <Popup>
-              <div className="text-center font-semibold">
-                📍 המיקום שלך
-              </div>
-            </Popup>
-          </Circle>
+          <>
+            {/* Outer glow circle */}
+            <Circle
+              center={userLocation}
+              radius={100}
+              pathOptions={{
+                color: '#EF4444',
+                fillColor: '#FEE2E2',
+                fillOpacity: 0.3,
+                weight: 0
+              }}
+            />
+            {/* Inner red dot */}
+            <Circle
+              center={userLocation}
+              radius={30}
+              pathOptions={{
+                color: '#DC2626',
+                fillColor: '#EF4444',
+                fillOpacity: 0.9,
+                weight: 3
+              }}
+            >
+              <Popup>
+                <div className="text-center font-semibold">
+                  <div className="text-2xl mb-1">📍</div>
+                  <div className="text-red-600">המיקום שלך</div>
+                </div>
+              </Popup>
+            </Circle>
+          </>
         )}
 
         {/* Cabinet circles (750m radius) */}
