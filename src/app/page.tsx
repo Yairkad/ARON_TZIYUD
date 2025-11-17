@@ -15,8 +15,6 @@ export default function HomePage() {
   const router = useRouter()
   const [cities, setCities] = useState<City[]>([])
   const [loading, setLoading] = useState(true)
-  const [showCityDropdown, setShowCityDropdown] = useState(false)
-  const [selectedCity, setSelectedCity] = useState<City | null>(null)
   const [adminUrl, setAdminUrl] = useState<string | null>(null)
   const [searchTerm, setSearchTerm] = useState('')
 
@@ -69,8 +67,6 @@ export default function HomePage() {
   }
 
   const handleCitySelect = (city: City) => {
-    setSelectedCity(city)
-    setShowCityDropdown(false)
     router.push(`/city/${city.id}`)
   }
 
@@ -107,87 +103,61 @@ export default function HomePage() {
           </p>
         </div>
 
-        {/* Start Button with Dropdown */}
+        {/* City Selector - Direct Search */}
         <div className="relative">
           <Card className="border-2 border-blue-200 bg-gradient-to-r from-blue-50 to-indigo-50 shadow-2xl">
             <CardContent className="p-8">
-              {!showCityDropdown ? (
-                <div className="space-y-4">
-                  <div className="text-6xl mb-4">🏙️</div>
-                  <h3 className="text-2xl font-bold text-gray-800 mb-2">
-                    בחר עיר להתחלה
-                  </h3>
-                  <p className="text-gray-600 mb-6">
-                    לחץ על הכפתור למטה כדי לבחור את העיר שלך
-                  </p>
-                  <Button
-                    onClick={() => setShowCityDropdown(true)}
-                    disabled={loading}
-                    className="w-full h-14 bg-gradient-to-r from-blue-600 to-indigo-600 hover:from-blue-700 hover:to-indigo-700 text-white font-bold text-lg rounded-xl shadow-lg hover:shadow-xl transition-all duration-200 hover:scale-105"
-                  >
-                    {loading ? (
-                      '⏳ טוען ערים...'
-                    ) : (
-                      <span className="flex items-center justify-center gap-2">
-                        🚀 התחל
-                        <ChevronDown className="h-5 w-5" />
-                      </span>
+              <div className="space-y-4">
+                <div className="text-6xl mb-4 text-center">🏙️</div>
+                <h3 className="text-2xl font-bold text-gray-800 mb-2 text-center">
+                  בחר עיר להתחלה
+                </h3>
+
+                {/* Search Input - Always Visible */}
+                <div className="relative mb-4">
+                  <span className="absolute right-3 top-1/2 -translate-y-1/2 text-gray-400 text-xl">
+                    🔍
+                  </span>
+                  <Input
+                    type="text"
+                    placeholder="חפש עיר..."
+                    value={searchTerm}
+                    onChange={(e) => setSearchTerm(e.target.value)}
+                    className="pr-10 h-14 border-2 border-gray-200 focus:border-blue-400 text-lg"
+                  />
+                </div>
+
+                {loading ? (
+                  <div className="text-center py-8">
+                    <p className="text-gray-500">⏳ טוען ערים...</p>
+                  </div>
+                ) : cities.length === 0 ? (
+                  <div className="text-center py-8">
+                    <p className="text-gray-500">אין ערים זמינות כרגע</p>
+                  </div>
+                ) : (
+                  <div className="max-h-96 overflow-y-auto space-y-2">
+                    {cities
+                      .filter(city => city.name.toLowerCase().includes(searchTerm.toLowerCase()))
+                      .map((city) => (
+                      <button
+                        key={city.id}
+                        onClick={() => handleCitySelect(city)}
+                        className="w-full p-4 rounded-xl bg-white border-2 border-gray-200 hover:border-blue-400 transition-all duration-200 hover:shadow-md hover:scale-[1.02] text-center"
+                      >
+                        <h4 className="font-bold text-lg text-gray-800">
+                          {city.name}
+                        </h4>
+                      </button>
+                    ))}
+                    {cities.filter(city => city.name.toLowerCase().includes(searchTerm.toLowerCase())).length === 0 && (
+                      <div className="text-center py-8">
+                        <p className="text-gray-500">לא נמצאו ערים התואמות לחיפוש</p>
+                      </div>
                     )}
-                  </Button>
-                </div>
-              ) : (
-                <div className="space-y-4">
-                  <div className="flex items-center justify-between mb-4">
-                    <h3 className="text-xl font-bold text-gray-800">
-                      בחר עיר
-                    </h3>
-                    <Button
-                      onClick={() => setShowCityDropdown(false)}
-                      variant="ghost"
-                      size="sm"
-                      className="text-gray-600 hover:text-gray-800"
-                    >
-                      ❌ סגור
-                    </Button>
                   </div>
-
-                  {/* Search Input */}
-                  <div className="relative mb-4">
-                    <span className="absolute right-3 top-1/2 -translate-y-1/2 text-gray-400">
-                      🔍
-                    </span>
-                    <Input
-                      type="text"
-                      placeholder="חפש עיר..."
-                      value={searchTerm}
-                      onChange={(e) => setSearchTerm(e.target.value)}
-                      className="pr-10 h-12 border-2 border-gray-200 focus:border-blue-400"
-                    />
-                  </div>
-
-                  {cities.length === 0 ? (
-                    <div className="text-center py-8">
-                      <p className="text-gray-500">אין ערים זמינות כרגע</p>
-                    </div>
-                  ) : (
-                    <div className="max-h-96 overflow-y-auto space-y-2">
-                      {cities
-                        .filter(city => city.name.toLowerCase().includes(searchTerm.toLowerCase()))
-                        .map((city) => (
-                        <button
-                          key={city.id}
-                          onClick={() => handleCitySelect(city)}
-                          className="w-full p-4 rounded-xl bg-white border-2 border-gray-200 hover:border-blue-400 transition-all duration-200 hover:shadow-md hover:scale-102 text-center"
-                        >
-                          <h4 className="font-bold text-lg text-gray-800">
-                            {city.name}
-                          </h4>
-                        </button>
-                      ))}
-                    </div>
-                  )}
-                </div>
-              )}
+                )}
+              </div>
             </CardContent>
           </Card>
         </div>
