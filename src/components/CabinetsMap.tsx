@@ -161,26 +161,26 @@ export default function CabinetsMap({ onCabinetClick }: CabinetsMapProps) {
   const defaultCenter: [number, number] = [31.5, 34.75]
 
   return (
-    <div className="w-full rounded-xl overflow-hidden border-2 border-gray-200 shadow-lg">
-      {/* Location status bar */}
-      <div className="bg-blue-50 border-b-2 border-blue-200 p-2 flex items-center justify-between text-sm">
-        <div className="text-blue-700">
+    <div className="w-full rounded-xl overflow-hidden shadow-lg">
+      {/* Clean location status bar */}
+      <div className="bg-white border-b border-gray-200 p-3 flex items-center justify-between text-sm">
+        <div className="text-gray-700 font-medium">
           {userLocation ? (
-            <span>✅ המיקום שלך מוצג במפה</span>
+            <span className="text-green-600">● מיקום מוצג</span>
           ) : (
-            <span>📍 לחץ כדי להציג את המיקום שלך</span>
+            <span className="text-gray-400">○ לחץ להצגת מיקום</span>
           )}
         </div>
         <button
           onClick={requestUserLocation}
-          className="bg-blue-600 hover:bg-blue-700 text-white px-3 py-1 rounded-lg text-xs font-semibold transition-all"
+          className="bg-blue-500 hover:bg-blue-600 text-white px-4 py-1.5 rounded-lg text-xs font-medium transition-colors"
         >
-          {userLocation ? '🔄 רענן מיקום' : '📍 הצג מיקום'}
+          {userLocation ? 'רענן מיקום' : 'הצג מיקום'}
         </button>
       </div>
       {locationError && (
-        <div className="bg-yellow-50 border-b-2 border-yellow-200 p-3 text-center text-sm text-yellow-700">
-          ℹ️ {locationError}
+        <div className="bg-amber-50 border-b border-amber-200 p-2 text-center text-xs text-amber-700">
+          {locationError}
         </div>
       )}
       <MapContainer
@@ -193,77 +193,76 @@ export default function CabinetsMap({ onCabinetClick }: CabinetsMapProps) {
       >
         <TileLayer
           attribution='&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors'
-          url="https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png"
+          url="https://{s}.tile.openstreetmap.fr/hot/{z}/{x}/{y}.png"
         />
 
         <MapCenterController userLocation={userLocation} cabinets={cabinets} />
 
-        {/* User location marker - Red pin style */}
+        {/* User location marker - Clean minimal style */}
         {userLocation && (
           <>
-            {/* Outer glow circle */}
+            {/* Subtle outer pulse */}
             <Circle
               center={userLocation}
-              radius={100}
+              radius={80}
               pathOptions={{
-                color: '#EF4444',
-                fillColor: '#FEE2E2',
-                fillOpacity: 0.3,
+                color: '#3B82F6',
+                fillColor: '#DBEAFE',
+                fillOpacity: 0.2,
                 weight: 0
               }}
             />
-            {/* Inner red dot */}
+            {/* Clean inner dot */}
             <Circle
               center={userLocation}
-              radius={30}
+              radius={20}
               pathOptions={{
-                color: '#DC2626',
-                fillColor: '#EF4444',
-                fillOpacity: 0.9,
-                weight: 3
+                color: '#2563EB',
+                fillColor: '#3B82F6',
+                fillOpacity: 1,
+                weight: 2
               }}
             >
               <Popup>
-                <div className="text-center font-semibold">
-                  <div className="text-2xl mb-1">📍</div>
-                  <div className="text-red-600">המיקום שלך</div>
+                <div className="text-center py-1">
+                  <div className="text-sm font-medium text-blue-600">המיקום שלך</div>
                 </div>
               </Popup>
             </Circle>
           </>
         )}
 
-        {/* Cabinet circles (750m radius) */}
+        {/* Cabinet circles - Clean minimal style */}
         {cabinets.map((cabinet) => (
           <Circle
             key={cabinet.id}
             center={[cabinet.public_lat, cabinet.public_lng]}
             radius={750}
             pathOptions={{
-              color: '#4F46E5',
-              fillColor: '#818CF8',
-              fillOpacity: 0.3,
+              color: '#10B981',
+              fillColor: '#34D399',
+              fillOpacity: 0.15,
               weight: 2
             }}
           >
             <Popup>
-              <div className="text-center p-3 min-w-[220px]">
-                <h3 className="font-bold text-xl text-gray-800 mb-2">
-                  🏙️ {cabinet.name}
+              <div className="text-center p-2 min-w-[200px]">
+                <h3 className="font-bold text-base text-gray-800 mb-1">
+                  {cabinet.name}
                 </h3>
                 {cabinet.manager_name && (
-                  <p className="text-sm text-gray-600 mb-3">
-                    👤 {cabinet.manager_name}
+                  <p className="text-xs text-gray-500 mb-2">
+                    {cabinet.manager_name}
                   </p>
                 )}
-                <p className="text-xs text-gray-500 mb-4 bg-yellow-50 p-2 rounded-lg border border-yellow-200">
-                  ⚠️ מיקום משוער בלבד (±750 מטר)
+                <p className="text-[10px] text-gray-400 mb-3">
+                  מיקום משוער ±750 מטר
                 </p>
                 <button
                   onClick={() => handleCircleClick(cabinet.id)}
-                  className="w-full bg-gradient-to-r from-blue-600 to-indigo-600 hover:from-blue-700 hover:to-indigo-700 text-white font-bold py-3 px-4 rounded-xl transition-all duration-200 hover:scale-105 shadow-lg"
+                  className="w-full bg-blue-500 hover:bg-blue-600 text-white font-medium py-2 px-3 rounded-lg transition-colors text-sm"
                 >
-                  🎒 פתח בקשה לארון זה
+                  פתח בקשה לארון זה
                 </button>
               </div>
             </Popup>
