@@ -24,8 +24,15 @@ export async function uploadImage(file: File, folder: string = 'equipment'): Pro
 
     // Generate a unique filename with timestamp
     const fileExt = file.name.split('.').pop()
-    const sanitizedName = sanitizeFilename(file.name.replace(`.${fileExt}`, ''))
-    const fileName = `${folder}/${Date.now()}-${sanitizedName || Math.random().toString(36).substring(7)}.${fileExt}`
+    const originalName = file.name.replace(`.${fileExt}`, '')
+    const sanitizedName = sanitizeFilename(originalName)
+
+    // Use random string if sanitized name is empty or only contains special chars
+    const safeName = sanitizedName && sanitizedName.replace(/[-_.]/g, '').length > 0
+      ? sanitizedName
+      : Math.random().toString(36).substring(7)
+
+    const fileName = `${folder}/${Date.now()}-${safeName}.${fileExt}`
 
     // Upload the file to the 'equipment-images' bucket
     const { data, error } = await supabase.storage
