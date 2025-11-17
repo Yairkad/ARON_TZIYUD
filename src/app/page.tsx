@@ -17,6 +17,7 @@ export default function HomePage() {
   const [showCityDropdown, setShowCityDropdown] = useState(false)
   const [selectedCity, setSelectedCity] = useState<City | null>(null)
   const [adminUrl, setAdminUrl] = useState<string | null>(null)
+  const [searchTerm, setSearchTerm] = useState('')
 
   useEffect(() => {
     fetchCities()
@@ -156,26 +157,15 @@ export default function HomePage() {
                   ) : (
                     <div className="max-h-96 overflow-y-auto space-y-2">
                       {cities.map((city) => (
-                        <div
+                        <button
                           key={city.id}
-                          className="w-full p-3 rounded-xl bg-white border-2 border-gray-200 hover:border-blue-400 transition-all duration-200 hover:shadow-md group"
+                          onClick={() => handleCitySelect(city)}
+                          className="w-full p-4 rounded-xl bg-white border-2 border-gray-200 hover:border-blue-400 transition-all duration-200 hover:shadow-md hover:scale-102 text-center"
                         >
-                          <div className="text-center space-y-1.5">
-                            <h4 className="font-bold text-lg text-gray-800">
-                              {city.name}
-                            </h4>
-                            <p className="text-sm text-gray-600">
-                              {city.manager1_name}
-                              {city.manager2_name && ` • ${city.manager2_name}`}
-                            </p>
-                            <Button
-                              onClick={() => handleCitySelect(city)}
-                              className="w-full mt-2 bg-gradient-to-r from-blue-600 to-indigo-600 hover:from-blue-700 hover:to-indigo-700 text-white font-semibold py-1.5 rounded-lg transition-all duration-200 hover:scale-105"
-                            >
-                              בחירה
-                            </Button>
-                          </div>
-                        </div>
+                          <h4 className="font-bold text-lg text-gray-800">
+                            {city.name}
+                          </h4>
+                        </button>
                       ))}
                     </div>
                   )}

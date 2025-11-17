@@ -27,6 +27,14 @@ export interface City {
   updated_at: string
 }
 
+export interface EquipmentCategory {
+  id: string
+  name: string
+  display_order: number
+  created_at: string
+  updated_at: string
+}
+
 export interface Equipment {
   id: string
   name: string
@@ -34,8 +42,14 @@ export interface Equipment {
   city_id: string
   equipment_status: 'working' | 'faulty'
   is_consumable: boolean
+  category_id?: string | null
+  image_url?: string | null
   created_at: string
   updated_at: string
+}
+
+export interface EquipmentWithCategory extends Equipment {
+  category?: EquipmentCategory
 }
 
 export interface BorrowHistory {

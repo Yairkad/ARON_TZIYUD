@@ -7,7 +7,7 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/com
 import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
 import { supabase } from '@/lib/supabase'
-import { Equipment, BorrowHistory, BorrowForm, ReturnForm, City, CreateRequestForm } from '@/types'
+import { Equipment, EquipmentWithCategory, BorrowHistory, BorrowForm, ReturnForm, City, CreateRequestForm } from '@/types'
 import Logo from '@/components/Logo'
 import CameraCapture from '@/components/CameraCapture'
 import { Phone, MessageCircle } from 'lucide-react'
@@ -89,7 +89,10 @@ export default function CityPage() {
   const fetchEquipment = async () => {
     const { data, error } = await supabase
       .from('equipment')
-      .select('*')
+      .select(`
+        *,
+        category:equipment_categories(*)
+      `)
       .eq('city_id', cityId)
       .order('name')
 
@@ -1156,18 +1159,28 @@ export default function CityPage() {
             <CardDescription className="text-gray-600">סטטוס זמינות ציוד במערכת</CardDescription>
           </CardHeader>
           <CardContent className="p-4 sm:p-6">
-            <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-4 gap-3">
-              {equipment.map((item) => (
+            {/* 3 cards per row on mobile, 4 on tablet, 5 on desktop */}
+            <div className="grid grid-cols-3 sm:grid-cols-4 lg:grid-cols-5 gap-2 sm:gap-3">
+              {equipment.map((item: any) => (
                 <div
                   key={item.id}
-                  className="bg-gradient-to-br from-white to-gray-50 rounded-xl p-2.5 border-2 border-gray-200 hover:border-blue-400 hover:shadow-md transition-all duration-200"
+                  className="bg-gradient-to-br from-white to-gray-50 rounded-xl p-2 border-2 border-gray-200 hover:border-blue-400 hover:shadow-md transition-all duration-200"
                 >
-                  {/* Item Name & Quantity */}
-                  <div className="flex items-center justify-center gap-1.5 mb-1.5">
-                    <span className="font-semibold text-gray-800 text-xs text-center leading-tight">
+                  {/* Emoji */}
+                  <div className="text-center text-3xl sm:text-4xl mb-1">
+                    {item.image_url || '📦'}
+                  </div>
+
+                  {/* Item Name - BOLD */}
+                  <div className="text-center mb-1.5">
+                    <span className="font-bold text-gray-800 text-[10px] sm:text-xs leading-tight block">
                       {item.name}
                     </span>
-                    <span className={`inline-flex items-center justify-center min-w-[1.5rem] h-6 px-1.5 rounded-full text-xs font-bold ${
+                  </div>
+
+                  {/* Quantity */}
+                  <div className="flex justify-center mb-1">
+                    <span className={`inline-flex items-center justify-center min-w-[1.5rem] h-5 px-1.5 rounded-full text-[10px] font-bold ${
                       item.quantity > 0
                         ? 'bg-green-100 text-green-700'
                         : 'bg-red-100 text-red-700'
@@ -1176,27 +1189,19 @@ export default function CityPage() {
                     </span>
                   </div>
 
-                  {/* Status & Type Badges */}
-                  <div className="flex items-center justify-center gap-1.5 flex-wrap">
-                    {/* Status Badge */}
+                  {/* Status Badge */}
+                  <div className="flex justify-center">
                     {item.equipment_status === 'faulty' ? (
-                      <span className="inline-flex items-center gap-1 px-1.5 py-0.5 bg-orange-100 text-orange-700 rounded-full text-[10px] font-medium">
-                        ⚠️ תקול
+                      <span className="inline-flex items-center gap-0.5 px-1.5 py-0.5 bg-orange-100 text-orange-700 rounded-full text-[9px] font-medium">
+                        ⚠️
                       </span>
                     ) : item.quantity > 0 ? (
-                      <span className="inline-flex items-center gap-1 px-1.5 py-0.5 bg-green-100 text-green-700 rounded-full text-[10px] font-medium">
-                        ✅ זמין
+                      <span className="inline-flex items-center gap-0.5 px-1.5 py-0.5 bg-green-100 text-green-700 rounded-full text-[9px] font-medium">
+                        ✅
                       </span>
                     ) : (
-                      <span className="inline-flex items-center gap-1 px-1.5 py-0.5 bg-red-100 text-red-700 rounded-full text-[10px] font-medium">
-                        ❌ חסר
-                      </span>
-                    )}
-
-                    {/* Type Badge */}
-                    {item.is_consumable && (
-                      <span className="inline-block px-1.5 py-0.5 bg-purple-100 text-purple-700 rounded-full text-[10px] font-medium">
-                        אין צורך להחזיר
+                      <span className="inline-flex items-center gap-0.5 px-1.5 py-0.5 bg-red-100 text-red-700 rounded-full text-[9px] font-medium">
+                        ❌
                       </span>
                     )}
                   </div>
