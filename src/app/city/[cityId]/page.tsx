@@ -1186,116 +1186,114 @@ export default function CityPage() {
             {/* Equipment by Category */}
             {(() => {
               const categories = Array.from(new Set(equipment.map((item: any) => item.category?.name).filter(Boolean))).sort()
-              const uncategorizedEquipment = equipment.filter((item: any) => !item.category?.name)
 
-              return (
-                <>
-                  {/* Categorized Equipment */}
-                  {categories.map((categoryName) => (
-                    <div key={categoryName} id={`category-${categoryName}`} className="mb-8 last:mb-0">
-                      <h3 className="text-lg font-bold text-gray-800 mb-3 pb-2 border-b-2 border-blue-200">
-                        {categoryName}
-                      </h3>
-                      <div className="grid grid-cols-3 sm:grid-cols-4 lg:grid-cols-5 gap-2 sm:gap-3">
-                        {equipment
-                          .filter((item: any) => item.category?.name === categoryName)
-                          .map((item: any) => {
-                            // Determine border color based on status
-                            let borderColor = 'border-red-500'
-                            if (item.equipment_status === 'faulty') {
-                              borderColor = 'border-orange-500'
-                            } else if (item.quantity > 0) {
-                              borderColor = 'border-green-500'
-                            }
+              return categories.map((categoryName) => (
+                <div key={categoryName} id={`category-${categoryName}`} className="mb-8 last:mb-0">
+                  <h3 className="text-lg font-bold text-gray-800 mb-3 pb-2 border-b-2 border-blue-200">
+                    {categoryName}
+                  </h3>
+                  <div className="grid grid-cols-3 sm:grid-cols-4 lg:grid-cols-5 gap-2 sm:gap-3">
+                    {equipment
+                      .filter((item: any) => item.category?.name === categoryName)
+                      .map((item: any) => {
+                        // Determine border color based on status
+                        let borderColor = 'border-red-500'
+                        if (item.equipment_status === 'faulty') {
+                          borderColor = 'border-orange-500'
+                        } else if (item.quantity > 0) {
+                          borderColor = 'border-green-500'
+                        }
 
-                            return (
-                              <div
-                                key={item.id}
-                                className={`relative bg-gradient-to-br from-white to-gray-50 rounded-xl p-2 border-2 ${borderColor} hover:shadow-lg transition-all duration-200`}
-                              >
-                                {/* Category Badge - Top Left */}
-                                {item.category?.name && (
-                                  <div className="absolute top-1 left-1 bg-blue-600 text-white text-[8px] sm:text-[9px] px-1.5 py-0.5 rounded-md font-bold shadow-sm z-10">
-                                    {item.category.name}
-                                  </div>
-                                )}
+                        const isSelected = selectedItems.has(item.id)
+                        const selectedQuantity = itemQuantities[item.id] || 1
 
-                                {/* Emoji */}
-                                <div className="text-center text-3xl sm:text-4xl mb-1 mt-4">
-                                  {item.image_url || '📦'}
-                                </div>
-
-                                {/* Item Name - BOLD */}
-                                <div className="text-center mb-1.5">
-                                  <span className="font-bold text-gray-800 text-[10px] sm:text-xs leading-tight block">
-                                    {item.name}
-                                  </span>
-                                </div>
-
-                                {/* Quantity - Plain Text */}
-                                <div className="text-center">
-                                  <span className={`text-sm font-bold ${
-                                    item.quantity > 0 ? 'text-green-700' : 'text-red-700'
-                                  }`}>
-                                    כמות: {item.quantity}
-                                  </span>
-                                </div>
+                        return (
+                          <button
+                            key={item.id}
+                            onClick={() => {
+                              if (isSelected) {
+                                // Remove from selection
+                                const newSelected = new Set(selectedItems)
+                                newSelected.delete(item.id)
+                                setSelectedItems(newSelected)
+                                const newQuantities = { ...itemQuantities }
+                                delete newQuantities[item.id]
+                                setItemQuantities(newQuantities)
+                              } else {
+                                // Add to selection
+                                setSelectedItems(new Set(selectedItems).add(item.id))
+                                setItemQuantities({ ...itemQuantities, [item.id]: 1 })
+                              }
+                            }}
+                            className={`relative bg-gradient-to-br from-white to-gray-50 rounded-xl p-2 border-2 ${borderColor} ${
+                              isSelected ? 'ring-4 ring-blue-400 shadow-xl scale-105' : 'hover:shadow-lg'
+                            } transition-all duration-200 cursor-pointer`}
+                          >
+                            {/* Category Badge - Top Left */}
+                            {item.category?.name && (
+                              <div className="absolute top-1 left-1 bg-blue-600 text-white text-[8px] sm:text-[9px] px-1.5 py-0.5 rounded-md font-bold shadow-sm z-10">
+                                {item.category.name}
                               </div>
-                            )
-                          })}
-                      </div>
-                    </div>
-                  ))}
+                            )}
 
-                  {/* Uncategorized Equipment */}
-                  {uncategorizedEquipment.length > 0 && (
-                    <div className="mb-8 last:mb-0">
-                      <h3 className="text-lg font-bold text-gray-800 mb-3 pb-2 border-b-2 border-gray-300">
-                        ציוד ללא קטגוריה
-                      </h3>
-                      <div className="grid grid-cols-3 sm:grid-cols-4 lg:grid-cols-5 gap-2 sm:gap-3">
-                        {uncategorizedEquipment.map((item: any) => {
-                          // Determine border color based on status
-                          let borderColor = 'border-red-500'
-                          if (item.equipment_status === 'faulty') {
-                            borderColor = 'border-orange-500'
-                          } else if (item.quantity > 0) {
-                            borderColor = 'border-green-500'
-                          }
-
-                          return (
-                            <div
-                              key={item.id}
-                              className={`relative bg-gradient-to-br from-white to-gray-50 rounded-xl p-2 border-2 ${borderColor} hover:shadow-lg transition-all duration-200`}
-                            >
-                              {/* Emoji */}
-                              <div className="text-center text-3xl sm:text-4xl mb-1">
-                                {item.image_url || '📦'}
+                            {/* Selection Badge - Top Right */}
+                            {isSelected && (
+                              <div className="absolute top-1 right-1 bg-green-600 text-white text-[9px] sm:text-[10px] px-2 py-0.5 rounded-full font-bold shadow-sm z-10 flex items-center gap-1">
+                                ✓ {selectedQuantity}
                               </div>
+                            )}
 
-                              {/* Item Name - BOLD */}
-                              <div className="text-center mb-1.5">
-                                <span className="font-bold text-gray-800 text-[10px] sm:text-xs leading-tight block">
-                                  {item.name}
-                                </span>
-                              </div>
-
-                              {/* Quantity - Plain Text */}
-                              <div className="text-center">
-                                <span className={`text-sm font-bold ${
-                                  item.quantity > 0 ? 'text-green-700' : 'text-red-700'
-                                }`}>
-                                  כמות: {item.quantity}
-                                </span>
-                              </div>
+                            {/* Emoji */}
+                            <div className="text-center text-3xl sm:text-4xl mb-1 mt-4">
+                              {item.image_url || '📦'}
                             </div>
-                          )
-                        })}
-                      </div>
-                    </div>
-                  )}
-                </>
-              )
+
+                            {/* Item Name - BOLD */}
+                            <div className="text-center mb-1.5">
+                              <span className="font-bold text-gray-800 text-[10px] sm:text-xs leading-tight block">
+                                {item.name}
+                              </span>
+                            </div>
+
+                            {/* Quantity - Plain Text */}
+                            <div className="text-center">
+                              <span className={`text-sm font-bold ${
+                                item.quantity > 0 ? 'text-green-700' : 'text-red-700'
+                              }`}>
+                                כמות: {item.quantity}
+                              </span>
+                            </div>
+
+                            {/* Quantity Selector - Show when selected */}
+                            {isSelected && (
+                              <div className="mt-2 flex items-center justify-center gap-1" onClick={(e) => e.stopPropagation()}>
+                                <button
+                                  onClick={() => {
+                                    const newQty = Math.max(1, selectedQuantity - 1)
+                                    setItemQuantities({ ...itemQuantities, [item.id]: newQty })
+                                  }}
+                                  className="w-6 h-6 bg-blue-500 text-white rounded-full font-bold hover:bg-blue-600"
+                                >
+                                  -
+                                </button>
+                                <span className="w-8 text-center font-bold text-sm">{selectedQuantity}</span>
+                                <button
+                                  onClick={() => {
+                                    const newQty = Math.min(item.quantity, selectedQuantity + 1)
+                                    setItemQuantities({ ...itemQuantities, [item.id]: newQty })
+                                  }}
+                                  className="w-6 h-6 bg-blue-500 text-white rounded-full font-bold hover:bg-blue-600"
+                                >
+                                  +
+                                </button>
+                              </div>
+                            )}
+                          </button>
+                        )
+                      })}
+                  </div>
+                </div>
+              ))
             })()}
           </CardContent>
         </Card>
