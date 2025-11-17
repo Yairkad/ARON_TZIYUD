@@ -39,10 +39,10 @@ function MapCenterController({
 
   useEffect(() => {
     if (userLocation) {
-      map.setView(userLocation, 13)
+      map.setView(userLocation, 12)
     } else if (cabinets.length > 0) {
-      // Center on Israel if no user location
-      map.setView([31.5, 34.75], 8)
+      // Center on Israel if no user location - adjusted for better view
+      map.setView([31.5, 35.0], 8)
     }
   }, [userLocation, cabinets, map])
 
@@ -82,12 +82,33 @@ export default function CabinetsMap({ onCabinetClick }: CabinetsMapProps) {
     if ('geolocation' in navigator) {
       navigator.geolocation.getCurrentPosition(
         (position) => {
+          console.log('📍 User location:', position.coords.latitude, position.coords.longitude)
+          console.log('📊 Accuracy:', position.coords.accuracy, 'meters')
           setUserLocation([position.coords.latitude, position.coords.longitude])
           setLocationError(null)
         },
         (error) => {
-          console.log('Geolocation error:', error)
-          setLocationError('לא ניתן לקבל מיקום - המפה תוצג במרכז ישראל')
+          console.log('Geolocation error:', error.code, error.message)
+          let errorMsg = 'לא ניתן לקבל מיקום - המפה תוצג במרכז ישראל'
+
+          switch(error.code) {
+            case error.PERMISSION_DENIED:
+              errorMsg = 'הרשאת מיקום נדחתה. אפשר גישה למיקום בהגדרות הדפדפן'
+              break
+            case error.POSITION_UNAVAILABLE:
+              errorMsg = 'מידע מיקום לא זמין כרגע'
+              break
+            case error.TIMEOUT:
+              errorMsg = 'פג זמן הבקשה למיקום'
+              break
+          }
+
+          setLocationError(errorMsg)
+        },
+        {
+          enableHighAccuracy: true,
+          timeout: 10000,
+          maximumAge: 0
         }
       )
     } else {
@@ -105,7 +126,7 @@ export default function CabinetsMap({ onCabinetClick }: CabinetsMapProps) {
 
   if (loading) {
     return (
-      <div className="w-full h-[600px] flex items-center justify-center bg-gray-100 rounded-xl">
+      <div className="w-full h-[400px] sm:h-[500px] md:h-[600px] lg:h-[700px] flex items-center justify-center bg-gray-100 rounded-xl">
         <div className="text-center">
           <div className="text-4xl mb-2">🗺️</div>
           <p className="text-gray-600">טוען מפה...</p>
@@ -116,7 +137,7 @@ export default function CabinetsMap({ onCabinetClick }: CabinetsMapProps) {
 
   if (error) {
     return (
-      <div className="w-full h-[600px] flex items-center justify-center bg-red-50 rounded-xl border-2 border-red-200">
+      <div className="w-full h-[400px] sm:h-[500px] md:h-[600px] lg:h-[700px] flex items-center justify-center bg-red-50 rounded-xl border-2 border-red-200">
         <div className="text-center">
           <div className="text-4xl mb-2">⚠️</div>
           <p className="text-red-600">{error}</p>
@@ -127,7 +148,7 @@ export default function CabinetsMap({ onCabinetClick }: CabinetsMapProps) {
 
   if (cabinets.length === 0) {
     return (
-      <div className="w-full h-[600px] flex items-center justify-center bg-yellow-50 rounded-xl border-2 border-yellow-200">
+      <div className="w-full h-[400px] sm:h-[500px] md:h-[600px] lg:h-[700px] flex items-center justify-center bg-yellow-50 rounded-xl border-2 border-yellow-200">
         <div className="text-center">
           <div className="text-4xl mb-2">📍</div>
           <p className="text-yellow-700">אין ארונות זמינים במפה כרגע</p>
@@ -141,6 +162,22 @@ export default function CabinetsMap({ onCabinetClick }: CabinetsMapProps) {
 
   return (
     <div className="w-full rounded-xl overflow-hidden border-2 border-gray-200 shadow-lg">
+      {/* Location status bar */}
+      <div className="bg-blue-50 border-b-2 border-blue-200 p-2 flex items-center justify-between text-sm">
+        <div className="text-blue-700">
+          {userLocation ? (
+            <span>✅ המיקום שלך מוצג במפה</span>
+          ) : (
+            <span>📍 לחץ כדי להציג את המיקום שלך</span>
+          )}
+        </div>
+        <button
+          onClick={requestUserLocation}
+          className="bg-blue-600 hover:bg-blue-700 text-white px-3 py-1 rounded-lg text-xs font-semibold transition-all"
+        >
+          {userLocation ? '🔄 רענן מיקום' : '📍 הצג מיקום'}
+        </button>
+      </div>
       {locationError && (
         <div className="bg-yellow-50 border-b-2 border-yellow-200 p-3 text-center text-sm text-yellow-700">
           ℹ️ {locationError}
@@ -148,9 +185,11 @@ export default function CabinetsMap({ onCabinetClick }: CabinetsMapProps) {
       )}
       <MapContainer
         center={userLocation || defaultCenter}
-        zoom={userLocation ? 13 : 8}
-        style={{ height: '600px', width: '100%' }}
-        className="z-0"
+        zoom={userLocation ? 12 : 8}
+        style={{ height: '100%', width: '100%', minHeight: '400px' }}
+        className="z-0 h-[400px] sm:h-[500px] md:h-[600px] lg:h-[700px]"
+        scrollWheelZoom={true}
+        zoomControl={true}
       >
         <TileLayer
           attribution='&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors'
