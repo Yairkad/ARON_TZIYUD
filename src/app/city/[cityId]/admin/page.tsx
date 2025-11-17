@@ -1215,6 +1215,30 @@ export default function CityAdminPage() {
                       <option value="working">✅ תקין</option>
                       <option value="faulty">⚠️ תקול</option>
                     </select>
+                  </div>
+
+                  <div className="flex flex-col sm:flex-row gap-4">
+                    <select
+                      value={newEquipment.category_id}
+                      onChange={(e) => setNewEquipment({ ...newEquipment, category_id: e.target.value })}
+                      disabled={!canEdit}
+                      className="flex-1 h-12 border-2 border-gray-200 rounded-xl focus:border-blue-500 transition-colors px-3 text-sm font-medium disabled:opacity-50 disabled:cursor-not-allowed"
+                    >
+                      <option value="">📁 בחר קטגוריה...</option>
+                      {categories.map((cat: any) => (
+                        <option key={cat.id} value={cat.id}>{cat.name}</option>
+                      ))}
+                    </select>
+
+                    <Input
+                      value={newEquipment.image_url}
+                      onChange={(e) => setNewEquipment({ ...newEquipment, image_url: e.target.value })}
+                      placeholder="אימוג'י (לדוגמה: 🔧)"
+                      disabled={!canEdit}
+                      className="w-full sm:w-32 h-12 border-2 border-gray-200 rounded-xl focus:border-blue-500 transition-colors text-center text-2xl disabled:opacity-50 disabled:cursor-not-allowed"
+                      maxLength={2}
+                    />
+
                     <Button
                       type="submit"
                       disabled={loading || !canEdit}
@@ -1223,6 +1247,7 @@ export default function CityAdminPage() {
                       ✅ הוסף
                     </Button>
                   </div>
+
                   <div className="flex items-center gap-2 pr-2">
                     <input
                       type="checkbox"
