@@ -77,7 +77,8 @@
       "Bash(start demo-equipment-display.html)",
       "Bash(dir:*)",
       "Bash(start https://supabase.com/dashboard/project/jgkmcsxrtovrdiguhwyv/editor)",
-      "Bash(start https://supabase.com/dashboard/project/jgkmcsxrtovrdiguhwyv/storage/buckets)"
+      "Bash(start https://supabase.com/dashboard/project/jgkmcsxrtovrdiguhwyv/storage/buckets)",
+      "Bash(start https://supabase.com/dashboard/project/jgkmcsxrtovrdiguhwyv/sql/new)"
     ],
     "deny": [],
     "ask": []

@@ -1159,23 +1159,33 @@ export default function CityPage() {
             <CardDescription className="text-gray-600">סטטוס זמינות ציוד במערכת</CardDescription>
           </CardHeader>
           <CardContent className="p-4 sm:p-6">
-            {/* Category Quick Navigation - Only show if there are categories */}
+            {/* Category Quick Navigation - Icon Grid Style */}
             {(() => {
-              const categories = Array.from(new Set(equipment.map((item: any) => item.category?.name).filter(Boolean))).sort()
+              // Get unique categories with their icons
+              const categoryMap = new Map()
+              equipment.forEach((item: any) => {
+                if (item.category?.name) {
+                  categoryMap.set(item.category.name, item.category.icon || '📦')
+                }
+              })
+              const categories = Array.from(categoryMap.entries()).sort((a, b) => a[0].localeCompare(b[0]))
+
               return categories.length > 0 ? (
-                <div className="mb-6 p-4 bg-gradient-to-r from-blue-50 to-indigo-50 rounded-xl">
-                  <h3 className="text-sm font-bold text-gray-700 mb-3">קטגוריות ציוד:</h3>
-                  <div className="flex flex-wrap gap-2">
-                    {categories.map((categoryName) => (
+                <div className="mb-6">
+                  <div className="grid grid-cols-4 sm:grid-cols-6 md:grid-cols-8 gap-3 sm:gap-4">
+                    {categories.map(([categoryName, icon]) => (
                       <button
                         key={categoryName}
                         onClick={() => {
                           const element = document.getElementById(`category-${categoryName}`)
                           element?.scrollIntoView({ behavior: 'smooth', block: 'start' })
                         }}
-                        className="px-3 py-1.5 bg-white border-2 border-blue-300 text-blue-700 rounded-lg text-xs font-semibold hover:bg-blue-100 hover:border-blue-400 transition-all duration-200 hover:scale-105 shadow-sm"
+                        className="flex flex-col items-center gap-2 p-3 bg-white rounded-xl border-2 border-gray-200 hover:border-blue-400 hover:bg-blue-50 transition-all duration-200 hover:scale-105 shadow-sm hover:shadow-md"
                       >
-                        {categoryName}
+                        <div className="text-4xl sm:text-5xl">{icon}</div>
+                        <span className="text-[10px] sm:text-xs font-bold text-gray-700 text-center leading-tight">
+                          {categoryName}
+                        </span>
                       </button>
                     ))}
                   </div>
