@@ -65,16 +65,31 @@ export async function POST(request: NextRequest) {
       )
     }
 
-    // Validate all items
-    for (const item of body.items) {
-      const { data: eq, error } = await supabaseServer
-        .from('equipment')
-        .select('quantity, is_consumable, equipment_status')
-        .eq('id', item.equipment_id)
-        .eq('city_id', cityId)
-        .single()
+    // Validate all items - OPTIMIZED: Batch query instead of N+1
+    const equipmentIds = body.items.map(item => item.equipment_id)
 
-      if (error || !eq) {
+    // Fetch all equipment in a single query
+    const { data: equipmentList, error: fetchError } = await supabaseServer
+      .from('equipment')
+      .select('id, quantity, is_consumable, equipment_status')
+      .in('id', equipmentIds)
+      .eq('city_id', cityId)
+
+    if (fetchError) {
+      return NextResponse.json(
+        { error: 'שגיאה בטעינת נתוני ציוד' },
+        { status: 500 }
+      )
+    }
+
+    // Create map for quick lookup
+    const equipmentMap = new Map(equipmentList?.map(eq => [eq.id, eq]) || [])
+
+    // Validate each item
+    for (const item of body.items) {
+      const eq = equipmentMap.get(item.equipment_id)
+
+      if (!eq) {
         return NextResponse.json(
           { error: `ציוד לא נמצא: ${item.equipment_id}` },
           { status: 404 }

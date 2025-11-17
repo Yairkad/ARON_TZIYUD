@@ -138,6 +138,14 @@ export default function CityPage() {
       return
     }
 
+    // Optimistic update - update UI immediately
+    const optimisticEquipment = equipment.map(eq =>
+      eq.id === borrowForm.equipment_id
+        ? { ...eq, quantity: eq.quantity - 1 }
+        : eq
+    )
+    setEquipment(optimisticEquipment)
+
     try {
       const isConsumable = selectedEquipment.is_consumable
       const borrowStatus = isConsumable ? 'returned' : 'borrowed'
@@ -173,10 +181,13 @@ export default function CityPage() {
       }
       setBorrowForm({ name: '', phone: '', equipment_id: '' })
       setEquipmentSearch('')
+      // Refresh from server to ensure consistency
       fetchEquipment()
     } catch (error) {
       console.error('Error borrowing equipment:', error)
       alert('אירעה שגיאה בהשאלת הציוד')
+      // Rollback optimistic update on error
+      fetchEquipment()
     } finally {
       setLoading(false)
     }

@@ -1,6 +1,6 @@
 'use client'
 
-import { useState, useEffect } from 'react'
+import { useState, useEffect, useMemo } from 'react'
 import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
 import { EquipmentRequestWithItems } from '@/types'
@@ -23,6 +23,7 @@ export default function RequestsTab({ cityId, cityName, managerName, onRequestsU
   const [regeneratedToken, setRegeneratedToken] = useState<{ requestId: string; token: string } | null>(null)
   const [approvedRequest, setApprovedRequest] = useState<string | null>(null)
   const [expandedRequests, setExpandedRequests] = useState<Set<string>>(new Set())
+  const [lastUpdated, setLastUpdated] = useState<Date | null>(null)
 
   useEffect(() => {
     fetchRequests()
@@ -51,6 +52,7 @@ export default function RequestsTab({ cityId, cityName, managerName, onRequestsU
 
       if (data.success) {
         setRequests(data.requests || [])
+        setLastUpdated(new Date())
         console.log('✅ Requests set to state:', data.requests?.length || 0)
       } else {
         console.error('❌ API returned error:', data.error)
@@ -259,14 +261,17 @@ ${locationUrl ? `\n📍 מיקום הארון:\n${locationUrl}` : ''}
     return texts[status] || status
   }
 
-  const filteredRequests = requests
-    .filter(req => filter === 'all' || req.status === filter)
-    .filter(req =>
-      search === '' ||
-      req.requester_name.toLowerCase().includes(search.toLowerCase()) ||
-      req.requester_phone.includes(search) ||
-      (req.call_id && req.call_id.includes(search))
-    )
+  // Memoize filtered requests to avoid recalculation on every render
+  const filteredRequests = useMemo(() => {
+    return requests
+      .filter(req => filter === 'all' || req.status === filter)
+      .filter(req =>
+        search === '' ||
+        req.requester_name.toLowerCase().includes(search.toLowerCase()) ||
+        req.requester_phone.includes(search) ||
+        (req.call_id && req.call_id.includes(search))
+      )
+  }, [requests, filter, search])
 
   if (loading && requests.length === 0) {
     return (
@@ -281,7 +286,7 @@ ${locationUrl ? `\n📍 מיקום הארון:\n${locationUrl}` : ''}
     <div className="space-y-6">
       {/* Filters and Search */}
       <div className="bg-white rounded-xl shadow-md p-6 space-y-4">
-        <div className="flex flex-col sm:flex-row gap-4">
+        <div className="flex flex-col sm:flex-row gap-4 items-center">
           <div className="flex-1">
             <Input
               type="text"
@@ -291,6 +296,12 @@ ${locationUrl ? `\n📍 מיקום הארון:\n${locationUrl}` : ''}
               className="h-12 border-2 border-gray-200 rounded-xl"
             />
           </div>
+          {lastUpdated && (
+            <div className="text-xs text-gray-500 whitespace-nowrap flex items-center gap-1">
+              <span className="animate-pulse">🔄</span>
+              <span>עדכון אחרון: {lastUpdated.toLocaleTimeString('he-IL', { hour: '2-digit', minute: '2-digit' })}</span>
+            </div>
+          )}
         </div>
 
         <div className="flex flex-wrap gap-2">

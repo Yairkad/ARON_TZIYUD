@@ -9,7 +9,6 @@ import { Input } from '@/components/ui/input'
 import { supabase } from '@/lib/supabase'
 import { Equipment, BorrowHistory, City } from '@/types'
 import { ArrowRight, FileDown, Bell, BellOff } from 'lucide-react'
-import * as XLSX from 'xlsx'
 import Logo from '@/components/Logo'
 import { checkAuth, logout } from '@/lib/auth'
 import RequestsTab from '@/components/RequestsTab'
@@ -647,44 +646,52 @@ export default function CityAdminPage() {
     })
   }
 
-  // Export to Excel
-  const handleExportToExcel = () => {
+  // Export to Excel - Lazy load XLSX library
+  const handleExportToExcel = async () => {
     if (!city) return
 
-    // Prepare equipment data
-    const equipmentData = equipment.map((item, index) => ({
-      'מס׳': index + 1,
-      'שם הציוד': item.name,
-      'כמות זמינה': item.quantity,
-    }))
+    try {
+      // Lazy load XLSX library only when needed
+      const XLSX = await import('xlsx')
 
-    // Prepare history data
-    const historyData = borrowHistory.map((item, index) => ({
-      'מס׳': index + 1,
-      'שם לווה': item.name,
-      'טלפון': item.phone,
-      'ציוד': item.equipment_name,
-      'תאריך השאלה': new Date(item.borrow_date).toLocaleDateString('he-IL'),
-      'תאריך החזרה': item.return_date ? new Date(item.return_date).toLocaleDateString('he-IL') : 'טרם הוחזר',
-      'סטטוס': item.status === 'borrowed' ? 'מושאל' : 'הוחזר',
-    }))
+      // Prepare equipment data
+      const equipmentData = equipment.map((item, index) => ({
+        'מס׳': index + 1,
+        'שם הציוד': item.name,
+        'כמות זמינה': item.quantity,
+      }))
 
-    // Create workbook
-    const wb = XLSX.utils.book_new()
+      // Prepare history data
+      const historyData = borrowHistory.map((item, index) => ({
+        'מס׳': index + 1,
+        'שם לווה': item.name,
+        'טלפון': item.phone,
+        'ציוד': item.equipment_name,
+        'תאריך השאלה': new Date(item.borrow_date).toLocaleDateString('he-IL'),
+        'תאריך החזרה': item.return_date ? new Date(item.return_date).toLocaleDateString('he-IL') : 'טרם הוחזר',
+        'סטטוס': item.status === 'borrowed' ? 'מושאל' : 'הוחזר',
+      }))
 
-    // Add equipment sheet
-    const wsEquipment = XLSX.utils.json_to_sheet(equipmentData)
-    XLSX.utils.book_append_sheet(wb, wsEquipment, 'ציוד')
+      // Create workbook
+      const wb = XLSX.utils.book_new()
 
-    // Add history sheet
-    const wsHistory = XLSX.utils.json_to_sheet(historyData)
-    XLSX.utils.book_append_sheet(wb, wsHistory, 'היסטוריית השאלות')
+      // Add equipment sheet
+      const wsEquipment = XLSX.utils.json_to_sheet(equipmentData)
+      XLSX.utils.book_append_sheet(wb, wsEquipment, 'ציוד')
 
-    // Generate file name with date
-    const fileName = `${city.name}_דוח_ציוד_${new Date().toLocaleDateString('he-IL').replace(/\//g, '-')}.xlsx`
+      // Add history sheet
+      const wsHistory = XLSX.utils.json_to_sheet(historyData)
+      XLSX.utils.book_append_sheet(wb, wsHistory, 'היסטוריית השאלות')
 
-    // Save file
-    XLSX.writeFile(wb, fileName)
+      // Generate file name with date
+      const fileName = `${city.name}_דוח_ציוד_${new Date().toLocaleDateString('he-IL').replace(/\//g, '-')}.xlsx`
+
+      // Save file
+      XLSX.writeFile(wb, fileName)
+    } catch (error) {
+      console.error('Error exporting to Excel:', error)
+      alert('שגיאה בייצוא לאקסל')
+    }
   }
 
   // Print functionality
