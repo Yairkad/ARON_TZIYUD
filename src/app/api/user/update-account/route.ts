@@ -19,12 +19,12 @@ export async function POST(request: NextRequest) {
 
   try {
     const body = await request.json()
-    const { full_name, phone, email, current_password, new_password } = body
+    const { full_name, phone, current_password, new_password } = body
 
     // Validate required fields
-    if (!full_name || !phone || !email) {
+    if (!full_name || !phone) {
       return NextResponse.json(
-        { success: false, error: 'שם, טלפון ואימייל הם שדות חובה' },
+        { success: false, error: 'שם וטלפון הם שדות חובה' },
         { status: 400 }
       )
     }
@@ -68,35 +68,11 @@ export async function POST(request: NextRequest) {
       }
     }
 
-    // Update email in Supabase Auth if changed
-    if (email !== user.email) {
-      // Update email with email confirmation required
-      // This will send a confirmation email to the new address
-      const { error: emailError } = await supabase.auth.admin.updateUserById(
-        user.id,
-        {
-          email,
-          email_confirm: false  // Require email confirmation
-        }
-      )
-
-      if (emailError) {
-        console.error('Error updating email:', emailError)
-        return NextResponse.json(
-          { success: false, error: 'שגיאה בעדכון האימייל' },
-          { status: 500 }
-        )
-      }
-
-      console.log('📧 Email update requested - confirmation email sent to:', email)
-    }
-
     // Update user data in public.users table
     console.log('📝 Updating user in database:', {
       user_id: user.id,
       full_name,
-      phone,
-      email
+      phone
     })
 
     const { error: updateError } = await supabase
@@ -104,7 +80,6 @@ export async function POST(request: NextRequest) {
       .update({
         full_name,
         phone,
-        email,
         updated_at: new Date().toISOString()
       })
       .eq('id', user.id)

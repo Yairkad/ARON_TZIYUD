@@ -2808,9 +2808,6 @@ export default function CityAdminPage() {
                 onSubmit={async (e) => {
                   e.preventDefault()
 
-                  // Check if email is being changed - require password
-                  const isEmailChanged = accountForm.email !== currentUser?.email
-
                   // Validate passwords if user wants to change password
                   if (accountForm.new_password || accountForm.confirm_password) {
                     if (accountForm.new_password !== accountForm.confirm_password) {
@@ -2827,12 +2824,6 @@ export default function CityAdminPage() {
                     }
                   }
 
-                  // Require current password when changing email
-                  if (isEmailChanged && !accountForm.current_password) {
-                    alert('⚠️ יש להזין את הסיסמה הנוכחית כדי לשנות את כתובת המייל')
-                    return
-                  }
-
                   setLoading(true)
                   try {
                     const response = await fetch('/api/user/update-account', {
@@ -2842,7 +2833,6 @@ export default function CityAdminPage() {
                       body: JSON.stringify({
                         full_name: accountForm.full_name,
                         phone: accountForm.phone,
-                        email: accountForm.email,
                         current_password: accountForm.current_password || undefined,
                         new_password: accountForm.new_password || undefined
                       })
@@ -2851,12 +2841,7 @@ export default function CityAdminPage() {
                     const data = await response.json()
 
                     if (data.success) {
-                      // Show different message based on whether email was changed
-                      if (isEmailChanged) {
-                        alert('✅ הפרטים עודכנו בהצלחה!\n\n📧 נשלח אימייל אימות לכתובת המייל החדשה.\nיש ללחוץ על הלינק באימייל כדי לאמת את כתובת המייל החדשה.\n\nעד לאימות, תישאר מחובר עם המייל הקודם.')
-                      } else {
-                        alert('✅ הפרטים עודכנו בהצלחה!')
-                      }
+                      alert('✅ הפרטים עודכנו בהצלחה!')
                       setShowAccountSettings(false)
 
                       // Refresh current user data
@@ -2914,15 +2899,18 @@ export default function CityAdminPage() {
 
                   <div>
                     <label className="block text-sm font-semibold text-gray-700 mb-2">
-                      אימייל <span className="text-red-500">*</span>
+                      אימייל
                     </label>
                     <Input
                       type="email"
                       value={accountForm.email}
-                      onChange={(e) => setAccountForm({ ...accountForm, email: e.target.value })}
-                      required
-                      className="h-12 text-base border-2"
+                      disabled
+                      className="h-12 text-base border-2 bg-gray-100 cursor-not-allowed"
+                      title="לא ניתן לשנות את כתובת המייל"
                     />
+                    <p className="text-xs text-gray-500 mt-1">
+                      לא ניתן לשנות את כתובת המייל. ליצירת קשר עם מנהל המערכת.
+                    </p>
                   </div>
                 </div>
 

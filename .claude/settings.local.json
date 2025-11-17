@@ -61,7 +61,11 @@
       "Bash(node -e:*)",
       "Bash(node:*)",
       "Bash(git reset:*)",
-      "Bash(git restore:*)"
+      "Bash(git restore:*)",
+      "Bash(npm install:*)",
+      "Bash(npm run dev:*)",
+      "Bash(if exist check-cities.js del check-cities.js)",
+      "Bash(if exist run-migration.js del run-migration.js)"
     ],
     "deny": [],
     "ask": []
