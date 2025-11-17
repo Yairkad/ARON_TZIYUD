@@ -76,7 +76,8 @@
       "Bash(start demo-city-selector-dropdown.html)",
       "Bash(start demo-equipment-display.html)",
       "Bash(dir:*)",
-      "Bash(start https://supabase.com/dashboard/project/jgkmcsxrtovrdiguhwyv/editor)"
+      "Bash(start https://supabase.com/dashboard/project/jgkmcsxrtovrdiguhwyv/editor)",
+      "Bash(start https://supabase.com/dashboard/project/jgkmcsxrtovrdiguhwyv/storage/buckets)"
     ],
     "deny": [],
     "ask": []

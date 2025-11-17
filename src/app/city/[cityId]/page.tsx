@@ -1243,9 +1243,13 @@ export default function CityPage() {
                               </div>
                             )}
 
-                            {/* Emoji */}
-                            <div className="text-center text-3xl sm:text-4xl mb-1 mt-4">
-                              {item.image_url || '📦'}
+                            {/* Image or Emoji */}
+                            <div className="text-center mb-1 mt-4 flex items-center justify-center h-12 sm:h-16">
+                              {item.image_url && item.image_url.startsWith('http') ? (
+                                <img src={item.image_url} alt={item.name} className="w-12 h-12 sm:w-16 sm:h-16 object-cover rounded-lg" />
+                              ) : (
+                                <span className="text-3xl sm:text-4xl">{item.image_url || '📦'}</span>
+                              )}
                             </div>
 
                             {/* Item Name - BOLD */}
