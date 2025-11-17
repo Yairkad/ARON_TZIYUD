@@ -1,6 +1,19 @@
 import { supabase } from '@/lib/supabase'
 
 /**
+ * Sanitize filename to be URL-safe
+ * Removes Hebrew and special characters, keeps only alphanumeric, dash, underscore, and dot
+ */
+function sanitizeFilename(filename: string): string {
+  return filename
+    .normalize('NFD') // Normalize unicode
+    .replace(/[\u0300-\u036f]/g, '') // Remove diacritics
+    .replace(/[^\w\s.-]/g, '') // Remove non-alphanumeric except dash, underscore, dot, space
+    .replace(/\s+/g, '-') // Replace spaces with dash
+    .toLowerCase()
+}
+
+/**
  * Upload an image file to Supabase Storage
  * @param file - The image file to upload
  * @param folder - Optional folder name within the bucket (e.g., 'equipment')
@@ -11,7 +24,8 @@ export async function uploadImage(file: File, folder: string = 'equipment'): Pro
 
     // Generate a unique filename with timestamp
     const fileExt = file.name.split('.').pop()
-    const fileName = `${folder}/${Date.now()}-${Math.random().toString(36).substring(7)}.${fileExt}`
+    const sanitizedName = sanitizeFilename(file.name.replace(`.${fileExt}`, ''))
+    const fileName = `${folder}/${Date.now()}-${sanitizedName || Math.random().toString(36).substring(7)}.${fileExt}`
 
     // Upload the file to the 'equipment-images' bucket
     const { data, error } = await supabase.storage
