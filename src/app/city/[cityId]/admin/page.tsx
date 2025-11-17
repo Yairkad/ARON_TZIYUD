@@ -91,12 +91,13 @@ export default function CityAdminPage() {
   const [city, setCity] = useState<City | null>(null)
   const [equipment, setEquipment] = useState<Equipment[]>([])
   const [borrowHistory, setBorrowHistory] = useState<BorrowHistory[]>([])
+  const [categories, setCategories] = useState<any[]>([])
   const [isAuthenticated, setIsAuthenticated] = useState(false)
   const [isCheckingAuth, setIsCheckingAuth] = useState(true) // Add loading state for auth check
   const [loading, setLoading] = useState(false)
   const [activeTab, setActiveTab] = useState<'equipment' | 'history' | 'requests' | 'settings'>('equipment')
-  const [newEquipment, setNewEquipment] = useState({ name: '', quantity: 1, equipment_status: 'working' as 'working' | 'faulty', is_consumable: false })
-  const [editingEquipment, setEditingEquipment] = useState<{ id: string; name: string; quantity: number; equipment_status: 'working' | 'faulty'; is_consumable: boolean } | null>(null)
+  const [newEquipment, setNewEquipment] = useState({ name: '', quantity: 1, equipment_status: 'working' as 'working' | 'faulty', is_consumable: false, category_id: '', image_url: '' })
+  const [editingEquipment, setEditingEquipment] = useState<{ id: string; name: string; quantity: number; equipment_status: 'working' | 'faulty'; is_consumable: boolean; category_id?: string; image_url?: string } | null>(null)
   const [editCityForm, setEditCityForm] = useState({
     manager1_name: '',
     manager1_phone: '',
@@ -151,6 +152,7 @@ export default function CityAdminPage() {
       fetchData()
       fetchAllCities()
       fetchPendingRequestsCount()
+      fetchCategories()
     }
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [isAuthenticated, cityId])
@@ -236,7 +238,10 @@ export default function CityAdminPage() {
   const fetchEquipment = async () => {
     const { data, error } = await supabase
       .from('equipment')
-      .select('*')
+      .select(`
+        *,
+        category:equipment_categories(id, name)
+      `)
       .eq('city_id', cityId)
       .order('name')
 
@@ -244,6 +249,19 @@ export default function CityAdminPage() {
       console.error('Error fetching equipment:', error)
     } else {
       setEquipment(data || [])
+    }
+  }
+
+  const fetchCategories = async () => {
+    const { data, error } = await supabase
+      .from('equipment_categories')
+      .select('*')
+      .order('display_order')
+
+    if (error) {
+      console.error('Error fetching categories:', error)
+    } else {
+      setCategories(data || [])
     }
   }
 
@@ -417,13 +435,15 @@ export default function CityAdminPage() {
           quantity: newEquipment.quantity,
           city_id: cityId,
           equipment_status: newEquipment.equipment_status,
-          is_consumable: newEquipment.is_consumable
+          is_consumable: newEquipment.is_consumable,
+          category_id: newEquipment.category_id || null,
+          image_url: newEquipment.image_url || null
         })
 
       if (error) throw error
 
       alert('הציוד נוסף בהצלחה!')
-      setNewEquipment({ name: '', quantity: 1, equipment_status: 'working', is_consumable: false })
+      setNewEquipment({ name: '', quantity: 1, equipment_status: 'working', is_consumable: false, category_id: '', image_url: '' })
       fetchEquipment()
     } catch (error) {
       console.error('Error adding equipment:', error)
@@ -433,7 +453,7 @@ export default function CityAdminPage() {
     }
   }
 
-  const handleUpdateEquipment = async (id: string, name: string, quantity: number, equipment_status: 'working' | 'faulty', is_consumable: boolean) => {
+  const handleUpdateEquipment = async (id: string, name: string, quantity: number, equipment_status: 'working' | 'faulty', is_consumable: boolean, category_id?: string, image_url?: string) => {
     // Check permissions
     if (!canEdit) {
       alert('אין לך הרשאה לבצע פעולה זו - נדרשת הרשאת עריכה מלאה')
@@ -449,7 +469,14 @@ export default function CityAdminPage() {
     try {
       const { error } = await supabase
         .from('equipment')
-        .update({ name, quantity, equipment_status, is_consumable })
+        .update({
+          name,
+          quantity,
+          equipment_status,
+          is_consumable,
+          category_id: category_id || null,
+          image_url: image_url || null
+        })
         .eq('id', id)
 
       if (error) throw error

@@ -65,7 +65,18 @@
       "Bash(npm install:*)",
       "Bash(npm run dev:*)",
       "Bash(if exist check-cities.js del check-cities.js)",
-      "Bash(if exist run-migration.js del run-migration.js)"
+      "Bash(if exist run-migration.js del run-migration.js)",
+      "Bash(git push:*)",
+      "Bash(start https://vercel.com/yairkads-projects/aron-tziyud)",
+      "Bash(start https://vercel.com/yairkads-projects/aron-tziyud/settings/git)",
+      "Bash(npx vercel --prod --force)",
+      "Bash(start https://github.com/settings/installations)",
+      "Bash(npx vercel --prod --yes)",
+      "Bash(start map-styles-examples.html)",
+      "Bash(start demo-city-selector-dropdown.html)",
+      "Bash(start demo-equipment-display.html)",
+      "Bash(dir:*)",
+      "Bash(start https://supabase.com/dashboard/project/jgkmcsxrtovrdiguhwyv/editor)"
     ],
     "deny": [],
     "ask": []
