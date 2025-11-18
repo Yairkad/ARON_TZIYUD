@@ -18,7 +18,8 @@ function sanitizeFilename(filename: string): string {
 export async function POST(request: NextRequest) {
   try {
     // Verify authentication using route handler client
-    const supabase = createRouteHandlerClient({ cookies })
+    const cookieStore = await cookies()
+    const supabase = createRouteHandlerClient({ cookies: () => cookieStore })
     const { data: { session }, error: sessionError } = await supabase.auth.getSession()
 
     if (sessionError || !session) {
