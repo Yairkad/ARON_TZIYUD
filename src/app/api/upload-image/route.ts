@@ -19,7 +19,7 @@ export async function POST(request: NextRequest) {
   try {
     // Verify authentication using route handler client
     const cookieStore = await cookies()
-    const supabase = createRouteHandlerClient({ cookies: () => cookieStore })
+    const supabase = createRouteHandlerClient({ cookies: () => Promise.resolve(cookieStore) })
     const { data: { session }, error: sessionError } = await supabase.auth.getSession()
 
     if (sessionError || !session) {

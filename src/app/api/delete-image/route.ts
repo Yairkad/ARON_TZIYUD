@@ -7,7 +7,7 @@ export async function DELETE(request: NextRequest) {
   try {
     // Verify authentication
     const cookieStore = await cookies()
-    const supabase = createRouteHandlerClient({ cookies: () => cookieStore })
+    const supabase = createRouteHandlerClient({ cookies: () => Promise.resolve(cookieStore) })
     const { data: { session }, error: sessionError } = await supabase.auth.getSession()
 
     if (sessionError || !session) {
