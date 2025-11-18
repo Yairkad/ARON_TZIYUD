@@ -1,0 +1,8 @@
+{
+  "crons": [
+    {
+      "path": "/api/recalculate-priority",
+      "schedule": "0 3 * * *"
+    }
+  ]
+}
