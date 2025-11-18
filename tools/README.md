@@ -30,7 +30,9 @@
 
 **דוגמה**:
 - **קלט**: `https://drive.google.com/file/d/1ABC123xyz/view?usp=sharing`
-- **פלט**: `https://drive.google.com/thumbnail?id=1ABC123xyz&sz=w1000`
+- **פלט**: `https://lh3.googleusercontent.com/d/1ABC123xyz`
+
+**✅ פורמט זה נבדק ועובד בצורה מושלמת!**
 
 ---
 
