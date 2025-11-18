@@ -1714,9 +1714,13 @@ export default function CityAdminPage() {
                                 )}
                               </div>
                             ) : (
-                              <span className="text-xl">{(item as any).image_url ? (
-                                <img src={(item as any).image_url} alt={item.name} className="w-12 h-12 object-cover rounded-lg mx-auto" />
-                              ) : '📦'}</span>
+                              <div className="text-center">
+                                {(item as any).image_url && (item as any).image_url.startsWith('http') ? (
+                                  <img src={(item as any).image_url} alt={item.name} className="w-12 h-12 object-cover rounded-lg mx-auto" />
+                                ) : (
+                                  <span className="text-xl">{(item as any).image_url || '📦'}</span>
+                                )}
+                              </div>
                             )}
                           </td>
                           <td className="p-4">
