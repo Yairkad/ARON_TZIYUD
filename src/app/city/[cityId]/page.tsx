@@ -1171,7 +1171,7 @@ export default function CityPage() {
               const categories = Array.from(categoryMap.entries()).sort((a, b) => a[0].localeCompare(b[0]))
 
               return categories.length > 0 ? (
-                <div className="mb-6">
+                <div className="mb-6 sticky top-0 z-10 bg-white pb-4 -mt-2 pt-2">
                   <div className="grid grid-cols-4 sm:grid-cols-6 md:grid-cols-8 gap-3 sm:gap-4">
                     {categories.map(([categoryName, icon]) => (
                       <button
