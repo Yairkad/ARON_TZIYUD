@@ -1464,33 +1464,13 @@ export default function CityAdminPage() {
                               </select>
                             </div>
                             <div>
-                              <label className="block text-xs font-medium text-gray-600 mb-1">📷 תמונה</label>
-                              <label className="flex items-center justify-center h-9 px-3 border border-blue-300 rounded-lg bg-white hover:bg-gray-50 transition-colors cursor-pointer">
-                                <span className="text-xs font-medium text-gray-700 truncate">
-                                  {editingEquipmentImageFile ? editingEquipmentImageFile.name : 'בחר תמונה'}
-                                </span>
-                                <input
-                                  type="file"
-                                  accept="image/*"
-                                  capture="environment"
-                                  onChange={(e) => {
-                                    const file = e.target.files?.[0]
-                                    if (file) {
-                                      setEditingEquipmentImageFile(file)
-                                    }
-                                  }}
-                                  className="hidden"
-                                />
-                              </label>
-                              {editingEquipmentImageFile && (
-                                <button
-                                  type="button"
-                                  onClick={() => setEditingEquipmentImageFile(null)}
-                                  className="text-[10px] text-red-600 hover:text-red-800 mt-1"
-                                >
-                                  ✕ הסר
-                                </button>
-                              )}
+                              <label className="block text-xs font-medium text-gray-600 mb-1">🖼️ URL תמונה</label>
+                              <Input
+                                value={editingEquipment.image_url || ''}
+                                onChange={(e) => setEditingEquipment({ ...editingEquipment, image_url: e.target.value })}
+                                placeholder="כתובת URL (אופציונלי)"
+                                className="h-9 text-xs"
+                              />
                             </div>
                           </div>
                           <div className="flex items-center gap-1.5">
