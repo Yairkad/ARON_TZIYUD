@@ -1,4 +1,4 @@
-import { supabase } from '@/lib/supabase'
+import { createClientComponentClient } from '@supabase/auth-helpers-nextjs'
 
 /**
  * Sanitize filename to be URL-safe
@@ -21,6 +21,15 @@ function sanitizeFilename(filename: string): string {
  */
 export async function uploadImage(file: File, folder: string = 'equipment'): Promise<string | null> {
   try {
+    const supabase = createClientComponentClient()
+
+    // Check if user is authenticated
+    const { data: { session }, error: sessionError } = await supabase.auth.getSession()
+
+    if (sessionError || !session) {
+      console.error('No authenticated user:', sessionError)
+      return null
+    }
 
     // Generate a unique filename with timestamp
     const fileExt = file.name.split('.').pop()
@@ -67,6 +76,15 @@ export async function uploadImage(file: File, folder: string = 'equipment'): Pro
  */
 export async function deleteImage(imageUrl: string): Promise<boolean> {
   try {
+    const supabase = createClientComponentClient()
+
+    // Check if user is authenticated
+    const { data: { session }, error: sessionError } = await supabase.auth.getSession()
+
+    if (sessionError || !session) {
+      console.error('No authenticated user:', sessionError)
+      return false
+    }
 
     // Extract the file path from the URL
     // URL format: https://[project].supabase.co/storage/v1/object/public/equipment-images/[path]
