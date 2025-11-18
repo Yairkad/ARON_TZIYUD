@@ -1306,11 +1306,11 @@ export default function CityPage() {
               const categories = Array.from(categoryMap.entries()).sort((a, b) => a[0].localeCompare(b[0]))
 
               return categories.length > 0 ? (
-                <div className="mb-6 sticky top-0 z-10 pb-4 -mt-2 pt-4">
+                <div className="mb-6 sticky top-0 z-50 pb-4 -mt-2 pt-4">
                   {/* Background layer */}
-                  <div className="absolute inset-0 bg-gradient-to-b from-white via-white to-blue-50 shadow-md border-b-2 border-blue-100 -z-10"></div>
+                  <div className="absolute inset-0 bg-gradient-to-b from-white via-white to-blue-50 shadow-md border-b-2 border-blue-100"></div>
                   {/* Content layer */}
-                  <div className="relative z-10 grid grid-cols-4 sm:grid-cols-6 md:grid-cols-8 gap-3 sm:gap-4">
+                  <div className="relative grid grid-cols-4 sm:grid-cols-6 md:grid-cols-8 gap-3 sm:gap-4">
                     {/* All Categories Button */}
                     <button
                       onClick={() => setSelectedCategory(null)}
