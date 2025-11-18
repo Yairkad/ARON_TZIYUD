@@ -44,6 +44,7 @@ export interface Equipment {
   is_consumable: boolean
   category_id?: string | null
   image_url?: string | null
+  display_order?: number
   created_at: string
   updated_at: string
 }

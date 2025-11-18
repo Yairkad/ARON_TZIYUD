@@ -1287,7 +1287,7 @@ export default function CityPage() {
               const categories = Array.from(categoryMap.entries()).sort((a, b) => a[0].localeCompare(b[0]))
 
               return categories.length > 0 ? (
-                <div className="mb-6 sticky top-0 z-10 bg-white pb-4 -mt-2 pt-2">
+                <div className="mb-6 sticky top-0 z-10 bg-gradient-to-b from-blue-50 via-white to-white pb-4 -mt-2 pt-4 shadow-md border-b-2 border-blue-100">
                   <div className="grid grid-cols-4 sm:grid-cols-6 md:grid-cols-8 gap-3 sm:gap-4">
                     {categories.map(([categoryName, icon]) => (
                       <button
@@ -1332,6 +1332,16 @@ export default function CityPage() {
                   <div className="grid grid-cols-3 sm:grid-cols-4 lg:grid-cols-5 gap-2 sm:gap-3">
                     {equipment
                       .filter((item: any) => item.category?.name === categoryName)
+                      .sort((a: any, b: any) => {
+                        // Sort by display_order first (lower number = higher priority)
+                        const orderA = a.display_order ?? 999
+                        const orderB = b.display_order ?? 999
+                        if (orderA !== orderB) {
+                          return orderA - orderB
+                        }
+                        // Then sort by name alphabetically
+                        return a.name.localeCompare(b.name)
+                      })
                       .map((item: any) => {
                         // Determine border color based on status
                         let borderColor = 'border-red-500'
