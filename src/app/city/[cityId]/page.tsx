@@ -1311,7 +1311,7 @@ export default function CityPage() {
                     {/* All Categories Button */}
                     <button
                       onClick={() => setSelectedCategory(null)}
-                      className={`flex flex-col items-center gap-2 p-3 rounded-xl border-2 transition-all duration-200 hover:scale-105 shadow-sm hover:shadow-md ${
+                      className={`relative flex flex-col items-center gap-2 p-3 rounded-xl border-2 transition-all duration-200 hover:scale-105 shadow-sm hover:shadow-md ${
                         selectedCategory === null
                           ? 'bg-blue-500 border-blue-600 text-white'
                           : 'bg-white border-gray-200 hover:border-blue-400 hover:bg-blue-50'
@@ -1331,7 +1331,7 @@ export default function CityPage() {
                       <button
                         key={categoryName}
                         onClick={() => setSelectedCategory(categoryName)}
-                        className={`flex flex-col items-center gap-2 p-3 rounded-xl border-2 transition-all duration-200 hover:scale-105 shadow-sm hover:shadow-md ${
+                        className={`relative flex flex-col items-center gap-2 p-3 rounded-xl border-2 transition-all duration-200 hover:scale-105 shadow-sm hover:shadow-md ${
                           selectedCategory === categoryName
                             ? 'bg-blue-500 border-blue-600 text-white'
                             : 'bg-white border-gray-200 hover:border-blue-400 hover:bg-blue-50'
