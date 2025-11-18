@@ -1360,7 +1360,6 @@ export default function CityPage() {
                       </button>
                     ))}
                   </div>
-                  </div>
                 </div>
               ) : null
             })()}
