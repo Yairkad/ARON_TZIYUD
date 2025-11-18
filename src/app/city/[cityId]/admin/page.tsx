@@ -1572,7 +1572,6 @@ export default function CityAdminPage() {
                       <tr className="bg-gradient-to-r from-blue-100 to-indigo-100 border-b-2 border-blue-200">
                         <th className="text-center p-4 font-bold text-gray-700">🎯 שם הציוד</th>
                         <th className="text-center p-4 font-bold text-gray-700">📁 קטגוריה</th>
-                        <th className="text-center p-4 font-bold text-gray-700">🖼️ תמונה</th>
                         <th className="text-center p-4 font-bold text-gray-700">🔢 כמות</th>
                         <th className="text-center p-4 font-bold text-gray-700">🔧 סטטוס</th>
                         <th className="text-center p-4 font-bold text-gray-700">🔄 מתכלה</th>
@@ -1610,20 +1609,6 @@ export default function CityAdminPage() {
                             ) : (
                               <span className="text-sm font-medium text-blue-600">
                                 {(item as any).category?.name || '—'}
-                              </span>
-                            )}
-                          </td>
-                          <td className="p-4">
-                            {editingEquipment?.id === item.id ? (
-                              <Input
-                                value={editingEquipment.image_url || ''}
-                                onChange={(e) => setEditingEquipment({ ...editingEquipment, image_url: e.target.value })}
-                                placeholder="🔗 URL תמונה"
-                                className="w-full h-10 border-2 border-blue-300 rounded-lg text-sm"
-                              />
-                            ) : (
-                              <span className="text-xs text-gray-500">
-                                {(item as any).image_url ? '✓ יש' : '—'}
                               </span>
                             )}
                           </td>
@@ -1737,6 +1722,24 @@ export default function CityAdminPage() {
                             </div>
                           </td>
                         </tr>
+                        {editingEquipment?.id === item.id && (
+                          <tr key={`${item.id}-image`} className="border-b bg-blue-50">
+                            <td colSpan={6} className="p-4">
+                              <div className="flex flex-col gap-2">
+                                <label className="text-sm font-semibold text-gray-700">🖼️ כתובת URL של תמונה:</label>
+                                <Input
+                                  value={editingEquipment.image_url || ''}
+                                  onChange={(e) => setEditingEquipment({ ...editingEquipment, image_url: e.target.value })}
+                                  placeholder="הדבק כאן קישור לתמונה מ-Google Drive או כל מקור אחר (אופציונלי)"
+                                  className="w-full h-12 border-2 border-blue-400 rounded-lg text-sm bg-white"
+                                />
+                                <p className="text-xs text-gray-600">
+                                  💡 טיפ: העלה תמונה ל-Google Drive, לחץ ימין → שתף → העתק קישור → השתמש בכלי ההמרה
+                                </p>
+                              </div>
+                            </td>
+                          </tr>
+                        )}
                       ))}
                     </tbody>
                   </table>
