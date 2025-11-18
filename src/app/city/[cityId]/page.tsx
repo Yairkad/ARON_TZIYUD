@@ -1153,7 +1153,7 @@ export default function CityPage() {
         )}
 
         {/* Equipment Inventory */}
-        <Card className="mt-8 border-0 shadow-2xl rounded-2xl overflow-hidden bg-white">
+        <Card className="mt-8 border-0 shadow-2xl rounded-2xl bg-white">
           <CardHeader className="bg-gradient-to-r from-blue-50 to-indigo-50 pb-6">
             <CardTitle className="text-2xl font-bold text-gray-800">📊 מלאי ציוד</CardTitle>
             <CardDescription className="text-gray-600">סטטוס זמינות ציוד במערכת</CardDescription>
