@@ -20,7 +20,6 @@ import {
   unsubscribeFromPush,
   isSubscribed
 } from '@/lib/push'
-import { uploadImage, deleteImage } from '@/lib/uploadImage'
 
 // Function to extract coordinates from Google Maps URL
 // Handles both full URLs and short URLs (via API expansion)
@@ -98,9 +97,7 @@ export default function CityAdminPage() {
   const [loading, setLoading] = useState(false)
   const [activeTab, setActiveTab] = useState<'equipment' | 'history' | 'requests' | 'settings'>('equipment')
   const [newEquipment, setNewEquipment] = useState({ name: '', quantity: 1, equipment_status: 'working' as 'working' | 'faulty', is_consumable: false, category_id: '', image_url: '' })
-  const [newEquipmentImageFile, setNewEquipmentImageFile] = useState<File | null>(null)
   const [editingEquipment, setEditingEquipment] = useState<{ id: string; name: string; quantity: number; equipment_status: 'working' | 'faulty'; is_consumable: boolean; category_id?: string; image_url?: string } | null>(null)
-  const [editingEquipmentImageFile, setEditingEquipmentImageFile] = useState<File | null>(null)
   const [editCityForm, setEditCityForm] = useState({
     manager1_name: '',
     manager1_phone: '',
@@ -431,18 +428,6 @@ export default function CityAdminPage() {
 
     setLoading(true)
     try {
-      let imageUrl = newEquipment.image_url
-
-      // Upload image if a file was selected
-      if (newEquipmentImageFile) {
-        const uploadedUrl = await uploadImage(newEquipmentImageFile, 'equipment')
-        if (uploadedUrl) {
-          imageUrl = uploadedUrl
-        } else {
-          alert('שגיאה בהעלאת התמונה, הציוד יתווסף ללא תמונה')
-        }
-      }
-
       const { error } = await supabase
         .from('equipment')
         .insert({
@@ -452,14 +437,13 @@ export default function CityAdminPage() {
           equipment_status: newEquipment.equipment_status,
           is_consumable: newEquipment.is_consumable,
           category_id: newEquipment.category_id || null,
-          image_url: imageUrl || null
+          image_url: newEquipment.image_url || null
         })
 
       if (error) throw error
 
       alert('הציוד נוסף בהצלחה!')
       setNewEquipment({ name: '', quantity: 1, equipment_status: 'working', is_consumable: false, category_id: '', image_url: '' })
-      setNewEquipmentImageFile(null)
       fetchEquipment()
     } catch (error) {
       console.error('Error adding equipment:', error)
@@ -483,22 +467,6 @@ export default function CityAdminPage() {
 
     setLoading(true)
     try {
-      let finalImageUrl = image_url
-
-      // Upload new image if a file was selected
-      if (editingEquipmentImageFile) {
-        const uploadedUrl = await uploadImage(editingEquipmentImageFile, 'equipment')
-        if (uploadedUrl) {
-          // Delete old image if exists and is from our storage
-          if (image_url && image_url.includes('supabase.co/storage')) {
-            await deleteImage(image_url)
-          }
-          finalImageUrl = uploadedUrl
-        } else {
-          alert('שגיאה בהעלאת התמונה החדשה, התמונה הקודמת תישאר')
-        }
-      }
-
       const { error } = await supabase
         .from('equipment')
         .update({
@@ -507,7 +475,7 @@ export default function CityAdminPage() {
           equipment_status,
           is_consumable,
           category_id: category_id || null,
-          image_url: finalImageUrl || null
+          image_url: image_url || null
         })
         .eq('id', id)
 
@@ -515,7 +483,6 @@ export default function CityAdminPage() {
 
       alert('הציוד עודכן בהצלחה!')
       setEditingEquipment(null)
-      setEditingEquipmentImageFile(null)
       fetchEquipment()
     } catch (error) {
       console.error('Error updating equipment:', error)
@@ -1263,33 +1230,13 @@ export default function CityAdminPage() {
                       ))}
                     </select>
 
-                    <div className="flex flex-col gap-2">
-                      <label className="flex items-center justify-center h-12 px-4 border-2 border-gray-200 rounded-xl bg-white hover:bg-gray-50 transition-colors cursor-pointer disabled:opacity-50 disabled:cursor-not-allowed">
-                        <span className="text-sm font-medium text-gray-700">📷 {newEquipmentImageFile ? newEquipmentImageFile.name : 'בחר תמונה'}</span>
-                        <input
-                          type="file"
-                          accept="image/*"
-                          capture="environment"
-                          onChange={(e) => {
-                            const file = e.target.files?.[0]
-                            if (file) {
-                              setNewEquipmentImageFile(file)
-                            }
-                          }}
-                          disabled={!canEdit}
-                          className="hidden"
-                        />
-                      </label>
-                      {newEquipmentImageFile && (
-                        <button
-                          type="button"
-                          onClick={() => setNewEquipmentImageFile(null)}
-                          className="text-xs text-red-600 hover:text-red-800"
-                        >
-                          ✕ הסר תמונה
-                        </button>
-                      )}
-                    </div>
+                    <Input
+                      value={newEquipment.image_url}
+                      onChange={(e) => setNewEquipment({ ...newEquipment, image_url: e.target.value })}
+                      disabled={!canEdit}
+                      placeholder="🖼️ כתובת URL של תמונה (אופציונלי)"
+                      className="flex-1 h-12 border-2 border-gray-200 rounded-xl focus:border-blue-500 transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
+                    />
 
                     <Button
                       type="submit"
@@ -1642,7 +1589,6 @@ export default function CityAdminPage() {
                       <tr className="bg-gradient-to-r from-blue-100 to-indigo-100 border-b-2 border-blue-200">
                         <th className="text-center p-4 font-bold text-gray-700">🎯 שם הציוד</th>
                         <th className="text-center p-4 font-bold text-gray-700">📁 קטגוריה</th>
-                        <th className="text-center p-4 font-bold text-gray-700">🎨 אימוג'י</th>
                         <th className="text-center p-4 font-bold text-gray-700">🔢 כמות</th>
                         <th className="text-center p-4 font-bold text-gray-700">🔧 סטטוס</th>
                         <th className="text-center p-4 font-bold text-gray-700">🔄 מתכלה</th>
@@ -1681,46 +1627,6 @@ export default function CityAdminPage() {
                               <span className="text-sm font-medium text-blue-600">
                                 {(item as any).category?.name || '—'}
                               </span>
-                            )}
-                          </td>
-                          <td className="p-4 text-center">
-                            {editingEquipment?.id === item.id ? (
-                              <div className="flex flex-col items-center gap-1">
-                                <label className="flex items-center justify-center h-10 px-3 border-2 border-blue-300 rounded-lg bg-white hover:bg-gray-50 transition-colors cursor-pointer">
-                                  <span className="text-xs font-medium text-gray-700 truncate max-w-[100px]">
-                                    {editingEquipmentImageFile ? '✓ נבחרה' : '📷 בחר'}
-                                  </span>
-                                  <input
-                                    type="file"
-                                    accept="image/*"
-                                    capture="environment"
-                                    onChange={(e) => {
-                                      const file = e.target.files?.[0]
-                                      if (file) {
-                                        setEditingEquipmentImageFile(file)
-                                      }
-                                    }}
-                                    className="hidden"
-                                  />
-                                </label>
-                                {editingEquipmentImageFile && (
-                                  <button
-                                    type="button"
-                                    onClick={() => setEditingEquipmentImageFile(null)}
-                                    className="text-[10px] text-red-600 hover:text-red-800"
-                                  >
-                                    ✕ הסר
-                                  </button>
-                                )}
-                              </div>
-                            ) : (
-                              <div className="text-center">
-                                {(item as any).image_url && (item as any).image_url.startsWith('http') ? (
-                                  <img src={(item as any).image_url} alt={item.name} className="w-12 h-12 object-cover rounded-lg mx-auto" />
-                                ) : (
-                                  <span className="text-xl">{(item as any).image_url || '📦'}</span>
-                                )}
-                              </div>
                             )}
                           </td>
                           <td className="p-4">
