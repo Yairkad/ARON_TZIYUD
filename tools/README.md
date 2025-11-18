@@ -4,7 +4,23 @@
 
 ## 🖼️ ניהול תמונות Google Drive
 
-### 1. `google-drive-url-converter.html`
+### 1. `generate-no-image-placeholder.html` 🆕
+**מטרה**: יצירת תמונת "אין תמונה זמינה" לציוד ללא תמונה
+
+**שימוש**:
+1. פתח את הקובץ בדפדפן
+2. צלם Screenshot של הריבוע המסומן (Win+Shift+S או Cmd+Shift+4)
+3. שמור בשם `no-image.png`
+4. העלה ל-Google Drive ושתף פומבית
+5. המר את הקישור ב-`google-drive-url-converter.html`
+6. עדכן את `set-default-no-image.js` עם הקישור
+7. הרץ: `node set-default-no-image.js`
+
+**אופציונלי**: לחץ על הריבוע להחלפת עיצובים שונים
+
+---
+
+### 2. `google-drive-url-converter.html`
 **מטרה**: המרת קישורי Google Drive לקישורים ישירים לתמונות
 
 **שימוש**:

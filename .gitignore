@@ -45,5 +45,6 @@ next-env.d.ts
 check-*.js
 create-super-admin*.js
 fix-super-admin*.js
+set-default-no-image.js
 nul
 תמונות/

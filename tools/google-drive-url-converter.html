@@ -199,7 +199,9 @@
             <code>https://drive.google.com/file/d/1ABC123xyz/view?usp=sharing</code>
             <br><br>
             <p><strong>קישור ישיר לתמונה (אחרי המרה):</strong></p>
-            <code>https://drive.google.com/thumbnail?id=1ABC123xyz&sz=w1000</code>
+            <code>https://lh3.googleusercontent.com/d/1ABC123xyz</code>
+            <br><br>
+            <p style="color: #11998e; font-weight: bold;">✅ פורמט זה נבדק ועובד בצורה מושלמת!</p>
         </div>
 
         <div class="converter-section">
@@ -257,8 +259,8 @@ https://drive.google.com/file/d/3GHI789rst/view?usp=sharing"
         }
 
         function convertToDirect(fileId) {
-            // Convert to direct thumbnail URL (high quality)
-            return `https://drive.google.com/thumbnail?id=${fileId}&sz=w1000`;
+            // Convert to lh3.googleusercontent format (VERIFIED WORKING!)
+            return `https://lh3.googleusercontent.com/d/${fileId}`;
         }
 
         function convertUrl() {

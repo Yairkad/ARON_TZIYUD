@@ -86,7 +86,8 @@
       "Bash(start download-equipment-images.html)",
       "Bash(start google-drive-url-converter.html)",
       "Bash(git mv:*)",
-      "Bash(.gitignore)"
+      "Bash(.gitignore)",
+      "Bash(start:*)"
     ],
     "deny": [],
     "ask": []
