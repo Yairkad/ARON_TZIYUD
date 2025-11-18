@@ -108,7 +108,7 @@ export default function CityPage() {
 
   const handleBorrow = async (e: React.FormEvent) => {
     e.preventDefault()
-    if (!borrowForm.name || !borrowForm.phone || !borrowForm.equipment_id) {
+    if (!borrowForm.name || !borrowForm.phone) {
       alert('אנא מלא את כל השדות')
       return
     }
@@ -127,70 +127,73 @@ export default function CityPage() {
       return
     }
 
+    // Validate selected items
+    if (selectedItems.size === 0) {
+      alert('יש לבחור לפחות פריט אחד')
+      return
+    }
+
     setLoading(true)
-    const selectedEquipment = equipment.find(eq => eq.id === borrowForm.equipment_id)
-
-    if (!selectedEquipment || selectedEquipment.quantity <= 0) {
-      alert('הציוד הנבחר אינו זמין')
-      setLoading(false)
-      return
-    }
-
-    if (selectedEquipment.equipment_status === 'faulty') {
-      alert('לא ניתן להשאיל ציוד תקול. אנא בחר ציוד אחר או פנה למנהל העיר.')
-      setLoading(false)
-      return
-    }
-
-    // Optimistic update - update UI immediately
-    const optimisticEquipment = equipment.map(eq =>
-      eq.id === borrowForm.equipment_id
-        ? { ...eq, quantity: eq.quantity - 1 }
-        : eq
-    )
-    setEquipment(optimisticEquipment)
 
     try {
-      const isConsumable = selectedEquipment.is_consumable
-      const borrowStatus = isConsumable ? 'returned' : 'borrowed'
-      const returnDate = isConsumable ? new Date().toISOString() : null
+      // Process each selected item
+      for (const itemId of Array.from(selectedItems)) {
+        const selectedEquipment = equipment.find(eq => eq.id === itemId)
 
-      const { data: borrowData, error: borrowError } = await supabase
-        .from('borrow_history')
-        .insert({
-          name: borrowForm.name,
-          phone: borrowForm.phone,
-          equipment_id: borrowForm.equipment_id,
-          equipment_name: selectedEquipment.name,
-          city_id: cityId,
-          status: borrowStatus,
-          return_date: returnDate
-        })
-        .select()
-        .single()
+        if (!selectedEquipment || selectedEquipment.quantity <= 0) {
+          console.error(`Equipment ${itemId} not available`)
+          continue
+        }
 
-      if (borrowError) throw borrowError
+        if (selectedEquipment.equipment_status === 'faulty') {
+          console.error(`Equipment ${itemId} is faulty`)
+          continue
+        }
 
-      const { error: updateError } = await supabase
-        .from('equipment')
-        .update({ quantity: selectedEquipment.quantity - 1 })
-        .eq('id', borrowForm.equipment_id)
+        const quantityToTake = selectedEquipment.is_consumable ? (itemQuantities[itemId] || 1) : 1
+        const isConsumable = selectedEquipment.is_consumable
+        const borrowStatus = isConsumable ? 'returned' : 'borrowed'
+        const returnDate = isConsumable ? new Date().toISOString() : null
 
-      if (updateError) throw updateError
+        // Create borrow history record
+        const { error: borrowError } = await supabase
+          .from('borrow_history')
+          .insert({
+            name: borrowForm.name,
+            phone: borrowForm.phone,
+            equipment_id: itemId,
+            equipment_name: selectedEquipment.name,
+            city_id: cityId,
+            status: borrowStatus,
+            return_date: returnDate,
+            quantity: quantityToTake
+          })
 
-      if (isConsumable) {
-        alert('יחידה אחת של הציוד המתכלה נרשמה בהצלחה! (לא דורש החזרה)\n💡 שים לב: רק יחידה בודדת הורדה מהמלאי, לא כל המארז.')
-      } else {
-        alert('הציוד הושאל בהצלחה!')
+        if (borrowError) {
+          console.error('Error creating borrow record:', borrowError)
+          continue
+        }
+
+        // Update equipment quantity
+        const { error: updateError } = await supabase
+          .from('equipment')
+          .update({ quantity: selectedEquipment.quantity - quantityToTake })
+          .eq('id', itemId)
+
+        if (updateError) {
+          console.error('Error updating equipment quantity:', updateError)
+        }
       }
+
+      alert('הציוד הושאל בהצלחה!')
       setBorrowForm({ name: '', phone: '', equipment_id: '' })
       setEquipmentSearch('')
-      // Refresh from server to ensure consistency
+      setSelectedItems(new Set())
+      setItemQuantities({})
       fetchEquipment()
     } catch (error) {
       console.error('Error borrowing equipment:', error)
       alert('אירעה שגיאה בהשאלת הציוד')
-      // Rollback optimistic update on error
       fetchEquipment()
     } finally {
       setLoading(false)
@@ -929,64 +932,143 @@ export default function CityPage() {
                     />
                   </div>
                 </div>
-                <div className="space-y-2">
-                  <label className="block text-sm font-semibold text-gray-700">🎒 בחר ציוד</label>
-                  {equipment.filter(item => item.quantity > 0 && item.equipment_status === 'working').length === 0 ? (
-                    <div className="w-full p-4 border-2 border-orange-200 bg-gradient-to-r from-orange-50 to-amber-50 rounded-xl text-orange-700 text-center font-medium">
-                      ⚠️ אין ציוד זמין כרגע. אנא נסה שוב מאוחר יותר.
-                    </div>
-                  ) : (
-                    <div className="relative equipment-search-container">
-                      <Input
-                        value={equipmentSearch}
-                        onChange={(e) => {
-                          setEquipmentSearch(e.target.value)
-                          setShowEquipmentDropdown(true)
-                        }}
-                        onFocus={() => setShowEquipmentDropdown(true)}
-                        placeholder="חפש או בחר ציוד..."
-                        className="h-12 border-2 border-gray-200 rounded-xl focus:border-blue-500 transition-colors"
-                      />
-                      {showEquipmentDropdown && (
-                        <div className="absolute z-[9999] w-full mt-1 max-h-96 overflow-y-auto bg-white border-2 border-gray-200 rounded-xl shadow-lg">
-                          {equipment
-                            .filter(item =>
-                              item.quantity > 0 &&
-                              item.equipment_status === 'working' &&
-                              item.name.toLowerCase().includes(equipmentSearch.toLowerCase())
-                            )
-                            .map(item => (
-                              <div
-                                key={item.id}
-                                onClick={() => {
-                                  setBorrowForm({ ...borrowForm, equipment_id: item.id })
-                                  setEquipmentSearch(item.name)
-                                  setShowEquipmentDropdown(false)
-                                }}
-                                className="px-4 py-3 hover:bg-blue-50 cursor-pointer transition-colors border-b border-gray-100 last:border-0"
-                              >
-                                <div className="flex justify-between items-center">
-                                  <span className="font-medium text-gray-800">{item.name}</span>
-                                  <span className="text-sm text-green-600 font-semibold">זמין: {item.quantity}</span>
-                                </div>
-                              </div>
-                            ))}
-                          {equipment.filter(item =>
-                            item.quantity > 0 &&
-                            item.name.toLowerCase().includes(equipmentSearch.toLowerCase())
-                          ).length === 0 && (
-                            <div className="px-4 py-3 text-center text-gray-500">
-                              לא נמצאו תוצאות
+                <div className="space-y-4">
+                  <div className="flex items-center justify-between">
+                    <label className="block text-sm font-semibold text-gray-700">🎒 בחר ציוד (ניתן לבחור מספר פריטים)</label>
+                    <Button
+                      type="button"
+                      onClick={() => setIsTableExpanded(!isTableExpanded)}
+                      className="h-8 px-4 bg-blue-100 hover:bg-blue-200 text-blue-700 font-semibold rounded-lg transition-colors"
+                    >
+                      {isTableExpanded ? '🔼 צמצם' : '🔽 הרחב'}
+                    </Button>
+                  </div>
+
+                  {isTableExpanded && (
+                    <>
+                      {/* Search Field */}
+                      <div className="relative">
+                        <Input
+                          type="text"
+                          value={equipmentSearch}
+                          onChange={(e) => setEquipmentSearch(e.target.value)}
+                          placeholder="🔍 חפש ציוד..."
+                          className="h-12 border-2 border-gray-300 rounded-xl pr-10 focus:border-blue-500 transition-colors"
+                        />
+                        {equipmentSearch && (
+                          <button
+                            type="button"
+                            onClick={() => setEquipmentSearch('')}
+                            className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-400 hover:text-gray-600"
+                          >
+                            ✕
+                          </button>
+                        )}
+                      </div>
+
+                      <div className="max-h-96 overflow-x-auto overflow-y-auto border-2 border-gray-200 rounded-xl">
+                        <table className="w-full text-sm">
+                          <thead className="bg-gray-100 sticky top-0">
+                            <tr>
+                              <th className="px-3 py-2 text-right font-semibold text-gray-700 border-b border-gray-300">בחר</th>
+                              <th className="px-3 py-2 text-right font-semibold text-gray-700 border-b border-gray-300">שם פריט</th>
+                              <th className="px-3 py-2 text-center font-semibold text-gray-700 border-b border-gray-300">כמות זמינה</th>
+                              <th className="px-3 py-2 text-center font-semibold text-gray-700 border-b border-gray-300">סטטוס</th>
+                            </tr>
+                          </thead>
+                          <tbody>
+                            {equipment
+                              .filter(item => item.quantity > 0 && item.equipment_status === 'working')
+                              .filter(item => item.name.toLowerCase().includes(equipmentSearch.toLowerCase()))
+                              .map(item => (
+                                <tr key={item.id} className="hover:bg-blue-50 transition-colors border-b border-gray-200">
+                                  <td className="px-3 py-2">
+                                    <input
+                                      type="checkbox"
+                                      checked={selectedItems.has(item.id)}
+                                      onChange={() => handleItemToggle(item.id)}
+                                      className="w-4 h-4 text-blue-600 rounded focus:ring-blue-500"
+                                    />
+                                  </td>
+                                  <td className="px-3 py-2 font-medium text-gray-800">
+                                    {item.name}
+                                  </td>
+                                  <td className="px-3 py-2 text-center text-gray-600">
+                                    {item.quantity}
+                                  </td>
+                                  <td className="px-3 py-2 text-center">
+                                    {item.is_consumable ? (
+                                      <div className="flex flex-col items-center gap-2">
+                                        <span className="inline-block text-xs bg-purple-100 text-purple-700 px-2 py-1 rounded">אין צורך להחזיר</span>
+                                        {selectedItems.has(item.id) && (
+                                          <div className="flex items-center gap-1">
+                                            <button
+                                              type="button"
+                                              onClick={() => handleQuantityChange(item.id, Math.max(1, (itemQuantities[item.id] || 1) - 1))}
+                                              disabled={(itemQuantities[item.id] || 1) <= 1}
+                                              className="w-6 h-6 flex items-center justify-center bg-red-500 hover:bg-red-600 disabled:bg-gray-300 disabled:cursor-not-allowed text-white font-bold rounded text-xs"
+                                            >
+                                              -
+                                            </button>
+                                            <span className="w-8 h-6 flex items-center justify-center font-bold text-xs text-gray-800 bg-white border border-gray-300 rounded">
+                                              {itemQuantities[item.id] || 1}
+                                            </span>
+                                            <button
+                                              type="button"
+                                              onClick={() => handleQuantityChange(item.id, Math.min(item.quantity, (itemQuantities[item.id] || 1) + 1))}
+                                              disabled={(itemQuantities[item.id] || 1) >= item.quantity}
+                                              className="w-6 h-6 flex items-center justify-center bg-green-500 hover:bg-green-600 disabled:bg-gray-300 disabled:cursor-not-allowed text-white font-bold rounded text-xs"
+                                            >
+                                              +
+                                            </button>
+                                          </div>
+                                        )}
+                                      </div>
+                                    ) : (
+                                      <span className="text-gray-400 text-xs">-</span>
+                                    )}
+                                  </td>
+                                </tr>
+                              ))}
+                            {equipment
+                              .filter(item => item.quantity > 0 && item.equipment_status === 'working')
+                              .filter(item => item.name.toLowerCase().includes(equipmentSearch.toLowerCase()))
+                              .length === 0 && (
+                              <tr>
+                                <td colSpan={4} className="text-center py-8 text-gray-500">
+                                  {equipmentSearch ? 'לא נמצא ציוד התואם לחיפוש' : 'אין ציוד זמין כרגע'}
+                                </td>
+                              </tr>
+                            )}
+                          </tbody>
+                        </table>
+                      </div>
+                    </>
+                  )}
+
+                  {/* Selected Items Summary */}
+                  {selectedItems.size > 0 && (
+                    <div className="bg-blue-50 border-2 border-blue-200 rounded-xl p-4">
+                      <p className="text-sm font-semibold text-gray-700 mb-2">✅ פריטים שנבחרו ({selectedItems.size}):</p>
+                      <div className="flex flex-wrap gap-2">
+                        {Array.from(selectedItems).map(id => {
+                          const item = equipment.find(eq => eq.id === id)
+                          return (
+                            <div key={id} className="bg-white px-3 py-1 rounded-lg border border-blue-300 text-sm">
+                              <span className="font-medium">{item?.name}</span>
+                              {item?.is_consumable && (
+                                <span className="text-blue-600 font-bold mr-1">×{itemQuantities[id] || 1}</span>
+                              )}
                             </div>
-                          )}
-                        </div>
-                      )}
+                          )
+                        })}
+                      </div>
                     </div>
                   )}
                 </div>
                 <Button
                   type="submit"
-                  disabled={loading || equipment.filter(item => item.quantity > 0).length === 0}
+                  disabled={loading || selectedItems.size === 0}
                   className="w-full h-14 bg-gradient-to-r from-blue-600 to-indigo-600 hover:from-blue-700 hover:to-indigo-700 text-white font-bold text-lg rounded-xl shadow-lg hover:shadow-xl transition-all duration-200 hover:scale-105 disabled:opacity-50 disabled:cursor-not-allowed disabled:hover:scale-100"
                 >
                   {loading ? '⏳ מעבד...' : '✅ השאל ציוד עכשיו'}
@@ -1261,7 +1343,7 @@ export default function CityPage() {
 
                         const isSelected = selectedItems.has(item.id)
                         const selectedQuantity = itemQuantities[item.id] || 1
-                        const canSelectFromGrid = isRequestMode && activeTab === 'borrow' && !requestCreated && item.quantity > 0 && item.equipment_status === 'working'
+                        const canSelectFromGrid = activeTab === 'borrow' && item.quantity > 0 && item.equipment_status === 'working' && (isRequestMode ? !requestCreated : true)
 
                         return (
                           <button
