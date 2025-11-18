@@ -1582,7 +1582,8 @@ export default function CityAdminPage() {
                       {equipment.filter(item =>
                         item.name.toLowerCase().includes(equipmentSearchQuery.toLowerCase())
                       ).map(item => (
-                        <tr key={item.id} className="border-b hover:bg-blue-50 transition-colors">
+                        <React.Fragment key={item.id}>
+                        <tr className="border-b hover:bg-blue-50 transition-colors">
                           <td className="p-4">
                             {editingEquipment?.id === item.id ? (
                               <Input
@@ -1723,7 +1724,7 @@ export default function CityAdminPage() {
                           </td>
                         </tr>
                         {editingEquipment?.id === item.id && (
-                          <tr key={`${item.id}-image`} className="border-b bg-blue-50">
+                          <tr className="border-b bg-blue-50">
                             <td colSpan={6} className="p-4">
                               <div className="flex flex-col gap-2">
                                 <label className="text-sm font-semibold text-gray-700">🖼️ כתובת URL של תמונה:</label>
@@ -1740,6 +1741,7 @@ export default function CityAdminPage() {
                             </td>
                           </tr>
                         )}
+                        </React.Fragment>
                       ))}
                     </tbody>
                   </table>
