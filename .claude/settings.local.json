@@ -80,7 +80,13 @@
       "Bash(start https://supabase.com/dashboard/project/jgkmcsxrtovrdiguhwyv/storage/buckets)",
       "Bash(start https://supabase.com/dashboard/project/jgkmcsxrtovrdiguhwyv/sql/new)",
       "Bash(start https://supabase.com/dashboard/project/jgkmcsxrtovrdiguhwyv/storage/policies)",
-      "Bash(start https://vercel.com/yairkads-projects/aron-tziyud/logs)"
+      "Bash(start https://vercel.com/yairkads-projects/aron-tziyud/logs)",
+      "Bash(set NEXT_PUBLIC_SUPABASE_URL=https://jgkmcsxrtovrdiguhwyv.supabase.co:*)",
+      "Bash(set SUPABASE_SERVICE_ROLE_KEY:*)",
+      "Bash(start download-equipment-images.html)",
+      "Bash(start google-drive-url-converter.html)",
+      "Bash(git mv:*)",
+      "Bash(.gitignore)"
     ],
     "deny": [],
     "ask": []
