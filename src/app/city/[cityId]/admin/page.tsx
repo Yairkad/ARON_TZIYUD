@@ -1230,13 +1230,18 @@ export default function CityAdminPage() {
                       ))}
                     </select>
 
-                    <Input
-                      value={newEquipment.image_url}
-                      onChange={(e) => setNewEquipment({ ...newEquipment, image_url: e.target.value })}
-                      disabled={!canEdit}
-                      placeholder="🖼️ כתובת URL של תמונה (אופציונלי)"
-                      className="flex-1 h-12 border-2 border-gray-200 rounded-xl focus:border-blue-500 transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
-                    />
+                    <div className="flex-1">
+                      <Input
+                        value={newEquipment.image_url}
+                        onChange={(e) => setNewEquipment({ ...newEquipment, image_url: e.target.value })}
+                        disabled={!canEdit}
+                        placeholder="🖼️ כתובת URL של תמונה (אופציונלי)"
+                        className="w-full h-12 border-2 border-gray-200 rounded-xl focus:border-blue-500 transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
+                      />
+                      <p className="text-xs text-gray-500 mt-1 mr-2">
+                        💡 טיפ: העלה תמונה ל-Google Drive, לחץ ימין → שתף → העתק קישור
+                      </p>
+                    </div>
 
                     <Button
                       type="submit"
@@ -1449,29 +1454,27 @@ export default function CityAdminPage() {
                               </select>
                             </div>
                           </div>
-                          <div className="grid grid-cols-2 gap-2">
-                            <div>
-                              <label className="block text-xs font-medium text-gray-600 mb-1">📁 קטגוריה</label>
-                              <select
-                                value={editingEquipment.category_id || ''}
-                                onChange={(e) => setEditingEquipment({ ...editingEquipment, category_id: e.target.value })}
-                                className="w-full h-9 border border-blue-300 rounded-lg px-2 text-xs font-medium"
-                              >
-                                <option value="">ללא</option>
-                                {categories.map((cat: any) => (
-                                  <option key={cat.id} value={cat.id}>{cat.name}</option>
-                                ))}
-                              </select>
-                            </div>
-                            <div>
-                              <label className="block text-xs font-medium text-gray-600 mb-1">🖼️ URL תמונה</label>
-                              <Input
-                                value={editingEquipment.image_url || ''}
-                                onChange={(e) => setEditingEquipment({ ...editingEquipment, image_url: e.target.value })}
-                                placeholder="כתובת URL (אופציונלי)"
-                                className="h-9 text-xs"
-                              />
-                            </div>
+                          <div>
+                            <label className="block text-xs font-medium text-gray-600 mb-1">📁 קטגוריה</label>
+                            <select
+                              value={editingEquipment.category_id || ''}
+                              onChange={(e) => setEditingEquipment({ ...editingEquipment, category_id: e.target.value })}
+                              className="w-full h-9 border border-blue-300 rounded-lg px-2 text-xs font-medium"
+                            >
+                              <option value="">ללא</option>
+                              {categories.map((cat: any) => (
+                                <option key={cat.id} value={cat.id}>{cat.name}</option>
+                              ))}
+                            </select>
+                          </div>
+                          <div>
+                            <label className="block text-xs font-medium text-gray-600 mb-1">🖼️ כתובת URL של תמונה</label>
+                            <Input
+                              value={editingEquipment.image_url || ''}
+                              onChange={(e) => setEditingEquipment({ ...editingEquipment, image_url: e.target.value })}
+                              placeholder="הדבק כאן קישור לתמונה מ-Google Drive או כל מקור אחר (אופציונלי)"
+                              className="w-full h-10 border-2 border-blue-300 rounded-lg text-sm"
+                            />
                           </div>
                           <div className="flex items-center gap-1.5">
                             <input
