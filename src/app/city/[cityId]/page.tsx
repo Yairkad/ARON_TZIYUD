@@ -42,7 +42,8 @@ export default function CityPage() {
   const [itemQuantities, setItemQuantities] = useState<Record<string, number>>({})
   const [createdToken, setCreatedToken] = useState<string>('')
   const [requestCreated, setRequestCreated] = useState(false)
-  const [isTableExpanded, setIsTableExpanded] = useState(true)
+  const [isTableExpanded, setIsTableExpanded] = useState(false)
+  const [selectedCategory, setSelectedCategory] = useState<string | null>(null)
 
   // Return status selection
   const [returnStatus, setReturnStatus] = useState<{ borrowId: string; equipmentId: string } | null>(null)
@@ -731,6 +732,15 @@ export default function CityPage() {
                         {equipment
                           .filter(item => item.quantity > 0 && item.equipment_status === 'working')
                           .filter(item => item.name.toLowerCase().includes(equipmentSearch.toLowerCase()))
+                          .sort((a, b) => {
+                            // Selected items first
+                            const aSelected = selectedItems.has(a.id)
+                            const bSelected = selectedItems.has(b.id)
+                            if (aSelected && !bSelected) return -1
+                            if (!aSelected && bSelected) return 1
+                            // Then sort alphabetically
+                            return a.name.localeCompare(b.name)
+                          })
                           .map(item => (
                             <tr key={item.id} className="hover:bg-blue-50 transition-colors border-b border-gray-200">
                               <td className="px-3 py-2">
@@ -980,6 +990,15 @@ export default function CityPage() {
                             {equipment
                               .filter(item => item.quantity > 0 && item.equipment_status === 'working')
                               .filter(item => item.name.toLowerCase().includes(equipmentSearch.toLowerCase()))
+                              .sort((a, b) => {
+                                // Selected items first
+                                const aSelected = selectedItems.has(a.id)
+                                const bSelected = selectedItems.has(b.id)
+                                if (aSelected && !bSelected) return -1
+                                if (!aSelected && bSelected) return 1
+                                // Then sort alphabetically
+                                return a.name.localeCompare(b.name)
+                              })
                               .map(item => (
                                 <tr key={item.id} className="hover:bg-blue-50 transition-colors border-b border-gray-200">
                                   <td className="px-3 py-2">
@@ -1289,14 +1308,34 @@ export default function CityPage() {
               return categories.length > 0 ? (
                 <div className="mb-6 sticky top-0 z-10 bg-gradient-to-b from-blue-50 via-white to-white pb-4 -mt-2 pt-4 shadow-md border-b-2 border-blue-100">
                   <div className="grid grid-cols-4 sm:grid-cols-6 md:grid-cols-8 gap-3 sm:gap-4">
+                    {/* All Categories Button */}
+                    <button
+                      onClick={() => setSelectedCategory(null)}
+                      className={`flex flex-col items-center gap-2 p-3 rounded-xl border-2 transition-all duration-200 hover:scale-105 shadow-sm hover:shadow-md ${
+                        selectedCategory === null
+                          ? 'bg-blue-500 border-blue-600 text-white'
+                          : 'bg-white border-gray-200 hover:border-blue-400 hover:bg-blue-50'
+                      }`}
+                    >
+                      <div className="w-16 h-16 sm:w-20 sm:h-20 flex items-center justify-center">
+                        <span className="text-4xl sm:text-5xl">📦</span>
+                      </div>
+                      <span className={`text-[10px] sm:text-xs font-bold text-center leading-tight ${
+                        selectedCategory === null ? 'text-white' : 'text-gray-700'
+                      }`}>
+                        הכל
+                      </span>
+                    </button>
+
                     {categories.map(([categoryName, icon]) => (
                       <button
                         key={categoryName}
-                        onClick={() => {
-                          const element = document.getElementById(`category-${categoryName}`)
-                          element?.scrollIntoView({ behavior: 'smooth', block: 'start' })
-                        }}
-                        className="flex flex-col items-center gap-2 p-3 bg-white rounded-xl border-2 border-gray-200 hover:border-blue-400 hover:bg-blue-50 transition-all duration-200 hover:scale-105 shadow-sm hover:shadow-md"
+                        onClick={() => setSelectedCategory(categoryName)}
+                        className={`flex flex-col items-center gap-2 p-3 rounded-xl border-2 transition-all duration-200 hover:scale-105 shadow-sm hover:shadow-md ${
+                          selectedCategory === categoryName
+                            ? 'bg-blue-500 border-blue-600 text-white'
+                            : 'bg-white border-gray-200 hover:border-blue-400 hover:bg-blue-50'
+                        }`}
                       >
                         {/* Display image or fallback icon */}
                         <div className="w-16 h-16 sm:w-20 sm:h-20 flex items-center justify-center">
@@ -1310,7 +1349,9 @@ export default function CityPage() {
                             <span className="text-4xl sm:text-5xl">{icon || '📦'}</span>
                           )}
                         </div>
-                        <span className="text-[10px] sm:text-xs font-bold text-gray-700 text-center leading-tight">
+                        <span className={`text-[10px] sm:text-xs font-bold text-center leading-tight ${
+                          selectedCategory === categoryName ? 'text-white' : 'text-gray-700'
+                        }`}>
                           {categoryName}
                         </span>
                       </button>
@@ -1323,8 +1364,9 @@ export default function CityPage() {
             {/* Equipment by Category */}
             {(() => {
               const categories = Array.from(new Set(equipment.map((item: any) => item.category?.name).filter(Boolean))).sort()
+              const categoriesToShow = selectedCategory ? [selectedCategory] : categories
 
-              return categories.map((categoryName) => (
+              return categoriesToShow.map((categoryName) => (
                 <div key={categoryName} id={`category-${categoryName}`} className="mb-8 last:mb-0">
                   <h3 className="text-lg font-bold text-gray-800 mb-3 pb-2 border-b-2 border-blue-200">
                     {categoryName}
