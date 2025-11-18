@@ -42,6 +42,7 @@ export default function CityPage() {
   const [itemQuantities, setItemQuantities] = useState<Record<string, number>>({})
   const [createdToken, setCreatedToken] = useState<string>('')
   const [requestCreated, setRequestCreated] = useState(false)
+  const [isTableExpanded, setIsTableExpanded] = useState(true)
 
   // Return status selection
   const [returnStatus, setReturnStatus] = useState<{ borrowId: string; equipmentId: string } | null>(null)
@@ -680,29 +681,40 @@ export default function CityPage() {
                 )}
 
                 <div className="space-y-4">
-                  <label className="block text-sm font-semibold text-gray-700">🎒 בחר ציוד (ניתן לבחור מספר פריטים)</label>
-
-                  {/* Search Field */}
-                  <div className="relative">
-                    <Input
-                      type="text"
-                      value={equipmentSearch}
-                      onChange={(e) => setEquipmentSearch(e.target.value)}
-                      placeholder="🔍 חפש ציוד..."
-                      className="h-12 border-2 border-gray-300 rounded-xl pr-10 focus:border-blue-500 transition-colors"
-                    />
-                    {equipmentSearch && (
-                      <button
-                        type="button"
-                        onClick={() => setEquipmentSearch('')}
-                        className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-400 hover:text-gray-600"
-                      >
-                        ✕
-                      </button>
-                    )}
+                  <div className="flex items-center justify-between">
+                    <label className="block text-sm font-semibold text-gray-700">🎒 בחר ציוד (ניתן לבחור מספר פריטים)</label>
+                    <Button
+                      type="button"
+                      onClick={() => setIsTableExpanded(!isTableExpanded)}
+                      className="h-8 px-4 bg-blue-100 hover:bg-blue-200 text-blue-700 font-semibold rounded-lg transition-colors"
+                    >
+                      {isTableExpanded ? '🔼 צמצם' : '🔽 הרחב'}
+                    </Button>
                   </div>
 
-                  <div className="max-h-96 overflow-x-auto overflow-y-auto border-2 border-gray-200 rounded-xl">
+                  {isTableExpanded && (
+                    <>
+                      {/* Search Field */}
+                      <div className="relative">
+                        <Input
+                          type="text"
+                          value={equipmentSearch}
+                          onChange={(e) => setEquipmentSearch(e.target.value)}
+                          placeholder="🔍 חפש ציוד..."
+                          className="h-12 border-2 border-gray-300 rounded-xl pr-10 focus:border-blue-500 transition-colors"
+                        />
+                        {equipmentSearch && (
+                          <button
+                            type="button"
+                            onClick={() => setEquipmentSearch('')}
+                            className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-400 hover:text-gray-600"
+                          >
+                            ✕
+                          </button>
+                        )}
+                      </div>
+
+                      <div className="max-h-96 overflow-x-auto overflow-y-auto border-2 border-gray-200 rounded-xl">
                     <table className="w-full text-sm">
                       <thead className="bg-gray-100 sticky top-0">
                         <tr>
@@ -778,7 +790,29 @@ export default function CityPage() {
                         )}
                       </tbody>
                     </table>
-                  </div>
+                      </div>
+                    </>
+                  )}
+
+                  {/* Selected Items Summary */}
+                  {selectedItems.size > 0 && (
+                    <div className="bg-blue-50 border-2 border-blue-200 rounded-xl p-4">
+                      <p className="text-sm font-semibold text-gray-700 mb-2">✅ פריטים שנבחרו ({selectedItems.size}):</p>
+                      <div className="flex flex-wrap gap-2">
+                        {Array.from(selectedItems).map(id => {
+                          const item = equipment.find(eq => eq.id === id)
+                          return (
+                            <div key={id} className="bg-white px-3 py-1 rounded-lg border border-blue-300 text-sm">
+                              <span className="font-medium">{item?.name}</span>
+                              {item?.is_consumable && (
+                                <span className="text-blue-600 font-bold mr-1">×{itemQuantities[id] || 1}</span>
+                              )}
+                            </div>
+                          )
+                        })}
+                      </div>
+                    </div>
+                  )}
                 </div>
 
                 <Button
@@ -1227,11 +1261,14 @@ export default function CityPage() {
 
                         const isSelected = selectedItems.has(item.id)
                         const selectedQuantity = itemQuantities[item.id] || 1
+                        const canSelectFromGrid = isRequestMode && activeTab === 'borrow' && !requestCreated && item.quantity > 0 && item.equipment_status === 'working'
 
                         return (
                           <button
                             key={item.id}
                             onClick={() => {
+                              if (!canSelectFromGrid && !isSelected) return
+
                               if (isSelected) {
                                 // Remove from selection
                                 const newSelected = new Set(selectedItems)
@@ -1247,8 +1284,8 @@ export default function CityPage() {
                               }
                             }}
                             className={`relative bg-gradient-to-br from-white to-gray-50 rounded-xl p-2 border-2 ${borderColor} ${
-                              isSelected ? 'ring-4 ring-blue-400 shadow-xl scale-105' : 'hover:shadow-lg'
-                            } transition-all duration-200 cursor-pointer`}
+                              isSelected ? 'ring-4 ring-blue-400 shadow-xl scale-105' : canSelectFromGrid ? 'hover:shadow-lg cursor-pointer' : 'cursor-default'
+                            } transition-all duration-200 ${canSelectFromGrid || isSelected ? 'opacity-100' : 'opacity-75'}`}
                           >
                             {/* Category Badge - Top Left */}
                             {item.category?.name && (
@@ -1289,8 +1326,8 @@ export default function CityPage() {
                               </span>
                             </div>
 
-                            {/* Quantity Selector - Show when selected */}
-                            {isSelected && (
+                            {/* Quantity Selector - Show when selected and consumable */}
+                            {isSelected && item.is_consumable && (
                               <div className="mt-2 flex items-center justify-center gap-1" onClick={(e) => e.stopPropagation()}>
                                 <button
                                   onClick={() => {
