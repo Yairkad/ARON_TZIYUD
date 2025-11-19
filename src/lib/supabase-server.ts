@@ -26,8 +26,26 @@ export function createServiceClient() {
 export const supabaseServer = createServiceClient()
 
 // Helper to get current user profile
-export async function getCurrentUserProfile() {
-  const supabase = createServerClient()
+export async function getCurrentUserProfile(accessToken?: string) {
+  let supabase
+
+  if (accessToken) {
+    // Use access token for authentication (middleware pattern)
+    supabase = createClient(
+      process.env.NEXT_PUBLIC_SUPABASE_URL!,
+      process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!,
+      {
+        global: {
+          headers: {
+            Authorization: `Bearer ${accessToken}`
+          }
+        }
+      }
+    )
+  } else {
+    // Use cookies for authentication (route handler pattern)
+    supabase = createServerClient()
+  }
 
   const { data: { user } } = await supabase.auth.getUser()
   if (!user) return null
