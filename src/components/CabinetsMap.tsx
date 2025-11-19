@@ -166,14 +166,14 @@ export default function CabinetsMap({ onCabinetClick }: CabinetsMapProps) {
       <div className="bg-white border-b border-gray-200 p-3 flex items-center justify-between text-sm">
         <div className="text-gray-700 font-medium">
           {userLocation ? (
-            <span className="text-green-600">● מיקום מוצג</span>
+            <span className="text-red-600">📍 המיקום שלך מוצג במפה</span>
           ) : (
-            <span className="text-gray-400">○ לחץ להצגת מיקום</span>
+            <span className="text-gray-400">📍 לחץ להצגת מיקומך</span>
           )}
         </div>
         <button
           onClick={requestUserLocation}
-          className="bg-blue-500 hover:bg-blue-600 text-white px-4 py-1.5 rounded-lg text-xs font-medium transition-colors"
+          className="bg-red-500 hover:bg-red-600 text-white px-4 py-1.5 rounded-lg text-xs font-medium transition-colors"
         >
           {userLocation ? 'רענן מיקום' : 'הצג מיקום'}
         </button>
@@ -198,7 +198,7 @@ export default function CabinetsMap({ onCabinetClick }: CabinetsMapProps) {
 
         <MapCenterController userLocation={userLocation} cabinets={cabinets} />
 
-        {/* User location marker - Clean minimal style */}
+        {/* User location marker - Red pin style like Google Maps */}
         {userLocation && (
           <>
             {/* Subtle outer pulse */}
@@ -206,26 +206,26 @@ export default function CabinetsMap({ onCabinetClick }: CabinetsMapProps) {
               center={userLocation}
               radius={80}
               pathOptions={{
-                color: '#3B82F6',
-                fillColor: '#DBEAFE',
+                color: '#DC2626',
+                fillColor: '#FEE2E2',
                 fillOpacity: 0.2,
                 weight: 0
               }}
             />
-            {/* Clean inner dot */}
+            {/* Red pin dot */}
             <Circle
               center={userLocation}
               radius={20}
               pathOptions={{
-                color: '#2563EB',
-                fillColor: '#3B82F6',
+                color: '#B91C1C',
+                fillColor: '#DC2626',
                 fillOpacity: 1,
-                weight: 2
+                weight: 3
               }}
             >
               <Popup>
                 <div className="text-center py-1">
-                  <div className="text-sm font-medium text-blue-600">המיקום שלך</div>
+                  <div className="text-sm font-medium text-red-600">📍 אתה נמצא כאן</div>
                 </div>
               </Popup>
             </Circle>
