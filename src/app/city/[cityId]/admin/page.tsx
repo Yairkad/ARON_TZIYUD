@@ -2497,14 +2497,16 @@ export default function CityAdminPage() {
                 </div>
 
                 {/* Equipment Pool Modal */}
-                <EquipmentPoolModal
-                  isOpen={showEquipmentPoolModal}
-                  onClose={() => setShowEquipmentPoolModal(false)}
-                  cityId={city.id}
-                  onEquipmentAdded={() => {
-                    fetchEquipment()
-                  }}
-                />
+                {city && (
+                  <EquipmentPoolModal
+                    isOpen={showEquipmentPoolModal}
+                    onClose={() => setShowEquipmentPoolModal(false)}
+                    cityId={city.id}
+                    onEquipmentAdded={() => {
+                      fetchEquipment()
+                    }}
+                  />
+                )}
 
                 {/* City Details Edit Form */}
                 <Card className="border-2 border-indigo-200 bg-gradient-to-r from-indigo-50 to-blue-50">
