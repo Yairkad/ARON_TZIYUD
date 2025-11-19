@@ -1365,13 +1365,13 @@ export default function CityPage() {
                   {/* Selected Items Summary - Mobile Only - Inside sticky container */}
                   {selectedItems.size > 0 && activeTab === 'borrow' && (
                     <div className="relative sm:hidden pb-2 pt-2">
-                      <div className="bg-blue-50 border-2 border-blue-200 rounded-xl p-3">
-                        <p className="text-sm font-semibold text-gray-700 mb-2">✅ פריטים שנבחרו ({selectedItems.size}):</p>
-                        <div className="flex flex-wrap gap-2">
+                      <div className="bg-blue-50 border-2 border-blue-200 rounded-xl p-2">
+                        <p className="text-xs font-semibold text-gray-700 mb-1.5">✅ נבחרו ({selectedItems.size}):</p>
+                        <div className="flex flex-wrap gap-1.5 max-h-20 overflow-y-auto">
                           {Array.from(selectedItems).map(id => {
                             const item = equipment.find(eq => eq.id === id)
                             return (
-                              <div key={id} className="bg-white px-3 py-1 rounded-lg border border-blue-300 text-sm">
+                              <div key={id} className="bg-white px-2 py-0.5 rounded-md border border-blue-300 text-xs">
                                 <span className="font-medium">{item?.name}</span>
                                 {item?.is_consumable && (
                                   <span className="text-blue-600 font-bold mr-1">×{itemQuantities[id] || 1}</span>
