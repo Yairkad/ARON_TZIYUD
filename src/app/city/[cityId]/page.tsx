@@ -1422,7 +1422,7 @@ export default function CityPage() {
                             }}
                             className={`relative bg-gradient-to-br from-white to-gray-50 rounded-xl p-2 border-2 ${borderColor} ${
                               isSelected ? 'ring-4 ring-blue-400 shadow-xl scale-105' : canSelectFromGrid ? 'hover:shadow-lg cursor-pointer' : 'cursor-default'
-                            } transition-all duration-200 ${canSelectFromGrid || isSelected ? 'opacity-100' : 'opacity-75'}`}
+                            } transition-all duration-200 ${canSelectFromGrid || isSelected ? 'opacity-100' : 'opacity-75'} flex flex-col min-h-[140px]`}
                           >
                             {/* Category Badge - Top Left */}
                             {item.category?.name && (
@@ -1438,19 +1438,19 @@ export default function CityPage() {
                               </div>
                             )}
 
-                            {/* Image or Emoji */}
-                            <div className="text-center mb-2 mt-2 flex items-center justify-center h-24 sm:h-28">
+                            {/* Image or Emoji - LARGER */}
+                            <div className="flex-1 flex items-center justify-center px-1 py-1">
                               {item.image_url && item.image_url.startsWith('http') ? (
-                                <img src={item.image_url} alt={item.name} className="w-full h-full object-contain rounded-lg" />
+                                <img src={item.image_url} alt={item.name} className="max-w-full max-h-full object-contain rounded-lg" />
                               ) : (
-                                <span className="text-3xl sm:text-4xl">{item.image_url || '📦'}</span>
+                                <span className="text-4xl sm:text-5xl">{item.image_url || '📦'}</span>
                               )}
                             </div>
 
                             {/* Item Name - BOLD with ellipsis and tooltip */}
-                            <div className="text-center mb-1 px-1">
+                            <div className="text-center px-1 pb-1">
                               <span
-                                className="font-bold text-gray-800 text-[9px] sm:text-[10px] leading-tight block line-clamp-2"
+                                className="font-bold text-gray-800 text-[9px] sm:text-[10px] leading-tight block overflow-hidden text-ellipsis whitespace-nowrap"
                                 title={item.name}
                               >
                                 {item.name}
