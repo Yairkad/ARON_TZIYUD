@@ -293,7 +293,7 @@ export default function GlobalEquipmentPage() {
     return (
       <div className="min-h-screen bg-gradient-to-br from-blue-50 to-indigo-100 flex items-center justify-center">
         <div className="text-center">
-          <Logo size="large" />
+          <Logo />
           <p className="text-gray-600 mt-4">טוען...</p>
         </div>
       </div>
@@ -311,7 +311,7 @@ export default function GlobalEquipmentPage() {
         <div className="mb-8">
           <div className="flex justify-between items-center mb-4">
             <div className="flex items-center gap-4">
-              <Logo size="medium" />
+              <Logo />
               <div>
                 <h1 className="text-3xl font-bold text-gray-800">ניהול מאגר ציוד גלובלי</h1>
                 <p className="text-gray-600">ניהול הציוד הגלובלי עבור כל הערים</p>
