@@ -1306,7 +1306,7 @@ export default function CityPage() {
               const categories = Array.from(categoryMap.entries()).sort((a, b) => a[0].localeCompare(b[0]))
 
               return categories.length > 0 ? (
-                <div className="sticky top-0 z-50 -mt-2 pt-3 mb-4">
+                <div className="sticky top-0 z-50 -mt-2 pt-3 mb-4 -mx-4 sm:-mx-6 px-4 sm:px-6">
                   {/* Background layer */}
                   <div className="absolute inset-0 bg-gradient-to-b from-white via-white to-blue-50 shadow-md border-b-2 border-blue-100"></div>
 
@@ -1470,10 +1470,10 @@ export default function CityPage() {
                               )}
                             </div>
 
-                            {/* Item Name - BOLD with ellipsis and tooltip */}
-                            <div className="text-center px-1 pb-1">
+                            {/* Item Name - BOLD with 2 lines */}
+                            <div className="text-center px-0.5 pb-1">
                               <span
-                                className="font-bold text-gray-800 text-[9px] sm:text-[10px] leading-tight block overflow-hidden text-ellipsis whitespace-nowrap"
+                                className="font-bold text-gray-800 text-[9px] sm:text-[10px] leading-tight block overflow-hidden line-clamp-2"
                                 title={item.name}
                               >
                                 {item.name}
