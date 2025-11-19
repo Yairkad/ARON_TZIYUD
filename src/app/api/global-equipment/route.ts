@@ -2,21 +2,28 @@ import { createClient } from '@supabase/supabase-js'
 import { cookies } from 'next/headers'
 import { NextResponse } from 'next/server'
 
+// Helper to create Supabase client with user context
+async function createSupabaseClient() {
+  const cookieStore = await cookies()
+  const authToken = cookieStore.get('sb-jgkmcsxrtovrdiguhwyv-auth-token')?.value
+
+  return createClient(
+    process.env.NEXT_PUBLIC_SUPABASE_URL!,
+    process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!,
+    {
+      global: {
+        headers: authToken ? {
+          Authorization: `Bearer ${authToken}`
+        } : {}
+      }
+    }
+  )
+}
+
 // GET - Fetch all global equipment
 export async function GET(request: Request) {
   try {
-    const cookieStore = await cookies()
-    const supabase = createClient(
-      process.env.NEXT_PUBLIC_SUPABASE_URL!,
-      process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!,
-      {
-        cookies: {
-          get(name: string) {
-            return cookieStore.get(name)?.value
-          }
-        }
-      }
-    )
+    const supabase = await createSupabaseClient()
     const { searchParams } = new URL(request.url)
     const status = searchParams.get('status') // 'active', 'pending_approval', 'archived'
     const includeCategories = searchParams.get('includeCategories') === 'true'
@@ -69,18 +76,7 @@ export async function GET(request: Request) {
 // POST - Add new equipment to global pool
 export async function POST(request: Request) {
   try {
-    const cookieStore = await cookies()
-    const supabase = createClient(
-      process.env.NEXT_PUBLIC_SUPABASE_URL!,
-      process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!,
-      {
-        cookies: {
-          get(name: string) {
-            return cookieStore.get(name)?.value
-          }
-        }
-      }
-    )
+    const supabase = await createSupabaseClient()
     const body = await request.json()
     const { name, image_url, category_id } = body
 
@@ -160,18 +156,7 @@ export async function POST(request: Request) {
 // PUT - Update equipment (Super Admin only)
 export async function PUT(request: Request) {
   try {
-    const cookieStore = await cookies()
-    const supabase = createClient(
-      process.env.NEXT_PUBLIC_SUPABASE_URL!,
-      process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!,
-      {
-        cookies: {
-          get(name: string) {
-            return cookieStore.get(name)?.value
-          }
-        }
-      }
-    )
+    const supabase = await createSupabaseClient()
     const body = await request.json()
     const { id, name, image_url, category_id } = body
 
@@ -239,18 +224,7 @@ export async function PUT(request: Request) {
 // DELETE - Archive equipment (Super Admin only)
 export async function DELETE(request: Request) {
   try {
-    const cookieStore = await cookies()
-    const supabase = createClient(
-      process.env.NEXT_PUBLIC_SUPABASE_URL!,
-      process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!,
-      {
-        cookies: {
-          get(name: string) {
-            return cookieStore.get(name)?.value
-          }
-        }
-      }
-    )
+    const supabase = await createSupabaseClient()
     const { searchParams } = new URL(request.url)
     const id = searchParams.get('id')
 
