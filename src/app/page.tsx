@@ -136,7 +136,7 @@ export default function HomePage() {
                     <p className="text-gray-500">אין ערים זמינות כרגע</p>
                   </div>
                 ) : (
-                  <div className="max-h-96 overflow-y-auto space-y-2">
+                  <div className="max-h-[200px] overflow-y-auto space-y-2">
                     {cities
                       .filter(city => city.name.toLowerCase().includes(searchTerm.toLowerCase()))
                       .map((city) => (

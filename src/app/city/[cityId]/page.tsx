@@ -1309,12 +1309,12 @@ export default function CityPage() {
                 <div className="mb-6 sticky top-0 z-50 pb-3 -mt-2 pt-3">
                   {/* Background layer */}
                   <div className="absolute inset-0 bg-gradient-to-b from-white via-white to-blue-50 shadow-md border-b-2 border-blue-100"></div>
-                  {/* Content layer - Horizontal scroll on mobile, grid on larger screens */}
-                  <div className="relative flex sm:grid sm:grid-cols-6 md:grid-cols-8 gap-2 sm:gap-4 overflow-x-auto pb-2 sm:pb-0 scrollbar-hide">
+                  {/* Content layer - Grid layout that wraps */}
+                  <div className="relative grid grid-cols-4 sm:grid-cols-6 md:grid-cols-8 gap-2 sm:gap-4">
                     {/* All Categories Button */}
                     <button
                       onClick={() => setSelectedCategory(null)}
-                      className={`relative flex flex-col items-center gap-1 p-2 rounded-xl border-2 transition-all duration-200 hover:scale-105 shadow-sm hover:shadow-md flex-shrink-0 ${
+                      className={`relative flex flex-col items-center gap-1 p-2 rounded-xl border-2 transition-all duration-200 hover:scale-105 shadow-sm hover:shadow-md ${
                         selectedCategory === null
                           ? 'bg-blue-500 border-blue-600 text-white'
                           : 'bg-white border-gray-200 hover:border-blue-400 hover:bg-blue-50'
@@ -1334,7 +1334,7 @@ export default function CityPage() {
                       <button
                         key={categoryName}
                         onClick={() => setSelectedCategory(categoryName)}
-                        className={`relative flex flex-col items-center gap-1 p-2 rounded-xl border-2 transition-all duration-200 hover:scale-105 shadow-sm hover:shadow-md flex-shrink-0 ${
+                        className={`relative flex flex-col items-center gap-1 p-2 rounded-xl border-2 transition-all duration-200 hover:scale-105 shadow-sm hover:shadow-md ${
                           selectedCategory === categoryName
                             ? 'bg-blue-500 border-blue-600 text-white'
                             : 'bg-white border-gray-200 hover:border-blue-400 hover:bg-blue-50'
@@ -1363,6 +1363,24 @@ export default function CityPage() {
                 </div>
               ) : null
             })()}
+
+            {/* Selected Items Sticky Bar - Mobile Only - Positioned below categories */}
+            {selectedItems.size > 0 && activeTab === 'borrow' && (
+              <div className="sticky top-0 z-40 mb-4 sm:hidden bg-white pt-2">
+                <div className="bg-gradient-to-r from-blue-500 to-indigo-500 text-white rounded-xl p-2 shadow-lg flex items-center justify-between">
+                  <span className="text-sm font-bold">✓ {selectedItems.size} פריטים נבחרו</span>
+                  <button
+                    onClick={() => {
+                      setSelectedItems(new Set())
+                      setItemQuantities({})
+                    }}
+                    className="text-xs bg-white/20 hover:bg-white/30 px-2 py-1 rounded-lg transition-colors"
+                  >
+                    ✕ נקה
+                  </button>
+                </div>
+              </div>
+            )}
 
             {/* Equipment by Category */}
             {(() => {
