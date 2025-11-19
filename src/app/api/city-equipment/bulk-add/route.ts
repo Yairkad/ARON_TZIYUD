@@ -101,7 +101,7 @@ export async function POST(request: Request) {
         *,
         global_equipment:global_equipment_pool(
           *,
-          equipment_categories(*)
+          category:equipment_categories(*)
         )
       `)
 

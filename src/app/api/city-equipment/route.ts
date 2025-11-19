@@ -20,7 +20,7 @@ export async function GET(request: Request) {
         *,
         global_equipment:global_equipment_pool!inner(
           *,
-          equipment_categories(*)
+          category:equipment_categories(*)
         )
       `)
       .eq('city_id', cityId)
@@ -103,7 +103,7 @@ export async function POST(request: Request) {
         *,
         global_equipment:global_equipment_pool(
           *,
-          equipment_categories(*)
+          category:equipment_categories(*)
         )
       `)
       .single()
@@ -184,7 +184,7 @@ export async function PUT(request: Request) {
         *,
         global_equipment:global_equipment_pool(
           *,
-          equipment_categories(*)
+          category:equipment_categories(*)
         )
       `)
       .single()

@@ -26,7 +26,7 @@ export async function GET(request: Request) {
     let query = supabase
       .from('global_equipment_pool')
       .select(includeCategories
-        ? '*, equipment_categories(*)'
+        ? '*, category:equipment_categories(*)'
         : '*'
       )
       .order('name', { ascending: true })
