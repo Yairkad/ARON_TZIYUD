@@ -1439,7 +1439,7 @@ export default function CityPage() {
                             )}
 
                             {/* Image or Emoji */}
-                            <div className="text-center mb-1 mt-4 flex items-center justify-center h-20 sm:h-24">
+                            <div className="text-center mb-2 mt-2 flex items-center justify-center h-24 sm:h-28">
                               {item.image_url && item.image_url.startsWith('http') ? (
                                 <img src={item.image_url} alt={item.name} className="w-full h-full object-contain rounded-lg" />
                               ) : (
@@ -1447,9 +1447,12 @@ export default function CityPage() {
                               )}
                             </div>
 
-                            {/* Item Name - BOLD */}
-                            <div className="text-center mb-1.5">
-                              <span className="font-bold text-gray-800 text-[10px] sm:text-xs leading-tight block">
+                            {/* Item Name - BOLD with ellipsis and tooltip */}
+                            <div className="text-center mb-1 px-1">
+                              <span
+                                className="font-bold text-gray-800 text-[9px] sm:text-[10px] leading-tight block line-clamp-2"
+                                title={item.name}
+                              >
                                 {item.name}
                               </span>
                             </div>

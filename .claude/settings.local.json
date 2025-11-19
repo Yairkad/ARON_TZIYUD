@@ -87,7 +87,8 @@
       "Bash(start google-drive-url-converter.html)",
       "Bash(git mv:*)",
       "Bash(.gitignore)",
-      "Bash(start:*)"
+      "Bash(start:*)",
+      "Bash(npx vercel login)"
     ],
     "deny": [],
     "ask": []
