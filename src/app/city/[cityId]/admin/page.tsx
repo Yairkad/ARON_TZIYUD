@@ -12,6 +12,7 @@ import { ArrowRight, FileDown, Bell, BellOff } from 'lucide-react'
 import Logo from '@/components/Logo'
 import { checkAuth, logout } from '@/lib/auth'
 import RequestsTab from '@/components/RequestsTab'
+import EquipmentPoolModal from '@/components/EquipmentPoolModal'
 import {
   isPushSupported,
   hasNotificationPermission,
@@ -115,6 +116,7 @@ export default function CityAdminPage() {
   const [allCities, setAllCities] = useState<City[]>([])
   const [selectedCityToCopy, setSelectedCityToCopy] = useState<string>('')
   const [showCopyEquipment, setShowCopyEquipment] = useState(false)
+  const [showEquipmentPoolModal, setShowEquipmentPoolModal] = useState(false)
   const [dismissedAlerts, setDismissedAlerts] = useState<Set<string>>(new Set())
   const [pendingRequestsCount, setPendingRequestsCount] = useState(0)
   const [expandedGroups, setExpandedGroups] = useState<Set<string>>(new Set())
@@ -2474,69 +2476,35 @@ export default function CityAdminPage() {
                   </div>
                 </div>
 
-                {/* Copy Equipment Section */}
-                {!showCopyEquipment ? (
-                  <div className="bg-gradient-to-r from-purple-50 to-pink-50 rounded-xl p-6 border-2 border-purple-200">
-                    <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-3">
-                      <div>
-                        <h3 className="text-lg font-bold text-gray-800 mb-1">📋 העתק ציוד מעיר אחרת</h3>
-                        <p className="text-sm text-gray-600">טען רשימת ציוד מוכנה מעיר קיימת - חיסכון בזמן לערים חדשות</p>
-                        {!canEdit && (
-                          <p className="text-xs text-red-600 mt-1">⚠️ נדרשת הרשאת עריכה מלאה</p>
-                        )}
-                      </div>
-                      <Button
-                        onClick={() => setShowCopyEquipment(true)}
-                        disabled={!canEdit}
-                        className="bg-gradient-to-r from-purple-600 to-pink-600 hover:from-purple-700 hover:to-pink-700 text-white font-semibold px-6 py-3 rounded-xl transition-all duration-200 hover:scale-105 disabled:opacity-50 disabled:cursor-not-allowed disabled:hover:scale-100"
-                      >
-                        📥 העתק ציוד
-                      </Button>
+                {/* Equipment Pool Section */}
+                <div className="bg-gradient-to-r from-purple-50 to-pink-50 rounded-xl p-6 border-2 border-purple-200">
+                  <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-3">
+                    <div>
+                      <h3 className="text-lg font-bold text-gray-800 mb-1">📦 פתח מאגר ציוד</h3>
+                      <p className="text-sm text-gray-600">בחר ציוד מהמאגר הגלובלי והוסף לעיר</p>
+                      {!canEdit && (
+                        <p className="text-xs text-red-600 mt-1">⚠️ נדרשת הרשאת עריכה מלאה</p>
+                      )}
                     </div>
+                    <Button
+                      onClick={() => setShowEquipmentPoolModal(true)}
+                      disabled={!canEdit}
+                      className="bg-gradient-to-r from-purple-600 to-pink-600 hover:from-purple-700 hover:to-pink-700 text-white font-semibold px-6 py-3 rounded-xl transition-all duration-200 hover:scale-105 disabled:opacity-50 disabled:cursor-not-allowed disabled:hover:scale-100"
+                    >
+                      📦 פתח מאגר
+                    </Button>
                   </div>
-                ) : (
-                  <Card className="border-2 border-purple-300 bg-gradient-to-r from-purple-50 to-pink-50">
-                    <CardHeader>
-                      <CardTitle className="text-xl font-bold text-gray-800">📥 העתק ציוד מעיר אחרת</CardTitle>
-                      <CardDescription>בחר עיר להעתקת הציוד ממנה. ציוד כפול לא יועתק.</CardDescription>
-                    </CardHeader>
-                    <CardContent>
-                      <div className="space-y-4">
-                        <div className="space-y-2">
-                          <label className="block text-sm font-semibold text-gray-700">🏙️ בחר עיר</label>
-                          <select
-                            value={selectedCityToCopy}
-                            onChange={(e) => setSelectedCityToCopy(e.target.value)}
-                            className="w-full h-12 px-4 border-2 border-gray-200 rounded-xl focus:border-purple-500 transition-colors bg-white text-gray-800"
-                          >
-                            <option value="">-- בחר עיר --</option>
-                            {allCities.map(city => (
-                              <option key={city.id} value={city.id}>{city.name}</option>
-                            ))}
-                          </select>
-                        </div>
-                        <div className="flex gap-3">
-                          <Button
-                            onClick={handleCopyEquipmentFromCity}
-                            disabled={loading || !selectedCityToCopy}
-                            className="flex-1 h-12 bg-gradient-to-r from-purple-600 to-pink-600 hover:from-purple-700 hover:to-pink-700 text-white font-bold rounded-xl shadow-md hover:shadow-lg transition-all"
-                          >
-                            {loading ? '⏳ מעתיק...' : '✅ העתק ציוד'}
-                          </Button>
-                          <Button
-                            onClick={() => {
-                              setShowCopyEquipment(false)
-                              setSelectedCityToCopy('')
-                            }}
-                            className="flex-1 h-12 bg-white border-2 border-gray-400 text-gray-700 hover:bg-gray-50 font-semibold rounded-xl transition-all"
-                          >
-                            ❌ ביטול
-                          </Button>
-                        </div>
-                      </div>
-                    </CardContent>
-                  </Card>
-                )}
+                </div>
+
+                {/* Equipment Pool Modal */}
+                <EquipmentPoolModal
+                  isOpen={showEquipmentPoolModal}
+                  onClose={() => setShowEquipmentPoolModal(false)}
+                  cityId={city.id}
+                  onEquipmentAdded={() => {
+                    fetchEquipment()
+                  }}
+                />
 
                 {/* City Details Edit Form */}
                 <Card className="border-2 border-indigo-200 bg-gradient-to-r from-indigo-50 to-blue-50">

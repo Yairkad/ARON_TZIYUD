@@ -31,8 +31,40 @@ export interface EquipmentCategory {
   id: string
   name: string
   display_order: number
+  icon?: string | null
   created_at: string
   updated_at: string
+}
+
+// Global Equipment Pool Interfaces
+export interface GlobalEquipmentPool {
+  id: string
+  name: string
+  image_url?: string | null
+  category_id?: string | null
+  created_by?: string | null
+  created_at: string
+  updated_at: string
+  status: 'active' | 'pending_approval' | 'archived'
+}
+
+export interface GlobalEquipmentPoolWithCategory extends GlobalEquipmentPool {
+  category?: EquipmentCategory
+}
+
+export interface CityEquipment {
+  id: string
+  city_id: string
+  global_equipment_id: string
+  quantity: number
+  display_order?: number
+  created_at: string
+  updated_at: string
+}
+
+export interface CityEquipmentWithDetails extends CityEquipment {
+  global_equipment?: GlobalEquipmentPool
+  category?: EquipmentCategory
 }
 
 export interface Equipment {
@@ -67,6 +99,7 @@ export interface BorrowHistory {
   faulty_notes?: string | null
   return_image_url?: string | null
   return_image_uploaded_at?: string | null
+  global_equipment_id?: string | null  // New field for global equipment pool
   created_at: string
   updated_at: string
 }
@@ -133,6 +166,7 @@ export interface RequestItem {
   request_id: string
   equipment_id: string
   quantity: number
+  global_equipment_id?: string | null  // New field for global equipment pool
   created_at: string
 }
 

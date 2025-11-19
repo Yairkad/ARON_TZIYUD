@@ -22,7 +22,7 @@ export default function SuperAdminPage() {
   const [password, setPassword] = useState('')
   const [rememberMe, setRememberMe] = useState(false)
   const [loading, setLoading] = useState(false)
-  const [activeTab, setActiveTab] = useState<'cities' | 'notifications' | 'settings' | 'users'>('cities')
+  const [activeTab, setActiveTab] = useState<'cities' | 'notifications' | 'settings' | 'users' | 'equipment'>('cities')
   const [showAddCity, setShowAddCity] = useState(false)
   const [newCity, setNewCity] = useState<CityForm>({ name: '', manager1_name: '', manager1_phone: '', manager2_name: '', manager2_phone: '', location_url: '', token_location_url: '', password: '' })
   const [editingCity, setEditingCity] = useState<City | null>(null)
@@ -784,7 +784,7 @@ export default function SuperAdminPage() {
         </header>
 
         {/* Tab Navigation */}
-        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-3 mb-8">
+        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-5 gap-3 mb-8">
           <Button
             onClick={() => setActiveTab('cities')}
             className={`py-6 rounded-xl font-semibold text-lg transition-all duration-300 ${
@@ -804,6 +804,12 @@ export default function SuperAdminPage() {
             }`}
           >
             <span className="text-2xl ml-2">👥</span> ניהול משתמשים
+          </Button>
+          <Button
+            onClick={() => router.push('/super-admin/global-equipment')}
+            className="py-6 rounded-xl font-semibold text-lg transition-all duration-300 bg-white text-gray-600 border-2 border-gray-200 hover:border-purple-300 hover:bg-purple-50"
+          >
+            <span className="text-2xl ml-2">📦</span> מאגר ציוד
           </Button>
           <Button
             onClick={() => setActiveTab('notifications')}
