@@ -5,7 +5,7 @@ import { NextResponse } from 'next/server'
 // GET - Fetch all global equipment
 export async function GET(request: Request) {
   try {
-    const cookieStore = cookies()
+    const cookieStore = await cookies()
     const supabase = createRouteHandlerClient({ cookies: () => cookieStore })
     const { searchParams } = new URL(request.url)
     const status = searchParams.get('status') // 'active', 'pending_approval', 'archived'
@@ -59,7 +59,7 @@ export async function GET(request: Request) {
 // POST - Add new equipment to global pool
 export async function POST(request: Request) {
   try {
-    const cookieStore = cookies()
+    const cookieStore = await cookies()
     const supabase = createRouteHandlerClient({ cookies: () => cookieStore })
     const body = await request.json()
     const { name, image_url, category_id } = body
@@ -140,7 +140,7 @@ export async function POST(request: Request) {
 // PUT - Update equipment (Super Admin only)
 export async function PUT(request: Request) {
   try {
-    const cookieStore = cookies()
+    const cookieStore = await cookies()
     const supabase = createRouteHandlerClient({ cookies: () => cookieStore })
     const body = await request.json()
     const { id, name, image_url, category_id } = body
@@ -209,7 +209,7 @@ export async function PUT(request: Request) {
 // DELETE - Archive equipment (Super Admin only)
 export async function DELETE(request: Request) {
   try {
-    const cookieStore = cookies()
+    const cookieStore = await cookies()
     const supabase = createRouteHandlerClient({ cookies: () => cookieStore })
     const { searchParams } = new URL(request.url)
     const id = searchParams.get('id')

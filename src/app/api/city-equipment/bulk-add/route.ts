@@ -5,7 +5,7 @@ import { NextResponse } from 'next/server'
 // POST - Add multiple equipment items from global pool to city
 export async function POST(request: Request) {
   try {
-    const cookieStore = cookies()
+    const cookieStore = await cookies()
     const supabase = createRouteHandlerClient({ cookies: () => cookieStore })
     const body = await request.json()
     const { city_id, equipment_ids } = body // equipment_ids: string[]
