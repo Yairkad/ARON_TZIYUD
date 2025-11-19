@@ -205,7 +205,7 @@ export default function EquipmentPoolModal({
             <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 gap-4">
               {filteredEquipment.map(item => {
                 const isSelected = selectedIds.has(item.id)
-                const category = item.equipment_categories
+                const category = item.category
 
                 return (
                   <div
