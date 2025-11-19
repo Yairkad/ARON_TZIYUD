@@ -96,6 +96,16 @@ html {
   background: linear-gradient(to bottom, #1e40af, #4338ca);
 }
 
+/* Hide scrollbar for elements with scrollbar-hide class */
+.scrollbar-hide {
+  -ms-overflow-style: none;  /* IE and Edge */
+  scrollbar-width: none;  /* Firefox */
+}
+
+.scrollbar-hide::-webkit-scrollbar {
+  display: none;  /* Chrome, Safari and Opera */
+}
+
 /* Responsive typography - smaller on mobile */
 @media (max-width: 640px) {
   body {

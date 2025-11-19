@@ -1306,24 +1306,24 @@ export default function CityPage() {
               const categories = Array.from(categoryMap.entries()).sort((a, b) => a[0].localeCompare(b[0]))
 
               return categories.length > 0 ? (
-                <div className="mb-6 sticky top-0 z-50 pb-4 -mt-2 pt-4">
+                <div className="mb-6 sticky top-0 z-50 pb-3 -mt-2 pt-3">
                   {/* Background layer */}
                   <div className="absolute inset-0 bg-gradient-to-b from-white via-white to-blue-50 shadow-md border-b-2 border-blue-100"></div>
-                  {/* Content layer */}
-                  <div className="relative grid grid-cols-4 sm:grid-cols-6 md:grid-cols-8 gap-3 sm:gap-4">
+                  {/* Content layer - Horizontal scroll on mobile, grid on larger screens */}
+                  <div className="relative flex sm:grid sm:grid-cols-6 md:grid-cols-8 gap-2 sm:gap-4 overflow-x-auto pb-2 sm:pb-0 scrollbar-hide">
                     {/* All Categories Button */}
                     <button
                       onClick={() => setSelectedCategory(null)}
-                      className={`relative flex flex-col items-center gap-2 p-3 rounded-xl border-2 transition-all duration-200 hover:scale-105 shadow-sm hover:shadow-md ${
+                      className={`relative flex flex-col items-center gap-1 p-2 rounded-xl border-2 transition-all duration-200 hover:scale-105 shadow-sm hover:shadow-md flex-shrink-0 ${
                         selectedCategory === null
                           ? 'bg-blue-500 border-blue-600 text-white'
                           : 'bg-white border-gray-200 hover:border-blue-400 hover:bg-blue-50'
                       }`}
                     >
-                      <div className="w-16 h-16 sm:w-20 sm:h-20 flex items-center justify-center">
-                        <span className="text-4xl sm:text-5xl">📦</span>
+                      <div className="w-12 h-12 sm:w-20 sm:h-20 flex items-center justify-center">
+                        <span className="text-3xl sm:text-5xl">📦</span>
                       </div>
-                      <span className={`text-[10px] sm:text-xs font-bold text-center leading-tight ${
+                      <span className={`text-[9px] sm:text-xs font-bold text-center leading-tight whitespace-nowrap ${
                         selectedCategory === null ? 'text-white' : 'text-gray-700'
                       }`}>
                         הכל
@@ -1334,14 +1334,14 @@ export default function CityPage() {
                       <button
                         key={categoryName}
                         onClick={() => setSelectedCategory(categoryName)}
-                        className={`relative flex flex-col items-center gap-2 p-3 rounded-xl border-2 transition-all duration-200 hover:scale-105 shadow-sm hover:shadow-md ${
+                        className={`relative flex flex-col items-center gap-1 p-2 rounded-xl border-2 transition-all duration-200 hover:scale-105 shadow-sm hover:shadow-md flex-shrink-0 ${
                           selectedCategory === categoryName
                             ? 'bg-blue-500 border-blue-600 text-white'
                             : 'bg-white border-gray-200 hover:border-blue-400 hover:bg-blue-50'
                         }`}
                       >
                         {/* Display image or fallback icon */}
-                        <div className="w-16 h-16 sm:w-20 sm:h-20 flex items-center justify-center">
+                        <div className="w-12 h-12 sm:w-20 sm:h-20 flex items-center justify-center">
                           {icon && icon.startsWith('http') ? (
                             <img
                               src={icon}
@@ -1349,10 +1349,10 @@ export default function CityPage() {
                               className="w-full h-full object-contain"
                             />
                           ) : (
-                            <span className="text-4xl sm:text-5xl">{icon || '📦'}</span>
+                            <span className="text-3xl sm:text-5xl">{icon || '📦'}</span>
                           )}
                         </div>
-                        <span className={`text-[10px] sm:text-xs font-bold text-center leading-tight ${
+                        <span className={`text-[9px] sm:text-xs font-bold text-center leading-tight whitespace-nowrap ${
                           selectedCategory === categoryName ? 'text-white' : 'text-gray-700'
                         }`}>
                           {categoryName}
