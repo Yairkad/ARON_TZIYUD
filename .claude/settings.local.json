@@ -90,7 +90,9 @@
       "Bash(start:*)",
       "Bash(npx vercel login)",
       "Bash(\"c:\\Users\\יאיר קדוש\\ARON_TZIYUD\\src\\lib\\supabase-server.ts\")",
-      "Bash(cat:*)"
+      "Bash(cat:*)",
+      "Bash(tasklist:*)",
+      "Bash(taskkill:*)"
     ],
     "deny": [],
     "ask": []
