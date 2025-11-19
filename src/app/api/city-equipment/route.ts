@@ -30,7 +30,7 @@ async function createSupabaseClient() {
 // GET - Fetch equipment for a specific city
 export async function GET(request: Request) {
   try {
-    const supabase = await createSupabaseClient()
+    const supabase = createServerClient()
     const { searchParams } = new URL(request.url)
     const cityId = searchParams.get('cityId')
 
@@ -66,7 +66,7 @@ export async function GET(request: Request) {
 // POST - Add equipment from global pool to city
 export async function POST(request: Request) {
   try {
-    const supabase = await createSupabaseClient()
+    const supabase = createServerClient()
     const body = await request.json()
     const { city_id, global_equipment_id, quantity = 0, display_order } = body
 
@@ -151,7 +151,7 @@ export async function POST(request: Request) {
 // PUT - Update city equipment (quantity, display_order)
 export async function PUT(request: Request) {
   try {
-    const supabase = await createSupabaseClient()
+    const supabase = createServerClient()
     const body = await request.json()
     const { id, quantity, display_order } = body
 
@@ -229,7 +229,7 @@ export async function PUT(request: Request) {
 // DELETE - Remove equipment from city (doesn't affect global pool)
 export async function DELETE(request: Request) {
   try {
-    const supabase = await createSupabaseClient()
+    const supabase = createServerClient()
     const { searchParams } = new URL(request.url)
     const id = searchParams.get('id')
 

@@ -30,7 +30,7 @@ async function createSupabaseClient() {
 // POST - Add multiple equipment items from global pool to city
 export async function POST(request: Request) {
   try {
-    const supabase = await createSupabaseClient()
+    const supabase = createServerClient()
     const body = await request.json()
     const { city_id, equipment_ids } = body // equipment_ids: string[]
 
