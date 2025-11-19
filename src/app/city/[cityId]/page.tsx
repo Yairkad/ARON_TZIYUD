@@ -1310,12 +1310,12 @@ export default function CityPage() {
                   {/* Background layer */}
                   <div className="absolute inset-0 bg-gradient-to-b from-white via-white to-blue-50 shadow-md border-b-2 border-blue-100"></div>
 
-                  {/* Categories Grid */}
-                  <div className="relative grid grid-cols-4 sm:grid-cols-6 md:grid-cols-8 gap-2 sm:gap-4 pb-3">
+                  {/* Categories - Horizontal scroll */}
+                  <div className="relative flex sm:grid sm:grid-cols-6 md:grid-cols-8 gap-2 sm:gap-4 overflow-x-auto pb-2 sm:pb-3 scrollbar-hide">
                     {/* All Categories Button */}
                     <button
                       onClick={() => setSelectedCategory(null)}
-                      className={`relative flex flex-col items-center gap-1 p-2 rounded-xl border-2 transition-all duration-200 hover:scale-105 shadow-sm hover:shadow-md ${
+                      className={`relative flex flex-col items-center gap-1 p-2 rounded-xl border-2 transition-all duration-200 hover:scale-105 shadow-sm hover:shadow-md flex-shrink-0 ${
                         selectedCategory === null
                           ? 'bg-blue-500 border-blue-600 text-white'
                           : 'bg-white border-gray-200 hover:border-blue-400 hover:bg-blue-50'
@@ -1335,7 +1335,7 @@ export default function CityPage() {
                       <button
                         key={categoryName}
                         onClick={() => setSelectedCategory(categoryName)}
-                        className={`relative flex flex-col items-center gap-1 p-2 rounded-xl border-2 transition-all duration-200 hover:scale-105 shadow-sm hover:shadow-md ${
+                        className={`relative flex flex-col items-center gap-1 p-2 rounded-xl border-2 transition-all duration-200 hover:scale-105 shadow-sm hover:shadow-md flex-shrink-0 ${
                           selectedCategory === categoryName
                             ? 'bg-blue-500 border-blue-600 text-white'
                             : 'bg-white border-gray-200 hover:border-blue-400 hover:bg-blue-50'
@@ -1362,20 +1362,24 @@ export default function CityPage() {
                     ))}
                   </div>
 
-                  {/* Selected Items Bar - Mobile Only - Inside sticky container */}
+                  {/* Selected Items Summary - Mobile Only - Inside sticky container */}
                   {selectedItems.size > 0 && activeTab === 'borrow' && (
-                    <div className="relative sm:hidden pb-2">
-                      <div className="bg-gradient-to-r from-blue-500 to-indigo-500 text-white rounded-xl p-2 shadow-lg flex items-center justify-between">
-                        <span className="text-sm font-bold">✓ {selectedItems.size} פריטים נבחרו</span>
-                        <button
-                          onClick={() => {
-                            setSelectedItems(new Set())
-                            setItemQuantities({})
-                          }}
-                          className="text-xs bg-white/20 hover:bg-white/30 px-2 py-1 rounded-lg transition-colors"
-                        >
-                          ✕ נקה
-                        </button>
+                    <div className="relative sm:hidden pb-2 pt-2">
+                      <div className="bg-blue-50 border-2 border-blue-200 rounded-xl p-3">
+                        <p className="text-sm font-semibold text-gray-700 mb-2">✅ פריטים שנבחרו ({selectedItems.size}):</p>
+                        <div className="flex flex-wrap gap-2">
+                          {Array.from(selectedItems).map(id => {
+                            const item = equipment.find(eq => eq.id === id)
+                            return (
+                              <div key={id} className="bg-white px-3 py-1 rounded-lg border border-blue-300 text-sm">
+                                <span className="font-medium">{item?.name}</span>
+                                {item?.is_consumable && (
+                                  <span className="text-blue-600 font-bold mr-1">×{itemQuantities[id] || 1}</span>
+                                )}
+                              </div>
+                            )
+                          })}
+                        </div>
                       </div>
                     </div>
                   )}

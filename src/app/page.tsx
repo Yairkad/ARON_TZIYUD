@@ -93,22 +93,11 @@ export default function HomePage() {
           <Logo />
         </div>
 
-        {/* Welcome Message */}
-        <div className="space-y-4">
-          <h2 className="text-3xl sm:text-4xl font-bold text-gray-800">
-            ברוכים הבאים לארון הציוד
-          </h2>
-          <p className="text-lg sm:text-xl text-gray-600">
-            מערכת השאלות וניהול ציוד מתקדמת
-          </p>
-        </div>
-
         {/* City Selector - Direct Search */}
         <div className="relative">
           <Card className="border-2 border-blue-200 bg-gradient-to-r from-blue-50 to-indigo-50 shadow-2xl">
             <CardContent className="p-8">
               <div className="space-y-4">
-                <div className="text-6xl mb-4 text-center">🏙️</div>
                 <h3 className="text-2xl font-bold text-gray-800 mb-2 text-center">
                   בחר עיר להתחלה
                 </h3>
