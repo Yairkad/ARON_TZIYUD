@@ -321,7 +321,10 @@ export default function GlobalEquipmentPage() {
               <Link href="/super-admin">
                 <Button variant="outline">חזרה לניהול ראשי</Button>
               </Link>
-              <Button variant="destructive" onClick={() => logout(router)}>
+              <Button variant="destructive" onClick={async () => {
+                await logout()
+                router.push('/super-admin')
+              }}>
                 התנתק
               </Button>
             </div>
