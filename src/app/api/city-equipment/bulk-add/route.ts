@@ -5,7 +5,14 @@ import { NextResponse } from 'next/server'
 // Helper to create Supabase client with user context
 async function createSupabaseClient() {
   const cookieStore = await cookies()
-  const authToken = cookieStore.get('sb-jgkmcsxrtovrdiguhwyv-auth-token')?.value
+
+  // Get all cookies and find the auth token
+  const allCookies = cookieStore.getAll()
+  const authCookie = allCookies.find(cookie =>
+    cookie.name.startsWith('sb-') && cookie.name.includes('-auth-token')
+  )
+
+  const authToken = authCookie?.value
 
   return createClient(
     process.env.NEXT_PUBLIC_SUPABASE_URL!,
