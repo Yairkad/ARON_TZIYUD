@@ -24,21 +24,55 @@ export default function RequestsTab({ cityId, cityName, managerName, onRequestsU
   const [approvedRequest, setApprovedRequest] = useState<string | null>(null)
   const [expandedRequests, setExpandedRequests] = useState<Set<string>>(new Set())
   const [lastUpdated, setLastUpdated] = useState<Date | null>(null)
+  const [pollInterval, setPollInterval] = useState(30000) // Start with 30 seconds
+  const [noChangeCount, setNoChangeCount] = useState(0)
+  const [lastRequestCount, setLastRequestCount] = useState(0)
 
   useEffect(() => {
     fetchRequests()
+    // Reset polling when city changes
+    setPollInterval(30000)
+    setNoChangeCount(0)
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [cityId])
 
-  // Auto-refresh every 30 seconds to check for new requests
+  // Smart auto-refresh with exponential backoff
   useEffect(() => {
     const interval = setInterval(() => {
-      console.log('🔄 Auto-refreshing requests...')
+      console.log(`🔄 Auto-refreshing requests... (interval: ${pollInterval / 1000}s)`)
       fetchRequests()
-    }, 30000) // 30 seconds
+    }, pollInterval)
 
     return () => clearInterval(interval)
-  }, [cityId])
+  }, [cityId, pollInterval])
+
+  // Adjust polling interval based on activity
+  useEffect(() => {
+    const currentCount = requests.length
+    const pendingCount = requests.filter(r => r.status === 'pending').length
+
+    // If there are pending requests, keep polling frequently
+    if (pendingCount > 0) {
+      setPollInterval(30000) // 30 seconds
+      setNoChangeCount(0)
+      return
+    }
+
+    // If no changes in request count
+    if (currentCount === lastRequestCount) {
+      setNoChangeCount(prev => prev + 1)
+      // Increase interval after no changes (max 5 minutes)
+      if (noChangeCount >= 3) {
+        setPollInterval(prev => Math.min(prev * 1.5, 300000))
+      }
+    } else {
+      // Changes detected, reset to fast polling
+      setPollInterval(30000)
+      setNoChangeCount(0)
+    }
+
+    setLastRequestCount(currentCount)
+  }, [requests, lastRequestCount, noChangeCount])
 
   const fetchRequests = async () => {
     setLoading(true)

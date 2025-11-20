@@ -22,10 +22,18 @@ export async function GET(request: NextRequest) {
       )
     }
 
-    return NextResponse.json({
-      success: true,
-      categories: categories || []
-    })
+    // Cache categories for 5 minutes - they rarely change
+    return NextResponse.json(
+      {
+        success: true,
+        categories: categories || []
+      },
+      {
+        headers: {
+          'Cache-Control': 'public, s-maxage=300, stale-while-revalidate=600'
+        }
+      }
+    )
   } catch (error) {
     console.error('Error in categories API:', error)
     return NextResponse.json(

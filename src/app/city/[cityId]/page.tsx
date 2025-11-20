@@ -1348,6 +1348,7 @@ export default function CityPage() {
                               src={icon}
                               alt={categoryName}
                               className="w-full h-full object-contain"
+                              loading="lazy"
                             />
                           ) : (
                             <span className="text-3xl sm:text-5xl">{icon || '📦'}</span>
@@ -1464,7 +1465,7 @@ export default function CityPage() {
                             {/* Image or Emoji - LARGER */}
                             <div className="flex-1 flex items-center justify-center px-1 py-1">
                               {item.image_url && item.image_url.startsWith('http') ? (
-                                <img src={item.image_url} alt={item.name} className="max-w-full max-h-full object-contain rounded-lg" />
+                                <img src={item.image_url} alt={item.name} className="max-w-full max-h-full object-contain rounded-lg" loading="lazy" />
                               ) : (
                                 <span className="text-4xl sm:text-5xl">{item.image_url || '📦'}</span>
                               )}

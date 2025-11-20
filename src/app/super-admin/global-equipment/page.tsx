@@ -88,14 +88,18 @@ export default function GlobalEquipmentPage() {
   const fetchEquipment = async () => {
     setLoading(true)
     try {
-      // Fetch active equipment
-      const activeResponse = await fetch('/api/global-equipment?status=active&includeCategories=true')
-      const activeData = await activeResponse.json()
-      setEquipment(activeData.equipment || [])
+      // Fetch active and pending equipment in parallel for better performance
+      const [activeResponse, pendingResponse] = await Promise.all([
+        fetch('/api/global-equipment?status=active&includeCategories=true'),
+        fetch('/api/global-equipment?status=pending_approval&includeCategories=true')
+      ])
 
-      // Fetch pending equipment
-      const pendingResponse = await fetch('/api/global-equipment?status=pending_approval&includeCategories=true')
-      const pendingData = await pendingResponse.json()
+      const [activeData, pendingData] = await Promise.all([
+        activeResponse.json(),
+        pendingResponse.json()
+      ])
+
+      setEquipment(activeData.equipment || [])
       setPendingEquipment(pendingData.equipment || [])
     } catch (error) {
       console.error('Error fetching equipment:', error)
@@ -676,6 +680,7 @@ export default function GlobalEquipmentPage() {
                                         src={item.image_url}
                                         alt={item.name}
                                         className="w-full h-full object-cover rounded-lg"
+                                        loading="lazy"
                                       />
                                     ) : (
                                       <span className="text-2xl sm:text-3xl">{item.image_url}</span>
@@ -785,6 +790,7 @@ export default function GlobalEquipmentPage() {
                                     src={item.image_url}
                                     alt={item.name}
                                     className="w-full h-full object-cover rounded-lg"
+                                    loading="lazy"
                                   />
                                 ) : (
                                   <span className="text-2xl">{item.image_url}</span>

@@ -1512,7 +1512,7 @@ export default function CityAdminPage() {
                           <div className="flex-1 min-w-0">
                             <div className="flex items-center gap-2">
                               {(item as any).image_url && (item as any).image_url.startsWith('http') ? (
-                                <img src={(item as any).image_url} alt={item.name} className="w-8 h-8 object-cover rounded-lg" />
+                                <img src={(item as any).image_url} alt={item.name} className="w-8 h-8 object-cover rounded-lg" loading="lazy" />
                               ) : (
                                 <span className="text-lg">{(item as any).image_url || '📦'}</span>
                               )}

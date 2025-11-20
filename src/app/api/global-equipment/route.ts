@@ -72,7 +72,15 @@ export async function GET(request: Request) {
       return NextResponse.json({ error: error.message }, { status: 500 })
     }
 
-    return NextResponse.json({ equipment })
+    // Cache for 1 minute with stale-while-revalidate for better performance
+    return NextResponse.json(
+      { equipment },
+      {
+        headers: {
+          'Cache-Control': 'public, s-maxage=60, stale-while-revalidate=120'
+        }
+      }
+    )
   } catch (error) {
     console.error('Error in global equipment GET:', error)
     return NextResponse.json({ error: 'שגיאת שרת' }, { status: 500 })
