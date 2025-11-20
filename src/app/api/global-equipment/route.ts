@@ -72,15 +72,7 @@ export async function GET(request: Request) {
       return NextResponse.json({ error: error.message }, { status: 500 })
     }
 
-    // Cache for 1 minute with stale-while-revalidate for better performance
-    return NextResponse.json(
-      { equipment },
-      {
-        headers: {
-          'Cache-Control': 'public, s-maxage=60, stale-while-revalidate=120'
-        }
-      }
-    )
+    return NextResponse.json({ equipment })
   } catch (error) {
     console.error('Error in global equipment GET:', error)
     return NextResponse.json({ error: 'שגיאת שרת' }, { status: 500 })
@@ -235,10 +227,10 @@ export async function PUT(request: Request) {
   }
 }
 
-// DELETE - Archive equipment (Super Admin only)
+// DELETE - Delete equipment permanently (Super Admin only)
 export async function DELETE(request: Request) {
   try {
-    const supabase = await createAuthClient()
+    const authClient = await createAuthClient()
     const { searchParams } = new URL(request.url)
     const id = searchParams.get('id')
 
@@ -247,12 +239,12 @@ export async function DELETE(request: Request) {
     }
 
     // Check authentication and role
-    const { data: { user } } = await supabase.auth.getUser()
+    const { data: { user } } = await authClient.auth.getUser()
     if (!user) {
       return NextResponse.json({ error: 'לא מורשה' }, { status: 401 })
     }
 
-    const { data: userData } = await supabase
+    const { data: userData } = await authClient
       .from('users')
       .select('role')
       .eq('id', user.id)
@@ -261,6 +253,18 @@ export async function DELETE(request: Request) {
     if (userData?.role !== 'super_admin') {
       return NextResponse.json({ error: 'רק מנהל ראשי יכול למחוק פריטים מהמאגר' }, { status: 403 })
     }
+
+    // Use service client for deletion
+    const supabase = createClient(
+      process.env.NEXT_PUBLIC_SUPABASE_URL!,
+      process.env.SUPABASE_SERVICE_ROLE_KEY!,
+      {
+        auth: {
+          autoRefreshToken: false,
+          persistSession: false
+        }
+      }
+    )
 
     // Get equipment name for notification
     const { data: equipmentData } = await supabase
@@ -271,27 +275,13 @@ export async function DELETE(request: Request) {
 
     const equipmentName = equipmentData?.name || 'פריט לא ידוע'
 
-    // Get all cities using this equipment before archiving
+    // Get all cities using this equipment before deleting
     const { data: citiesUsing } = await supabase
       .from('city_equipment')
       .select('city_id, cities(id, name)')
       .eq('global_equipment_id', id)
 
-    // Archive instead of delete (keeps history)
-    const { error } = await supabase
-      .from('global_equipment_pool')
-      .update({
-        status: 'archived',
-        updated_at: new Date().toISOString()
-      })
-      .eq('id', id)
-
-    if (error) {
-      console.error('Error archiving global equipment:', error)
-      return NextResponse.json({ error: error.message }, { status: 500 })
-    }
-
-    // Send notifications to affected cities
+    // Send notifications to affected cities BEFORE deleting
     if (citiesUsing && citiesUsing.length > 0) {
       const notifications = citiesUsing.map((item: any) => ({
         city_id: item.city_id,
@@ -305,9 +295,25 @@ export async function DELETE(request: Request) {
         .insert(notifications)
     }
 
-    // Note: CASCADE will remove from all cities automatically
+    // Delete from city_equipment first (foreign key constraint)
+    await supabase
+      .from('city_equipment')
+      .delete()
+      .eq('global_equipment_id', id)
+
+    // Delete permanently from global pool
+    const { error } = await supabase
+      .from('global_equipment_pool')
+      .delete()
+      .eq('id', id)
+
+    if (error) {
+      console.error('Error deleting global equipment:', error)
+      return NextResponse.json({ error: error.message }, { status: 500 })
+    }
+
     return NextResponse.json({
-      message: 'הפריט הוסר מהמאגר ומכל הערים',
+      message: 'הפריט נמחק לצמיתות מהמאגר ומכל הערים',
       affectedCities: citiesUsing?.length || 0
     })
   } catch (error) {
