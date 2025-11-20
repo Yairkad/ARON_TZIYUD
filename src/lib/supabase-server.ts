@@ -3,9 +3,8 @@ import { createClient } from '@supabase/supabase-js'
 import { cookies } from 'next/headers'
 
 // For routes that need user context (uses cookies for auth)
-export async function createServerClient() {
-  const cookieStore = await cookies()
-  return createRouteHandlerClient({ cookies: () => cookieStore })
+export function createServerClient() {
+  return createRouteHandlerClient({ cookies })
 }
 
 // For routes that need service role access (admin operations)
@@ -44,7 +43,7 @@ export async function getCurrentUserProfile(accessToken?: string) {
     )
   } else {
     // Use cookies for authentication (route handler pattern)
-    supabase = await createServerClient()
+    supabase = createServerClient()
   }
 
   const { data: { user } } = await supabase.auth.getUser()

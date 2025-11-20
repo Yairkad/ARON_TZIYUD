@@ -5,8 +5,7 @@ import { NextResponse } from 'next/server'
 // POST - Approve or reject pending equipment
 export async function POST(request: Request) {
   try {
-    const cookieStore = await cookies()
-    const supabase = createRouteHandlerClient({ cookies: () => cookieStore })
+    const supabase = createRouteHandlerClient({ cookies })
     const body = await request.json()
     const { equipmentId, action } = body // action: 'approve' | 'reject'
 
