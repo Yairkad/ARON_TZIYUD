@@ -7,18 +7,31 @@ async function createAuthClient() {
   const cookieStore = await cookies()
   const allCookies = cookieStore.getAll()
 
-  // Find the auth token cookie
+  // Find the auth token cookie - Supabase stores it as JSON with access_token
   const authCookie = allCookies.find(cookie =>
     cookie.name.includes('auth-token') && cookie.name.startsWith('sb-')
   )
 
+  let accessToken: string | undefined
+
+  if (authCookie) {
+    try {
+      // The cookie value is JSON encoded
+      const parsed = JSON.parse(authCookie.value)
+      accessToken = parsed.access_token
+    } catch {
+      // If not JSON, try using the value directly
+      accessToken = authCookie.value
+    }
+  }
+
   const supabase = createClient(
     process.env.NEXT_PUBLIC_SUPABASE_URL!,
     process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!,
-    authCookie ? {
+    accessToken ? {
       global: {
         headers: {
-          Authorization: `Bearer ${authCookie.value}`
+          Authorization: `Bearer ${accessToken}`
         }
       }
     } : {}

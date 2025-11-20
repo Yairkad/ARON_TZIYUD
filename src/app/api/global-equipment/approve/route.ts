@@ -11,13 +11,24 @@ async function createAuthClient() {
     cookie.name.includes('auth-token') && cookie.name.startsWith('sb-')
   )
 
+  let accessToken: string | undefined
+
+  if (authCookie) {
+    try {
+      const parsed = JSON.parse(authCookie.value)
+      accessToken = parsed.access_token
+    } catch {
+      accessToken = authCookie.value
+    }
+  }
+
   return createClient(
     process.env.NEXT_PUBLIC_SUPABASE_URL!,
     process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!,
-    authCookie ? {
+    accessToken ? {
       global: {
         headers: {
-          Authorization: `Bearer ${authCookie.value}`
+          Authorization: `Bearer ${accessToken}`
         }
       }
     } : {}
