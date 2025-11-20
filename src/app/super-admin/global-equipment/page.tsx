@@ -353,51 +353,22 @@ export default function GlobalEquipmentPage() {
 
     setLoading(true)
     try {
-      // Update all city_equipment records to point to the new equipment
-      const { error: updateError } = await supabase
-        .from('city_equipment')
-        .update({ global_equipment_id: mergeTarget })
-        .eq('global_equipment_id', mergeSource.id)
+      const response = await fetch('/api/global-equipment/merge', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          sourceId: mergeSource.id,
+          targetId: mergeTarget
+        })
+      })
 
-      if (updateError) {
-        // Handle duplicate constraint - some cities might already have the target equipment
-        if (updateError.code === '23505') {
-          // Delete duplicates first, then update
-          const { data: existing } = await supabase
-            .from('city_equipment')
-            .select('city_id')
-            .eq('global_equipment_id', mergeTarget)
+      const data = await response.json()
 
-          const existingCityIds = existing?.map(e => e.city_id) || []
-
-          // Delete source equipment entries for cities that already have the target
-          await supabase
-            .from('city_equipment')
-            .delete()
-            .eq('global_equipment_id', mergeSource.id)
-            .in('city_id', existingCityIds)
-
-          // Now update remaining
-          await supabase
-            .from('city_equipment')
-            .update({ global_equipment_id: mergeTarget })
-            .eq('global_equipment_id', mergeSource.id)
-        } else {
-          throw updateError
-        }
+      if (!response.ok) {
+        throw new Error(data.error || 'שגיאה במיזוג הפריטים')
       }
 
-      // Delete the source equipment from global pool
-      const { error: deleteError } = await supabase
-        .from('global_equipment_pool')
-        .delete()
-        .eq('id', mergeSource.id)
-
-      if (deleteError) {
-        throw deleteError
-      }
-
-      alert('הפריטים מוזגו בהצלחה')
+      alert(data.message || 'הפריטים מוזגו בהצלחה')
       setShowMergeModal(false)
       setMergeSource(null)
       setMergeTarget('')
