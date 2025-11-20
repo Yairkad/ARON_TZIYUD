@@ -1,10 +1,26 @@
-import { createRouteHandlerClient } from '@supabase/auth-helpers-nextjs'
 import { createClient } from '@supabase/supabase-js'
 import { cookies } from 'next/headers'
 
 // For routes that need user context (uses cookies for auth)
-export function createServerClient() {
-  return createRouteHandlerClient({ cookies })
+export async function createServerClient() {
+  const cookieStore = await cookies()
+  const allCookies = cookieStore.getAll()
+
+  const authCookie = allCookies.find(cookie =>
+    cookie.name.includes('auth-token') && cookie.name.startsWith('sb-')
+  )
+
+  return createClient(
+    process.env.NEXT_PUBLIC_SUPABASE_URL!,
+    process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!,
+    authCookie ? {
+      global: {
+        headers: {
+          Authorization: `Bearer ${authCookie.value}`
+        }
+      }
+    } : {}
+  )
 }
 
 // For routes that need service role access (admin operations)
@@ -43,7 +59,7 @@ export async function getCurrentUserProfile(accessToken?: string) {
     )
   } else {
     // Use cookies for authentication (route handler pattern)
-    supabase = createServerClient()
+    supabase = await createServerClient()
   }
 
   const { data: { user } } = await supabase.auth.getUser()

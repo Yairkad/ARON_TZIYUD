@@ -1,11 +1,33 @@
-import { createRouteHandlerClient } from '@supabase/auth-helpers-nextjs'
+import { createClient } from '@supabase/supabase-js'
 import { cookies } from 'next/headers'
 import { NextResponse } from 'next/server'
+
+// Helper to create authenticated Supabase client
+async function createAuthClient() {
+  const cookieStore = await cookies()
+  const allCookies = cookieStore.getAll()
+
+  const authCookie = allCookies.find(cookie =>
+    cookie.name.includes('auth-token') && cookie.name.startsWith('sb-')
+  )
+
+  return createClient(
+    process.env.NEXT_PUBLIC_SUPABASE_URL!,
+    process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!,
+    authCookie ? {
+      global: {
+        headers: {
+          Authorization: `Bearer ${authCookie.value}`
+        }
+      }
+    } : {}
+  )
+}
 
 // POST - Approve or reject pending equipment
 export async function POST(request: Request) {
   try {
-    const supabase = createRouteHandlerClient({ cookies })
+    const supabase = await createAuthClient()
     const body = await request.json()
     const { equipmentId, action } = body // action: 'approve' | 'reject'
 

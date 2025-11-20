@@ -1,11 +1,33 @@
-import { createRouteHandlerClient } from '@supabase/auth-helpers-nextjs'
+import { createClient } from '@supabase/supabase-js'
 import { cookies } from 'next/headers'
 import { NextResponse } from 'next/server'
+
+// Helper to create authenticated Supabase client
+async function createAuthClient() {
+  const cookieStore = await cookies()
+  const allCookies = cookieStore.getAll()
+
+  const authCookie = allCookies.find(cookie =>
+    cookie.name.includes('auth-token') && cookie.name.startsWith('sb-')
+  )
+
+  return createClient(
+    process.env.NEXT_PUBLIC_SUPABASE_URL!,
+    process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!,
+    authCookie ? {
+      global: {
+        headers: {
+          Authorization: `Bearer ${authCookie.value}`
+        }
+      }
+    } : {}
+  )
+}
 
 // GET - Fetch equipment for a specific city
 export async function GET(request: Request) {
   try {
-    const supabase = createRouteHandlerClient({ cookies })
+    const supabase = await createAuthClient()
     const { searchParams } = new URL(request.url)
     const cityId = searchParams.get('cityId')
 
@@ -41,7 +63,7 @@ export async function GET(request: Request) {
 // POST - Add equipment from global pool to city
 export async function POST(request: Request) {
   try {
-    const supabase = createRouteHandlerClient({ cookies })
+    const supabase = await createAuthClient()
     const body = await request.json()
     const { city_id, global_equipment_id, quantity = 0, display_order } = body
 
@@ -126,7 +148,7 @@ export async function POST(request: Request) {
 // PUT - Update city equipment (quantity, display_order)
 export async function PUT(request: Request) {
   try {
-    const supabase = createRouteHandlerClient({ cookies })
+    const supabase = await createAuthClient()
     const body = await request.json()
     const { id, quantity, display_order } = body
 
@@ -204,7 +226,7 @@ export async function PUT(request: Request) {
 // DELETE - Remove equipment from city (doesn't affect global pool)
 export async function DELETE(request: Request) {
   try {
-    const supabase = createRouteHandlerClient({ cookies })
+    const supabase = await createAuthClient()
     const { searchParams } = new URL(request.url)
     const id = searchParams.get('id')
 
