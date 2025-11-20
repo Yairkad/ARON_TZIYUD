@@ -41,6 +41,17 @@ export default function GlobalEquipmentPage() {
     category_id: ''
   })
 
+  // City list popup state
+  const [showCityList, setShowCityList] = useState(false)
+  const [selectedEquipmentForCities, setSelectedEquipmentForCities] = useState<GlobalEquipmentPool | null>(null)
+  const [citiesUsingEquipment, setCitiesUsingEquipment] = useState<{id: string, name: string}[]>([])
+  const [loadingCities, setLoadingCities] = useState(false)
+
+  // Merge state
+  const [showMergeModal, setShowMergeModal] = useState(false)
+  const [mergeSource, setMergeSource] = useState<GlobalEquipmentPool | null>(null)
+  const [mergeTarget, setMergeTarget] = useState<string>('')
+
   // Check authentication
   useEffect(() => {
     const verifyAuth = async () => {
@@ -294,6 +305,111 @@ export default function GlobalEquipmentPage() {
     } catch (error) {
       console.error('Error fetching usage count:', error)
     }
+  }
+
+  // Fetch cities using specific equipment
+  const fetchCitiesUsingEquipment = async (equipmentId: string) => {
+    setLoadingCities(true)
+    try {
+      const { data, error } = await supabase
+        .from('city_equipment')
+        .select('city_id, cities(id, name)')
+        .eq('global_equipment_id', equipmentId)
+
+      if (!error && data) {
+        const cities = data
+          .map((item: any) => item.cities)
+          .filter(Boolean)
+          .map((city: any) => ({ id: city.id, name: city.name }))
+        setCitiesUsingEquipment(cities)
+      }
+    } catch (error) {
+      console.error('Error fetching cities:', error)
+    } finally {
+      setLoadingCities(false)
+    }
+  }
+
+  const showCitiesPopup = (item: GlobalEquipmentPool) => {
+    setSelectedEquipmentForCities(item)
+    fetchCitiesUsingEquipment(item.id)
+    setShowCityList(true)
+  }
+
+  // Merge equipment
+  const handleMergeEquipment = async () => {
+    if (!mergeSource || !mergeTarget || mergeSource.id === mergeTarget) {
+      alert('יש לבחור פריט יעד שונה מהמקור')
+      return
+    }
+
+    if (!confirm(`האם אתה בטוח שברצונך למזג את "${mergeSource.name}" לתוך הפריט הנבחר? כל הערים שמשתמשות בפריט זה יעודכנו לפריט החדש והפריט הישן יימחק.`)) {
+      return
+    }
+
+    setLoading(true)
+    try {
+      // Update all city_equipment records to point to the new equipment
+      const { error: updateError } = await supabase
+        .from('city_equipment')
+        .update({ global_equipment_id: mergeTarget })
+        .eq('global_equipment_id', mergeSource.id)
+
+      if (updateError) {
+        // Handle duplicate constraint - some cities might already have the target equipment
+        if (updateError.code === '23505') {
+          // Delete duplicates first, then update
+          const { data: existing } = await supabase
+            .from('city_equipment')
+            .select('city_id')
+            .eq('global_equipment_id', mergeTarget)
+
+          const existingCityIds = existing?.map(e => e.city_id) || []
+
+          // Delete source equipment entries for cities that already have the target
+          await supabase
+            .from('city_equipment')
+            .delete()
+            .eq('global_equipment_id', mergeSource.id)
+            .in('city_id', existingCityIds)
+
+          // Now update remaining
+          await supabase
+            .from('city_equipment')
+            .update({ global_equipment_id: mergeTarget })
+            .eq('global_equipment_id', mergeSource.id)
+        } else {
+          throw updateError
+        }
+      }
+
+      // Delete the source equipment from global pool
+      const { error: deleteError } = await supabase
+        .from('global_equipment_pool')
+        .delete()
+        .eq('id', mergeSource.id)
+
+      if (deleteError) {
+        throw deleteError
+      }
+
+      alert('הפריטים מוזגו בהצלחה')
+      setShowMergeModal(false)
+      setMergeSource(null)
+      setMergeTarget('')
+      fetchEquipment()
+    } catch (error: any) {
+      console.error('Error merging equipment:', error)
+      alert('שגיאה במיזוג הפריטים: ' + error.message)
+    } finally {
+      setLoading(false)
+    }
+  }
+
+  const startMerge = (item: GlobalEquipmentPool) => {
+    setMergeSource(item)
+    setMergeTarget('')
+    setShowMergeModal(true)
   }
 
   if (isCheckingAuth) {
@@ -579,9 +695,12 @@ export default function GlobalEquipmentPage() {
                                       {category?.name || 'ללא קטגוריה'}
                                     </span>
                                     {usageCount > 0 && (
-                                      <span className="text-xs text-green-600 font-medium">
+                                      <button
+                                        onClick={() => showCitiesPopup(item)}
+                                        className="text-xs text-green-600 font-medium hover:text-green-800 hover:underline"
+                                      >
                                         {usageCount} ערים
-                                      </span>
+                                      </button>
                                     )}
                                   </div>
                                 </div>
@@ -594,6 +713,13 @@ export default function GlobalEquipmentPage() {
                                   className="flex-1 py-2.5 text-sm text-blue-600 hover:bg-blue-50 transition-colors font-medium"
                                 >
                                   ערוך
+                                </button>
+                                <div className="w-px bg-gray-100"></div>
+                                <button
+                                  onClick={() => startMerge(item)}
+                                  className="flex-1 py-2.5 text-sm text-purple-600 hover:bg-purple-50 transition-colors font-medium"
+                                >
+                                  מזג
                                 </button>
                                 <div className="w-px bg-gray-100"></div>
                                 <button
@@ -730,6 +856,86 @@ export default function GlobalEquipmentPage() {
         >
           +
         </button>
+      )}
+
+      {/* City List Modal */}
+      {showCityList && selectedEquipmentForCities && (
+        <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50 p-4" onClick={() => setShowCityList(false)}>
+          <div className="bg-white rounded-xl max-w-sm w-full max-h-[80vh] overflow-hidden" onClick={e => e.stopPropagation()}>
+            <div className="p-4 border-b border-gray-200">
+              <h3 className="font-bold text-lg">ערים המשתמשות ב-{selectedEquipmentForCities.name}</h3>
+            </div>
+            <div className="p-4 overflow-y-auto max-h-[60vh]">
+              {loadingCities ? (
+                <div className="flex items-center justify-center py-4">
+                  <div className="w-2 h-2 bg-blue-600 rounded-full animate-bounce mx-1"></div>
+                  <div className="w-2 h-2 bg-blue-600 rounded-full animate-bounce mx-1" style={{ animationDelay: '150ms' }}></div>
+                  <div className="w-2 h-2 bg-blue-600 rounded-full animate-bounce mx-1" style={{ animationDelay: '300ms' }}></div>
+                </div>
+              ) : citiesUsingEquipment.length === 0 ? (
+                <p className="text-gray-500 text-center">אין ערים המשתמשות בפריט זה</p>
+              ) : (
+                <ul className="space-y-2">
+                  {citiesUsingEquipment.map(city => (
+                    <li key={city.id} className="p-2 bg-gray-50 rounded-lg text-sm">
+                      {city.name}
+                    </li>
+                  ))}
+                </ul>
+              )}
+            </div>
+            <div className="p-4 border-t border-gray-200">
+              <Button onClick={() => setShowCityList(false)} className="w-full">
+                סגור
+              </Button>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* Merge Modal */}
+      {showMergeModal && mergeSource && (
+        <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50 p-4" onClick={() => setShowMergeModal(false)}>
+          <div className="bg-white rounded-xl max-w-md w-full" onClick={e => e.stopPropagation()}>
+            <div className="p-4 border-b border-gray-200">
+              <h3 className="font-bold text-lg">מיזוג פריט</h3>
+              <p className="text-sm text-gray-500 mt-1">
+                מזג את "{mergeSource.name}" לתוך פריט אחר
+              </p>
+            </div>
+            <div className="p-4">
+              <label className="block text-sm font-medium mb-2">בחר פריט יעד</label>
+              <select
+                value={mergeTarget}
+                onChange={(e) => setMergeTarget(e.target.value)}
+                className="w-full p-2.5 border border-gray-300 rounded-lg text-sm"
+              >
+                <option value="">בחר פריט...</option>
+                {equipment
+                  .filter(e => e.id !== mergeSource.id)
+                  .map(e => (
+                    <option key={e.id} value={e.id}>{e.name}</option>
+                  ))
+                }
+              </select>
+              <p className="text-xs text-gray-500 mt-2">
+                כל הערים שמשתמשות ב-"{mergeSource.name}" יעודכנו לפריט החדש, והפריט הנוכחי יימחק.
+              </p>
+            </div>
+            <div className="p-4 border-t border-gray-200 flex gap-2">
+              <Button
+                onClick={handleMergeEquipment}
+                disabled={!mergeTarget || loading}
+                className="flex-1 bg-purple-600 hover:bg-purple-700"
+              >
+                {loading ? 'ממזג...' : 'מזג'}
+              </Button>
+              <Button variant="outline" onClick={() => setShowMergeModal(false)} className="flex-1">
+                ביטול
+              </Button>
+            </div>
+          </div>
+        </div>
       )}
     </div>
   )

@@ -254,6 +254,21 @@ export async function DELETE(request: Request) {
       return NextResponse.json({ error: 'רק מנהל ראשי יכול למחוק פריטים מהמאגר' }, { status: 403 })
     }
 
+    // Get equipment name for notification
+    const { data: equipmentData } = await supabase
+      .from('global_equipment_pool')
+      .select('name')
+      .eq('id', id)
+      .single()
+
+    const equipmentName = equipmentData?.name || 'פריט לא ידוע'
+
+    // Get all cities using this equipment before archiving
+    const { data: citiesUsing } = await supabase
+      .from('city_equipment')
+      .select('city_id, cities(id, name)')
+      .eq('global_equipment_id', id)
+
     // Archive instead of delete (keeps history)
     const { error } = await supabase
       .from('global_equipment_pool')
@@ -268,8 +283,25 @@ export async function DELETE(request: Request) {
       return NextResponse.json({ error: error.message }, { status: 500 })
     }
 
+    // Send notifications to affected cities
+    if (citiesUsing && citiesUsing.length > 0) {
+      const notifications = citiesUsing.map((item: any) => ({
+        city_id: item.city_id,
+        city_name: item.cities?.name || 'עיר לא ידועה',
+        message: `הפריט "${equipmentName}" הוסר מהמאגר הגלובלי. יש לבחור פריט חלופי מהמאגר.`,
+        is_read: false
+      }))
+
+      await supabase
+        .from('admin_notifications')
+        .insert(notifications)
+    }
+
     // Note: CASCADE will remove from all cities automatically
-    return NextResponse.json({ message: 'הפריט הוסר מהמאגר ומכל הערים' })
+    return NextResponse.json({
+      message: 'הפריט הוסר מהמאגר ומכל הערים',
+      affectedCities: citiesUsing?.length || 0
+    })
   } catch (error) {
     console.error('Error in global equipment DELETE:', error)
     return NextResponse.json({ error: 'שגיאת שרת' }, { status: 500 })
