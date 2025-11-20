@@ -7,31 +7,9 @@ async function createAuthClient() {
   const cookieStore = await cookies()
   const allCookies = cookieStore.getAll()
 
-  // Log all cookies for debugging
-  console.log('🍪 All cookies:', allCookies.map(c => ({ name: c.name, valuePreview: c.value.substring(0, 50) })))
-
-  // Find the auth token cookie - Supabase stores it as JSON with access_token
-  // The cookie name format is: sb-{project-ref}-auth-token
-  const authCookie = allCookies.find(cookie =>
-    cookie.name.includes('auth-token') && cookie.name.startsWith('sb-')
-  )
-
-  console.log('🔑 Auth cookie found:', authCookie ? authCookie.name : 'none')
-
-  let accessToken: string | undefined
-
-  if (authCookie) {
-    try {
-      // The cookie value is JSON encoded
-      const parsed = JSON.parse(authCookie.value)
-      accessToken = parsed.access_token
-      console.log('✅ Access token extracted from JSON')
-    } catch {
-      // If not JSON, try using the value directly
-      accessToken = authCookie.value
-      console.log('⚠️ Cookie value is not JSON, using directly')
-    }
-  }
+  // Find the access token cookie - it's stored as 'sb-access-token'
+  const accessTokenCookie = allCookies.find(cookie => cookie.name === 'sb-access-token')
+  const accessToken = accessTokenCookie?.value
 
   const supabase = createClient(
     process.env.NEXT_PUBLIC_SUPABASE_URL!,

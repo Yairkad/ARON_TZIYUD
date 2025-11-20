@@ -7,20 +7,8 @@ async function createAuthClient() {
   const cookieStore = await cookies()
   const allCookies = cookieStore.getAll()
 
-  const authCookie = allCookies.find(cookie =>
-    cookie.name.includes('auth-token') && cookie.name.startsWith('sb-')
-  )
-
-  let accessToken: string | undefined
-
-  if (authCookie) {
-    try {
-      const parsed = JSON.parse(authCookie.value)
-      accessToken = parsed.access_token
-    } catch {
-      accessToken = authCookie.value
-    }
-  }
+  const accessTokenCookie = allCookies.find(cookie => cookie.name === 'sb-access-token')
+  const accessToken = accessTokenCookie?.value
 
   return createClient(
     process.env.NEXT_PUBLIC_SUPABASE_URL!,
