@@ -99,14 +99,14 @@ export async function POST(request: Request) {
 
     // Delete source equipment entries for cities that already have the target (to avoid duplicates)
     if (existingCityIds.length > 0) {
-      const { error: deleteError } = await supabase
+      const { error: deleteDupError } = await supabase
         .from('city_equipment')
         .delete()
         .eq('global_equipment_id', sourceId)
         .in('city_id', existingCityIds)
 
-      if (deleteError) {
-        console.error('Error deleting duplicate city equipment:', deleteError)
+      if (deleteDupError) {
+        console.error('Error deleting duplicate city equipment:', deleteDupError)
         // Continue anyway, the update might still work
       }
     }
@@ -122,15 +122,34 @@ export async function POST(request: Request) {
       return NextResponse.json({ error: 'שגיאה בעדכון ציוד הערים: ' + updateError.message }, { status: 500 })
     }
 
+    // Delete ALL remaining city_equipment records for the source (should not exist, but just in case)
+    await supabase
+      .from('city_equipment')
+      .delete()
+      .eq('global_equipment_id', sourceId)
+
     // Delete the source equipment from global pool
-    const { error: deleteError } = await supabase
+    const { data: deletedData, error: deleteError } = await supabase
       .from('global_equipment_pool')
       .delete()
       .eq('id', sourceId)
+      .select()
 
     if (deleteError) {
       console.error('Error deleting source equipment:', deleteError)
       return NextResponse.json({ error: 'שגיאה במחיקת הפריט המקורי: ' + deleteError.message }, { status: 500 })
+    }
+
+    // Verify deletion actually happened
+    const { data: checkDeleted } = await supabase
+      .from('global_equipment_pool')
+      .select('id')
+      .eq('id', sourceId)
+      .single()
+
+    if (checkDeleted) {
+      console.error('Source equipment still exists after deletion attempt')
+      return NextResponse.json({ error: 'הפריט המקורי לא נמחק - ייתכן שיש לו תלויות' }, { status: 500 })
     }
 
     return NextResponse.json({
