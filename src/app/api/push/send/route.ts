@@ -9,16 +9,31 @@ const supabase = createClient(
 
 // Configure web-push with VAPID keys
 // Generate keys with: npx web-push generate-vapid-keys
-const vapidPublicKey = process.env.NEXT_PUBLIC_VAPID_PUBLIC_KEY!
-const vapidPrivateKey = process.env.VAPID_PRIVATE_KEY!
-const vapidSubject = process.env.NEXT_PUBLIC_APP_URL || 'mailto:support@aron-tziyud.com'
+const vapidPublicKey = process.env.NEXT_PUBLIC_VAPID_PUBLIC_KEY
+const vapidPrivateKey = process.env.VAPID_PRIVATE_KEY
 
-if (vapidPublicKey && vapidPrivateKey) {
-  webpush.setVapidDetails(
-    vapidSubject,
-    vapidPublicKey,
-    vapidPrivateKey
-  )
+// VAPID subject must be mailto: or https:// URL
+const getVapidSubject = () => {
+  const appUrl = process.env.NEXT_PUBLIC_APP_URL
+  if (appUrl && appUrl.startsWith('https://')) {
+    return appUrl
+  }
+  return 'mailto:support@aron-tziyud.com'
+}
+
+// Only configure VAPID if both keys are properly set
+let vapidConfigured = false
+if (vapidPublicKey && vapidPrivateKey && vapidPrivateKey.length > 10) {
+  try {
+    webpush.setVapidDetails(
+      getVapidSubject(),
+      vapidPublicKey,
+      vapidPrivateKey
+    )
+    vapidConfigured = true
+  } catch (error) {
+    console.error('Failed to configure VAPID:', error)
+  }
 }
 
 export async function POST(request: NextRequest) {
@@ -30,6 +45,14 @@ export async function POST(request: NextRequest) {
         { error: 'חסר city_id' },
         { status: 400 }
       )
+    }
+
+    if (!vapidConfigured) {
+      return NextResponse.json({
+        success: false,
+        message: 'Push notifications are not configured',
+        sent: 0
+      })
     }
 
     // Get all push subscriptions for this city

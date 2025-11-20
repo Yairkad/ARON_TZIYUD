@@ -291,10 +291,14 @@ export default function GlobalEquipmentPage() {
 
   if (isCheckingAuth) {
     return (
-      <div className="min-h-screen bg-gradient-to-br from-blue-50 to-indigo-100 flex items-center justify-center">
+      <div className="min-h-screen bg-gradient-to-br from-slate-50 to-blue-50 flex items-center justify-center">
         <div className="text-center">
           <Logo />
-          <p className="text-gray-600 mt-4">טוען...</p>
+          <div className="mt-4 flex items-center justify-center gap-2">
+            <div className="w-2 h-2 bg-blue-600 rounded-full animate-bounce" style={{ animationDelay: '0ms' }}></div>
+            <div className="w-2 h-2 bg-blue-600 rounded-full animate-bounce" style={{ animationDelay: '150ms' }}></div>
+            <div className="w-2 h-2 bg-blue-600 rounded-full animate-bounce" style={{ animationDelay: '300ms' }}></div>
+          </div>
         </div>
       </div>
     )
@@ -305,91 +309,134 @@ export default function GlobalEquipmentPage() {
   }
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-blue-50 to-indigo-100 py-8 px-4" dir="rtl">
-      <div className="max-w-7xl mx-auto">
-        {/* Header */}
-        <div className="mb-8">
-          <div className="flex justify-between items-center mb-4">
-            <div className="flex items-center gap-4">
+    <div className="min-h-screen bg-gradient-to-br from-slate-50 to-blue-50" dir="rtl">
+      {/* Header - Fixed on mobile */}
+      <header className="sticky top-0 z-50 bg-white/80 backdrop-blur-md border-b border-gray-200 shadow-sm">
+        <div className="max-w-7xl mx-auto px-4 py-3 sm:py-4">
+          <div className="flex flex-col sm:flex-row sm:justify-between sm:items-center gap-3">
+            <div className="flex items-center gap-3">
               <Logo />
               <div>
-                <h1 className="text-3xl font-bold text-gray-800">ניהול מאגר ציוד גלובלי</h1>
-                <p className="text-gray-600">ניהול הציוד הגלובלי עבור כל הערים</p>
+                <h1 className="text-lg sm:text-2xl font-bold text-gray-800">ניהול מאגר ציוד</h1>
+                <p className="text-xs sm:text-sm text-gray-500 hidden sm:block">ניהול הציוד הגלובלי עבור כל הערים</p>
               </div>
             </div>
             <div className="flex gap-2">
-              <Link href="/super-admin">
-                <Button variant="outline">חזרה לניהול ראשי</Button>
+              <Link href="/super-admin" className="flex-1 sm:flex-none">
+                <Button variant="outline" size="sm" className="w-full sm:w-auto text-sm">
+                  חזרה
+                </Button>
               </Link>
-              <Button variant="destructive" onClick={async () => {
-                await logout()
-                router.push('/super-admin')
-              }}>
+              <Button
+                variant="destructive"
+                size="sm"
+                className="flex-1 sm:flex-none text-sm"
+                onClick={async () => {
+                  await logout()
+                  router.push('/super-admin')
+                }}
+              >
                 התנתק
               </Button>
             </div>
           </div>
         </div>
+      </header>
+
+      <main className="max-w-7xl mx-auto px-4 py-4 sm:py-6">
+        {/* Stats Cards */}
+        <div className="grid grid-cols-2 sm:grid-cols-4 gap-3 mb-4 sm:mb-6">
+          <div className="bg-white rounded-xl p-3 sm:p-4 shadow-sm border border-gray-100">
+            <div className="text-2xl sm:text-3xl font-bold text-blue-600">{equipment.length}</div>
+            <div className="text-xs sm:text-sm text-gray-500">פריטים פעילים</div>
+          </div>
+          <div className="bg-white rounded-xl p-3 sm:p-4 shadow-sm border border-gray-100">
+            <div className="text-2xl sm:text-3xl font-bold text-amber-600">{pendingEquipment.length}</div>
+            <div className="text-xs sm:text-sm text-gray-500">ממתינים לאישור</div>
+          </div>
+          <div className="bg-white rounded-xl p-3 sm:p-4 shadow-sm border border-gray-100">
+            <div className="text-2xl sm:text-3xl font-bold text-green-600">{categories.length}</div>
+            <div className="text-xs sm:text-sm text-gray-500">קטגוריות</div>
+          </div>
+          <div className="bg-white rounded-xl p-3 sm:p-4 shadow-sm border border-gray-100">
+            <div className="text-2xl sm:text-3xl font-bold text-purple-600">
+              {Object.values(equipmentUsageCount).reduce((a, b) => a + b, 0)}
+            </div>
+            <div className="text-xs sm:text-sm text-gray-500">שימושים בערים</div>
+          </div>
+        </div>
 
         {/* Tabs */}
-        <div className="flex gap-2 mb-6">
-          <Button
-            variant={activeTab === 'active' ? 'default' : 'outline'}
+        <div className="flex gap-2 mb-4 sm:mb-6 overflow-x-auto pb-1">
+          <button
             onClick={() => setActiveTab('active')}
+            className={`flex-shrink-0 px-4 py-2 rounded-lg text-sm font-medium transition-all ${
+              activeTab === 'active'
+                ? 'bg-blue-600 text-white shadow-md'
+                : 'bg-white text-gray-600 hover:bg-gray-50 border border-gray-200'
+            }`}
           >
             ציוד פעיל ({equipment.length})
-          </Button>
-          <Button
-            variant={activeTab === 'pending' ? 'default' : 'outline'}
+          </button>
+          <button
             onClick={() => setActiveTab('pending')}
-            className={pendingEquipment.length > 0 ? 'relative' : ''}
+            className={`flex-shrink-0 px-4 py-2 rounded-lg text-sm font-medium transition-all relative ${
+              activeTab === 'pending'
+                ? 'bg-amber-500 text-white shadow-md'
+                : 'bg-white text-gray-600 hover:bg-gray-50 border border-gray-200'
+            }`}
           >
-            ממתינים לאישור ({pendingEquipment.length})
-            {pendingEquipment.length > 0 && (
-              <span className="absolute -top-1 -right-1 bg-red-500 text-white text-xs rounded-full w-5 h-5 flex items-center justify-center">
+            ממתינים ({pendingEquipment.length})
+            {pendingEquipment.length > 0 && activeTab !== 'pending' && (
+              <span className="absolute -top-1 -right-1 bg-red-500 text-white text-xs rounded-full w-5 h-5 flex items-center justify-center animate-pulse">
                 {pendingEquipment.length}
               </span>
             )}
-          </Button>
+          </button>
         </div>
 
         {/* Active Equipment Tab */}
         {activeTab === 'active' && (
-          <Card>
-            <CardHeader>
-              <div className="flex justify-between items-center">
-                <div>
-                  <CardTitle>מאגר הציוד הגלובלי</CardTitle>
-                  <CardDescription>ניהול כל הציוד הזמין במערכת</CardDescription>
-                </div>
-                <Button onClick={() => setShowAddEquipment(!showAddEquipment)}>
-                  {showAddEquipment ? 'ביטול' : '+ הוסף ציוד חדש'}
-                </Button>
-              </div>
-            </CardHeader>
-            <CardContent>
-              {/* Add/Edit Form */}
-              {showAddEquipment && (
-                <div className="mb-6 p-4 bg-gray-50 rounded-lg">
-                  <h3 className="font-bold mb-4">
+          <div className="space-y-4">
+            {/* Add Equipment Button - Floating on mobile */}
+            <div className="fixed bottom-4 left-4 right-4 sm:relative sm:bottom-auto sm:left-auto sm:right-auto z-40 sm:z-auto">
+              <Button
+                onClick={() => setShowAddEquipment(!showAddEquipment)}
+                className={`w-full sm:w-auto shadow-lg sm:shadow-none ${
+                  showAddEquipment ? 'bg-gray-500' : 'bg-blue-600 hover:bg-blue-700'
+                }`}
+                size="lg"
+              >
+                {showAddEquipment ? 'ביטול' : '+ הוסף ציוד חדש'}
+              </Button>
+            </div>
+
+            {/* Add/Edit Form */}
+            {showAddEquipment && (
+              <Card className="border-blue-200 shadow-md">
+                <CardHeader className="pb-3">
+                  <CardTitle className="text-lg">
                     {editingEquipment ? 'עריכת ציוד' : 'הוספת ציוד חדש'}
-                  </h3>
+                  </CardTitle>
+                </CardHeader>
+                <CardContent>
                   <form onSubmit={editingEquipment ? handleUpdateEquipment : handleAddEquipment} className="space-y-4">
                     <div>
-                      <label className="block text-sm font-medium mb-1">שם הציוד *</label>
+                      <label className="block text-sm font-medium mb-1.5 text-gray-700">שם הציוד *</label>
                       <Input
                         value={equipmentForm.name}
                         onChange={(e) => setEquipmentForm({ ...equipmentForm, name: e.target.value })}
                         placeholder="למשל: בורג סיליקון גדול"
                         required
+                        className="text-base"
                       />
                     </div>
                     <div>
-                      <label className="block text-sm font-medium mb-1">קטגוריה</label>
+                      <label className="block text-sm font-medium mb-1.5 text-gray-700">קטגוריה</label>
                       <select
                         value={equipmentForm.category_id}
                         onChange={(e) => setEquipmentForm({ ...equipmentForm, category_id: e.target.value })}
-                        className="w-full p-2 border rounded"
+                        className="w-full p-2.5 border border-gray-300 rounded-lg text-base focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
                       >
                         <option value="">ללא קטגוריה</option>
                         {categories.map(cat => (
@@ -398,161 +445,237 @@ export default function GlobalEquipmentPage() {
                       </select>
                     </div>
                     <div>
-                      <label className="block text-sm font-medium mb-1">תמונה (URL או Emoji)</label>
+                      <label className="block text-sm font-medium mb-1.5 text-gray-700">תמונה (URL או Emoji)</label>
                       <Input
                         value={equipmentForm.image_url}
                         onChange={(e) => setEquipmentForm({ ...equipmentForm, image_url: e.target.value })}
-                        placeholder="🔧 או https://..."
+                        placeholder="https://..."
+                        className="text-base"
                       />
                     </div>
-                    <div className="flex gap-2">
-                      <Button type="submit" disabled={loading}>
-                        {editingEquipment ? 'עדכן' : 'הוסף'}
+                    <div className="flex gap-2 pt-2">
+                      <Button type="submit" disabled={loading} className="flex-1 sm:flex-none">
+                        {loading ? 'שומר...' : editingEquipment ? 'עדכן' : 'הוסף'}
                       </Button>
-                      <Button type="button" variant="outline" onClick={cancelEdit}>
+                      <Button type="button" variant="outline" onClick={cancelEdit} className="flex-1 sm:flex-none">
                         ביטול
                       </Button>
                     </div>
                   </form>
+                </CardContent>
+              </Card>
+            )}
+
+            {/* Filters */}
+            <Card className="shadow-sm">
+              <CardContent className="p-3 sm:p-4">
+                <div className="flex flex-col sm:flex-row gap-3">
+                  <div className="flex-1">
+                    <Input
+                      placeholder="חיפוש ציוד..."
+                      value={searchQuery}
+                      onChange={(e) => setSearchQuery(e.target.value)}
+                      className="text-base"
+                    />
+                  </div>
+                  <select
+                    value={categoryFilter}
+                    onChange={(e) => setCategoryFilter(e.target.value)}
+                    className="p-2.5 border border-gray-300 rounded-lg text-sm focus:ring-2 focus:ring-blue-500 focus:border-blue-500 bg-white"
+                  >
+                    <option value="all">כל הקטגוריות</option>
+                    {categories.map(cat => (
+                      <option key={cat.id} value={cat.id}>{cat.name}</option>
+                    ))}
+                  </select>
                 </div>
-              )}
+              </CardContent>
+            </Card>
 
-              {/* Filters */}
-              <div className="flex gap-4 mb-4">
-                <Input
-                  placeholder="חיפוש ציוד..."
-                  value={searchQuery}
-                  onChange={(e) => setSearchQuery(e.target.value)}
-                  className="max-w-sm"
-                />
-                <select
-                  value={categoryFilter}
-                  onChange={(e) => setCategoryFilter(e.target.value)}
-                  className="p-2 border rounded"
-                >
-                  <option value="all">כל הקטגוריות</option>
-                  {categories.map(cat => (
-                    <option key={cat.id} value={cat.id}>{cat.name}</option>
-                  ))}
-                </select>
+            {/* Equipment Grid */}
+            {loading ? (
+              <div className="flex items-center justify-center py-12">
+                <div className="flex items-center gap-2">
+                  <div className="w-2 h-2 bg-blue-600 rounded-full animate-bounce" style={{ animationDelay: '0ms' }}></div>
+                  <div className="w-2 h-2 bg-blue-600 rounded-full animate-bounce" style={{ animationDelay: '150ms' }}></div>
+                  <div className="w-2 h-2 bg-blue-600 rounded-full animate-bounce" style={{ animationDelay: '300ms' }}></div>
+                </div>
               </div>
+            ) : filteredEquipment.length === 0 ? (
+              <Card className="shadow-sm">
+                <CardContent className="py-12 text-center">
+                  <div className="text-4xl mb-3">📦</div>
+                  <p className="text-gray-500">אין ציוד במאגר</p>
+                  <p className="text-sm text-gray-400 mt-1">לחץ על "הוסף ציוד חדש" להתחלה</p>
+                </CardContent>
+              </Card>
+            ) : (
+              <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-3 pb-20 sm:pb-4">
+                {filteredEquipment.map(item => {
+                  const category = categories.find(c => c.id === item.category_id)
+                  const usageCount = equipmentUsageCount[item.id] || 0
 
-              {/* Equipment List */}
-              {loading ? (
-                <p className="text-center text-gray-500">טוען...</p>
-              ) : filteredEquipment.length === 0 ? (
-                <p className="text-center text-gray-500">אין ציוד במאגר</p>
-              ) : (
-                <div className="space-y-2">
-                  {filteredEquipment.map(item => {
-                    const category = categories.find(c => c.id === item.category_id)
-                    const usageCount = equipmentUsageCount[item.id] || 0
-
-                    return (
-                      <div key={item.id} className="p-4 border rounded-lg flex items-center justify-between hover:bg-gray-50">
-                        <div className="flex items-center gap-4">
-                          {item.image_url && (
-                            <div className="text-4xl">
-                              {item.image_url.startsWith('http') ? (
-                                <img src={item.image_url} alt={item.name} className="w-12 h-12 object-cover rounded" />
+                  return (
+                    <Card key={item.id} className="shadow-sm hover:shadow-md transition-shadow overflow-hidden">
+                      <CardContent className="p-0">
+                        <div className="flex items-start p-3 sm:p-4 gap-3">
+                          {/* Image/Emoji */}
+                          <div className="flex-shrink-0 w-12 h-12 sm:w-14 sm:h-14 bg-gray-100 rounded-lg flex items-center justify-center">
+                            {item.image_url ? (
+                              item.image_url.startsWith('http') ? (
+                                <img
+                                  src={item.image_url}
+                                  alt={item.name}
+                                  className="w-full h-full object-cover rounded-lg"
+                                />
                               ) : (
-                                <span>{item.image_url}</span>
+                                <span className="text-2xl sm:text-3xl">{item.image_url}</span>
+                              )
+                            ) : (
+                              <span className="text-2xl text-gray-400">📦</span>
+                            )}
+                          </div>
+
+                          {/* Content */}
+                          <div className="flex-1 min-w-0">
+                            <h3 className="font-semibold text-sm sm:text-base text-gray-800 truncate">
+                              {item.name}
+                            </h3>
+                            <div className="flex items-center gap-2 mt-1">
+                              <span className="inline-flex items-center px-2 py-0.5 rounded-full text-xs bg-gray-100 text-gray-600">
+                                {category?.name || 'ללא קטגוריה'}
+                              </span>
+                              {usageCount > 0 && (
+                                <span className="text-xs text-green-600 font-medium">
+                                  {usageCount} ערים
+                                </span>
                               )}
                             </div>
-                          )}
-                          <div>
-                            <h3 className="font-bold">{item.name}</h3>
-                            <p className="text-sm text-gray-600">
-                              {category?.name || 'ללא קטגוריה'} • {usageCount} ערים משתמשות
-                            </p>
                           </div>
                         </div>
-                        <div className="flex gap-2">
-                          <Button size="sm" variant="outline" onClick={() => startEdit(item)}>
+
+                        {/* Actions */}
+                        <div className="flex border-t border-gray-100">
+                          <button
+                            onClick={() => startEdit(item)}
+                            className="flex-1 py-2.5 text-sm text-blue-600 hover:bg-blue-50 transition-colors font-medium"
+                          >
                             ערוך
-                          </Button>
-                          <Button
-                            size="sm"
-                            variant="destructive"
+                          </button>
+                          <div className="w-px bg-gray-100"></div>
+                          <button
                             onClick={() => handleDeleteEquipment(item.id, item.name)}
+                            className="flex-1 py-2.5 text-sm text-red-600 hover:bg-red-50 transition-colors font-medium"
                           >
                             מחק
-                          </Button>
+                          </button>
                         </div>
-                      </div>
-                    )
-                  })}
-                </div>
-              )}
-            </CardContent>
-          </Card>
+                      </CardContent>
+                    </Card>
+                  )
+                })}
+              </div>
+            )}
+          </div>
         )}
 
         {/* Pending Equipment Tab */}
         {activeTab === 'pending' && (
-          <Card>
-            <CardHeader>
-              <CardTitle>בקשות ממתינות לאישור</CardTitle>
-              <CardDescription>פריטי ציוד שמנהלי ערים הוסיפו וממתינים לאישורך</CardDescription>
-            </CardHeader>
-            <CardContent>
-              {loading ? (
-                <p className="text-center text-gray-500">טוען...</p>
-              ) : filteredPendingEquipment.length === 0 ? (
-                <p className="text-center text-gray-500">אין בקשות ממתינות</p>
-              ) : (
-                <div className="space-y-2">
-                  {filteredPendingEquipment.map(item => {
-                    const category = categories.find(c => c.id === item.category_id)
+          <div className="space-y-4">
+            <Card className="shadow-sm">
+              <CardHeader className="pb-3">
+                <CardTitle className="text-lg">בקשות ממתינות לאישור</CardTitle>
+                <CardDescription className="text-sm">
+                  פריטי ציוד שמנהלי ערים הוסיפו וממתינים לאישורך
+                </CardDescription>
+              </CardHeader>
+              <CardContent>
+                {loading ? (
+                  <div className="flex items-center justify-center py-8">
+                    <div className="flex items-center gap-2">
+                      <div className="w-2 h-2 bg-amber-500 rounded-full animate-bounce" style={{ animationDelay: '0ms' }}></div>
+                      <div className="w-2 h-2 bg-amber-500 rounded-full animate-bounce" style={{ animationDelay: '150ms' }}></div>
+                      <div className="w-2 h-2 bg-amber-500 rounded-full animate-bounce" style={{ animationDelay: '300ms' }}></div>
+                    </div>
+                  </div>
+                ) : filteredPendingEquipment.length === 0 ? (
+                  <div className="text-center py-8">
+                    <div className="text-4xl mb-3">✅</div>
+                    <p className="text-gray-500">אין בקשות ממתינות</p>
+                    <p className="text-sm text-gray-400 mt-1">כל הבקשות טופלו</p>
+                  </div>
+                ) : (
+                  <div className="space-y-3">
+                    {filteredPendingEquipment.map(item => {
+                      const category = categories.find(c => c.id === item.category_id)
 
-                    return (
-                      <div key={item.id} className="p-4 border rounded-lg flex items-center justify-between hover:bg-yellow-50">
-                        <div className="flex items-center gap-4">
-                          {item.image_url && (
-                            <div className="text-4xl">
-                              {item.image_url.startsWith('http') ? (
-                                <img src={item.image_url} alt={item.name} className="w-12 h-12 object-cover rounded" />
+                      return (
+                        <div
+                          key={item.id}
+                          className="p-3 sm:p-4 bg-amber-50 border border-amber-200 rounded-xl"
+                        >
+                          <div className="flex items-start gap-3">
+                            {/* Image/Emoji */}
+                            <div className="flex-shrink-0 w-12 h-12 bg-white rounded-lg flex items-center justify-center border border-amber-200">
+                              {item.image_url ? (
+                                item.image_url.startsWith('http') ? (
+                                  <img
+                                    src={item.image_url}
+                                    alt={item.name}
+                                    className="w-full h-full object-cover rounded-lg"
+                                  />
+                                ) : (
+                                  <span className="text-2xl">{item.image_url}</span>
+                                )
                               ) : (
-                                <span>{item.image_url}</span>
+                                <span className="text-2xl text-gray-400">📦</span>
                               )}
                             </div>
-                          )}
-                          <div>
-                            <h3 className="font-bold">{item.name}</h3>
-                            <p className="text-sm text-gray-600">
-                              {category?.name || 'ללא קטגוריה'}
-                            </p>
-                            <p className="text-xs text-gray-500">
-                              נוצר ב-{new Date(item.created_at).toLocaleDateString('he-IL')}
-                            </p>
+
+                            {/* Content */}
+                            <div className="flex-1 min-w-0">
+                              <h3 className="font-semibold text-sm sm:text-base text-gray-800">
+                                {item.name}
+                              </h3>
+                              <div className="flex flex-wrap items-center gap-2 mt-1">
+                                <span className="inline-flex items-center px-2 py-0.5 rounded-full text-xs bg-white text-gray-600 border border-gray-200">
+                                  {category?.name || 'ללא קטגוריה'}
+                                </span>
+                                <span className="text-xs text-gray-500">
+                                  {new Date(item.created_at).toLocaleDateString('he-IL')}
+                                </span>
+                              </div>
+                            </div>
+                          </div>
+
+                          {/* Actions */}
+                          <div className="flex gap-2 mt-3">
+                            <Button
+                              size="sm"
+                              onClick={() => handleApproveEquipment(item.id, item.name)}
+                              className="flex-1 bg-green-600 hover:bg-green-700 text-white"
+                            >
+                              ✓ אשר
+                            </Button>
+                            <Button
+                              size="sm"
+                              variant="destructive"
+                              onClick={() => handleRejectEquipment(item.id, item.name)}
+                              className="flex-1"
+                            >
+                              ✗ דחה
+                            </Button>
                           </div>
                         </div>
-                        <div className="flex gap-2">
-                          <Button
-                            size="sm"
-                            variant="default"
-                            onClick={() => handleApproveEquipment(item.id, item.name)}
-                            className="bg-green-600 hover:bg-green-700"
-                          >
-                            ✓ אשר
-                          </Button>
-                          <Button
-                            size="sm"
-                            variant="destructive"
-                            onClick={() => handleRejectEquipment(item.id, item.name)}
-                          >
-                            ✗ דחה
-                          </Button>
-                        </div>
-                      </div>
-                    )
-                  })}
-                </div>
-              )}
-            </CardContent>
-          </Card>
+                      )
+                    })}
+                  </div>
+                )}
+              </CardContent>
+            </Card>
+          </div>
         )}
-      </div>
+      </main>
     </div>
   )
 }
