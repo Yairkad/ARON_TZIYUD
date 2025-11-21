@@ -1186,9 +1186,43 @@ export default function CityAdminPage() {
 
         {activeTab === 'equipment' && (
           <div className="space-y-6">
+            {/* Add from Global Pool - New prominent section */}
+            <Card className="border-2 border-purple-200 shadow-xl rounded-2xl overflow-hidden bg-gradient-to-r from-purple-50 to-pink-50">
+              <CardContent className="p-6">
+                <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4">
+                  <div>
+                    <h3 className="text-xl font-bold text-gray-800 mb-2">📦 הוסף ציוד מהמאגר</h3>
+                    <p className="text-sm text-gray-600">בחר ציוד מהמאגר הגלובלי והוסף לעיר שלך</p>
+                    {!canEdit && (
+                      <p className="text-xs text-red-600 mt-1">⚠️ נדרשת הרשאת עריכה מלאה</p>
+                    )}
+                  </div>
+                  <Button
+                    onClick={() => setShowEquipmentPoolModal(true)}
+                    disabled={!canEdit}
+                    className="bg-gradient-to-r from-purple-600 to-pink-600 hover:from-purple-700 hover:to-pink-700 text-white font-bold px-8 py-4 rounded-xl transition-all duration-200 hover:scale-105 shadow-lg hover:shadow-xl disabled:opacity-50 disabled:cursor-not-allowed disabled:hover:scale-100"
+                  >
+                    <span className="text-xl ml-2">📦</span> בחר מהמאגר
+                  </Button>
+                </div>
+              </CardContent>
+            </Card>
+
+            {/* Equipment Pool Modal */}
+            {city && (
+              <EquipmentPoolModal
+                isOpen={showEquipmentPoolModal}
+                onClose={() => setShowEquipmentPoolModal(false)}
+                cityId={city.id}
+                onEquipmentAdded={() => {
+                  fetchEquipment()
+                }}
+              />
+            )}
+
             <Card className="border-0 shadow-2xl rounded-2xl overflow-hidden bg-white/90 backdrop-blur-sm mb-6">
               <CardHeader className="bg-gradient-to-r from-green-50 to-emerald-50 pb-4">
-                <CardTitle className="text-xl font-bold text-gray-800">➕ הוספת ציוד חדש</CardTitle>
+                <CardTitle className="text-xl font-bold text-gray-800">➕ הוספת ציוד ידנית</CardTitle>
               </CardHeader>
               <CardContent className="p-6">
                 <form onSubmit={handleAddEquipment} className="flex flex-col gap-4">
@@ -2475,38 +2509,6 @@ export default function CityAdminPage() {
                     </button>
                   </div>
                 </div>
-
-                {/* Equipment Pool Section */}
-                <div className="bg-gradient-to-r from-purple-50 to-pink-50 rounded-xl p-6 border-2 border-purple-200">
-                  <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-3">
-                    <div>
-                      <h3 className="text-lg font-bold text-gray-800 mb-1">📦 פתח מאגר ציוד</h3>
-                      <p className="text-sm text-gray-600">בחר ציוד מהמאגר הגלובלי והוסף לעיר</p>
-                      {!canEdit && (
-                        <p className="text-xs text-red-600 mt-1">⚠️ נדרשת הרשאת עריכה מלאה</p>
-                      )}
-                    </div>
-                    <Button
-                      onClick={() => setShowEquipmentPoolModal(true)}
-                      disabled={!canEdit}
-                      className="bg-gradient-to-r from-purple-600 to-pink-600 hover:from-purple-700 hover:to-pink-700 text-white font-semibold px-6 py-3 rounded-xl transition-all duration-200 hover:scale-105 disabled:opacity-50 disabled:cursor-not-allowed disabled:hover:scale-100"
-                    >
-                      📦 פתח מאגר
-                    </Button>
-                  </div>
-                </div>
-
-                {/* Equipment Pool Modal */}
-                {city && (
-                  <EquipmentPoolModal
-                    isOpen={showEquipmentPoolModal}
-                    onClose={() => setShowEquipmentPoolModal(false)}
-                    cityId={city.id}
-                    onEquipmentAdded={() => {
-                      fetchEquipment()
-                    }}
-                  />
-                )}
 
                 {/* City Details Edit Form */}
                 <Card className="border-2 border-indigo-200 bg-gradient-to-r from-indigo-50 to-blue-50">

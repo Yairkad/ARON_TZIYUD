@@ -64,8 +64,20 @@ export async function POST(request: Request) {
       return NextResponse.json({ error: 'נדרשת הרשאת עריכה מלאה' }, { status: 403 })
     }
 
+    // Use service client for insert operations to bypass RLS
+    const serviceClient = createClient(
+      process.env.NEXT_PUBLIC_SUPABASE_URL!,
+      process.env.SUPABASE_SERVICE_ROLE_KEY!,
+      {
+        auth: {
+          autoRefreshToken: false,
+          persistSession: false
+        }
+      }
+    )
+
     // Verify all equipment items exist and are active
-    const { data: globalEquipment, error: fetchError } = await supabase
+    const { data: globalEquipment, error: fetchError } = await serviceClient
       .from('global_equipment_pool')
       .select('id, name, status')
       .in('id', equipment_ids)
@@ -88,7 +100,7 @@ export async function POST(request: Request) {
     }
 
     // Get existing equipment for this city to avoid duplicates
-    const { data: existingEquipment } = await supabase
+    const { data: existingEquipment } = await serviceClient
       .from('city_equipment')
       .select('global_equipment_id')
       .eq('city_id', city_id)
@@ -115,7 +127,7 @@ export async function POST(request: Request) {
     }))
 
     // Insert all at once
-    const { data: insertedEquipment, error: insertError } = await supabase
+    const { data: insertedEquipment, error: insertError } = await serviceClient
       .from('city_equipment')
       .insert(insertData)
       .select(`
