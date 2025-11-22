@@ -135,7 +135,7 @@ export async function POST(request: Request) {
     const insertData = newEquipmentIds.map(equipment_id => ({
       city_id,
       global_equipment_id: equipment_id,
-      quantity: 0, // Default quantity
+      quantity: 1, // Default quantity
       display_order: null
     }))
 

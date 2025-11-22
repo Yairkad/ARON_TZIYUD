@@ -117,6 +117,7 @@ export default function CityAdminPage() {
   const [selectedCityToCopy, setSelectedCityToCopy] = useState<string>('')
   const [showCopyEquipment, setShowCopyEquipment] = useState(false)
   const [showEquipmentPoolModal, setShowEquipmentPoolModal] = useState(false)
+  const [showManualAddForm, setShowManualAddForm] = useState(false)
   const [dismissedAlerts, setDismissedAlerts] = useState<Set<string>>(new Set())
   const [pendingRequestsCount, setPendingRequestsCount] = useState(0)
   const [expandedGroups, setExpandedGroups] = useState<Set<string>>(new Set())
@@ -1241,10 +1242,17 @@ export default function CityAdminPage() {
               />
             )}
 
-            <Card className="border-0 shadow-2xl rounded-2xl overflow-hidden bg-white/90 backdrop-blur-sm mb-6">
-              <CardHeader className="bg-gradient-to-r from-green-50 to-emerald-50 pb-4">
-                <CardTitle className="text-xl font-bold text-gray-800">➕ הוספת ציוד ידנית</CardTitle>
+            <Card className="border-0 shadow-lg rounded-2xl overflow-hidden bg-white/90 backdrop-blur-sm mb-6">
+              <CardHeader
+                className="bg-gradient-to-r from-gray-50 to-gray-100 pb-4 cursor-pointer hover:bg-gray-100 transition-colors"
+                onClick={() => setShowManualAddForm(!showManualAddForm)}
+              >
+                <CardTitle className="text-base font-medium text-gray-600 flex items-center justify-between">
+                  <span>➕ הוספת ציוד ידנית (מתקדם)</span>
+                  <span className="text-sm">{showManualAddForm ? '▲' : '▼'}</span>
+                </CardTitle>
               </CardHeader>
+              {showManualAddForm && (
               <CardContent className="p-6">
                 <form onSubmit={handleAddEquipment} className="flex flex-col gap-4">
                   <div className="flex flex-col sm:flex-row gap-4">
@@ -1324,6 +1332,7 @@ export default function CityAdminPage() {
                   </div>
                 </form>
               </CardContent>
+              )}
             </Card>
 
             {/* Low Stock Alerts for Consumable Equipment - Compact Version */}
