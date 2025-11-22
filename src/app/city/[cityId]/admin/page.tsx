@@ -143,21 +143,15 @@ export default function CityAdminPage() {
   const canApprove = currentUser?.permissions === 'approve_requests' || currentUser?.permissions === 'full_access'
 
   useEffect(() => {
-    if (cityId) {
+    if (isAuthenticated && cityId && currentUser) {
       fetchCity()
-    }
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [cityId])
-
-  useEffect(() => {
-    if (isAuthenticated && cityId) {
       fetchData()
       fetchAllCities()
       fetchPendingRequestsCount()
       fetchCategories()
     }
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [isAuthenticated, cityId])
+  }, [isAuthenticated, cityId, currentUser])
 
   // Auto-refresh pending requests count every 15 seconds when in request mode
   useEffect(() => {
@@ -201,16 +195,22 @@ export default function CityAdminPage() {
 
   const fetchCity = async () => {
     try {
+      // Fetch city without is_active filter - we'll check permissions after
       const { data, error } = await supabase
         .from('cities')
         .select('*')
         .eq('id', cityId)
-        .eq('is_active', true)
         .single()
 
       if (error) {
         console.error('Error fetching city:', error)
       } else {
+        // If city is inactive, only super_admin can access it
+        if (!data.is_active && currentUser?.role !== 'super_admin') {
+          console.log('❌ Access denied - city is inactive and user is not super admin')
+          setCity(null)
+          return
+        }
         setCity(data)
         // Initialize edit form with current city data
         setEditCityForm({
@@ -238,19 +238,38 @@ export default function CityAdminPage() {
   }
 
   const fetchEquipment = async () => {
-    const { data, error } = await supabase
-      .from('equipment')
-      .select(`
-        *,
-        category:equipment_categories(id, name)
-      `)
-      .eq('city_id', cityId)
-      .order('name')
+    console.log('📦 Fetching equipment for city:', cityId)
+    try {
+      const response = await fetch(`/api/city-equipment?cityId=${cityId}`)
+      const result = await response.json()
 
-    if (error) {
+      console.log('📦 Equipment API result:', { count: result.equipment?.length, error: result.error })
+
+      if (!response.ok) {
+        console.error('Error fetching equipment:', result.error)
+        return
+      }
+
+      // Map to Equipment format for backward compatibility
+      const mappedData = (result.equipment || []).map((item: any) => ({
+        id: item.id,
+        name: item.global_equipment?.name || '',
+        quantity: item.quantity,
+        city_id: item.city_id,
+        equipment_status: 'working' as const,
+        is_consumable: false,
+        category_id: item.global_equipment?.category_id,
+        image_url: item.global_equipment?.image_url,
+        display_order: item.display_order,
+        created_at: item.created_at,
+        updated_at: item.updated_at,
+        category: item.global_equipment?.category,
+        global_equipment_id: item.global_equipment_id
+      }))
+      console.log('📦 Equipment mapped:', mappedData.length, 'items')
+      setEquipment(mappedData)
+    } catch (error) {
       console.error('Error fetching equipment:', error)
-    } else {
-      setEquipment(data || [])
     }
   }
 

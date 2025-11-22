@@ -30,7 +30,10 @@ export async function POST(request: Request) {
     const body = await request.json()
     const { city_id, equipment_ids } = body // equipment_ids: string[]
 
+    console.log('📦 Bulk add request:', { city_id, equipment_ids_count: equipment_ids?.length })
+
     if (!city_id || !equipment_ids || !Array.isArray(equipment_ids)) {
+      console.log('❌ Missing parameters')
       return NextResponse.json({ error: 'חסרים פרמטרים או פורמט שגוי' }, { status: 400 })
     }
 
@@ -39,30 +42,40 @@ export async function POST(request: Request) {
     }
 
     // Check authentication
-    const { data: { user } } = await supabase.auth.getUser()
+    const { data: { user }, error: authError } = await supabase.auth.getUser()
+    console.log('🔐 Auth check:', { userId: user?.id, authError: authError?.message })
+
     if (!user) {
+      console.log('❌ Not authenticated')
       return NextResponse.json({ error: 'לא מורשה' }, { status: 401 })
     }
 
     // Check permissions
-    const { data: userData } = await supabase
+    const { data: userData, error: userError } = await supabase
       .from('users')
       .select('role, city_id, permissions')
       .eq('id', user.id)
       .single()
 
+    console.log('👤 User data:', { userData, userError: userError?.message })
+
     if (!userData) {
+      console.log('❌ User not found in users table')
       return NextResponse.json({ error: 'משתמש לא נמצא' }, { status: 404 })
     }
 
     // Verify user can manage this city
     if (userData.role !== 'super_admin' && userData.city_id !== city_id) {
+      console.log('❌ No permission for this city')
       return NextResponse.json({ error: 'אין הרשאה לנהל עיר זו' }, { status: 403 })
     }
 
     if (userData.role === 'city_manager' && userData.permissions !== 'full_access') {
+      console.log('❌ City manager without full_access')
       return NextResponse.json({ error: 'נדרשת הרשאת עריכה מלאה' }, { status: 403 })
     }
+
+    console.log('✅ Authorization passed')
 
     // Use service client for insert operations to bypass RLS
     const serviceClient = createClient(

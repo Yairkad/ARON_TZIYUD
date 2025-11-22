@@ -26,7 +26,6 @@ async function createAuthClient() {
 // GET - Fetch equipment for a specific city
 export async function GET(request: Request) {
   try {
-    const supabase = await createAuthClient()
     const { searchParams } = new URL(request.url)
     const cityId = searchParams.get('cityId')
 
@@ -34,8 +33,20 @@ export async function GET(request: Request) {
       return NextResponse.json({ error: 'מזהה עיר חובה' }, { status: 400 })
     }
 
+    // Use service client to bypass RLS for reading city equipment
+    const serviceClient = createClient(
+      process.env.NEXT_PUBLIC_SUPABASE_URL!,
+      process.env.SUPABASE_SERVICE_ROLE_KEY!,
+      {
+        auth: {
+          autoRefreshToken: false,
+          persistSession: false
+        }
+      }
+    )
+
     // Fetch city equipment with global equipment details and categories
-    const { data: cityEquipment, error } = await supabase
+    const { data: cityEquipment, error } = await serviceClient
       .from('city_equipment')
       .select(`
         *,
@@ -52,6 +63,7 @@ export async function GET(request: Request) {
       return NextResponse.json({ error: error.message }, { status: 500 })
     }
 
+    console.log(`📦 Fetched ${cityEquipment?.length || 0} equipment items for city ${cityId}`)
     return NextResponse.json({ equipment: cityEquipment })
   } catch (error) {
     console.error('Error in city equipment GET:', error)
