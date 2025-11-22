@@ -524,18 +524,20 @@ export default function CityAdminPage() {
 
     setLoading(true)
     try {
-      const { error } = await supabase
-        .from('equipment')
-        .delete()
-        .eq('id', id)
+      const response = await fetch(`/api/city-equipment?id=${id}`, {
+        method: 'DELETE'
+      })
 
-      if (error) throw error
+      if (!response.ok) {
+        const data = await response.json()
+        throw new Error(data.error || 'שגיאה במחיקה')
+      }
 
       alert('הציוד נמחק בהצלחה!')
       fetchEquipment()
-    } catch (error) {
+    } catch (error: any) {
       console.error('Error deleting equipment:', error)
-      alert('אירעה שגיאה במחיקת הציוד')
+      alert('אירעה שגיאה במחיקת הציוד: ' + error.message)
     } finally {
       setLoading(false)
     }

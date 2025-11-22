@@ -251,8 +251,20 @@ export async function DELETE(request: Request) {
       return NextResponse.json({ error: 'לא מורשה' }, { status: 401 })
     }
 
+    // Use service client to bypass RLS
+    const serviceClient = createClient(
+      process.env.NEXT_PUBLIC_SUPABASE_URL!,
+      process.env.SUPABASE_SERVICE_ROLE_KEY!,
+      {
+        auth: {
+          autoRefreshToken: false,
+          persistSession: false
+        }
+      }
+    )
+
     // Get current equipment to verify city
-    const { data: currentEquipment } = await supabase
+    const { data: currentEquipment } = await serviceClient
       .from('city_equipment')
       .select('city_id')
       .eq('id', id)
@@ -263,7 +275,7 @@ export async function DELETE(request: Request) {
     }
 
     // Check permissions
-    const { data: userData } = await supabase
+    const { data: userData } = await serviceClient
       .from('users')
       .select('role, city_id, permissions')
       .eq('id', user.id)
@@ -283,7 +295,7 @@ export async function DELETE(request: Request) {
     }
 
     // Delete the link (doesn't affect global pool or other cities)
-    const { error } = await supabase
+    const { error } = await serviceClient
       .from('city_equipment')
       .delete()
       .eq('id', id)
