@@ -71,6 +71,9 @@ export default function GlobalEquipmentPage() {
   const [showCategoryEquipment, setShowCategoryEquipment] = useState(false)
   const [selectedCategoryForEquipment, setSelectedCategoryForEquipment] = useState<EquipmentCategory | null>(null)
 
+  // Category search
+  const [categorySearchQuery, setCategorySearchQuery] = useState('')
+
   // Check authentication
   useEffect(() => {
     const verifyAuth = async () => {
@@ -590,6 +593,11 @@ export default function GlobalEquipmentPage() {
     setShowCategoryEquipment(true)
   }
 
+  // Filter categories by search
+  const filteredCategories = categories.filter(cat =>
+    cat.name.toLowerCase().includes(categorySearchQuery.toLowerCase())
+  )
+
   if (isCheckingAuth) {
     return (
       <div className="min-h-screen bg-gradient-to-br from-slate-50 to-blue-50 flex items-center justify-center">
@@ -610,7 +618,7 @@ export default function GlobalEquipmentPage() {
   }
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-slate-50 to-blue-50" dir="rtl">
+    <div className="min-h-screen bg-gradient-to-br from-blue-50 via-indigo-50 to-purple-50" dir="rtl">
       {/* Header with Logo */}
       <div className="max-w-7xl mx-auto px-4 py-3">
         <div className="flex items-center justify-between">
@@ -635,64 +643,57 @@ export default function GlobalEquipmentPage() {
       </div>
 
       <main className="max-w-7xl mx-auto px-4 py-4 sm:py-6 pb-24">
-        {/* Stats Cards */}
-        <div className="grid grid-cols-2 sm:grid-cols-4 gap-3 mb-4 sm:mb-6">
-          <div className="bg-white rounded-xl p-3 sm:p-4 shadow-sm border border-gray-100">
-            <div className="text-2xl sm:text-3xl font-bold text-blue-600">{equipment.length}</div>
-            <div className="text-xs sm:text-sm text-gray-500">פריטים פעילים</div>
-          </div>
-          <div className="bg-white rounded-xl p-3 sm:p-4 shadow-sm border border-gray-100">
-            <div className="text-2xl sm:text-3xl font-bold text-amber-600">{pendingEquipment.length}</div>
-            <div className="text-xs sm:text-sm text-gray-500">ממתינים לאישור</div>
-          </div>
-          <div className="bg-white rounded-xl p-3 sm:p-4 shadow-sm border border-gray-100">
-            <div className="text-2xl sm:text-3xl font-bold text-green-600">{categories.length}</div>
-            <div className="text-xs sm:text-sm text-gray-500">קטגוריות</div>
-          </div>
-          <div className="bg-white rounded-xl p-3 sm:p-4 shadow-sm border border-gray-100">
-            <div className="text-2xl sm:text-3xl font-bold text-purple-600">
-              {Object.values(equipmentUsageCount).reduce((a, b) => a + b, 0)}
-            </div>
-            <div className="text-xs sm:text-sm text-gray-500">שימושים בערים</div>
-          </div>
-        </div>
-
-        {/* Tabs */}
-        <div className="flex gap-2 mb-4 sm:mb-6 overflow-x-auto pb-1">
+        {/* Tab Cards - Clickable */}
+        <div className="grid grid-cols-3 gap-3 mb-4 sm:mb-6">
           <button
             onClick={() => setActiveTab('active')}
-            className={`flex-shrink-0 px-4 py-2 rounded-lg text-sm font-medium transition-all ${
+            className={`rounded-xl p-3 sm:p-4 transition-all text-right ${
               activeTab === 'active'
-                ? 'bg-blue-600 text-white shadow-md'
-                : 'bg-white text-gray-600 hover:bg-gray-50 border border-gray-200'
+                ? 'bg-blue-600 text-white shadow-lg scale-[1.02]'
+                : 'bg-white shadow-sm border border-gray-100 hover:shadow-md hover:border-blue-200'
             }`}
           >
-            ציוד פעיל ({equipment.length})
+            <div className={`text-2xl sm:text-3xl font-bold ${activeTab === 'active' ? 'text-white' : 'text-blue-600'}`}>
+              {equipment.length}
+            </div>
+            <div className={`text-xs sm:text-sm ${activeTab === 'active' ? 'text-blue-100' : 'text-gray-500'}`}>
+              פריטים פעילים
+            </div>
           </button>
           <button
             onClick={() => setActiveTab('pending')}
-            className={`flex-shrink-0 px-4 py-2 rounded-lg text-sm font-medium transition-all relative ${
+            className={`rounded-xl p-3 sm:p-4 transition-all text-right relative ${
               activeTab === 'pending'
-                ? 'bg-amber-500 text-white shadow-md'
-                : 'bg-white text-gray-600 hover:bg-gray-50 border border-gray-200'
+                ? 'bg-amber-500 text-white shadow-lg scale-[1.02]'
+                : 'bg-white shadow-sm border border-gray-100 hover:shadow-md hover:border-amber-200'
             }`}
           >
-            ממתינים ({pendingEquipment.length})
+            <div className={`text-2xl sm:text-3xl font-bold ${activeTab === 'pending' ? 'text-white' : 'text-amber-600'}`}>
+              {pendingEquipment.length}
+            </div>
+            <div className={`text-xs sm:text-sm ${activeTab === 'pending' ? 'text-amber-100' : 'text-gray-500'}`}>
+              ממתינים לאישור
+            </div>
             {pendingEquipment.length > 0 && activeTab !== 'pending' && (
               <span className="absolute -top-1 -right-1 bg-red-500 text-white text-xs rounded-full w-5 h-5 flex items-center justify-center animate-pulse">
-                {pendingEquipment.length}
+                !
               </span>
             )}
           </button>
           <button
             onClick={() => setActiveTab('categories')}
-            className={`flex-shrink-0 px-4 py-2 rounded-lg text-sm font-medium transition-all ${
+            className={`rounded-xl p-3 sm:p-4 transition-all text-right ${
               activeTab === 'categories'
-                ? 'bg-green-600 text-white shadow-md'
-                : 'bg-white text-gray-600 hover:bg-gray-50 border border-gray-200'
+                ? 'bg-green-600 text-white shadow-lg scale-[1.02]'
+                : 'bg-white shadow-sm border border-gray-100 hover:shadow-md hover:border-green-200'
             }`}
           >
-            קטגוריות ({categories.length})
+            <div className={`text-2xl sm:text-3xl font-bold ${activeTab === 'categories' ? 'text-white' : 'text-green-600'}`}>
+              {categories.length}
+            </div>
+            <div className={`text-xs sm:text-sm ${activeTab === 'categories' ? 'text-green-100' : 'text-gray-500'}`}>
+              קטגוריות
+            </div>
           </button>
         </div>
 
@@ -1112,20 +1113,29 @@ export default function GlobalEquipmentPage() {
             {/* Categories List */}
             <Card className="shadow-sm">
               <CardHeader className="pb-3">
-                <div className="flex items-center justify-between">
+                <div className="flex items-center justify-between mb-3">
                   <CardTitle className="text-lg">קטגוריות</CardTitle>
                   <span className="text-sm text-gray-500">{categories.length} קטגוריות</span>
                 </div>
+                {/* Search field */}
+                <Input
+                  placeholder="חיפוש קטגוריה..."
+                  value={categorySearchQuery}
+                  onChange={(e) => setCategorySearchQuery(e.target.value)}
+                  className="text-sm"
+                />
               </CardHeader>
               <CardContent>
-                {categories.length === 0 ? (
+                {filteredCategories.length === 0 ? (
                   <div className="text-center py-8">
                     <div className="text-4xl mb-3">📁</div>
-                    <p className="text-gray-500">אין קטגוריות</p>
+                    <p className="text-gray-500">
+                      {categorySearchQuery ? 'לא נמצאו קטגוריות' : 'אין קטגוריות'}
+                    </p>
                   </div>
                 ) : (
                   <div className="space-y-2">
-                    {categories.map((cat) => {
+                    {filteredCategories.map((cat) => {
                       const equipmentCount = getCategoryEquipmentCount(cat.id)
 
                       return (
