@@ -591,7 +591,7 @@ export default function GlobalEquipmentPage() {
 
   return (
     <div className="min-h-screen bg-gradient-to-br from-slate-50 to-blue-50" dir="rtl">
-      {/* Header - Simple with back button and title */}
+      {/* Header with Logo */}
       <div className="max-w-7xl mx-auto px-4 py-3">
         <div className="flex items-center justify-between">
           {/* Back button */}
@@ -603,8 +603,11 @@ export default function GlobalEquipmentPage() {
             </button>
           </Link>
 
-          {/* Title */}
-          <h1 className="text-lg font-semibold text-gray-700">ניהול מאגר</h1>
+          {/* Logo and Title */}
+          <div className="flex flex-col items-center">
+            <Logo />
+            <h1 className="text-sm font-medium text-gray-600 mt-1">ניהול מאגר</h1>
+          </div>
 
           {/* Empty space for balance */}
           <div className="w-9"></div>
@@ -1087,39 +1090,53 @@ export default function GlobalEquipmentPage() {
             )}
 
             {/* Categories List */}
-            <Card className="shadow-sm">
-              <CardHeader className="pb-3">
-                <CardTitle className="text-lg">רשימת קטגוריות</CardTitle>
-                <CardDescription className="text-sm">
-                  נהל את הקטגוריות של מאגר הציוד
-                </CardDescription>
-              </CardHeader>
-              <CardContent>
-                {categories.length === 0 ? (
-                  <div className="text-center py-8">
-                    <div className="text-4xl mb-3">📁</div>
-                    <p className="text-gray-500">אין קטגוריות</p>
-                    <p className="text-sm text-gray-400 mt-1">לחץ על + להוספה</p>
-                  </div>
-                ) : (
-                  <div className="space-y-3">
-                    {categories.map(cat => {
-                      const equipmentCount = getCategoryEquipmentCount(cat.id)
+            <div className="bg-gradient-to-br from-emerald-50 to-teal-50 rounded-2xl p-4 sm:p-6 border border-emerald-100">
+              <div className="flex items-center justify-between mb-4">
+                <h2 className="text-xl font-bold text-emerald-800">רשימת קטגוריות</h2>
+                <span className="px-3 py-1 bg-emerald-100 text-emerald-700 rounded-full text-sm font-medium">
+                  {categories.length} קטגוריות
+                </span>
+              </div>
 
-                      return (
-                        <div
-                          key={cat.id}
-                          className="p-3 sm:p-4 bg-gray-50 border border-gray-200 rounded-xl hover:shadow-md transition-shadow"
-                        >
+              {categories.length === 0 ? (
+                <div className="text-center py-12 bg-white/50 rounded-xl">
+                  <div className="text-5xl mb-4">📁</div>
+                  <p className="text-gray-600 font-medium">אין קטגוריות עדיין</p>
+                  <p className="text-sm text-gray-400 mt-1">לחץ על + להוספת קטגוריה ראשונה</p>
+                </div>
+              ) : (
+                <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+                  {categories.map((cat, index) => {
+                    const equipmentCount = getCategoryEquipmentCount(cat.id)
+                    // Cycle through colors
+                    const colors = [
+                      'from-blue-500 to-blue-600',
+                      'from-purple-500 to-purple-600',
+                      'from-pink-500 to-pink-600',
+                      'from-orange-500 to-orange-600',
+                      'from-teal-500 to-teal-600',
+                      'from-indigo-500 to-indigo-600',
+                    ]
+                    const colorClass = colors[index % colors.length]
+
+                    return (
+                      <div
+                        key={cat.id}
+                        className="bg-white rounded-xl shadow-sm hover:shadow-lg transition-all overflow-hidden border border-gray-100"
+                      >
+                        {/* Colored header strip */}
+                        <div className={`h-2 bg-gradient-to-r ${colorClass}`}></div>
+
+                        <div className="p-4">
                           <div className="flex items-center gap-3">
                             {/* Icon/Image */}
-                            <div className="flex-shrink-0 w-12 h-12 bg-white rounded-lg flex items-center justify-center border border-gray-200 overflow-hidden">
+                            <div className={`flex-shrink-0 w-14 h-14 bg-gradient-to-br ${colorClass} rounded-xl flex items-center justify-center shadow-md`}>
                               {cat.image_url ? (
                                 cat.image_url.startsWith('http') ? (
                                   <img
                                     src={cat.image_url}
                                     alt={cat.name}
-                                    className="w-full h-full object-cover"
+                                    className="w-full h-full object-cover rounded-xl"
                                     loading="lazy"
                                   />
                                 ) : (
@@ -1128,50 +1145,50 @@ export default function GlobalEquipmentPage() {
                               ) : cat.icon ? (
                                 <span className="text-2xl">{cat.icon}</span>
                               ) : (
-                                <span className="text-2xl text-gray-400">📁</span>
+                                <span className="text-2xl text-white">📁</span>
                               )}
                             </div>
 
                             {/* Content */}
                             <div className="flex-1 min-w-0">
-                              <h3 className="font-semibold text-sm sm:text-base text-gray-800 truncate">
+                              <h3 className="font-bold text-base text-gray-800 truncate">
                                 {cat.name}
                               </h3>
-                              <div className="flex items-center gap-2 mt-1">
-                                <span className="text-xs text-gray-500">
+                              <div className="flex items-center gap-3 mt-1">
+                                <span className="inline-flex items-center px-2 py-0.5 rounded-full text-xs bg-gray-100 text-gray-600 font-medium">
                                   {equipmentCount} פריטים
                                 </span>
                                 <span className="text-xs text-gray-400">
-                                  סדר: {cat.display_order || 0}
+                                  #{cat.display_order || 0}
                                 </span>
                               </div>
                             </div>
+                          </div>
 
-                            {/* Actions */}
-                            <div className="flex-shrink-0 flex gap-1">
-                              <button
-                                onClick={() => startEditCategory(cat)}
-                                className="p-2 text-blue-600 hover:bg-blue-50 rounded-lg transition-colors"
-                              >
-                                ✏️
-                              </button>
-                              <button
-                                onClick={() => handleDeleteCategory(cat.id, cat.name)}
-                                className="p-2 text-red-600 hover:bg-red-50 rounded-lg transition-colors"
-                                disabled={equipmentCount > 0}
-                                title={equipmentCount > 0 ? 'לא ניתן למחוק קטגוריה עם פריטים' : 'מחק'}
-                              >
-                                🗑️
-                              </button>
-                            </div>
+                          {/* Actions */}
+                          <div className="flex gap-2 mt-3 pt-3 border-t border-gray-100">
+                            <button
+                              onClick={() => startEditCategory(cat)}
+                              className="flex-1 py-2 text-sm font-medium text-blue-600 hover:bg-blue-50 rounded-lg transition-colors"
+                            >
+                              ✏️ ערוך
+                            </button>
+                            <button
+                              onClick={() => handleDeleteCategory(cat.id, cat.name)}
+                              className="flex-1 py-2 text-sm font-medium text-red-600 hover:bg-red-50 rounded-lg transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
+                              disabled={equipmentCount > 0}
+                              title={equipmentCount > 0 ? 'לא ניתן למחוק קטגוריה עם פריטים' : 'מחק'}
+                            >
+                              🗑️ מחק
+                            </button>
                           </div>
                         </div>
-                      )
-                    })}
-                  </div>
-                )}
-              </CardContent>
-            </Card>
+                      </div>
+                    )
+                  })}
+                </div>
+              )}
+            </div>
           </div>
         )}
       </main>

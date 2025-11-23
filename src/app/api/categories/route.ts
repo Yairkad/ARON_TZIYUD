@@ -153,6 +153,8 @@ export async function PUT(request: NextRequest) {
     const body = await request.json()
     const { id, name, image_url, display_order } = body
 
+    console.log('Category PUT - received data:', { id, name, image_url, display_order })
+
     if (!id) {
       return NextResponse.json(
         { success: false, error: 'מזהה קטגוריה חובה' },
@@ -182,16 +184,21 @@ export async function PUT(request: NextRequest) {
       )
     }
 
+    const updateData = {
+      name,
+      image_url: image_url || null,
+      display_order: display_order || 0
+    }
+    console.log('Category PUT - updating with:', updateData)
+
     const { data, error } = await supabase
       .from('equipment_categories')
-      .update({
-        name,
-        image_url: image_url || null,
-        display_order: display_order || null
-      })
+      .update(updateData)
       .eq('id', id)
       .select()
       .single()
+
+    console.log('Category PUT - result:', { data, error })
 
     if (error) {
       console.error('Error updating category:', error)
