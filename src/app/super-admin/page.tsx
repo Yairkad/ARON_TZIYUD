@@ -22,7 +22,7 @@ export default function SuperAdminPage() {
   const [password, setPassword] = useState('')
   const [rememberMe, setRememberMe] = useState(false)
   const [loading, setLoading] = useState(false)
-  const [activeTab, setActiveTab] = useState<'cities' | 'notifications' | 'settings' | 'users' | 'equipment'>('cities')
+  const [activeTab, setActiveTab] = useState<'cities' | 'notifications' | 'settings' | 'users' | 'equipment' | 'emails'>('cities')
   const [showAddCity, setShowAddCity] = useState(false)
   const [newCity, setNewCity] = useState<CityForm & { manager1_email?: string, manager2_email?: string }>({ name: '', manager1_name: '', manager1_phone: '', manager1_email: '', manager2_name: '', manager2_phone: '', manager2_email: '', location_url: '', token_location_url: '', password: '' })
   const [editingCity, setEditingCity] = useState<City | null>(null)
@@ -48,6 +48,12 @@ export default function SuperAdminPage() {
   })
   const [userFilter, setUserFilter] = useState<'all' | 'city_manager' | 'super_admin'>('all')
   const [currentUser, setCurrentUser] = useState<any>(null)
+
+  // Email Logs State
+  const [emailLogs, setEmailLogs] = useState<any[]>([])
+  const [emailLogsLoading, setEmailLogsLoading] = useState(false)
+  const [emailTypeFilter, setEmailTypeFilter] = useState<string>('all')
+  const [emailSearchQuery, setEmailSearchQuery] = useState('')
 
   // Password visibility state for all password fields
   const [showNewCityPassword, setShowNewCityPassword] = useState(false)
@@ -532,6 +538,37 @@ export default function SuperAdminPage() {
     }
   }
 
+  // Email Logs Functions
+  const fetchEmailLogs = async () => {
+    setEmailLogsLoading(true)
+    try {
+      const params = new URLSearchParams()
+      params.set('limit', '100')
+      if (emailTypeFilter !== 'all') {
+        params.set('type', emailTypeFilter)
+      }
+      if (emailSearchQuery) {
+        params.set('search', emailSearchQuery)
+      }
+
+      const response = await fetch(`/api/admin/email-logs?${params.toString()}`, {
+        credentials: 'include'
+      })
+      const data = await response.json()
+
+      if (!response.ok) {
+        console.error('Error fetching email logs:', data.error)
+        return
+      }
+
+      setEmailLogs(data.logs || [])
+    } catch (error) {
+      console.error('Error fetching email logs:', error)
+    } finally {
+      setEmailLogsLoading(false)
+    }
+  }
+
   const handleCreateUser = async (e: React.FormEvent) => {
     e.preventDefault()
 
@@ -779,6 +816,13 @@ export default function SuperAdminPage() {
     }
   }, [isAuthenticated, activeTab])
 
+  // Load email logs when switching to emails tab
+  useEffect(() => {
+    if (isAuthenticated && activeTab === 'emails') {
+      fetchEmailLogs()
+    }
+  }, [isAuthenticated, activeTab, emailTypeFilter, emailSearchQuery])
+
   // Show loading while checking authentication
   if (isCheckingAuth) {
     return (
@@ -841,7 +885,7 @@ export default function SuperAdminPage() {
         </header>
 
         {/* Tab Navigation */}
-        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-5 gap-3 mb-8">
+        <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-6 gap-3 mb-8">
           <Button
             onClick={() => setActiveTab('cities')}
             className={`py-6 rounded-xl font-semibold text-lg transition-all duration-300 ${
@@ -892,6 +936,16 @@ export default function SuperAdminPage() {
             }`}
           >
             <span className="text-2xl ml-2">⚙️</span> הגדרות
+          </Button>
+          <Button
+            onClick={() => setActiveTab('emails')}
+            className={`py-6 rounded-xl font-semibold text-lg transition-all duration-300 ${
+              activeTab === 'emails'
+                ? 'bg-gradient-to-r from-purple-600 to-pink-600 text-white shadow-lg shadow-purple-500/50 scale-105'
+                : 'bg-white text-gray-600 border-2 border-gray-200 hover:border-purple-300 hover:bg-purple-50'
+            }`}
+          >
+            <span className="text-2xl ml-2">📧</span> מיילים
           </Button>
         </div>
 
@@ -2147,6 +2201,123 @@ export default function SuperAdminPage() {
                             >
                               🗑️ מחק
                             </Button>
+                          </div>
+                        </div>
+                      </div>
+                    ))}
+                  </div>
+                )}
+              </CardContent>
+            </Card>
+          </>
+        )}
+
+        {/* Email Logs Tab */}
+        {activeTab === 'emails' && (
+          <>
+            <Card className="bg-white rounded-2xl shadow-xl border-2 border-purple-100">
+              <CardHeader className="border-b border-purple-100 bg-gradient-to-r from-purple-50 to-pink-50 rounded-t-2xl">
+                <div className="flex flex-col md:flex-row justify-between items-start md:items-center gap-4">
+                  <div>
+                    <CardTitle className="text-2xl text-gray-800 flex items-center gap-2">
+                      <span>📧</span> מעקב מיילים שנשלחו
+                    </CardTitle>
+                    <p className="text-sm text-gray-600 mt-1">צפייה בכל המיילים שנשלחו מהמערכת</p>
+                  </div>
+                  <div className="flex flex-col sm:flex-row gap-3 w-full md:w-auto">
+                    <Input
+                      placeholder="חיפוש לפי מייל או שם..."
+                      value={emailSearchQuery}
+                      onChange={(e) => setEmailSearchQuery(e.target.value)}
+                      className="min-w-[200px]"
+                    />
+                    <select
+                      value={emailTypeFilter}
+                      onChange={(e) => setEmailTypeFilter(e.target.value)}
+                      className="h-10 border-2 border-gray-200 rounded-lg px-3 bg-white"
+                    >
+                      <option value="all">כל הסוגים</option>
+                      <option value="password_reset">איפוס סיסמה</option>
+                      <option value="welcome">ברוך הבא</option>
+                      <option value="email_update">עדכון מייל</option>
+                      <option value="verification">אימות</option>
+                    </select>
+                    <Button
+                      onClick={fetchEmailLogs}
+                      className="bg-gradient-to-r from-purple-500 to-pink-500 hover:from-purple-600 hover:to-pink-600"
+                    >
+                      🔄 רענון
+                    </Button>
+                  </div>
+                </div>
+              </CardHeader>
+              <CardContent className="p-6">
+                {emailLogsLoading ? (
+                  <div className="text-center py-12">
+                    <div className="text-4xl mb-4 animate-spin">⏳</div>
+                    <p className="text-gray-500 text-lg">טוען מיילים...</p>
+                  </div>
+                ) : emailLogs.length === 0 ? (
+                  <div className="text-center py-12">
+                    <span className="text-6xl mb-4 block">📭</span>
+                    <p className="text-gray-500 text-lg">לא נמצאו מיילים</p>
+                    <p className="text-gray-400 text-sm mt-2">מיילים שישלחו יופיעו כאן</p>
+                  </div>
+                ) : (
+                  <div className="space-y-3">
+                    {emailLogs.map((log) => (
+                      <div
+                        key={log.id}
+                        className={`bg-gradient-to-r ${log.status === 'sent' ? 'from-green-50 to-emerald-50 border-green-200' : 'from-red-50 to-rose-50 border-red-200'} rounded-xl p-4 border-2`}
+                      >
+                        <div className="flex flex-col lg:flex-row justify-between items-start lg:items-center gap-3">
+                          <div className="flex-1">
+                            <div className="flex items-center gap-3 mb-2">
+                              <span className="text-xl">
+                                {log.status === 'sent' ? '✅' : '❌'}
+                              </span>
+                              <div>
+                                <p className="font-bold text-gray-800">{log.recipient_name || 'לא צוין'}</p>
+                                <p className="text-sm text-gray-600">{log.recipient_email}</p>
+                              </div>
+                            </div>
+                            <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-2 mt-3">
+                              <div className="text-sm">
+                                <span className="font-semibold text-gray-700">סוג:</span>{' '}
+                                <span className="text-purple-600">
+                                  {log.email_type === 'password_reset' && 'איפוס סיסמה'}
+                                  {log.email_type === 'welcome' && 'ברוך הבא'}
+                                  {log.email_type === 'email_update' && 'עדכון מייל'}
+                                  {log.email_type === 'verification' && 'אימות'}
+                                  {log.email_type === 'other' && 'אחר'}
+                                </span>
+                              </div>
+                              <div className="text-sm">
+                                <span className="font-semibold text-gray-700">נושא:</span>{' '}
+                                <span className="text-gray-600 truncate">{log.subject}</span>
+                              </div>
+                              <div className="text-sm">
+                                <span className="font-semibold text-gray-700">נשלח ע"י:</span>{' '}
+                                <span className="text-gray-600">{log.sent_by || 'מערכת'}</span>
+                              </div>
+                              <div className="text-sm">
+                                <span className="font-semibold text-gray-700">תאריך:</span>{' '}
+                                <span className="text-gray-600">
+                                  {new Date(log.created_at).toLocaleDateString('he-IL', {
+                                    day: '2-digit',
+                                    month: '2-digit',
+                                    year: 'numeric',
+                                    hour: '2-digit',
+                                    minute: '2-digit'
+                                  })}
+                                </span>
+                              </div>
+                            </div>
+                            {log.error_message && (
+                              <div className="mt-2 text-sm text-red-600 bg-red-50 p-2 rounded">
+                                <span className="font-semibold">שגיאה:</span> {log.error_message}
+                              </div>
+                            )}
                           </div>
                         </div>
                       </div>

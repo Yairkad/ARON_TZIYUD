@@ -8,6 +8,7 @@
 
 import { NextRequest, NextResponse } from 'next/server'
 import { createServiceClient } from '@/lib/supabase-server'
+import { logEmail } from '@/lib/email'
 
 interface UpdateUserBody {
   user_id: string
@@ -180,6 +181,22 @@ async function handleUpdate(request: NextRequest) {
           redirectTo: `${process.env.NEXT_PUBLIC_APP_URL}/reset-password`
         }
       )
+
+      // Log the email
+      await logEmail({
+        recipientEmail: body.email,
+        recipientName: body.full_name || existingUser.full_name,
+        emailType: 'email_update',
+        subject: 'איפוס סיסמה - כתובת מייל עודכנה',
+        status: resetError ? 'failed' : 'sent',
+        errorMessage: resetError?.message,
+        sentBy: adminProfile.email,
+        metadata: {
+          user_id: body.user_id,
+          old_email: existingUser.email,
+          new_email: body.email
+        }
+      })
 
       if (resetError) {
         console.error('⚠️ Error sending password reset to new email:', resetError)

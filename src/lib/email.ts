@@ -1,10 +1,61 @@
 // Email sending utilities for city manager authentication
 // Using a simple approach - you can replace with SendGrid, Resend, etc.
 
+import { createClient } from '@supabase/supabase-js'
+
 export interface EmailOptions {
   to: string
   subject: string
   html: string
+}
+
+export interface EmailLogOptions {
+  recipientEmail: string
+  recipientName?: string
+  emailType: 'password_reset' | 'welcome' | 'email_update' | 'verification' | 'other'
+  subject: string
+  status: 'sent' | 'failed' | 'pending'
+  errorMessage?: string
+  sentBy?: string
+  metadata?: Record<string, any>
+}
+
+/**
+ * Log email to database for tracking
+ */
+export async function logEmail(options: EmailLogOptions): Promise<void> {
+  try {
+    const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL
+    const supabaseServiceKey = process.env.SUPABASE_SERVICE_ROLE_KEY
+
+    if (!supabaseUrl || !supabaseServiceKey) {
+      console.error('❌ Cannot log email - missing Supabase config')
+      return
+    }
+
+    const supabase = createClient(supabaseUrl, supabaseServiceKey)
+
+    const { error } = await supabase
+      .from('email_logs')
+      .insert({
+        recipient_email: options.recipientEmail,
+        recipient_name: options.recipientName || null,
+        email_type: options.emailType,
+        subject: options.subject,
+        status: options.status,
+        error_message: options.errorMessage || null,
+        sent_by: options.sentBy || null,
+        metadata: options.metadata || {}
+      })
+
+    if (error) {
+      console.error('❌ Error logging email:', error)
+    } else {
+      console.log('📝 Email logged:', options.emailType, 'to', options.recipientEmail)
+    }
+  } catch (error) {
+    console.error('❌ Error in logEmail:', error)
+  }
 }
 
 /**
