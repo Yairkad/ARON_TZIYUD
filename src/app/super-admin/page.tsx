@@ -290,7 +290,17 @@ export default function SuperAdminPage() {
         return
       }
 
-      alert(data.message || 'העיר נוספה בהצלחה!')
+      // Show success message with user credentials if any were created
+      if (data.createdUsers && data.createdUsers.length > 0) {
+        const userDetails = data.createdUsers.map((user: any) =>
+          `${user.role === 'manager1' ? 'מנהל ראשון' : 'מנהל שני'}:\nמייל: ${user.email}\nסיסמה: ${user.password}`
+        ).join('\n\n')
+
+        alert(`${data.message}\n\n📋 פרטי משתמשים שנוצרו:\n\n${userDetails}\n\n⚠️ שמור את הסיסמאות! הן לא יוצגו שוב.`)
+      } else {
+        alert(data.message || 'העיר נוספה בהצלחה!')
+      }
+
       setNewCity({ name: '', manager1_name: '', manager1_phone: '', manager1_email: '', manager2_name: '', manager2_phone: '', manager2_email: '', location_url: '', token_location_url: '', password: '' })
       setShowAddCity(false)
       fetchCities()

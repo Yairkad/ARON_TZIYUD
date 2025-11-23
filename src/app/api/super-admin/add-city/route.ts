@@ -115,25 +115,10 @@ export async function POST(request: NextRequest) {
 
           createdUsers.push({
             email: manager1_email,
+            name: manager1_name,
             password: tempPassword,
             role: 'manager1'
           })
-
-          // Send welcome email
-          try {
-            await fetch(`${process.env.NEXT_PUBLIC_APP_URL}/api/email/welcome`, {
-              method: 'POST',
-              headers: { 'Content-Type': 'application/json' },
-              body: JSON.stringify({
-                email: manager1_email,
-                name: manager1_name,
-                password: tempPassword,
-                role: 'city_manager',
-              }),
-            })
-          } catch (emailError) {
-            console.error('Error sending welcome email to manager1:', emailError)
-          }
         } else {
           console.error('Error creating manager1 user:', createError)
         }
@@ -192,25 +177,10 @@ export async function POST(request: NextRequest) {
 
           createdUsers.push({
             email: manager2_email,
+            name: manager2_name,
             password: tempPassword,
             role: 'manager2'
           })
-
-          // Send welcome email
-          try {
-            await fetch(`${process.env.NEXT_PUBLIC_APP_URL}/api/email/welcome`, {
-              method: 'POST',
-              headers: { 'Content-Type': 'application/json' },
-              body: JSON.stringify({
-                email: manager2_email,
-                name: manager2_name,
-                password: tempPassword,
-                role: 'city_manager',
-              }),
-            })
-          } catch (emailError) {
-            console.error('Error sending welcome email to manager2:', emailError)
-          }
         } else {
           console.error('Error creating manager2 user:', createError)
         }
@@ -227,7 +197,7 @@ export async function POST(request: NextRequest) {
 
     let message = 'העיר נוספה בהצלחה'
     if (createdUsers.length > 0) {
-      message += `. נוצרו ${createdUsers.length} משתמשים חדשים - סיסמאות זמניות נשלחו במייל`
+      message += `. נוצרו ${createdUsers.length} משתמשים חדשים`
     }
 
     return NextResponse.json({

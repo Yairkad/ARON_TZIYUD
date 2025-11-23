@@ -92,7 +92,8 @@
       "Bash(\"c:\\Users\\יאיר קדוש\\ARON_TZIYUD\\src\\lib\\supabase-server.ts\")",
       "Bash(cat:*)",
       "Bash(tasklist:*)",
-      "Bash(taskkill:*)"
+      "Bash(taskkill:*)",
+      "Bash(npx next build)"
     ],
     "deny": [],
     "ask": []
