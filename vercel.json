@@ -3,6 +3,10 @@
     {
       "path": "/api/recalculate-priority",
       "schedule": "0 3 * * *"
+    },
+    {
+      "path": "/api/cron/weekly-stock-alert",
+      "schedule": "0 5 * * 0"
     }
   ]
 }

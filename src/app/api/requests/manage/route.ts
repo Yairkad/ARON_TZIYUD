@@ -205,6 +205,27 @@ export async function PATCH(request: NextRequest) {
       ipAddress: request.headers.get('x-forwarded-for') || request.headers.get('x-real-ip') || undefined
     })
 
+    // Send WhatsApp notification to requester (fire and forget)
+    if (existingRequest.requester_phone && (action === 'approve' || action === 'reject')) {
+      try {
+        const { sendRequestStatusWhatsApp } = await import('@/lib/whatsapp')
+        const equipmentNames = existingRequest.items
+          .map((item: any) => item.equipment?.name || 'ציוד')
+          .join(', ')
+
+        await sendRequestStatusWhatsApp(
+          existingRequest.requester_phone,
+          existingRequest.requester_name,
+          action === 'approve' ? 'approved' : 'rejected',
+          equipmentNames,
+          action === 'reject' ? rejectedReason : undefined
+        )
+      } catch (whatsappError) {
+        console.error('Error sending WhatsApp to requester:', whatsappError)
+        // Continue anyway - WhatsApp failure shouldn't block the action
+      }
+    }
+
     console.log('Request managed:', {
       request_id: requestId,
       action,
