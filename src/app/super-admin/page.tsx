@@ -605,9 +605,11 @@ export default function SuperAdminPage() {
 
     setLoading(true)
     try {
-      // When changing role to city_manager, must provide city_id for the constraint
-      const isChangingToCityManager = userForm.role === 'city_manager' && editingUser.role !== 'city_manager'
-      const needsCityId = isChangingToCityManager && !editingUser.city_id && (!editingUser.managed_cities || editingUser.managed_cities.length === 0)
+      // Check if user needs a city_id for city_manager role
+      // This applies when: changing to city_manager OR already city_manager but has no cities
+      const isCityManager = userForm.role === 'city_manager'
+      const hasNoCities = !editingUser.city_id && (!editingUser.managed_cities || editingUser.managed_cities.length === 0)
+      const needsCityId = isCityManager && hasNoCities
 
       if (needsCityId && !userForm.city_id) {
         alert('יש לבחור עיר עבור מנהל עיר')
@@ -624,8 +626,8 @@ export default function SuperAdminPage() {
         role: userForm.role,
       }
 
-      // Include city_id when changing to city_manager role
-      if (needsCityId) {
+      // Include city_id when city_manager needs one
+      if (needsCityId && userForm.city_id) {
         updateData.city_id = userForm.city_id
         updateData.manager_role = userForm.manager_role || 'manager1'
       }
@@ -1712,8 +1714,8 @@ export default function SuperAdminPage() {
                             <div className="space-y-3">
                               <label className="block text-sm font-semibold text-gray-700">🏙️ ערים מנוהלות</label>
 
-                              {/* When changing to city_manager and user has no cities - must select first city */}
-                              {(!editingUser.managed_cities || editingUser.managed_cities.length === 0) && editingUser.role !== 'city_manager' && (
+                              {/* When user has no cities - must select first city */}
+                              {(!editingUser.managed_cities || editingUser.managed_cities.length === 0) && !editingUser.city_id && (
                                 <div className="p-4 bg-yellow-50 border-2 border-yellow-300 rounded-xl space-y-3">
                                   <p className="text-sm font-semibold text-yellow-800">⚠️ יש לבחור עיר ראשונה עבור המנהל</p>
                                   <div className="grid grid-cols-2 gap-3">

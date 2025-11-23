@@ -212,6 +212,34 @@ async function handleUpdate(request: NextRequest) {
       console.log('✅ Password updated in Supabase Auth')
     }
 
+    // If adding a new city_id, link the user to the city
+    if (body.city_id && body.manager_role) {
+      const cityUpdateData: any = {}
+
+      if (body.manager_role === 'manager1') {
+        cityUpdateData.manager1_user_id = body.user_id
+        cityUpdateData.manager1_name = body.full_name || updatedUser.full_name
+        cityUpdateData.manager1_phone = body.phone || updatedUser.phone || null
+      } else if (body.manager_role === 'manager2') {
+        cityUpdateData.manager2_user_id = body.user_id
+        cityUpdateData.manager2_name = body.full_name || updatedUser.full_name
+        cityUpdateData.manager2_phone = body.phone || updatedUser.phone || null
+      }
+
+      if (Object.keys(cityUpdateData).length > 0) {
+        const { error: cityLinkError } = await supabase
+          .from('cities')
+          .update(cityUpdateData)
+          .eq('id', body.city_id)
+
+        if (cityLinkError) {
+          console.error('❌ Error linking user to city:', cityLinkError)
+        } else {
+          console.log('✅ User linked to city as', body.manager_role)
+        }
+      }
+    }
+
     // Update manager name/phone in ALL cities this user manages
     if ((updatedUser.role === 'city_manager' || body.role === 'city_manager') && (body.full_name !== undefined || body.phone !== undefined)) {
       const finalFullName = body.full_name !== undefined ? body.full_name : updatedUser.full_name
