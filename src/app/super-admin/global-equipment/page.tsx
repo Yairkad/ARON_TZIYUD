@@ -48,6 +48,7 @@ export default function GlobalEquipmentPage() {
 
   // Refs for scrolling to edit form
   const editFormRefs = useRef<Record<string, HTMLDivElement | null>>({})
+  const categoryFormRef = useRef<HTMLDivElement | null>(null)
 
   // Form state
   const [equipmentForm, setEquipmentForm] = useState({
@@ -500,6 +501,10 @@ export default function GlobalEquipmentPage() {
       display_order: cat.display_order || 0
     })
     setShowAddCategory(false)
+    // Scroll to form after state update
+    setTimeout(() => {
+      categoryFormRef.current?.scrollIntoView({ behavior: 'smooth', block: 'start' })
+    }, 100)
   }
 
   const cancelEditCategory = () => {
@@ -1026,12 +1031,13 @@ export default function GlobalEquipmentPage() {
           <div className="space-y-4">
             {/* Add Category Form */}
             {(showAddCategory || editingCategory) && (
-              <Card className="border-green-200 shadow-md">
-                <CardHeader className="pb-3">
-                  <CardTitle className="text-lg">
-                    {editingCategory ? 'עריכת קטגוריה' : 'הוספת קטגוריה חדשה'}
-                  </CardTitle>
-                </CardHeader>
+              <div ref={categoryFormRef}>
+                <Card className="border-green-200 shadow-md bg-green-50/30">
+                  <CardHeader className="pb-3">
+                    <CardTitle className="text-lg text-green-800">
+                      {editingCategory ? '✏️ עריכת קטגוריה' : '➕ הוספת קטגוריה חדשה'}
+                    </CardTitle>
+                  </CardHeader>
                 <CardContent>
                   <form onSubmit={editingCategory ? handleUpdateCategory : handleAddCategory} className="space-y-4">
                     <div>
@@ -1061,6 +1067,16 @@ export default function GlobalEquipmentPage() {
                         placeholder="https://..."
                         className="text-base"
                       />
+                      {categoryForm.image_url && categoryForm.image_url.startsWith('http') && (
+                        <div className="mt-2 flex items-center gap-2">
+                          <span className="text-xs text-gray-500">תצוגה מקדימה:</span>
+                          <img
+                            src={categoryForm.image_url}
+                            alt="תצוגה מקדימה"
+                            className="w-10 h-10 object-cover rounded-lg border border-gray-200"
+                          />
+                        </div>
+                      )}
                     </div>
                     <div>
                       <label className="block text-sm font-medium mb-1.5 text-gray-700">סדר תצוגה</label>
@@ -1082,6 +1098,7 @@ export default function GlobalEquipmentPage() {
                   </form>
                 </CardContent>
               </Card>
+              </div>
             )}
 
             {/* Categories List */}

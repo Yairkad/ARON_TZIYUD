@@ -1,11 +1,21 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { createClient } from '@supabase/supabase-js'
 
-const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL!
-const supabaseServiceKey = process.env.SUPABASE_SERVICE_ROLE_KEY!
+export const dynamic = 'force-dynamic'
 
 export async function GET(request: NextRequest) {
   try {
+    const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL
+    const supabaseServiceKey = process.env.SUPABASE_SERVICE_ROLE_KEY
+
+    if (!supabaseUrl || !supabaseServiceKey) {
+      console.error('Missing Supabase environment variables')
+      return NextResponse.json(
+        { success: false, error: 'שגיאת הגדרות שרת' },
+        { status: 500 }
+      )
+    }
+
     const supabase = createClient(supabaseUrl, supabaseServiceKey)
 
     // Fetch all categories ordered by display_order
@@ -46,6 +56,16 @@ export async function GET(request: NextRequest) {
 // POST - Add new category
 export async function POST(request: NextRequest) {
   try {
+    const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL
+    const supabaseServiceKey = process.env.SUPABASE_SERVICE_ROLE_KEY
+
+    if (!supabaseUrl || !supabaseServiceKey) {
+      return NextResponse.json(
+        { success: false, error: 'שגיאת הגדרות שרת' },
+        { status: 500 }
+      )
+    }
+
     const supabase = createClient(supabaseUrl, supabaseServiceKey)
     const body = await request.json()
     const { name, icon, image_url, display_order } = body
@@ -120,6 +140,16 @@ export async function POST(request: NextRequest) {
 // PUT - Update category
 export async function PUT(request: NextRequest) {
   try {
+    const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL
+    const supabaseServiceKey = process.env.SUPABASE_SERVICE_ROLE_KEY
+
+    if (!supabaseUrl || !supabaseServiceKey) {
+      return NextResponse.json(
+        { success: false, error: 'שגיאת הגדרות שרת' },
+        { status: 500 }
+      )
+    }
+
     const supabase = createClient(supabaseUrl, supabaseServiceKey)
     const body = await request.json()
     const { id, name, icon, image_url, display_order } = body
@@ -190,6 +220,16 @@ export async function PUT(request: NextRequest) {
 // DELETE - Delete category
 export async function DELETE(request: NextRequest) {
   try {
+    const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL
+    const supabaseServiceKey = process.env.SUPABASE_SERVICE_ROLE_KEY
+
+    if (!supabaseUrl || !supabaseServiceKey) {
+      return NextResponse.json(
+        { success: false, error: 'שגיאת הגדרות שרת' },
+        { status: 500 }
+      )
+    }
+
     const supabase = createClient(supabaseUrl, supabaseServiceKey)
     const { searchParams } = new URL(request.url)
     const id = searchParams.get('id')
