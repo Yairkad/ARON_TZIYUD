@@ -129,8 +129,24 @@ export async function POST(request: Request) {
     // Determine status based on role
     const status = userData.role === 'super_admin' ? 'active' : 'pending_approval'
 
+    // For super_admin, use service client to bypass RLS
+    // For city_manager, use auth client (they can only insert pending items)
+    let insertClient = supabase
+    if (userData.role === 'super_admin') {
+      insertClient = createClient(
+        process.env.NEXT_PUBLIC_SUPABASE_URL!,
+        process.env.SUPABASE_SERVICE_ROLE_KEY!,
+        {
+          auth: {
+            autoRefreshToken: false,
+            persistSession: false
+          }
+        }
+      )
+    }
+
     // Insert equipment
-    const { data: newEquipment, error } = await supabase
+    const { data: newEquipment, error } = await insertClient
       .from('global_equipment_pool')
       .insert({
         name: name.trim(),
@@ -208,7 +224,19 @@ export async function PUT(request: Request) {
     if (image_url !== undefined) updateData.image_url = image_url
     if (category_id !== undefined) updateData.category_id = category_id
 
-    const { data: updatedEquipment, error } = await supabase
+    // Use service client for super_admin operations
+    const updateClient = createClient(
+      process.env.NEXT_PUBLIC_SUPABASE_URL!,
+      process.env.SUPABASE_SERVICE_ROLE_KEY!,
+      {
+        auth: {
+          autoRefreshToken: false,
+          persistSession: false
+        }
+      }
+    )
+
+    const { data: updatedEquipment, error } = await updateClient
       .from('global_equipment_pool')
       .update(updateData)
       .eq('id', id)
