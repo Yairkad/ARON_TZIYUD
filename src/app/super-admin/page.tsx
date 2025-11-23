@@ -1981,6 +1981,44 @@ export default function SuperAdminPage() {
                             </Button>
                             <Button
                               type="button"
+                              onClick={async (e) => {
+                                e.preventDefault()
+                                e.stopPropagation()
+
+                                if (!confirm(`האם לשלוח לינק לאיפוס סיסמה למייל ${user.email}?`)) return
+
+                                setLoading(true)
+                                try {
+                                  const response = await fetch('/api/admin/users/send-reset-email', {
+                                    method: 'POST',
+                                    headers: { 'Content-Type': 'application/json' },
+                                    credentials: 'include',
+                                    body: JSON.stringify({
+                                      email: user.email
+                                    }),
+                                  })
+
+                                  const data = await response.json()
+
+                                  if (!response.ok) {
+                                    alert(data.error || 'שגיאה בשליחת מייל')
+                                    return
+                                  }
+
+                                  alert(data.message)
+                                } catch (error) {
+                                  console.error('Error sending reset email:', error)
+                                  alert('אירעה שגיאה בשליחת המייל')
+                                } finally {
+                                  setLoading(false)
+                                }
+                              }}
+                              className="bg-gradient-to-r from-emerald-500 to-teal-500 hover:from-emerald-600 hover:to-teal-600 text-white font-semibold px-4 py-2 rounded-lg transition-all duration-200 hover:scale-105"
+                            >
+                              📧 שלח לינק
+                            </Button>
+                            <Button
+                              type="button"
                               onClick={(e) => {
                                 e.preventDefault()
                                 e.stopPropagation()
