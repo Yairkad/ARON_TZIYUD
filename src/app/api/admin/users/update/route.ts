@@ -172,6 +172,20 @@ async function handleUpdate(request: NextRequest) {
       }
 
       console.log('✅ Email updated in Supabase Auth')
+
+      // Send password reset email to new address so user can set their password
+      const { error: resetError } = await supabase.auth.resetPasswordForEmail(
+        body.email,
+        {
+          redirectTo: `${process.env.NEXT_PUBLIC_APP_URL}/reset-password`
+        }
+      )
+
+      if (resetError) {
+        console.error('⚠️ Error sending password reset to new email:', resetError)
+      } else {
+        console.log('✅ Password reset email sent to new address')
+      }
     }
 
     // Update user in public.users table

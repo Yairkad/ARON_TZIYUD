@@ -195,6 +195,67 @@ export async function sendWelcomeEmail(email: string, tempPassword: string, mana
 }
 
 /**
+ * Send email update notification to new email address
+ */
+export async function sendEmailUpdateNotification(newEmail: string, userName: string) {
+  const loginUrl = `${process.env.NEXT_PUBLIC_APP_URL}/login`
+
+  const html = `
+    <!DOCTYPE html>
+    <html dir="rtl" lang="he">
+    <head>
+      <meta charset="UTF-8">
+      <style>
+        body { font-family: Arial, sans-serif; background-color: #f4f4f4; padding: 20px; }
+        .container { max-width: 600px; margin: 0 auto; background: white; border-radius: 10px; padding: 40px; box-shadow: 0 2px 10px rgba(0,0,0,0.1); }
+        .header { text-align: center; margin-bottom: 30px; }
+        .logo { font-size: 32px; font-weight: bold; color: #6366f1; }
+        .info-box { background: #f0fdf4; border-right: 4px solid #22c55e; padding: 20px; margin: 20px 0; }
+        .button { display: inline-block; background: linear-gradient(to left, #6366f1, #a855f7); color: white; padding: 15px 30px; text-decoration: none; border-radius: 8px; font-weight: bold; margin: 20px 0; }
+        .footer { text-align: center; color: #666; font-size: 12px; margin-top: 30px; }
+      </style>
+    </head>
+    <body>
+      <div class="container">
+        <div class="header">
+          <div class="logo">🏙️ ארון ציוד ידידים</div>
+        </div>
+
+        <h2>שלום ${userName},</h2>
+
+        <p>כתובת המייל שלך במערכת ארון הציוד עודכנה בהצלחה.</p>
+
+        <div class="info-box">
+          <p><strong>📧 כתובת המייל החדשה שלך:</strong></p>
+          <p style="font-size: 18px; margin: 10px 0;">${newEmail}</p>
+        </div>
+
+        <p>מעכשיו תוכל להתחבר למערכת עם כתובת המייל החדשה.</p>
+
+        <div style="text-align: center;">
+          <a href="${loginUrl}" class="button">🚀 התחבר למערכת</a>
+        </div>
+
+        <p style="color: #dc2626; font-size: 14px;">
+          <strong>⚠️ אם לא ביקשת לשנות את כתובת המייל שלך, אנא צור קשר עם מנהל המערכת מיד.</strong>
+        </p>
+
+        <div class="footer">
+          <p>מערכת ארון ציוד ידידים - ${new Date().getFullYear()}</p>
+        </div>
+      </div>
+    </body>
+    </html>
+  `
+
+  return sendEmail({
+    to: newEmail,
+    subject: '✅ כתובת המייל שלך עודכנה - ארון ציוד ידידים',
+    html
+  })
+}
+
+/**
  * Generic email sending function using Resend
  */
 async function sendEmail(options: EmailOptions): Promise<{ success: boolean; error?: string }> {
