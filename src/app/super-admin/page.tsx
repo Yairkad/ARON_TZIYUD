@@ -290,13 +290,13 @@ export default function SuperAdminPage() {
         return
       }
 
-      // Show success message with user credentials if any were created
+      // Show success message with user info if any were created
       if (data.createdUsers && data.createdUsers.length > 0) {
         const userDetails = data.createdUsers.map((user: any) =>
-          `${user.role === 'manager1' ? 'מנהל ראשון' : 'מנהל שני'}:\nמייל: ${user.email}\nסיסמה: ${user.password}`
+          `${user.role === 'manager1' ? 'מנהל ראשון' : 'מנהל שני'}:\nמייל: ${user.email}\nסטטוס: ${user.emailSent ? '✅ נשלח מייל עם לינק להגדרת סיסמה' : '❌ שגיאה בשליחת מייל'}`
         ).join('\n\n')
 
-        alert(`${data.message}\n\n📋 פרטי משתמשים שנוצרו:\n\n${userDetails}\n\n⚠️ שמור את הסיסמאות! הן לא יוצגו שוב.`)
+        alert(`${data.message}\n\n📋 פרטי משתמשים שנוצרו:\n\n${userDetails}`)
       } else {
         alert(data.message || 'העיר נוספה בהצלחה!')
       }

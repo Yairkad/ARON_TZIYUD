@@ -113,11 +113,23 @@ export async function POST(request: NextRequest) {
             })
             .eq('id', newCity.id)
 
+          // Send password reset email via Supabase
+          const { error: resetError } = await serviceClient.auth.resetPasswordForEmail(
+            manager1_email,
+            {
+              redirectTo: `${process.env.NEXT_PUBLIC_APP_URL}/reset-password`
+            }
+          )
+
+          if (resetError) {
+            console.error('Error sending password reset email to manager1:', resetError)
+          }
+
           createdUsers.push({
             email: manager1_email,
             name: manager1_name,
-            password: tempPassword,
-            role: 'manager1'
+            role: 'manager1',
+            emailSent: !resetError
           })
         } else {
           console.error('Error creating manager1 user:', createError)
@@ -175,11 +187,23 @@ export async function POST(request: NextRequest) {
             })
             .eq('id', newCity.id)
 
+          // Send password reset email via Supabase
+          const { error: resetError } = await serviceClient.auth.resetPasswordForEmail(
+            manager2_email,
+            {
+              redirectTo: `${process.env.NEXT_PUBLIC_APP_URL}/reset-password`
+            }
+          )
+
+          if (resetError) {
+            console.error('Error sending password reset email to manager2:', resetError)
+          }
+
           createdUsers.push({
             email: manager2_email,
             name: manager2_name,
-            password: tempPassword,
-            role: 'manager2'
+            role: 'manager2',
+            emailSent: !resetError
           })
         } else {
           console.error('Error creating manager2 user:', createError)
@@ -197,7 +221,11 @@ export async function POST(request: NextRequest) {
 
     let message = 'העיר נוספה בהצלחה'
     if (createdUsers.length > 0) {
+      const emailsSent = createdUsers.filter((u: any) => u.emailSent).length
       message += `. נוצרו ${createdUsers.length} משתמשים חדשים`
+      if (emailsSent > 0) {
+        message += ` - נשלחו ${emailsSent} מיילים עם לינק להגדרת סיסמה`
+      }
     }
 
     return NextResponse.json({
