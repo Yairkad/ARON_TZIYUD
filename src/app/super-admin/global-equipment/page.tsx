@@ -588,7 +588,7 @@ export default function GlobalEquipmentPage() {
   return (
     <div className="min-h-screen bg-gradient-to-br from-slate-50 to-blue-50" dir="rtl">
       {/* Header - Centered logo with subtitle */}
-      <header className="sticky top-0 z-50 bg-white/80 backdrop-blur-md border-b border-gray-200 shadow-sm">
+      <header className="bg-white border-b border-gray-200 shadow-sm">
         <div className="max-w-7xl mx-auto px-4 py-3">
           <div className="flex items-center justify-between">
             {/* Back button - left side */}
@@ -1111,13 +1111,13 @@ export default function GlobalEquipmentPage() {
                         >
                           <div className="flex items-center gap-3">
                             {/* Icon/Image */}
-                            <div className="flex-shrink-0 w-12 h-12 bg-white rounded-lg flex items-center justify-center border border-gray-200">
+                            <div className="flex-shrink-0 w-12 h-12 bg-white rounded-lg flex items-center justify-center border border-gray-200 overflow-hidden">
                               {cat.image_url ? (
                                 cat.image_url.startsWith('http') ? (
                                   <img
                                     src={cat.image_url}
                                     alt={cat.name}
-                                    className="w-full h-full object-cover rounded-lg"
+                                    className="w-full h-full object-cover"
                                     loading="lazy"
                                   />
                                 ) : (
@@ -1132,7 +1132,7 @@ export default function GlobalEquipmentPage() {
 
                             {/* Content */}
                             <div className="flex-1 min-w-0">
-                              <h3 className="font-semibold text-sm sm:text-base text-gray-800">
+                              <h3 className="font-semibold text-sm sm:text-base text-gray-800 truncate">
                                 {cat.name}
                               </h3>
                               <div className="flex items-center gap-2 mt-1">
@@ -1146,7 +1146,7 @@ export default function GlobalEquipmentPage() {
                             </div>
 
                             {/* Actions */}
-                            <div className="flex gap-1">
+                            <div className="flex-shrink-0 flex gap-1">
                               <button
                                 onClick={() => startEditCategory(cat)}
                                 className="p-2 text-blue-600 hover:bg-blue-50 rounded-lg transition-colors"
