@@ -1,6 +1,7 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { supabaseServer, createServiceClient } from '@/lib/supabase-server'
 import bcrypt from 'bcryptjs'
+import { logEmail } from '@/lib/email'
 
 export async function POST(request: NextRequest) {
   try {
@@ -121,6 +122,23 @@ export async function POST(request: NextRequest) {
             }
           )
 
+          // Log the email
+          await logEmail({
+            recipientEmail: manager1_email,
+            recipientName: manager1_name,
+            emailType: 'welcome',
+            subject: 'הגדרת סיסמה - ארון ציוד ידידים',
+            status: resetError ? 'failed' : 'sent',
+            errorMessage: resetError?.message,
+            sentBy: 'system',
+            metadata: {
+              user_id: authData.user.id,
+              city_id: newCity.id,
+              city_name: name,
+              manager_role: 'manager1'
+            }
+          })
+
           if (resetError) {
             console.error('Error sending password reset email to manager1:', resetError)
           }
@@ -194,6 +212,23 @@ export async function POST(request: NextRequest) {
               redirectTo: `${process.env.NEXT_PUBLIC_APP_URL}/reset-password`
             }
           )
+
+          // Log the email
+          await logEmail({
+            recipientEmail: manager2_email,
+            recipientName: manager2_name,
+            emailType: 'welcome',
+            subject: 'הגדרת סיסמה - ארון ציוד ידידים',
+            status: resetError ? 'failed' : 'sent',
+            errorMessage: resetError?.message,
+            sentBy: 'system',
+            metadata: {
+              user_id: authData.user.id,
+              city_id: newCity.id,
+              city_name: name,
+              manager_role: 'manager2'
+            }
+          })
 
           if (resetError) {
             console.error('Error sending password reset email to manager2:', resetError)

@@ -8,6 +8,7 @@
 
 import { NextRequest, NextResponse } from 'next/server'
 import { createServiceClient } from '@/lib/supabase-server'
+import { logEmail } from '@/lib/email'
 
 interface SendResetEmailBody {
   email: string
@@ -36,7 +37,7 @@ export async function POST(request: NextRequest) {
   // Check if user is super admin
   const { data: adminProfile } = await supabase
     .from('users')
-    .select('role, is_active')
+    .select('role, is_active, email')
     .eq('id', authUser.id)
     .single()
 
@@ -78,6 +79,20 @@ export async function POST(request: NextRequest) {
         redirectTo: `${process.env.NEXT_PUBLIC_APP_URL}/reset-password`
       }
     )
+
+    // Log the email
+    await logEmail({
+      recipientEmail: body.email,
+      recipientName: user.full_name,
+      emailType: 'password_reset',
+      subject: 'איפוס סיסמה - ארון ציוד ידידים',
+      status: resetError ? 'failed' : 'sent',
+      errorMessage: resetError?.message,
+      sentBy: adminProfile.email,
+      metadata: {
+        user_id: user.id
+      }
+    })
 
     if (resetError) {
       console.error('Error sending password reset email:', resetError)
