@@ -24,12 +24,27 @@ export default function GlobalEquipmentPage() {
   const [loading, setLoading] = useState(false)
 
   // UI state
-  const [activeTab, setActiveTab] = useState<'active' | 'pending'>('active')
+  const [activeTab, setActiveTab] = useState<'active' | 'pending' | 'categories'>('active')
   const [showAddEquipment, setShowAddEquipment] = useState(false)
   const [editingEquipment, setEditingEquipment] = useState<GlobalEquipmentPool | null>(null)
   const [editingItemId, setEditingItemId] = useState<string | null>(null)
   const [searchQuery, setSearchQuery] = useState('')
   const [categoryFilter, setCategoryFilter] = useState<string>('all')
+
+  // Category management state
+  const [showAddCategory, setShowAddCategory] = useState(false)
+  const [editingCategory, setEditingCategory] = useState<EquipmentCategory | null>(null)
+  const [categoryForm, setCategoryForm] = useState({
+    name: '',
+    icon: '',
+    image_url: '',
+    display_order: 0
+  })
+
+  // Bulk selection state
+  const [selectedItems, setSelectedItems] = useState<string[]>([])
+  const [showBulkAssign, setShowBulkAssign] = useState(false)
+  const [bulkCategoryId, setBulkCategoryId] = useState<string>('')
 
   // Refs for scrolling to edit form
   const editFormRefs = useRef<Record<string, HTMLDivElement | null>>({})
@@ -387,6 +402,170 @@ export default function GlobalEquipmentPage() {
     setShowMergeModal(true)
   }
 
+  // Category management functions
+  const handleAddCategory = async (e: React.FormEvent) => {
+    e.preventDefault()
+    setLoading(true)
+
+    try {
+      const response = await fetch('/api/categories', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(categoryForm)
+      })
+
+      const data = await response.json()
+
+      if (!response.ok) {
+        throw new Error(data.error || 'שגיאה בהוספת קטגוריה')
+      }
+
+      alert(data.message || 'הקטגוריה נוספה בהצלחה')
+      setShowAddCategory(false)
+      setCategoryForm({ name: '', icon: '', image_url: '', display_order: 0 })
+      fetchCategories()
+    } catch (error: any) {
+      alert(error.message)
+    } finally {
+      setLoading(false)
+    }
+  }
+
+  const handleUpdateCategory = async (e: React.FormEvent) => {
+    e.preventDefault()
+    if (!editingCategory) return
+
+    setLoading(true)
+
+    try {
+      const response = await fetch('/api/categories', {
+        method: 'PUT',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          id: editingCategory.id,
+          ...categoryForm
+        })
+      })
+
+      const data = await response.json()
+
+      if (!response.ok) {
+        throw new Error(data.error || 'שגיאה בעדכון קטגוריה')
+      }
+
+      alert('הקטגוריה עודכנה בהצלחה')
+      setEditingCategory(null)
+      setCategoryForm({ name: '', icon: '', image_url: '', display_order: 0 })
+      fetchCategories()
+    } catch (error: any) {
+      alert(error.message)
+    } finally {
+      setLoading(false)
+    }
+  }
+
+  const handleDeleteCategory = async (id: string, name: string) => {
+    if (!confirm(`האם אתה בטוח שברצונך למחוק את הקטגוריה "${name}"?`)) {
+      return
+    }
+
+    setLoading(true)
+
+    try {
+      const response = await fetch(`/api/categories?id=${id}`, {
+        method: 'DELETE'
+      })
+
+      const data = await response.json()
+
+      if (!response.ok) {
+        throw new Error(data.error || 'שגיאה במחיקת קטגוריה')
+      }
+
+      alert(data.message)
+      fetchCategories()
+    } catch (error: any) {
+      alert(error.message)
+    } finally {
+      setLoading(false)
+    }
+  }
+
+  const startEditCategory = (cat: EquipmentCategory) => {
+    setEditingCategory(cat)
+    setCategoryForm({
+      name: cat.name,
+      icon: cat.icon || '',
+      image_url: cat.image_url || '',
+      display_order: cat.display_order || 0
+    })
+    setShowAddCategory(false)
+  }
+
+  const cancelEditCategory = () => {
+    setEditingCategory(null)
+    setCategoryForm({ name: '', icon: '', image_url: '', display_order: 0 })
+    setShowAddCategory(false)
+  }
+
+  // Bulk assign functions
+  const toggleItemSelection = (id: string) => {
+    setSelectedItems(prev =>
+      prev.includes(id)
+        ? prev.filter(i => i !== id)
+        : [...prev, id]
+    )
+  }
+
+  const selectAllItems = () => {
+    if (selectedItems.length === filteredEquipment.length) {
+      setSelectedItems([])
+    } else {
+      setSelectedItems(filteredEquipment.map(e => e.id))
+    }
+  }
+
+  const handleBulkAssign = async () => {
+    if (selectedItems.length === 0) {
+      alert('יש לבחור לפחות פריט אחד')
+      return
+    }
+
+    setLoading(true)
+
+    try {
+      const response = await fetch('/api/categories/bulk-assign', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          equipment_ids: selectedItems,
+          category_id: bulkCategoryId || null
+        })
+      })
+
+      const data = await response.json()
+
+      if (!response.ok) {
+        throw new Error(data.error || 'שגיאה בשיוך הפריטים')
+      }
+
+      alert(data.message)
+      setShowBulkAssign(false)
+      setSelectedItems([])
+      setBulkCategoryId('')
+      fetchEquipment()
+    } catch (error: any) {
+      alert(error.message)
+    } finally {
+      setLoading(false)
+    }
+  }
+
+  // Count equipment per category
+  const getCategoryEquipmentCount = (categoryId: string) => {
+    return equipment.filter(e => e.category_id === categoryId).length
+  }
+
   if (isCheckingAuth) {
     return (
       <div className="min-h-screen bg-gradient-to-br from-slate-50 to-blue-50 flex items-center justify-center">
@@ -483,6 +662,16 @@ export default function GlobalEquipmentPage() {
               </span>
             )}
           </button>
+          <button
+            onClick={() => setActiveTab('categories')}
+            className={`flex-shrink-0 px-4 py-2 rounded-lg text-sm font-medium transition-all ${
+              activeTab === 'categories'
+                ? 'bg-green-600 text-white shadow-md'
+                : 'bg-white text-gray-600 hover:bg-gray-50 border border-gray-200'
+            }`}
+          >
+            קטגוריות ({categories.length})
+          </button>
         </div>
 
         {/* Active Equipment Tab */}
@@ -563,6 +752,14 @@ export default function GlobalEquipmentPage() {
                       <option key={cat.id} value={cat.id}>{cat.name}</option>
                     ))}
                   </select>
+                  <button
+                    onClick={selectAllItems}
+                    className="px-4 py-2 border border-gray-300 rounded-lg text-sm font-medium hover:bg-gray-50 transition-colors bg-white"
+                  >
+                    {selectedItems.length === filteredEquipment.length && filteredEquipment.length > 0
+                      ? 'בטל בחירה'
+                      : `בחר הכל (${filteredEquipment.length})`}
+                  </button>
                 </div>
               </CardContent>
             </Card>
@@ -643,6 +840,15 @@ export default function GlobalEquipmentPage() {
                             // Normal Display
                             <>
                               <div className="flex items-start p-3 sm:p-4 gap-3">
+                                {/* Checkbox for bulk selection */}
+                                <div className="flex-shrink-0 flex items-center">
+                                  <input
+                                    type="checkbox"
+                                    checked={selectedItems.includes(item.id)}
+                                    onChange={() => toggleItemSelection(item.id)}
+                                    className="w-4 h-4 rounded border-gray-300 text-blue-600 focus:ring-blue-500 cursor-pointer"
+                                  />
+                                </div>
                                 {/* Image/Emoji */}
                                 <div className="flex-shrink-0 w-12 h-12 sm:w-14 sm:h-14 bg-gray-100 rounded-lg flex items-center justify-center">
                                   {item.image_url ? (
@@ -814,6 +1020,158 @@ export default function GlobalEquipmentPage() {
             </Card>
           </div>
         )}
+
+        {/* Categories Tab */}
+        {activeTab === 'categories' && (
+          <div className="space-y-4">
+            {/* Add Category Form */}
+            {(showAddCategory || editingCategory) && (
+              <Card className="border-green-200 shadow-md">
+                <CardHeader className="pb-3">
+                  <CardTitle className="text-lg">
+                    {editingCategory ? 'עריכת קטגוריה' : 'הוספת קטגוריה חדשה'}
+                  </CardTitle>
+                </CardHeader>
+                <CardContent>
+                  <form onSubmit={editingCategory ? handleUpdateCategory : handleAddCategory} className="space-y-4">
+                    <div>
+                      <label className="block text-sm font-medium mb-1.5 text-gray-700">שם הקטגוריה *</label>
+                      <Input
+                        value={categoryForm.name}
+                        onChange={(e) => setCategoryForm({ ...categoryForm, name: e.target.value })}
+                        placeholder="למשל: כלי יד"
+                        required
+                        className="text-base"
+                      />
+                    </div>
+                    <div>
+                      <label className="block text-sm font-medium mb-1.5 text-gray-700">אייקון (אימוג'י)</label>
+                      <Input
+                        value={categoryForm.icon}
+                        onChange={(e) => setCategoryForm({ ...categoryForm, icon: e.target.value })}
+                        placeholder="🔧"
+                        className="text-base"
+                      />
+                    </div>
+                    <div>
+                      <label className="block text-sm font-medium mb-1.5 text-gray-700">תמונה (URL)</label>
+                      <Input
+                        value={categoryForm.image_url}
+                        onChange={(e) => setCategoryForm({ ...categoryForm, image_url: e.target.value })}
+                        placeholder="https://..."
+                        className="text-base"
+                      />
+                    </div>
+                    <div>
+                      <label className="block text-sm font-medium mb-1.5 text-gray-700">סדר תצוגה</label>
+                      <Input
+                        type="number"
+                        value={categoryForm.display_order}
+                        onChange={(e) => setCategoryForm({ ...categoryForm, display_order: parseInt(e.target.value) || 0 })}
+                        className="text-base"
+                      />
+                    </div>
+                    <div className="flex gap-2 pt-2">
+                      <Button type="submit" disabled={loading} className="flex-1 sm:flex-none bg-green-600 hover:bg-green-700">
+                        {loading ? 'שומר...' : editingCategory ? 'עדכן' : 'הוסף'}
+                      </Button>
+                      <Button type="button" variant="outline" onClick={cancelEditCategory} className="flex-1 sm:flex-none">
+                        ביטול
+                      </Button>
+                    </div>
+                  </form>
+                </CardContent>
+              </Card>
+            )}
+
+            {/* Categories List */}
+            <Card className="shadow-sm">
+              <CardHeader className="pb-3">
+                <CardTitle className="text-lg">רשימת קטגוריות</CardTitle>
+                <CardDescription className="text-sm">
+                  נהל את הקטגוריות של מאגר הציוד
+                </CardDescription>
+              </CardHeader>
+              <CardContent>
+                {categories.length === 0 ? (
+                  <div className="text-center py-8">
+                    <div className="text-4xl mb-3">📁</div>
+                    <p className="text-gray-500">אין קטגוריות</p>
+                    <p className="text-sm text-gray-400 mt-1">לחץ על + להוספה</p>
+                  </div>
+                ) : (
+                  <div className="space-y-3">
+                    {categories.map(cat => {
+                      const equipmentCount = getCategoryEquipmentCount(cat.id)
+
+                      return (
+                        <div
+                          key={cat.id}
+                          className="p-3 sm:p-4 bg-gray-50 border border-gray-200 rounded-xl hover:shadow-md transition-shadow"
+                        >
+                          <div className="flex items-center gap-3">
+                            {/* Icon/Image */}
+                            <div className="flex-shrink-0 w-12 h-12 bg-white rounded-lg flex items-center justify-center border border-gray-200">
+                              {cat.image_url ? (
+                                cat.image_url.startsWith('http') ? (
+                                  <img
+                                    src={cat.image_url}
+                                    alt={cat.name}
+                                    className="w-full h-full object-cover rounded-lg"
+                                    loading="lazy"
+                                  />
+                                ) : (
+                                  <span className="text-2xl">{cat.image_url}</span>
+                                )
+                              ) : cat.icon ? (
+                                <span className="text-2xl">{cat.icon}</span>
+                              ) : (
+                                <span className="text-2xl text-gray-400">📁</span>
+                              )}
+                            </div>
+
+                            {/* Content */}
+                            <div className="flex-1 min-w-0">
+                              <h3 className="font-semibold text-sm sm:text-base text-gray-800">
+                                {cat.name}
+                              </h3>
+                              <div className="flex items-center gap-2 mt-1">
+                                <span className="text-xs text-gray-500">
+                                  {equipmentCount} פריטים
+                                </span>
+                                <span className="text-xs text-gray-400">
+                                  סדר: {cat.display_order || 0}
+                                </span>
+                              </div>
+                            </div>
+
+                            {/* Actions */}
+                            <div className="flex gap-1">
+                              <button
+                                onClick={() => startEditCategory(cat)}
+                                className="p-2 text-blue-600 hover:bg-blue-50 rounded-lg transition-colors"
+                              >
+                                ✏️
+                              </button>
+                              <button
+                                onClick={() => handleDeleteCategory(cat.id, cat.name)}
+                                className="p-2 text-red-600 hover:bg-red-50 rounded-lg transition-colors"
+                                disabled={equipmentCount > 0}
+                                title={equipmentCount > 0 ? 'לא ניתן למחוק קטגוריה עם פריטים' : 'מחק'}
+                              >
+                                🗑️
+                              </button>
+                            </div>
+                          </div>
+                        </div>
+                      )
+                    })}
+                  </div>
+                )}
+              </CardContent>
+            </Card>
+          </div>
+        )}
       </main>
 
       {/* Floating Add Button - Circle on bottom left */}
@@ -833,6 +1191,82 @@ export default function GlobalEquipmentPage() {
         >
           +
         </button>
+      )}
+
+      {/* Floating Add Button for Categories */}
+      {activeTab === 'categories' && !editingCategory && (
+        <button
+          onClick={() => {
+            setShowAddCategory(!showAddCategory)
+          }}
+          className={`fixed bottom-6 left-6 w-14 h-14 rounded-full shadow-lg flex items-center justify-center text-white text-2xl z-50 transition-all ${
+            showAddCategory
+              ? 'bg-gray-500 rotate-45'
+              : 'bg-green-600 hover:bg-green-700 hover:scale-110'
+          }`}
+        >
+          +
+        </button>
+      )}
+
+      {/* Bulk Selection Bar */}
+      {selectedItems.length > 0 && (
+        <div className="fixed bottom-6 left-1/2 -translate-x-1/2 bg-white rounded-xl shadow-lg border border-gray-200 p-3 flex items-center gap-3 z-50">
+          <span className="text-sm font-medium">{selectedItems.length} נבחרו</span>
+          <Button
+            size="sm"
+            onClick={() => setShowBulkAssign(true)}
+            className="bg-purple-600 hover:bg-purple-700"
+          >
+            שייך לקטגוריה
+          </Button>
+          <Button
+            size="sm"
+            variant="outline"
+            onClick={() => setSelectedItems([])}
+          >
+            בטל
+          </Button>
+        </div>
+      )}
+
+      {/* Bulk Assign Modal */}
+      {showBulkAssign && (
+        <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50 p-4" onClick={() => setShowBulkAssign(false)}>
+          <div className="bg-white rounded-xl max-w-sm w-full" onClick={e => e.stopPropagation()}>
+            <div className="p-4 border-b border-gray-200">
+              <h3 className="font-bold text-lg">שיוך לקטגוריה</h3>
+              <p className="text-sm text-gray-500 mt-1">
+                {selectedItems.length} פריטים נבחרו
+              </p>
+            </div>
+            <div className="p-4">
+              <label className="block text-sm font-medium mb-2">בחר קטגוריה</label>
+              <select
+                value={bulkCategoryId}
+                onChange={(e) => setBulkCategoryId(e.target.value)}
+                className="w-full p-2.5 border border-gray-300 rounded-lg text-sm"
+              >
+                <option value="">הסר מקטגוריה</option>
+                {categories.map(cat => (
+                  <option key={cat.id} value={cat.id}>{cat.name}</option>
+                ))}
+              </select>
+            </div>
+            <div className="p-4 border-t border-gray-200 flex gap-2">
+              <Button
+                onClick={handleBulkAssign}
+                disabled={loading}
+                className="flex-1 bg-purple-600 hover:bg-purple-700"
+              >
+                {loading ? 'משייך...' : 'שייך'}
+              </Button>
+              <Button variant="outline" onClick={() => setShowBulkAssign(false)} className="flex-1">
+                ביטול
+              </Button>
+            </div>
+          </div>
+        </div>
       )}
 
       {/* City List Modal */}
