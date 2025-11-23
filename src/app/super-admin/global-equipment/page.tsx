@@ -36,7 +36,6 @@ export default function GlobalEquipmentPage() {
   const [editingCategory, setEditingCategory] = useState<EquipmentCategory | null>(null)
   const [categoryForm, setCategoryForm] = useState({
     name: '',
-    icon: '',
     image_url: '',
     display_order: 0
   })
@@ -423,7 +422,7 @@ export default function GlobalEquipmentPage() {
 
       alert(data.message || 'הקטגוריה נוספה בהצלחה')
       setShowAddCategory(false)
-      setCategoryForm({ name: '', icon: '', image_url: '', display_order: 0 })
+      setCategoryForm({ name: '', image_url: '', display_order: 0 })
       fetchCategories()
     } catch (error: any) {
       alert(error.message)
@@ -456,7 +455,8 @@ export default function GlobalEquipmentPage() {
 
       alert('הקטגוריה עודכנה בהצלחה')
       setEditingCategory(null)
-      setCategoryForm({ name: '', icon: '', image_url: '', display_order: 0 })
+      setCategoryForm({ name: '', image_url: '', display_order: 0 })
+      setShowAddCategory(false)
       fetchCategories()
     } catch (error: any) {
       alert(error.message)
@@ -496,20 +496,19 @@ export default function GlobalEquipmentPage() {
     setEditingCategory(cat)
     setCategoryForm({
       name: cat.name,
-      icon: cat.icon || '',
-      image_url: cat.image_url || '',
+      image_url: cat.image_url || cat.icon || '',
       display_order: cat.display_order || 0
     })
-    setShowAddCategory(false)
+    setShowAddCategory(true)
     // Scroll to form after state update
     setTimeout(() => {
-      categoryFormRef.current?.scrollIntoView({ behavior: 'smooth', block: 'start' })
-    }, 100)
+      window.scrollTo({ top: 0, behavior: 'smooth' })
+    }, 50)
   }
 
   const cancelEditCategory = () => {
     setEditingCategory(null)
-    setCategoryForm({ name: '', icon: '', image_url: '', display_order: 0 })
+    setCategoryForm({ name: '', image_url: '', display_order: 0 })
     setShowAddCategory(false)
   }
 
@@ -592,30 +591,25 @@ export default function GlobalEquipmentPage() {
 
   return (
     <div className="min-h-screen bg-gradient-to-br from-slate-50 to-blue-50" dir="rtl">
-      {/* Header - Centered logo with subtitle */}
-      <header className="bg-white border-b border-gray-200 shadow-sm">
-        <div className="max-w-7xl mx-auto px-4 py-3">
-          <div className="flex items-center justify-between">
-            {/* Back button - left side */}
-            <Link href="/super-admin">
-              <button className="p-2 rounded-full hover:bg-gray-100 transition-colors">
-                <svg xmlns="http://www.w3.org/2000/svg" className="h-5 w-5 text-gray-600" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 5l7 7-7 7" />
-                </svg>
-              </button>
-            </Link>
+      {/* Header - Simple with back button and title */}
+      <div className="max-w-7xl mx-auto px-4 py-3">
+        <div className="flex items-center justify-between">
+          {/* Back button */}
+          <Link href="/super-admin">
+            <button className="p-2 rounded-full hover:bg-white/50 transition-colors">
+              <svg xmlns="http://www.w3.org/2000/svg" className="h-5 w-5 text-gray-600" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 5l7 7-7 7" />
+              </svg>
+            </button>
+          </Link>
 
-            {/* Centered logo and title */}
-            <div className="flex flex-col items-center">
-              <Logo />
-              <h1 className="text-sm font-medium text-gray-600 mt-1">ניהול מאגר</h1>
-            </div>
+          {/* Title */}
+          <h1 className="text-lg font-semibold text-gray-700">ניהול מאגר</h1>
 
-            {/* Empty space for balance */}
-            <div className="w-9"></div>
-          </div>
+          {/* Empty space for balance */}
+          <div className="w-9"></div>
         </div>
-      </header>
+      </div>
 
       <main className="max-w-7xl mx-auto px-4 py-4 sm:py-6 pb-24">
         {/* Stats Cards */}
@@ -1051,20 +1045,11 @@ export default function GlobalEquipmentPage() {
                       />
                     </div>
                     <div>
-                      <label className="block text-sm font-medium mb-1.5 text-gray-700">אייקון (אימוג'י)</label>
-                      <Input
-                        value={categoryForm.icon}
-                        onChange={(e) => setCategoryForm({ ...categoryForm, icon: e.target.value })}
-                        placeholder="🔧"
-                        className="text-base"
-                      />
-                    </div>
-                    <div>
-                      <label className="block text-sm font-medium mb-1.5 text-gray-700">תמונה (URL)</label>
+                      <label className="block text-sm font-medium mb-1.5 text-gray-700">תמונה (URL או אימוג'י)</label>
                       <Input
                         value={categoryForm.image_url}
                         onChange={(e) => setCategoryForm({ ...categoryForm, image_url: e.target.value })}
-                        placeholder="https://..."
+                        placeholder="https://... או 🔧"
                         className="text-base"
                       />
                       {categoryForm.image_url && categoryForm.image_url.startsWith('http') && (

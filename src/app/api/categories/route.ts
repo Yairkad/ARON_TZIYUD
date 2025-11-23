@@ -68,7 +68,7 @@ export async function POST(request: NextRequest) {
 
     const supabase = createClient(supabaseUrl, supabaseServiceKey)
     const body = await request.json()
-    const { name, icon, image_url, display_order } = body
+    const { name, image_url, display_order } = body
 
     if (!name) {
       return NextResponse.json(
@@ -108,7 +108,6 @@ export async function POST(request: NextRequest) {
       .from('equipment_categories')
       .insert([{
         name,
-        icon: icon || null,
         image_url: image_url || null,
         display_order: order
       }])
@@ -152,7 +151,7 @@ export async function PUT(request: NextRequest) {
 
     const supabase = createClient(supabaseUrl, supabaseServiceKey)
     const body = await request.json()
-    const { id, name, icon, image_url, display_order } = body
+    const { id, name, image_url, display_order } = body
 
     if (!id) {
       return NextResponse.json(
@@ -187,7 +186,6 @@ export async function PUT(request: NextRequest) {
       .from('equipment_categories')
       .update({
         name,
-        icon: icon || null,
         image_url: image_url || null,
         display_order: display_order || null
       })
