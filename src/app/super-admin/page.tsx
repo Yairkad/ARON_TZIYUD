@@ -29,6 +29,8 @@ export default function SuperAdminPage() {
   const [changePasswordForm, setChangePasswordForm] = useState({ currentPassword: '', newPassword: '', confirmPassword: '' })
   const [showChangePassword, setShowChangePassword] = useState(false)
   const [cityFilter, setCityFilter] = useState<'all' | 'active' | 'inactive'>('all')
+  const [citySearchQuery, setCitySearchQuery] = useState('')
+  const [expandedCities, setExpandedCities] = useState<Set<string>>(new Set())
 
   // Users Management State
   const [users, setUsers] = useState<any[]>([])
@@ -111,12 +113,39 @@ export default function SuperAdminPage() {
     }
   }
 
-  // Filter cities based on selected filter
+  // Filter cities based on selected filter and search
   const filteredCities = cities.filter(city => {
-    if (cityFilter === 'active') return city.is_active
-    if (cityFilter === 'inactive') return !city.is_active
-    return true // 'all'
+    // First apply status filter
+    if (cityFilter === 'active' && !city.is_active) return false
+    if (cityFilter === 'inactive' && city.is_active) return false
+
+    // Then apply search filter
+    if (citySearchQuery.trim()) {
+      const query = citySearchQuery.toLowerCase()
+      return (
+        city.name.toLowerCase().includes(query) ||
+        city.manager1_name.toLowerCase().includes(query) ||
+        city.manager1_phone.includes(query) ||
+        (city.manager2_name && city.manager2_name.toLowerCase().includes(query)) ||
+        (city.manager2_phone && city.manager2_phone.includes(query))
+      )
+    }
+
+    return true
   })
+
+  // Toggle city expansion
+  const toggleCityExpansion = (cityId: string) => {
+    setExpandedCities(prev => {
+      const next = new Set(prev)
+      if (next.has(cityId)) {
+        next.delete(cityId)
+      } else {
+        next.add(cityId)
+      }
+      return next
+    })
+  }
 
   const fetchNotifications = async () => {
     try {
@@ -1020,6 +1049,27 @@ export default function SuperAdminPage() {
             <CardDescription className="text-gray-600">ניהול כל הערים במערכת</CardDescription>
           </CardHeader>
           <CardContent className="p-6">
+            {/* Search Input */}
+            <div className="mb-4">
+              <div className="relative">
+                <Input
+                  type="text"
+                  placeholder="🔍 חיפוש לפי שם עיר, מנהל או טלפון..."
+                  value={citySearchQuery}
+                  onChange={(e) => setCitySearchQuery(e.target.value)}
+                  className="h-12 pr-4 pl-10 text-base"
+                />
+                {citySearchQuery && (
+                  <button
+                    onClick={() => setCitySearchQuery('')}
+                    className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-400 hover:text-gray-600"
+                  >
+                    ✕
+                  </button>
+                )}
+              </div>
+            </div>
+
             {/* Filter Buttons */}
             <div className="flex gap-2 mb-6">
               <Button
@@ -1042,9 +1092,9 @@ export default function SuperAdminPage() {
               </Button>
             </div>
 
-            <div className="space-y-4">
+            <div className="space-y-3">
               {filteredCities.map(city => (
-                <div key={city.id} className={`p-6 rounded-xl border-2 transition-all ${city.is_active ? 'bg-gradient-to-r from-blue-50 to-indigo-50 border-blue-200' : 'bg-gray-100 border-gray-300'}`}>
+                <div key={city.id} className={`${expandedCities.has(city.id) ? 'p-4' : 'p-3'} rounded-xl border-2 transition-all ${city.is_active ? 'bg-gradient-to-r from-blue-50 to-indigo-50 border-blue-200' : 'bg-gray-100 border-gray-300'}`}>
                   {editingCity?.id === city.id ? (
                     <form onSubmit={handleUpdateCity} className="space-y-4">
                       <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
@@ -1132,10 +1182,36 @@ export default function SuperAdminPage() {
                     </form>
                   ) : (
                     <div>
-                      <div className="flex justify-between items-start mb-4">
-                        <div className="flex-1">
-                          <h3 className="text-2xl font-bold text-gray-800 mb-3">🏙️ {city.name}</h3>
-                          <div className="space-y-2">
+                      {/* Compact View Header - Always visible */}
+                      <div className="flex justify-between items-center">
+                        <div className="flex items-center gap-3 flex-1">
+                          <button
+                            onClick={() => toggleCityExpansion(city.id)}
+                            className="text-gray-500 hover:text-gray-700 transition-colors"
+                          >
+                            {expandedCities.has(city.id) ? '▼' : '◀'}
+                          </button>
+                          <h3 className="text-lg font-bold text-gray-800">🏙️ {city.name}</h3>
+                        </div>
+                        <div className="flex items-center gap-2">
+                          <div className={`px-3 py-1 rounded-lg text-sm font-bold ${city.is_active ? 'bg-green-100 text-green-700' : 'bg-gray-200 text-gray-700'}`}>
+                            {city.is_active ? '✅ פעילה' : '❌ מושבתת'}
+                          </div>
+                          <Button
+                            onClick={() => toggleCityExpansion(city.id)}
+                            variant="outline"
+                            size="sm"
+                            className="text-xs"
+                          >
+                            {expandedCities.has(city.id) ? 'צמצם' : 'הרחב'}
+                          </Button>
+                        </div>
+                      </div>
+
+                      {/* Expanded View - Only shown when expanded */}
+                      {expandedCities.has(city.id) && (
+                        <div className="mt-4 pt-4 border-t border-gray-200">
+                          <div className="space-y-2 mb-4">
                             {/* Manager 1 */}
                             <div className="flex items-center gap-3 bg-white rounded-lg p-2 border border-gray-200">
                               <span className="text-lg">👤</span>
@@ -1167,92 +1243,89 @@ export default function SuperAdminPage() {
                               </a>
                             )}
                           </div>
-                          <p className="text-sm text-gray-500 mt-3">🔐 סיסמה: ••••••</p>
+                          <p className="text-sm text-gray-500 mb-4">🔐 סיסמה: ••••••</p>
+                          <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-5 gap-2">
+                            <Button
+                              onClick={() => router.push(`/city/${city.id}/admin`)}
+                              className="bg-gradient-to-r from-purple-600 to-pink-600 hover:from-purple-700 hover:to-pink-700 text-white font-bold text-sm md:text-base h-10 md:h-auto"
+                            >
+                              <span className="hidden sm:inline">🚪 כניסה לניהול</span>
+                              <span className="sm:hidden">🚪 ניהול</span>
+                            </Button>
+                            {currentUser?.permissions !== 'view_only' && (
+                              <>
+                                <Button
+                                  onClick={() => setEditingCity(city)}
+                                  className="bg-blue-500 hover:bg-blue-600 text-sm md:text-base h-10 md:h-auto"
+                                >
+                                  ✏️ ערוך
+                                </Button>
+                                <Button
+                                  onClick={async () => {
+                                    const newPassword = prompt('הזן סיסמה חדשה לעיר (השאר ריק עבור 123456):') ?? '123456'
+
+                                    if (newPassword.length < 4) {
+                                      alert('הסיסמה חייבת להכיל לפחות 4 תווים')
+                                      return
+                                    }
+
+                                    if (!confirm(`האם לאפס את הסיסמה של העיר ${city.name}?\nסיסמה חדשה: ${newPassword}`)) return
+
+                                    setLoading(true)
+                                    try {
+                                      const response = await fetch('/api/admin/cities/reset-password', {
+                                        method: 'POST',
+                                        headers: { 'Content-Type': 'application/json' },
+                                        credentials: 'include',
+                                        body: JSON.stringify({
+                                          city_id: city.id,
+                                          new_password: newPassword
+                                        }),
+                                      })
+
+                                      const data = await response.json()
+
+                                      if (!response.ok) {
+                                        alert(data.error || 'שגיאה באיפוס סיסמה')
+                                        return
+                                      }
+
+                                      alert(data.message)
+                                    } catch (error) {
+                                      console.error('Error resetting city password:', error)
+                                      alert('אירעה שגיאה באיפוס הסיסמה')
+                                    } finally {
+                                      setLoading(false)
+                                    }
+                                  }}
+                                  disabled={loading}
+                                  className="bg-gradient-to-r from-amber-500 to-orange-500 hover:from-amber-600 hover:to-orange-600 text-sm md:text-base h-10 md:h-auto"
+                                >
+                                  🔑 אפס סיסמה
+                                </Button>
+                                <Button
+                                  onClick={() => handleToggleActive(city)}
+                                  disabled={loading}
+                                  className={`text-sm md:text-base h-10 md:h-auto ${city.is_active ? 'bg-orange-500 hover:bg-orange-600' : 'bg-green-500 hover:bg-green-600'}`}
+                                >
+                                  <span className="hidden sm:inline">{city.is_active ? '🔴 השבת' : '🟢 הפעל'}</span>
+                                  <span className="sm:hidden">{city.is_active ? '🔴' : '🟢'}</span>
+                                </Button>
+                                <Button
+                                  onClick={() => handleDeleteCity(city)}
+                                  disabled={loading}
+                                  className="bg-red-500 hover:bg-red-600 text-sm md:text-base h-10 md:h-auto"
+                                >
+                                  🗑️ מחק
+                                </Button>
+                              </>
+                            )}
+                            {currentUser?.permissions === 'view_only' && (
+                              <span className="text-sm text-gray-500 italic">צפייה בלבד</span>
+                            )}
+                          </div>
                         </div>
-                        <div className={`px-4 py-2 rounded-lg font-bold ${city.is_active ? 'bg-green-100 text-green-700' : 'bg-gray-200 text-gray-700'}`}>
-                          {city.is_active ? '✅ פעילה' : '❌ לא פעילה'}
-                        </div>
-                      </div>
-                      <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-5 gap-2">
-                        <Button
-                          onClick={() => router.push(`/city/${city.id}/admin`)}
-                          className="bg-gradient-to-r from-purple-600 to-pink-600 hover:from-purple-700 hover:to-pink-700 text-white font-bold text-sm md:text-base h-10 md:h-auto"
-                        >
-                          <span className="hidden sm:inline">🚪 כניסה לניהול</span>
-                          <span className="sm:hidden">🚪 ניהול</span>
-                        </Button>
-                        {currentUser?.permissions !== 'view_only' && (
-                          <>
-                            <Button
-                              onClick={() => setEditingCity(city)}
-                              className="bg-blue-500 hover:bg-blue-600 text-sm md:text-base h-10 md:h-auto"
-                            >
-                              ✏️ ערוך
-                            </Button>
-                            <Button
-                              onClick={async () => {
-                                const newPassword = prompt('הזן סיסמה חדשה לעיר (השאר ריק עבור 123456):') ?? '123456'
-
-                                if (newPassword.length < 4) {
-                                  alert('הסיסמה חייבת להכיל לפחות 4 תווים')
-                                  return
-                                }
-
-                                if (!confirm(`האם לאפס את הסיסמה של העיר ${city.name}?\nסיסמה חדשה: ${newPassword}`)) return
-
-                                setLoading(true)
-                                try {
-                                  const response = await fetch('/api/admin/cities/reset-password', {
-                                    method: 'POST',
-                                    headers: { 'Content-Type': 'application/json' },
-                                    credentials: 'include',
-                                    body: JSON.stringify({
-                                      city_id: city.id,
-                                      new_password: newPassword
-                                    }),
-                                  })
-
-                                  const data = await response.json()
-
-                                  if (!response.ok) {
-                                    alert(data.error || 'שגיאה באיפוס סיסמה')
-                                    return
-                                  }
-
-                                  alert(data.message)
-                                } catch (error) {
-                                  console.error('Error resetting city password:', error)
-                                  alert('אירעה שגיאה באיפוס הסיסמה')
-                                } finally {
-                                  setLoading(false)
-                                }
-                              }}
-                              disabled={loading}
-                              className="bg-gradient-to-r from-amber-500 to-orange-500 hover:from-amber-600 hover:to-orange-600 text-sm md:text-base h-10 md:h-auto"
-                            >
-                              🔑 אפס סיסמה
-                            </Button>
-                            <Button
-                              onClick={() => handleToggleActive(city)}
-                              disabled={loading}
-                              className={`text-sm md:text-base h-10 md:h-auto ${city.is_active ? 'bg-orange-500 hover:bg-orange-600' : 'bg-green-500 hover:bg-green-600'}`}
-                            >
-                              <span className="hidden sm:inline">{city.is_active ? '🔴 השבת' : '🟢 הפעל'}</span>
-                              <span className="sm:hidden">{city.is_active ? '🔴' : '🟢'}</span>
-                            </Button>
-                            <Button
-                              onClick={() => handleDeleteCity(city)}
-                              disabled={loading}
-                              className="bg-red-500 hover:bg-red-600 text-sm md:text-base h-10 md:h-auto"
-                            >
-                              🗑️ מחק
-                            </Button>
-                          </>
-                        )}
-                        {currentUser?.permissions === 'view_only' && (
-                          <span className="text-sm text-gray-500 italic">צפייה בלבד</span>
-                        )}
-                      </div>
+                      )}
                     </div>
                   )}
                 </div>

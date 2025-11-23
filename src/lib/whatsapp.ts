@@ -290,9 +290,20 @@ export async function sendRequestStatusWhatsApp(
   equipmentName: string,
   notes?: string
 ): Promise<WhatsAppMessageResult> {
+  // Use approved template for rejected status
+  if (status === 'rejected') {
+    // Template: request_rejected
+    // Parameters: {{1}} = name, {{2}} = items, {{3}} = reason
+    return sendWhatsAppTemplate(phone, 'request_rejected', [
+      userName,
+      equipmentName,
+      notes || 'לא צוינה סיבה'
+    ])
+  }
+
+  // For approved and returned - still using text messages until templates are approved
   const statusMessages = {
     approved: `✅ בקשתך לציוד "${equipmentName}" אושרה!\n\nאנא הגע לארון לאיסוף הציוד.`,
-    rejected: `❌ בקשתך לציוד "${equipmentName}" נדחתה.${notes ? `\n\nסיבה: ${notes}` : ''}`,
     returned: `🔄 הציוד "${equipmentName}" הוחזר בהצלחה.\n\nתודה רבה!`
   }
 
