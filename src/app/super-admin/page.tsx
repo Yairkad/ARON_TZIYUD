@@ -24,7 +24,7 @@ export default function SuperAdminPage() {
   const [loading, setLoading] = useState(false)
   const [activeTab, setActiveTab] = useState<'cities' | 'notifications' | 'settings' | 'users' | 'equipment'>('cities')
   const [showAddCity, setShowAddCity] = useState(false)
-  const [newCity, setNewCity] = useState<CityForm>({ name: '', manager1_name: '', manager1_phone: '', manager2_name: '', manager2_phone: '', location_url: '', token_location_url: '', password: '' })
+  const [newCity, setNewCity] = useState<CityForm & { manager1_email?: string, manager2_email?: string }>({ name: '', manager1_name: '', manager1_phone: '', manager1_email: '', manager2_name: '', manager2_phone: '', manager2_email: '', location_url: '', token_location_url: '', password: '' })
   const [editingCity, setEditingCity] = useState<City | null>(null)
   const [changePasswordForm, setChangePasswordForm] = useState({ currentPassword: '', newPassword: '', confirmPassword: '' })
   const [showChangePassword, setShowChangePassword] = useState(false)
@@ -273,8 +273,10 @@ export default function SuperAdminPage() {
           name: newCity.name,
           manager1_name: newCity.manager1_name,
           manager1_phone: newCity.manager1_phone,
+          manager1_email: newCity.manager1_email || null,
           manager2_name: newCity.manager2_name || null,
           manager2_phone: newCity.manager2_phone || null,
+          manager2_email: newCity.manager2_email || null,
           location_url: newCity.location_url || null,
           token_location_url: newCity.token_location_url || null,
           password: newCity.password
@@ -288,8 +290,8 @@ export default function SuperAdminPage() {
         return
       }
 
-      alert('העיר נוספה בהצלחה!')
-      setNewCity({ name: '', manager1_name: '', manager1_phone: '', manager2_name: '', manager2_phone: '', location_url: '', token_location_url: '', password: '' })
+      alert(data.message || 'העיר נוספה בהצלחה!')
+      setNewCity({ name: '', manager1_name: '', manager1_phone: '', manager1_email: '', manager2_name: '', manager2_phone: '', manager2_email: '', location_url: '', token_location_url: '', password: '' })
       setShowAddCity(false)
       fetchCities()
     } catch (error) {
@@ -897,6 +899,17 @@ export default function SuperAdminPage() {
                       required
                     />
                   </div>
+                  <div className="space-y-2 md:col-span-2">
+                    <label className="block text-sm font-semibold text-gray-700">📧 מנהל ראשון - מייל <span className="text-gray-400 text-xs">(ייצור משתמש אוטומטי)</span></label>
+                    <Input
+                      type="email"
+                      value={newCity.manager1_email || ''}
+                      onChange={(e) => setNewCity({ ...newCity, manager1_email: e.target.value })}
+                      placeholder="manager1@example.com"
+                      className="h-12"
+                    />
+                    <p className="text-xs text-green-600">אם תזין מייל, ייווצר משתמש חדש וסיסמה זמנית תישלח למייל</p>
+                  </div>
                   <div className="space-y-2">
                     <label className="block text-sm font-semibold text-gray-700">👤 מנהל שני - שם <span className="text-gray-400 text-xs">(אופציונלי)</span></label>
                     <Input
@@ -922,6 +935,17 @@ export default function SuperAdminPage() {
                       maxLength={10}
                       className="h-12"
                     />
+                  </div>
+                  <div className="space-y-2 md:col-span-2">
+                    <label className="block text-sm font-semibold text-gray-700">📧 מנהל שני - מייל <span className="text-gray-400 text-xs">(ייצור משתמש אוטומטי)</span></label>
+                    <Input
+                      type="email"
+                      value={newCity.manager2_email || ''}
+                      onChange={(e) => setNewCity({ ...newCity, manager2_email: e.target.value })}
+                      placeholder="manager2@example.com"
+                      className="h-12"
+                    />
+                    <p className="text-xs text-green-600">אם תזין מייל, ייווצר משתמש חדש וסיסמה זמנית תישלח למייל</p>
                   </div>
                   <div className="space-y-2 md:col-span-2">
                     <label className="block text-sm font-semibold text-gray-700">📍 קישור למיקום הארון - דף ראשי <span className="text-gray-400 text-xs">(אופציונלי)</span></label>

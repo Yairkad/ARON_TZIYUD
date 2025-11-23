@@ -194,13 +194,16 @@ export async function POST(request: NextRequest) {
     }
 
     // Update city manager details if this is a city manager with manager_role
+    // This links the user to the city in the cities table
     if (body.role === 'city_manager' && body.manager_role && body.city_id) {
       const updateData: any = {}
 
       if (body.manager_role === 'manager1') {
+        updateData.manager1_user_id = authData.user.id
         updateData.manager1_name = body.full_name
         updateData.manager1_phone = body.phone || null
       } else if (body.manager_role === 'manager2') {
+        updateData.manager2_user_id = authData.user.id
         updateData.manager2_name = body.full_name
         updateData.manager2_phone = body.phone || null
       }
