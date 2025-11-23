@@ -119,10 +119,24 @@ async function handleUpdate(request: NextRequest) {
     if (body.is_active !== undefined) updateData.is_active = body.is_active
     if (body.role !== undefined) updateData.role = body.role
 
-    // Only update city_id and manager_role for NEW users or when explicitly adding first city
-    // For existing users with multiple cities, use the manage-cities API instead
-    // We skip updating these fields to avoid violating the city_manager_has_city constraint
-    // when the user manages multiple cities (city_id should remain null in that case)
+    // Handle city_id update for city_manager role
+    // The constraint city_manager_has_city requires city_manager to have a city_id
+    if (body.city_id !== undefined) {
+      updateData.city_id = body.city_id || null
+    } else if (body.role === 'city_manager' && !existingUser.city_id) {
+      // If changing to city_manager and no city_id provided and user has no city_id
+      // This will fail the constraint - the caller must provide a city_id
+      console.error('❌ Cannot set role to city_manager without a city_id')
+      return NextResponse.json(
+        { success: false, error: 'לא ניתן להגדיר תפקיד מנהל עיר ללא שיוך לעיר. יש לבחור עיר.' },
+        { status: 400 }
+      )
+    }
+
+    // Update manager_role if provided
+    if (body.manager_role !== undefined) {
+      updateData.manager_role = body.manager_role
+    }
 
     // Update email in Auth if provided (must be done before updating public.users)
     if (body.email && body.email !== existingUser.email) {

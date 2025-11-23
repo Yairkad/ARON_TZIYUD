@@ -605,6 +605,16 @@ export default function SuperAdminPage() {
 
     setLoading(true)
     try {
+      // When changing role to city_manager, must provide city_id for the constraint
+      const isChangingToCityManager = userForm.role === 'city_manager' && editingUser.role !== 'city_manager'
+      const needsCityId = isChangingToCityManager && !editingUser.city_id && (!editingUser.managed_cities || editingUser.managed_cities.length === 0)
+
+      if (needsCityId && !userForm.city_id) {
+        alert('יש לבחור עיר עבור מנהל עיר')
+        setLoading(false)
+        return
+      }
+
       const updateData: any = {
         user_id: editingUser.id,
         email: userForm.email,
@@ -612,8 +622,12 @@ export default function SuperAdminPage() {
         permissions: userForm.permissions,
         phone: userForm.phone || null,
         role: userForm.role,
-        // Don't send city_id and manager_role for existing users
-        // Cities are managed via the manage-cities API instead
+      }
+
+      // Include city_id when changing to city_manager role
+      if (needsCityId) {
+        updateData.city_id = userForm.city_id
+        updateData.manager_role = userForm.manager_role || 'manager1'
       }
 
       // Only include password if it was changed
@@ -1697,6 +1711,36 @@ export default function SuperAdminPage() {
                             /* For existing users - show managed cities list with add/remove */
                             <div className="space-y-3">
                               <label className="block text-sm font-semibold text-gray-700">🏙️ ערים מנוהלות</label>
+
+                              {/* When changing to city_manager and user has no cities - must select first city */}
+                              {(!editingUser.managed_cities || editingUser.managed_cities.length === 0) && editingUser.role !== 'city_manager' && (
+                                <div className="p-4 bg-yellow-50 border-2 border-yellow-300 rounded-xl space-y-3">
+                                  <p className="text-sm font-semibold text-yellow-800">⚠️ יש לבחור עיר ראשונה עבור המנהל</p>
+                                  <div className="grid grid-cols-2 gap-3">
+                                    <select
+                                      value={userForm.city_id}
+                                      onChange={(e) => setUserForm({ ...userForm, city_id: e.target.value })}
+                                      className="h-10 border-2 border-gray-200 rounded-lg px-3"
+                                      required
+                                    >
+                                      <option value="">בחר עיר</option>
+                                      {cities.map(city => (
+                                        <option key={city.id} value={city.id}>{city.name}</option>
+                                      ))}
+                                    </select>
+                                    <select
+                                      value={userForm.manager_role}
+                                      onChange={(e) => setUserForm({ ...userForm, manager_role: e.target.value as any })}
+                                      className="h-10 border-2 border-gray-200 rounded-lg px-3"
+                                      required
+                                    >
+                                      <option value="">תפקיד</option>
+                                      <option value="manager1">מנהל ראשון</option>
+                                      <option value="manager2">מנהל שני</option>
+                                    </select>
+                                  </div>
+                                </div>
+                              )}
 
                               {/* List of managed cities */}
                               {editingUser.managed_cities && editingUser.managed_cities.length > 0 ? (
