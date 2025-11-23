@@ -67,6 +67,10 @@ export default function GlobalEquipmentPage() {
   const [mergeSource, setMergeSource] = useState<GlobalEquipmentPool | null>(null)
   const [mergeTarget, setMergeTarget] = useState<string>('')
 
+  // Category equipment popup state
+  const [showCategoryEquipment, setShowCategoryEquipment] = useState(false)
+  const [selectedCategoryForEquipment, setSelectedCategoryForEquipment] = useState<EquipmentCategory | null>(null)
+
   // Check authentication
   useEffect(() => {
     const verifyAuth = async () => {
@@ -438,13 +442,18 @@ export default function GlobalEquipmentPage() {
     setLoading(true)
 
     try {
+      const payload = {
+        id: editingCategory.id,
+        name: categoryForm.name,
+        image_url: categoryForm.image_url,
+        display_order: categoryForm.display_order
+      }
+      console.log('Updating category with:', payload)
+
       const response = await fetch('/api/categories', {
         method: 'PUT',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({
-          id: editingCategory.id,
-          ...categoryForm
-        })
+        body: JSON.stringify(payload)
       })
 
       const data = await response.json()
@@ -568,6 +577,17 @@ export default function GlobalEquipmentPage() {
   // Count equipment per category
   const getCategoryEquipmentCount = (categoryId: string) => {
     return equipment.filter(e => e.category_id === categoryId).length
+  }
+
+  // Get equipment list for category
+  const getCategoryEquipment = (categoryId: string) => {
+    return equipment.filter(e => e.category_id === categoryId)
+  }
+
+  // Show category equipment popup
+  const showCategoryEquipmentPopup = (cat: EquipmentCategory) => {
+    setSelectedCategoryForEquipment(cat)
+    setShowCategoryEquipment(true)
   }
 
   if (isCheckingAuth) {
@@ -1090,105 +1110,91 @@ export default function GlobalEquipmentPage() {
             )}
 
             {/* Categories List */}
-            <div className="bg-gradient-to-br from-emerald-50 to-teal-50 rounded-2xl p-4 sm:p-6 border border-emerald-100">
-              <div className="flex items-center justify-between mb-4">
-                <h2 className="text-xl font-bold text-emerald-800">רשימת קטגוריות</h2>
-                <span className="px-3 py-1 bg-emerald-100 text-emerald-700 rounded-full text-sm font-medium">
-                  {categories.length} קטגוריות
-                </span>
-              </div>
-
-              {categories.length === 0 ? (
-                <div className="text-center py-12 bg-white/50 rounded-xl">
-                  <div className="text-5xl mb-4">📁</div>
-                  <p className="text-gray-600 font-medium">אין קטגוריות עדיין</p>
-                  <p className="text-sm text-gray-400 mt-1">לחץ על + להוספת קטגוריה ראשונה</p>
+            <Card className="shadow-sm">
+              <CardHeader className="pb-3">
+                <div className="flex items-center justify-between">
+                  <CardTitle className="text-lg">קטגוריות</CardTitle>
+                  <span className="text-sm text-gray-500">{categories.length} קטגוריות</span>
                 </div>
-              ) : (
-                <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
-                  {categories.map((cat, index) => {
-                    const equipmentCount = getCategoryEquipmentCount(cat.id)
-                    // Cycle through colors
-                    const colors = [
-                      'from-blue-500 to-blue-600',
-                      'from-purple-500 to-purple-600',
-                      'from-pink-500 to-pink-600',
-                      'from-orange-500 to-orange-600',
-                      'from-teal-500 to-teal-600',
-                      'from-indigo-500 to-indigo-600',
-                    ]
-                    const colorClass = colors[index % colors.length]
+              </CardHeader>
+              <CardContent>
+                {categories.length === 0 ? (
+                  <div className="text-center py-8">
+                    <div className="text-4xl mb-3">📁</div>
+                    <p className="text-gray-500">אין קטגוריות</p>
+                  </div>
+                ) : (
+                  <div className="space-y-2">
+                    {categories.map((cat) => {
+                      const equipmentCount = getCategoryEquipmentCount(cat.id)
 
-                    return (
-                      <div
-                        key={cat.id}
-                        className="bg-white rounded-xl shadow-sm hover:shadow-lg transition-all overflow-hidden border border-gray-100"
-                      >
-                        {/* Colored header strip */}
-                        <div className={`h-2 bg-gradient-to-r ${colorClass}`}></div>
-
-                        <div className="p-4">
-                          <div className="flex items-center gap-3">
-                            {/* Icon/Image */}
-                            <div className={`flex-shrink-0 w-14 h-14 bg-gradient-to-br ${colorClass} rounded-xl flex items-center justify-center shadow-md`}>
-                              {cat.image_url ? (
-                                cat.image_url.startsWith('http') ? (
-                                  <img
-                                    src={cat.image_url}
-                                    alt={cat.name}
-                                    className="w-full h-full object-cover rounded-xl"
-                                    loading="lazy"
-                                  />
-                                ) : (
-                                  <span className="text-2xl">{cat.image_url}</span>
-                                )
-                              ) : cat.icon ? (
-                                <span className="text-2xl">{cat.icon}</span>
+                      return (
+                        <div
+                          key={cat.id}
+                          className="flex items-center gap-3 p-3 bg-gray-50 rounded-lg hover:bg-gray-100 transition-colors"
+                        >
+                          {/* Icon/Image */}
+                          <div className="flex-shrink-0 w-10 h-10 bg-white rounded-lg flex items-center justify-center border border-gray-200 overflow-hidden">
+                            {cat.image_url ? (
+                              cat.image_url.startsWith('http') ? (
+                                <img
+                                  src={cat.image_url}
+                                  alt={cat.name}
+                                  className="w-full h-full object-cover"
+                                  loading="lazy"
+                                />
                               ) : (
-                                <span className="text-2xl text-white">📁</span>
-                              )}
-                            </div>
+                                <span className="text-lg">{cat.image_url}</span>
+                              )
+                            ) : cat.icon ? (
+                              <span className="text-lg">{cat.icon}</span>
+                            ) : (
+                              <span className="text-lg text-gray-400">📁</span>
+                            )}
+                          </div>
 
-                            {/* Content */}
-                            <div className="flex-1 min-w-0">
-                              <h3 className="font-bold text-base text-gray-800 truncate">
-                                {cat.name}
-                              </h3>
-                              <div className="flex items-center gap-3 mt-1">
-                                <span className="inline-flex items-center px-2 py-0.5 rounded-full text-xs bg-gray-100 text-gray-600 font-medium">
-                                  {equipmentCount} פריטים
-                                </span>
-                                <span className="text-xs text-gray-400">
-                                  #{cat.display_order || 0}
-                                </span>
-                              </div>
-                            </div>
+                          {/* Content */}
+                          <div className="flex-1 min-w-0">
+                            <h3 className="font-medium text-sm text-gray-800 truncate">
+                              {cat.name}
+                            </h3>
+                            <button
+                              onClick={() => showCategoryEquipmentPopup(cat)}
+                              className="text-xs text-blue-600 hover:text-blue-800 hover:underline"
+                            >
+                              {equipmentCount} פריטים
+                            </button>
                           </div>
 
                           {/* Actions */}
-                          <div className="flex gap-2 mt-3 pt-3 border-t border-gray-100">
+                          <div className="flex-shrink-0 flex gap-1">
                             <button
                               onClick={() => startEditCategory(cat)}
-                              className="flex-1 py-2 text-sm font-medium text-blue-600 hover:bg-blue-50 rounded-lg transition-colors"
+                              className="p-1.5 text-blue-600 hover:bg-blue-50 rounded transition-colors"
+                              title="ערוך"
                             >
-                              ✏️ ערוך
+                              <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z" />
+                              </svg>
                             </button>
                             <button
                               onClick={() => handleDeleteCategory(cat.id, cat.name)}
-                              className="flex-1 py-2 text-sm font-medium text-red-600 hover:bg-red-50 rounded-lg transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
+                              className="p-1.5 text-red-600 hover:bg-red-50 rounded transition-colors disabled:opacity-30"
                               disabled={equipmentCount > 0}
                               title={equipmentCount > 0 ? 'לא ניתן למחוק קטגוריה עם פריטים' : 'מחק'}
                             >
-                              🗑️ מחק
+                              <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16" />
+                              </svg>
                             </button>
                           </div>
                         </div>
-                      </div>
-                    )
-                  })}
-                </div>
-              )}
-            </div>
+                      )
+                    })}
+                  </div>
+                )}
+              </CardContent>
+            </Card>
           </div>
         )}
       </main>
@@ -1362,6 +1368,49 @@ export default function GlobalEquipmentPage() {
               </Button>
               <Button variant="outline" onClick={() => setShowMergeModal(false)} className="flex-1">
                 ביטול
+              </Button>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* Category Equipment Modal */}
+      {showCategoryEquipment && selectedCategoryForEquipment && (
+        <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50 p-4" onClick={() => setShowCategoryEquipment(false)}>
+          <div className="bg-white rounded-xl max-w-md w-full max-h-[80vh] overflow-hidden" onClick={e => e.stopPropagation()}>
+            <div className="p-4 border-b border-gray-200">
+              <h3 className="font-bold text-lg">פריטים בקטגוריה: {selectedCategoryForEquipment.name}</h3>
+              <p className="text-sm text-gray-500 mt-1">
+                {getCategoryEquipmentCount(selectedCategoryForEquipment.id)} פריטים
+              </p>
+            </div>
+            <div className="p-4 overflow-y-auto max-h-[60vh]">
+              {getCategoryEquipment(selectedCategoryForEquipment.id).length === 0 ? (
+                <p className="text-gray-500 text-center py-4">אין פריטים בקטגוריה זו</p>
+              ) : (
+                <ul className="space-y-2">
+                  {getCategoryEquipment(selectedCategoryForEquipment.id).map(item => (
+                    <li key={item.id} className="flex items-center gap-3 p-2 bg-gray-50 rounded-lg">
+                      <div className="flex-shrink-0 w-8 h-8 bg-white rounded flex items-center justify-center border border-gray-200 overflow-hidden">
+                        {item.image_url ? (
+                          item.image_url.startsWith('http') ? (
+                            <img src={item.image_url} alt={item.name} className="w-full h-full object-cover" />
+                          ) : (
+                            <span className="text-sm">{item.image_url}</span>
+                          )
+                        ) : (
+                          <span className="text-sm text-gray-400">📦</span>
+                        )}
+                      </div>
+                      <span className="text-sm text-gray-700 truncate">{item.name}</span>
+                    </li>
+                  ))}
+                </ul>
+              )}
+            </div>
+            <div className="p-4 border-t border-gray-200">
+              <Button onClick={() => setShowCategoryEquipment(false)} className="w-full">
+                סגור
               </Button>
             </div>
           </div>
