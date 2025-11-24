@@ -4,17 +4,32 @@ import { useEffect, useState, Suspense } from 'react'
 import { useRouter, useSearchParams } from 'next/navigation'
 import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
+import { supabase } from '@/lib/supabase'
 
 function ResetPasswordContent() {
   const router = useRouter()
   const searchParams = useSearchParams()
-  const token = searchParams.get('token')
 
   const [newPassword, setNewPassword] = useState('')
   const [confirmPassword, setConfirmPassword] = useState('')
   const [loading, setLoading] = useState(false)
   const [success, setSuccess] = useState(false)
   const [error, setError] = useState('')
+  const [hasToken, setHasToken] = useState(false)
+
+  // Check for token hash in URL (Supabase Auth sends #access_token=...)
+  useEffect(() => {
+    const hashParams = new URLSearchParams(window.location.hash.substring(1))
+    const accessToken = hashParams.get('access_token')
+    const type = hashParams.get('type')
+
+    // Check if this is a password recovery link
+    if (accessToken && type === 'recovery') {
+      setHasToken(true)
+    } else {
+      setHasToken(false)
+    }
+  }, [])
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault()
@@ -30,31 +45,49 @@ function ResetPasswordContent() {
       return
     }
 
-    if (!token) {
-      setError('טוקן איפוס חסר')
-      return
-    }
-
     setLoading(true)
     setError('')
 
     try {
-      const response = await fetch('/api/managers/reset-password', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({
-          token,
-          newPassword
-        })
+      // Extract access_token from URL hash
+      const hashParams = new URLSearchParams(window.location.hash.substring(1))
+      const accessToken = hashParams.get('access_token')
+
+      if (!accessToken) {
+        setError('טוקן איפוס חסר או לא תקין')
+        setLoading(false)
+        return
+      }
+
+      // Set the session with the recovery token
+      const { error: sessionError } = await supabase.auth.setSession({
+        access_token: accessToken,
+        refresh_token: hashParams.get('refresh_token') || ''
       })
 
-      const data = await response.json()
-
-      if (response.ok && data.success) {
-        setSuccess(true)
-      } else {
-        setError(data.error || 'שגיאה באיפוס הסיסמה')
+      if (sessionError) {
+        console.error('Session error:', sessionError)
+        setError('שגיאה באימות הטוקן')
+        setLoading(false)
+        return
       }
+
+      // Update the user's password
+      const { error: updateError } = await supabase.auth.updateUser({
+        password: newPassword
+      })
+
+      if (updateError) {
+        console.error('Update error:', updateError)
+        setError(updateError.message || 'שגיאה באיפוס הסיסמה')
+        setLoading(false)
+        return
+      }
+
+      // Sign out after password change (user will login with new password)
+      await supabase.auth.signOut()
+
+      setSuccess(true)
     } catch (err) {
       console.error('Reset password error:', err)
       setError('שגיאה בתקשורת עם השרת')
@@ -64,7 +97,7 @@ function ResetPasswordContent() {
   }
 
   // No token provided
-  if (!token) {
+  if (!hasToken && !loading) {
     return (
       <div className="min-h-screen bg-gradient-to-b from-blue-50 to-white flex items-center justify-center p-4">
         <div className="max-w-md w-full bg-white rounded-2xl shadow-xl p-8">
