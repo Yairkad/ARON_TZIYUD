@@ -151,6 +151,14 @@ export async function POST(request: NextRequest) {
     }
 
     // Create user in Supabase Auth
+    console.log('Creating user with data:', {
+      email: body.email,
+      role: body.role,
+      city_id: body.city_id,
+      permissions: permissions,
+      manager_role: body.manager_role,
+    })
+
     const { data: authData, error: createError } = await supabase.auth.admin.createUser({
       email: body.email,
       password: body.password,
@@ -167,8 +175,9 @@ export async function POST(request: NextRequest) {
 
     if (createError || !authData.user) {
       console.error('Error creating user in Auth:', createError)
+      console.error('Full error details:', JSON.stringify(createError, null, 2))
       return NextResponse.json(
-        { success: false, error: `שגיאה ביצירת משתמש: ${createError?.message}` },
+        { success: false, error: `שגיאה ביצירת משתמש: ${createError?.message || 'Unknown error'}` },
         { status: 500 }
       )
     }
