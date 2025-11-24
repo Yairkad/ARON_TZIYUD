@@ -102,7 +102,7 @@ function ResetPasswordContent() {
           if (userData?.role === 'super_admin') {
             router.push('/super-admin')
           } else if (userData?.role === 'city_manager') {
-            router.push('/city-manager')
+            router.push('/city')
           } else {
             router.push('/login')
           }

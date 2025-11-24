@@ -54,6 +54,7 @@ export default function SuperAdminPage() {
   const [emailLogsLoading, setEmailLogsLoading] = useState(false)
   const [emailTypeFilter, setEmailTypeFilter] = useState<string>('all')
   const [emailSearchQuery, setEmailSearchQuery] = useState('')
+  const [expandedEmails, setExpandedEmails] = useState<Set<string>>(new Set())
 
   // Password visibility state for all password fields
   const [showNewCityPassword, setShowNewCityPassword] = useState(false)
@@ -567,6 +568,44 @@ export default function SuperAdminPage() {
     } finally {
       setEmailLogsLoading(false)
     }
+  }
+
+  const handleDeleteEmailLog = async (logId: string) => {
+    if (!confirm('האם אתה בטוח שברצונך למחוק את רשומת המייל הזו?')) return
+
+    try {
+      const response = await fetch('/api/admin/email-logs/delete', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        credentials: 'include',
+        body: JSON.stringify({ log_id: logId }),
+      })
+
+      const data = await response.json()
+
+      if (!response.ok) {
+        alert(data.error || 'שגיאה במחיקת רשומת המייל')
+        return
+      }
+
+      alert('רשומת המייל נמחקה בהצלחה')
+      fetchEmailLogs()
+    } catch (error) {
+      console.error('Error deleting email log:', error)
+      alert('שגיאה במחיקת רשומת המייל')
+    }
+  }
+
+  const toggleEmailExpand = (emailId: string) => {
+    const newExpanded = new Set(expandedEmails)
+    if (newExpanded.has(emailId)) {
+      newExpanded.delete(emailId)
+    } else {
+      newExpanded.add(emailId)
+    }
+    setExpandedEmails(newExpanded)
   }
 
   const handleCreateUser = async (e: React.FormEvent) => {
@@ -2265,63 +2304,104 @@ export default function SuperAdminPage() {
                   </div>
                 ) : (
                   <div className="space-y-3">
-                    {emailLogs.map((log) => (
-                      <div
-                        key={log.id}
-                        className={`bg-gradient-to-r ${log.status === 'sent' ? 'from-green-50 to-emerald-50 border-green-200' : 'from-red-50 to-rose-50 border-red-200'} rounded-xl p-4 border-2`}
-                      >
-                        <div className="flex flex-col lg:flex-row justify-between items-start lg:items-center gap-3">
-                          <div className="flex-1">
-                            <div className="flex items-center gap-3 mb-2">
-                              <span className="text-xl">
-                                {log.status === 'sent' ? '✅' : '❌'}
-                              </span>
-                              <div>
-                                <p className="font-bold text-gray-800">{log.recipient_name || 'לא צוין'}</p>
-                                <p className="text-sm text-gray-600">{log.recipient_email}</p>
-                              </div>
-                            </div>
-                            <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-2 mt-3">
-                              <div className="text-sm">
-                                <span className="font-semibold text-gray-700">סוג:</span>{' '}
-                                <span className="text-purple-600">
-                                  {log.email_type === 'password_reset' && 'איפוס סיסמה'}
-                                  {log.email_type === 'welcome' && 'ברוך הבא'}
-                                  {log.email_type === 'email_update' && 'עדכון מייל'}
-                                  {log.email_type === 'verification' && 'אימות'}
-                                  {log.email_type === 'other' && 'אחר'}
+                    {emailLogs.map((log) => {
+                      const isExpanded = expandedEmails.has(log.id)
+                      return (
+                        <div
+                          key={log.id}
+                          className={`bg-gradient-to-r ${log.status === 'sent' ? 'from-green-50 to-emerald-50 border-green-200' : 'from-red-50 to-rose-50 border-red-200'} rounded-xl p-4 border-2`}
+                        >
+                          <div className="flex flex-col lg:flex-row justify-between items-start lg:items-center gap-3">
+                            <div className="flex-1">
+                              <div className="flex items-center gap-3 mb-2">
+                                <span className="text-xl">
+                                  {log.status === 'sent' ? '✅' : '❌'}
                                 </span>
+                                <div className="flex-1">
+                                  <p className="font-bold text-gray-800">{log.recipient_name || 'לא צוין'}</p>
+                                  <p className="text-sm text-gray-600">{log.recipient_email}</p>
+                                </div>
+                                <div className="flex gap-2">
+                                  <Button
+                                    size="sm"
+                                    variant="outline"
+                                    onClick={() => toggleEmailExpand(log.id)}
+                                    className="h-8"
+                                  >
+                                    {isExpanded ? '📄 הסתר פרטים' : '📋 הצג פרטים'}
+                                  </Button>
+                                  <Button
+                                    size="sm"
+                                    variant="destructive"
+                                    onClick={() => handleDeleteEmailLog(log.id)}
+                                    className="h-8 bg-red-500 hover:bg-red-600"
+                                  >
+                                    🗑️ מחק
+                                  </Button>
+                                </div>
                               </div>
-                              <div className="text-sm">
-                                <span className="font-semibold text-gray-700">נושא:</span>{' '}
-                                <span className="text-gray-600 truncate">{log.subject}</span>
+
+                              {/* תצוגה מצומצמת */}
+                              <div className="text-sm text-gray-700 mb-2">
+                                <span className="font-semibold">נושא:</span> {log.subject}
                               </div>
-                              <div className="text-sm">
-                                <span className="font-semibold text-gray-700">נשלח ע"י:</span>{' '}
-                                <span className="text-gray-600">{log.sent_by || 'מערכת'}</span>
-                              </div>
-                              <div className="text-sm">
-                                <span className="font-semibold text-gray-700">תאריך:</span>{' '}
-                                <span className="text-gray-600">
-                                  {new Date(log.created_at).toLocaleDateString('he-IL', {
-                                    day: '2-digit',
-                                    month: '2-digit',
-                                    year: 'numeric',
-                                    hour: '2-digit',
-                                    minute: '2-digit'
-                                  })}
-                                </span>
-                              </div>
+
+                              {/* תצוגה מורחבת */}
+                              {isExpanded && (
+                                <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-2 mt-3 pt-3 border-t border-gray-200">
+                                  <div className="text-sm">
+                                    <span className="font-semibold text-gray-700">סוג:</span>{' '}
+                                    <span className="text-purple-600">
+                                      {log.email_type === 'password_reset' && 'איפוס סיסמה'}
+                                      {log.email_type === 'welcome' && 'ברוך הבא'}
+                                      {log.email_type === 'email_update' && 'עדכון מייל'}
+                                      {log.email_type === 'verification' && 'אימות'}
+                                      {log.email_type === 'other' && 'אחר'}
+                                    </span>
+                                  </div>
+                                  <div className="text-sm">
+                                    <span className="font-semibold text-gray-700">נשלח ע"י:</span>{' '}
+                                    <span className="text-gray-600">{log.sent_by || 'מערכת'}</span>
+                                  </div>
+                                  <div className="text-sm">
+                                    <span className="font-semibold text-gray-700">תאריך:</span>{' '}
+                                    <span className="text-gray-600">
+                                      {new Date(log.created_at).toLocaleDateString('he-IL', {
+                                        day: '2-digit',
+                                        month: '2-digit',
+                                        year: 'numeric',
+                                        hour: '2-digit',
+                                        minute: '2-digit'
+                                      })}
+                                    </span>
+                                  </div>
+                                  <div className="text-sm">
+                                    <span className="font-semibold text-gray-700">סטטוס:</span>{' '}
+                                    <span className={log.status === 'sent' ? 'text-green-600' : 'text-red-600'}>
+                                      {log.status === 'sent' ? 'נשלח בהצלחה' : 'נכשל'}
+                                    </span>
+                                  </div>
+                                  {log.metadata && Object.keys(log.metadata).length > 0 && (
+                                    <div className="text-sm col-span-full">
+                                      <span className="font-semibold text-gray-700">מידע נוסף:</span>{' '}
+                                      <pre className="text-xs bg-gray-100 p-2 rounded mt-1 overflow-x-auto">
+                                        {JSON.stringify(log.metadata, null, 2)}
+                                      </pre>
+                                    </div>
+                                  )}
+                                </div>
+                              )}
+
+                              {log.error_message && (
+                                <div className="mt-2 text-sm text-red-600 bg-red-50 p-2 rounded">
+                                  <span className="font-semibold">שגיאה:</span> {log.error_message}
+                                </div>
+                              )}
                             </div>
-                            {log.error_message && (
-                              <div className="mt-2 text-sm text-red-600 bg-red-50 p-2 rounded">
-                                <span className="font-semibold">שגיאה:</span> {log.error_message}
-                              </div>
-                            )}
                           </div>
                         </div>
-                      </div>
-                    ))}
+                      )
+                    })}
                   </div>
                 )}
               </CardContent>
