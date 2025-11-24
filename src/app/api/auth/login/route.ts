@@ -52,9 +52,18 @@ export async function POST(request: NextRequest) {
     // Authenticate with Supabase
     const authClient = createServiceClient()
 
+    // Set session persistence based on rememberMe
     const { data: authData, error: authError } = await authClient.auth.signInWithPassword({
       email,
       password,
+      options: {
+        // This tells Supabase to return a longer-lived session
+        ...(rememberMe && {
+          data: {
+            remember_me: true
+          }
+        })
+      }
     })
 
     if (authError || !authData.user) {
