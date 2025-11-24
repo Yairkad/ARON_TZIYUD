@@ -84,10 +84,32 @@ function ResetPasswordContent() {
         return
       }
 
-      // Sign out after password change (user will login with new password)
-      await supabase.auth.signOut()
+      // Get user info to determine where to redirect
+      const { data: { user } } = await supabase.auth.getUser()
 
-      setSuccess(true)
+      if (user) {
+        // Fetch user role from database
+        const { data: userData } = await supabase
+          .from('users')
+          .select('role')
+          .eq('id', user.id)
+          .single()
+
+        setSuccess(true)
+
+        // Redirect based on role after 2 seconds
+        setTimeout(() => {
+          if (userData?.role === 'super_admin') {
+            router.push('/super-admin')
+          } else if (userData?.role === 'city_manager') {
+            router.push('/city-manager')
+          } else {
+            router.push('/login')
+          }
+        }, 2000)
+      } else {
+        setSuccess(true)
+      }
     } catch (err) {
       console.error('Reset password error:', err)
       setError('שגיאה בתקשורת עם השרת')
@@ -141,21 +163,17 @@ function ResetPasswordContent() {
           <div className="text-center mb-6">
             <div className="text-6xl mb-4">✅</div>
             <h1 className="text-2xl font-bold text-green-600 mb-2">הסיסמה שונתה בהצלחה!</h1>
-            <p className="text-gray-600">כעת תוכל להתחבר עם הסיסמה החדשה</p>
+            <p className="text-gray-600">אתה כבר מחובר למערכת</p>
           </div>
 
           <div className="bg-green-50 border-2 border-green-200 rounded-xl p-4 mb-6">
             <p className="text-sm text-green-800 text-center">
-              <strong>הצעד הבא:</strong> התחבר למערכת עם כתובת המייל והסיסמה החדשה שהגדרת.
+              <strong>מעביר אותך לדף הניהול...</strong>
             </p>
+            <div className="flex justify-center mt-3">
+              <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-green-600"></div>
+            </div>
           </div>
-
-          <Button
-            onClick={() => router.push('/login')}
-            className="w-full bg-gradient-to-r from-green-600 to-emerald-600 hover:from-green-700 hover:to-emerald-700 text-lg py-6"
-          >
-            המשך להתחברות →
-          </Button>
         </div>
       </div>
     )
