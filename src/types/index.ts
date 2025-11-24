@@ -131,7 +131,6 @@ export interface CityForm {
   manager2_phone?: string
   location_url?: string
   token_location_url?: string
-  password: string
 }
 
 export interface AdminNotification {
