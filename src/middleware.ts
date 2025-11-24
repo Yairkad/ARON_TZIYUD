@@ -41,15 +41,16 @@ export async function middleware(request: NextRequest) {
     // Refresh successful - update cookies with new tokens
     const newResponse = NextResponse.next()
 
-    // Keep the same maxAge as the original cookies
-    const accessTokenMaxAge = request.cookies.get('sb-access-token')?.maxAge || 60 * 60 * 8
-    const refreshTokenMaxAge = request.cookies.get('sb-refresh-token')?.maxAge || 60 * 60 * 24 * 30
+    // Set default maxAge based on whether this is a "remember me" session
+    // We use 8 hours as default, or 30 days if refresh token exists (indicating remember me)
+    const hasRefreshToken = !!refreshToken
+    const defaultMaxAge = hasRefreshToken ? 60 * 60 * 24 * 30 : 60 * 60 * 8
 
     newResponse.cookies.set('sb-access-token', refreshData.session.access_token, {
       httpOnly: true,
       secure: process.env.NODE_ENV === 'production',
       sameSite: 'lax',
-      maxAge: accessTokenMaxAge,
+      maxAge: defaultMaxAge,
       path: '/',
     })
 
@@ -57,7 +58,7 @@ export async function middleware(request: NextRequest) {
       httpOnly: true,
       secure: process.env.NODE_ENV === 'production',
       sameSite: 'lax',
-      maxAge: refreshTokenMaxAge,
+      maxAge: defaultMaxAge,
       path: '/',
     })
 
