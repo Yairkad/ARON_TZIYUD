@@ -27,6 +27,20 @@ export async function POST(request: NextRequest) {
       )
     }
 
+    // Check if city with this name already exists
+    const { data: existingCity } = await supabaseServer
+      .from('cities')
+      .select('id, name')
+      .eq('name', name)
+      .single()
+
+    if (existingCity) {
+      return NextResponse.json(
+        { error: `עיר בשם "${name}" כבר קיימת במערכת` },
+        { status: 409 }
+      )
+    }
+
     if (manager1_phone.length !== 10) {
       return NextResponse.json(
         { error: 'טלפון מנהל ראשון חייב להיות בן 10 ספרות' },
