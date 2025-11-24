@@ -1,144 +1,339 @@
-# 🔔 הגדרת Web Push Notifications
+# הגדרת התראות Push - מדריך מלא
 
-## תיאור
-המערכת תומכת ב-Web Push Notifications כך שמנהלי ערים יקבלו התראות על בקשות חדשות גם כשהם לא בתוך האתר.
+## מצב נוכחי: מה כבר קיים?
 
-## דרישות מקדימות
-1. HTTPS (Vercel מספק זאת אוטומטית)
-2. דפדפן תומך (Chrome, Firefox, Edge, Safari 16.4+)
-3. מפתחות VAPID
+### ✅ קבצים שכבר קיימים:
+1. **Service Worker** (`public/sw.js`) - מטפל בהתראות
+2. **PWA Manifest** (`public/manifest.json`) - הגדרות PWA
+3. **Push API Endpoints** - subscribe/send routes
 
-## 🔑 יצירת מפתחות VAPID
+### 📝 קבצים שנוצרו עכשיו:
+1. **SQL Schema** (`create-push-subscriptions-table.sql`) - טבלת subscriptions
+2. **Push Manager** (`src/lib/push-notifications.ts`) - ניהול התראות בצד client
+3. **UI Component** (`src/components/NotificationSettings.tsx`) - ממשק להפעלת התראות
 
-### שלב 1: התקנת web-push (אם עוד לא מותקן)
+---
+
+## 🚀 שלבי ההתקנה
+
+### שלב 1: התקנת חבילת web-push
+
 ```bash
 npm install web-push
 ```
 
-### שלב 2: יצירת מפתחות
+### שלב 2: יצירת VAPID Keys
+
+הרץ את הפקודה הבאה ליצירת מפתחות:
+
 ```bash
 npx web-push generate-vapid-keys
 ```
 
-הפקודה תחזיר משהו כזה:
+תקבל פלט דומה לזה:
 ```
 Public Key:
-BEl62iUYgUivxIkv69yViEuiBIa-Ib27SDbQjaDTbVJWoN9gUFeldHqnX_-j1xhGqZ8jQBLYchQ8FxjhU2G-K1k
+BKxj...xyz
 
 Private Key:
-nGEP7Y3kZWZZjKqN7tLQYf5kL9s8hZWGP3_t7xK6k1Q
+abc...123
 ```
 
-### שלב 3: הוספה ל-.env.local
-הוסף את המפתחות לקובץ `.env.local`:
+### שלב 3: הוספת משתני סביבה
 
-```bash
-# Web Push Notifications (VAPID Keys)
-NEXT_PUBLIC_VAPID_PUBLIC_KEY=BEl62iUYgUivxIkv69yViEuiBIa-Ib27SDbQjaDTbVJWoN9gUFeldHqnX_-j1xhGqZ8jQBLYchQ8FxjhU2G-K1k
-VAPID_PRIVATE_KEY=nGEP7Y3kZWZZjKqN7tLQYf5kL9s8hZWGP3_t7xK6k1Q
-NEXT_PUBLIC_APP_URL=https://your-domain.vercel.app
+הוסף ל-`.env.local`:
+
+```env
+# VAPID Keys for Web Push Notifications
+NEXT_PUBLIC_VAPID_PUBLIC_KEY=<Public Key מהשלב הקודם>
+VAPID_PRIVATE_KEY=<Private Key מהשלב הקודם>
+VAPID_SUBJECT=mailto:aronyedidim@gmail.com
 ```
 
-**חשוב:**
-- `NEXT_PUBLIC_VAPID_PUBLIC_KEY` - ציבורי, נשלח ללקוח
-- `VAPID_PRIVATE_KEY` - פרטי, רק בשרת!  **לא לשתף!**
-- `NEXT_PUBLIC_APP_URL` - ה-URL של האתר שלך
+**חשוב**: הוסף גם ל-Vercel Environment Variables!
 
-### שלב 4: הוספה ל-Vercel Environment Variables
-1. עבור ל-Vercel Dashboard
-2. בחר את הפרויקט
-3. Settings → Environment Variables
-4. הוסף את 3 המשתנים:
-   - `NEXT_PUBLIC_VAPID_PUBLIC_KEY`
-   - `VAPID_PRIVATE_KEY`
-   - `NEXT_PUBLIC_APP_URL`
-5. Redeploy את הפרויקט
+### שלב 4: יצירת הטבלה ב-Supabase
 
-## 📊 הרצת Migration ל-Database
+1. פתח את Supabase Dashboard
+2. לך ל-SQL Editor
+3. העתק והרץ את התוכן של `create-push-subscriptions-table.sql`
+4. ודא שהטבלה נוצרה: `push_subscriptions`
 
-הרץ את ה-migration ב-Supabase:
+### שלב 5: הוספת Component להגדרות משתמש
 
-```sql
--- הקובץ נמצא ב: supabase/migrations/add-push-subscriptions.sql
+בעמוד ההגדרות של מנהלי הערים (`src/app/city/page.tsx` או דומה), הוסף:
+
+```tsx
+import NotificationSettings from '@/components/NotificationSettings'
+
+// בתוך הקומפוננטה:
+<NotificationSettings />
 ```
 
-או העתק את התוכן לכלי ה-SQL Editor ב-Supabase Dashboard.
+### שלב 6: אתחול Service Worker
 
-## 🚀 שימוש
+בעמוד הראשי של האפליקציה (`src/app/layout.tsx` או דף ראשי אחר), הוסף:
 
-### למנהלי ערים:
-1. כנס לפאנל הניהול של העיר
-2. לחץ על כפתור **"הפעל התראות"** (יופיע רק במצב בקשות)
-3. אשר את ההרשאה בדפדפן
-4. מעכשיו תקבל התראות על בקשות חדשות!
+```tsx
+'use client'
 
-### איך זה עובד?
-1. משתמש שולח בקשה לציוד
-2. המערכת יוצרת את הבקשה בדאטאבייס
-3. המערכת שולחת Push Notification לכל המנהלים שהפעילו התראות באותה עיר
-4. המנהל מקבל התראה במכשיר שלו (גם אם האתר סגור!)
-5. לחיצה על ההתראה פותחת את דף הבקשות
+import { useEffect } from 'react'
+import { initializePushNotifications } from '@/lib/push-notifications'
 
-## 🔧 קבצים שנוצרו
+export default function Layout({ children }) {
+  useEffect(() => {
+    // Initialize push notifications for logged-in users
+    initializePushNotifications()
+  }, [])
 
-### Frontend:
-- `src/lib/push.ts` - פונקציות עזר לניהול push
-- `src/app/city/[cityId]/admin/page.tsx` - כפתור התראות בדף המנהל
-
-### Backend:
-- `src/app/api/push/subscribe/route.ts` - הרשמה/ביטול מהתראות
-- `src/app/api/push/send/route.ts` - שליחת התראות
-- `src/app/api/requests/create/route.ts` - שליחת push כשיש בקשה חדשה
-
-### Service Worker:
-- `public/sw.js` - Service Worker לטיפול בהתראות
-- `public/manifest.json` - PWA manifest
-
-### Database:
-- `supabase/migrations/add-push-subscriptions.sql` - טבלת subscriptions
-
-## 🎯 תכונות
-
-✅ התראות אוטומטיות על בקשות חדשות
-✅ עובד גם כש-PWA לא פתוח
-✅ תמיכה מלאה בכל הדפדפנים המודרניים
-✅ אפשרות להפעיל/לכבות התראות בקלות
-✅ ניקוי אוטומטי של subscriptions לא פעילים
-
-## 🐛 Troubleshooting
-
-### ההתראות לא עובדות?
-1. וודא ש-VAPID keys מוגדרים ב-.env
-2. וודא שהאתר רץ על HTTPS
-3. בדוק שההרשאות לא נחסמו בדפדפן
-4. בדוק ב-Console שאין שגיאות
-5. וודא שה-Service Worker נרשם בהצלחה (DevTools → Application → Service Workers)
-
-### איך לבדוק שה-Service Worker פעיל?
-1. פתח DevTools (F12)
-2. Application → Service Workers
-3. תראה `sw.js` ברשימה עם סטטוס "activated"
-
-### איך לבדוק subscription?
-1. פתח DevTools Console
-2. הרץ:
-```javascript
-navigator.serviceWorker.ready.then(reg => {
-  reg.pushManager.getSubscription().then(sub => {
-    console.log('Subscription:', sub)
-  })
-})
+  return <>{children}</>
+}
 ```
-
-## 📱 PWA Support
-
-המערכת תומכת ב-PWA! המשתמשים יכולים להתקין את האפליקציה על המכשיר וההתראות יעבדו כמו באפליקציה רגילה.
-
-### התקנת PWA:
-- **Chrome/Edge Desktop**: לחץ על אייקון ההתקנה בשורת הכתובת
-- **Chrome Android**: "Add to Home Screen" מהתפריט
-- **Safari iOS 16.4+**: Share → Add to Home Screen
 
 ---
 
-**🎉 מערכת ההתראות מוכנה! המנהלים יקבלו עדכונים בזמן אמת על בקשות חדשות.**
+## 📤 שליחת התראות
+
+### דרך 1: שליחה ידנית דרך API
+
+```typescript
+const response = await fetch('/api/push/send', {
+  method: 'POST',
+  headers: {
+    'Content-Type': 'application/json',
+  },
+  credentials: 'include',
+  body: JSON.stringify({
+    cityId: 'city-uuid-here',
+    title: 'בקשה חדשה!',
+    body: 'יש בקשה חדשה להשאלת ציוד',
+    url: '/city/requests',
+  }),
+})
+```
+
+### דרך 2: אוטומטית בעת יצירת בקשה
+
+ב-`src/app/api/city/requests/route.ts` (או איפה ששומרים בקשות חדשות), הוסף:
+
+```typescript
+// After creating the request:
+const { sendPushNotification } = await import('@/lib/push-server')
+
+await sendPushNotification({
+  cityId: request.city_id,
+  title: 'בקשה חדשה להשאלת ציוד',
+  body: `${requesterName} ביקש להשאיל ציוד`,
+  url: `/city/requests?id=${request.id}`,
+})
+```
+
+---
+
+## 🔧 קוד Server-Side לשליחת התראות
+
+צור קובץ `src/lib/push-server.ts`:
+
+```typescript
+import webpush from 'web-push'
+import { createServiceClient } from './supabase-server'
+
+// Configure web-push with VAPID keys
+webpush.setVapidDetails(
+  process.env.VAPID_SUBJECT!,
+  process.env.NEXT_PUBLIC_VAPID_PUBLIC_KEY!,
+  process.env.VAPID_PRIVATE_KEY!
+)
+
+export async function sendPushNotification({
+  cityId,
+  title,
+  body,
+  url,
+}: {
+  cityId: string
+  title: string
+  body: string
+  url: string
+}) {
+  const supabase = createServiceClient()
+
+  // Get all active subscriptions for managers of this city
+  const { data: users } = await supabase
+    .from('users')
+    .select('id')
+    .eq('city_id', cityId)
+    .eq('role', 'city_manager')
+    .eq('is_active', true)
+
+  if (!users || users.length === 0) {
+    console.log('No active managers found for city:', cityId)
+    return
+  }
+
+  const userIds = users.map(u => u.id)
+
+  // Get subscriptions
+  const { data: subscriptions } = await supabase
+    .from('push_subscriptions')
+    .select('*')
+    .in('user_id', userIds)
+    .eq('is_active', true)
+
+  if (!subscriptions || subscriptions.length === 0) {
+    console.log('No active push subscriptions found')
+    return
+  }
+
+  // Send push notification to each subscription
+  const promises = subscriptions.map(async (sub) => {
+    try {
+      await webpush.sendNotification(
+        {
+          endpoint: sub.endpoint,
+          keys: {
+            p256dh: sub.p256dh,
+            auth: sub.auth,
+          },
+        },
+        JSON.stringify({
+          title,
+          body,
+          icon: '/icon-192.png',
+          badge: '/badge-72.png',
+          url,
+          cityId,
+        })
+      )
+
+      // Update last_used_at
+      await supabase
+        .from('push_subscriptions')
+        .update({ last_used_at: new Date().toISOString() })
+        .eq('id', sub.id)
+
+      console.log('✅ Push sent to:', sub.endpoint)
+    } catch (error: any) {
+      console.error('❌ Failed to send push:', error)
+
+      // If subscription is invalid, mark as inactive
+      if (error.statusCode === 410 || error.statusCode === 404) {
+        await supabase
+          .from('push_subscriptions')
+          .update({ is_active: false })
+          .eq('id', sub.id)
+      }
+    }
+  })
+
+  await Promise.all(promises)
+}
+```
+
+---
+
+## ✅ בדיקות
+
+### בדיקה 1: רישום ה-Service Worker
+1. פתח את האפליקציה
+2. פתח DevTools → Application → Service Workers
+3. ודא שיש רשום: `sw.js` (Status: Activated)
+
+### בדיקה 2: הרשאות התראות
+1. לחץ על "הפעל התראות" בהגדרות
+2. ודא שמופיעה בקשת הרשאה מהדפדפן
+3. אפשר התראות
+
+### בדיקה 3: שליחת התראת בדיקה
+במסוף DevTools:
+
+```javascript
+fetch('/api/push/send', {
+  method: 'POST',
+  headers: { 'Content-Type': 'application/json' },
+  credentials: 'include',
+  body: JSON.stringify({
+    cityId: 'YOUR_CITY_ID',
+    title: 'התראת בדיקה',
+    body: 'זו התראת בדיקה!',
+    url: '/',
+  }),
+})
+```
+
+### בדיקה 4: התראה כשהאפליקציה סגורה
+1. סגור את הטאב של האפליקציה
+2. שלח התראה (דרך API או על ידי יצירת בקשה)
+3. ודא שההתראה מופיעה במערכת ההפעלה
+
+---
+
+## 🐛 פתרון בעיות נפוצות
+
+### "VAPID public key not configured"
+- ודא ש-`NEXT_PUBLIC_VAPID_PUBLIC_KEY` מוגדר ב-`.env.local`
+- ודא שהמפתח מתחיל ב-`B` ואורכו 88 תווים
+
+### "Service Worker registration failed"
+- ודא שהקובץ `public/sw.js` קיים
+- ודא ש-HTTPS מופעל (או localhost)
+
+### "Push subscription failed"
+- בדוק שההרשאות לא נחסמו בדפדפן
+- נסה למחוק cookies ולהתחבר מחדש
+
+### התראות לא מגיעות
+- ודא שהטבלה `push_subscriptions` נוצרה
+- בדוק שיש רשומות בטבלה
+- ודא שה-VAPID keys זהים בשרת וב-client
+
+---
+
+## 📱 תמיכה בדפדפנים
+
+| דפדפן | Desktop | Mobile |
+|-------|---------|--------|
+| Chrome | ✅ | ✅ |
+| Edge | ✅ | ✅ |
+| Firefox | ✅ | ✅ |
+| Safari | ✅ (16.4+) | ✅ (16.4+) |
+| Opera | ✅ | ✅ |
+
+**הערה**: Safari תומך בהתראות רק מגרסה 16.4 ומעלה.
+
+---
+
+## 🔒 אבטחה
+
+- ✅ RLS מופעל על טבלת `push_subscriptions`
+- ✅ משתמשים רואים רק את ה-subscriptions שלהם
+- ✅ VAPID private key לא חשוף ל-client
+- ✅ Authentication נדרשת לכל ה-endpoints
+
+---
+
+## 📊 ניטור
+
+### שאילתות שימושיות:
+
+**כמה subscriptions פעילים?**
+```sql
+SELECT COUNT(*) FROM push_subscriptions WHERE is_active = true;
+```
+
+**subscriptions לפי משתמש:**
+```sql
+SELECT u.email, COUNT(ps.id) as subscription_count
+FROM users u
+LEFT JOIN push_subscriptions ps ON ps.user_id = u.id AND ps.is_active = true
+GROUP BY u.email
+ORDER BY subscription_count DESC;
+```
+
+**ניקוי subscriptions ישנים (מעל 90 יום):**
+```sql
+UPDATE push_subscriptions 
+SET is_active = false 
+WHERE last_used_at < NOW() - INTERVAL '90 days';
+```
+
