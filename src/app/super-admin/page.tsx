@@ -314,8 +314,7 @@ export default function SuperAdminPage() {
           manager2_phone: newCity.manager2_phone || null,
           manager2_email: newCity.manager2_email || null,
           location_url: newCity.location_url || null,
-          token_location_url: newCity.token_location_url || null,
-          password: newCity.password
+          token_location_url: newCity.token_location_url || null
         }),
       })
 
