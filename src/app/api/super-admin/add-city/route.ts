@@ -120,11 +120,13 @@ export async function POST(request: NextRequest) {
           // Wait for trigger to create user in public.users
           await new Promise(resolve => setTimeout(resolve, 500))
 
-          // Link user to city as manager1
+          // Link user to city as manager1 and sync name/phone
           await serviceClient
             .from('cities')
             .update({
-              manager1_user_id: authData.user.id
+              manager1_user_id: authData.user.id,
+              manager1_name: manager1_name,
+              manager1_phone: manager1_phone
             })
             .eq('id', newCity.id)
 
@@ -167,13 +169,27 @@ export async function POST(request: NextRequest) {
           console.error('Error creating manager1 user:', createError)
         }
       } else {
-        // User exists, link them to the city
+        // User exists, link them to the city and sync name/phone
         await serviceClient
           .from('cities')
           .update({
-            manager1_user_id: existingUser.id
+            manager1_user_id: existingUser.id,
+            manager1_name: manager1_name,
+            manager1_phone: manager1_phone
           })
           .eq('id', newCity.id)
+
+        // Also update the user's details in users table to match
+        await serviceClient
+          .from('users')
+          .update({
+            full_name: manager1_name,
+            phone: manager1_phone,
+            city_id: newCity.id,
+            manager_role: 'manager1',
+            updated_at: new Date().toISOString()
+          })
+          .eq('id', existingUser.id)
       }
     }
 
@@ -211,11 +227,13 @@ export async function POST(request: NextRequest) {
           // Wait for trigger to create user in public.users
           await new Promise(resolve => setTimeout(resolve, 500))
 
-          // Link user to city as manager2
+          // Link user to city as manager2 and sync name/phone
           await serviceClient
             .from('cities')
             .update({
-              manager2_user_id: authData.user.id
+              manager2_user_id: authData.user.id,
+              manager2_name: manager2_name,
+              manager2_phone: manager2_phone || null
             })
             .eq('id', newCity.id)
 
@@ -258,13 +276,27 @@ export async function POST(request: NextRequest) {
           console.error('Error creating manager2 user:', createError)
         }
       } else {
-        // User exists, link them to the city
+        // User exists, link them to the city and sync name/phone
         await serviceClient
           .from('cities')
           .update({
-            manager2_user_id: existingUser.id
+            manager2_user_id: existingUser.id,
+            manager2_name: manager2_name,
+            manager2_phone: manager2_phone || null
           })
           .eq('id', newCity.id)
+
+        // Also update the user's details in users table to match
+        await serviceClient
+          .from('users')
+          .update({
+            full_name: manager2_name,
+            phone: manager2_phone || null,
+            city_id: newCity.id,
+            manager_role: 'manager2',
+            updated_at: new Date().toISOString()
+          })
+          .eq('id', existingUser.id)
       }
     }
 
