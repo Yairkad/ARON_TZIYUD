@@ -24,7 +24,7 @@ export default function SuperAdminPage() {
   const [loading, setLoading] = useState(false)
   const [activeTab, setActiveTab] = useState<'cities' | 'notifications' | 'settings' | 'users' | 'equipment' | 'emails'>('cities')
   const [showAddCity, setShowAddCity] = useState(false)
-  const [newCity, setNewCity] = useState<CityForm & { manager1_email?: string, manager2_email?: string }>({ name: '', manager1_name: '', manager1_phone: '', manager1_email: '', manager2_name: '', manager2_phone: '', manager2_email: '', location_url: '', token_location_url: '', password: '' })
+  const [newCity, setNewCity] = useState<CityForm & { manager1_email?: string, manager2_email?: string }>({ name: '', manager1_name: '', manager1_phone: '', manager1_email: '', manager2_name: '', manager2_phone: '', manager2_email: '', location_url: '', token_location_url: '' })
   const [editingCity, setEditingCity] = useState<City | null>(null)
   const [changePasswordForm, setChangePasswordForm] = useState({ currentPassword: '', newPassword: '', confirmPassword: '' })
   const [showChangePassword, setShowChangePassword] = useState(false)
@@ -283,8 +283,8 @@ export default function SuperAdminPage() {
 
   const handleAddCity = async (e: React.FormEvent) => {
     e.preventDefault()
-    if (!newCity.name || !newCity.manager1_name || !newCity.manager1_phone || !newCity.password) {
-      alert('אנא מלא את כל השדות החובה (שם עיר, מנהל ראשון, טלפון, סיסמה)')
+    if (!newCity.name || !newCity.manager1_name || !newCity.manager1_phone) {
+      alert('אנא מלא את כל השדות החובה (שם עיר, מנהל ראשון, טלפון)')
       return
     }
 
@@ -340,6 +340,10 @@ export default function SuperAdminPage() {
       setNewCity({ name: '', manager1_name: '', manager1_phone: '', manager1_email: '', manager2_name: '', manager2_phone: '', manager2_email: '', location_url: '', token_location_url: '', password: '' })
       setShowAddCity(false)
       fetchCities()
+      // Refresh users list if any users were created
+      if (data.createdUsers && data.createdUsers.length > 0) {
+        fetchUsers()
+      }
     } catch (error) {
       console.error('Error adding city:', error)
       alert('אירעה שגיאה בהוספת העיר')
@@ -352,8 +356,8 @@ export default function SuperAdminPage() {
     e.preventDefault()
     if (!editingCity) return
 
-    if (!editingCity.name || !editingCity.manager1_name || !editingCity.manager1_phone || !editingCity.password) {
-      alert('אנא מלא את כל השדות החובה (שם עיר, מנהל ראשון, טלפון, סיסמה)')
+    if (!editingCity.name || !editingCity.manager1_name || !editingCity.manager1_phone) {
+      alert('אנא מלא את כל השדות החובה (שם עיר, מנהל ראשון, טלפון)')
       return
     }
 
@@ -382,7 +386,6 @@ export default function SuperAdminPage() {
           manager2_name: editingCity.manager2_name || null,
           manager2_phone: editingCity.manager2_phone || null,
           location_url: editingCity.location_url || null,
-          password: editingCity.password,
           is_active: editingCity.is_active
         }),
       })
@@ -1117,27 +1120,6 @@ export default function SuperAdminPage() {
                     />
                     <p className="text-xs text-purple-600">יוצג רק בדף הטוקן לאחר אישור בקשה</p>
                   </div>
-                  <div className="space-y-2">
-                    <label className="block text-sm font-semibold text-gray-700">🔐 סיסמת העיר</label>
-                    <div className="relative">
-                      <Input
-                        type={showNewCityPassword ? "text" : "password"}
-                        value={newCity.password}
-                        onChange={(e) => setNewCity({ ...newCity, password: e.target.value })}
-                        placeholder="הזן סיסמה"
-                        className="h-12 pr-12"
-                        required
-                      />
-                      <button
-                        type="button"
-                        onClick={() => setShowNewCityPassword(!showNewCityPassword)}
-                        className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-500 hover:text-gray-700 transition-colors"
-                        tabIndex={-1}
-                      >
-                        {showNewCityPassword ? '👁️' : '👁️‍🗨️'}
-                      </button>
-                    </div>
-                  </div>
                 </div>
                 <Button
                   type="submit"
@@ -1260,24 +1242,6 @@ export default function SuperAdminPage() {
                             onChange={(e) => setEditingCity({ ...editingCity, location_url: e.target.value })}
                             placeholder="📍 קישור Google Maps (אופציונלי)"
                           />
-                        </div>
-                        <div className="relative">
-                          <Input
-                            type={showEditCityPassword ? "text" : "password"}
-                            value={editingCity.password}
-                            onChange={(e) => setEditingCity({ ...editingCity, password: e.target.value })}
-                            placeholder="סיסמה"
-                            required
-                            className="pr-12"
-                          />
-                          <button
-                            type="button"
-                            onClick={() => setShowEditCityPassword(!showEditCityPassword)}
-                            className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-500 hover:text-gray-700 transition-colors"
-                            tabIndex={-1}
-                          >
-                            {showEditCityPassword ? '👁️' : '👁️‍🗨️'}
-                          </button>
                         </div>
                       </div>
                       <div className="flex gap-2">

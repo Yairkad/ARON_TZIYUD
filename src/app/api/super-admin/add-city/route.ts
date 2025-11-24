@@ -14,15 +14,14 @@ export async function POST(request: NextRequest) {
       manager2_phone,
       manager2_email,
       location_url,
-      token_location_url,
-      password
+      token_location_url
     } = await request.json()
 
     console.log('Add city request:', { name, manager1_name, manager1_phone, manager2_name, manager2_phone, location_url, token_location_url })
 
-    if (!name || !manager1_name || !manager1_phone || !password) {
+    if (!name || !manager1_name || !manager1_phone) {
       return NextResponse.json(
-        { error: 'אנא מלא את כל השדות החובה (שם עיר, מנהל ראשון, טלפון, סיסמה)' },
+        { error: 'אנא מלא את כל השדות החובה (שם עיר, מנהל ראשון, טלפון)' },
         { status: 400 }
       )
     }
@@ -55,9 +54,6 @@ export async function POST(request: NextRequest) {
       )
     }
 
-    // הצפנת הסיסמה
-    const hashedPassword = await bcrypt.hash(password, 10)
-
     // הוספת העיר
     const { data, error } = await supabaseServer
       .from('cities')
@@ -69,7 +65,6 @@ export async function POST(request: NextRequest) {
         manager2_phone: manager2_phone || null,
         location_url: location_url || null,
         token_location_url: token_location_url || null,
-        password: hashedPassword,
         is_active: true
       }])
       .select()
