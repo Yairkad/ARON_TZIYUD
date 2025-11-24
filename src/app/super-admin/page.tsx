@@ -57,8 +57,6 @@ export default function SuperAdminPage() {
   const [expandedEmails, setExpandedEmails] = useState<Set<string>>(new Set())
 
   // Password visibility state for all password fields
-  const [showNewCityPassword, setShowNewCityPassword] = useState(false)
-  const [showEditCityPassword, setShowEditCityPassword] = useState(false)
   const [showChangePasswordCurrent, setShowChangePasswordCurrent] = useState(false)
   const [showChangePasswordNew, setShowChangePasswordNew] = useState(false)
   const [showChangePasswordConfirm, setShowChangePasswordConfirm] = useState(false)
@@ -336,7 +334,7 @@ export default function SuperAdminPage() {
         alert(data.message || 'העיר נוספה בהצלחה!')
       }
 
-      setNewCity({ name: '', manager1_name: '', manager1_phone: '', manager1_email: '', manager2_name: '', manager2_phone: '', manager2_email: '', location_url: '', token_location_url: '', password: '' })
+      setNewCity({ name: '', manager1_name: '', manager1_phone: '', manager1_email: '', manager2_name: '', manager2_phone: '', manager2_email: '', location_url: '', token_location_url: '' })
       setShowAddCity(false)
       fetchCities()
       // Refresh users list if any users were created
