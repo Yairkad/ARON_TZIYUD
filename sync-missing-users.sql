@@ -29,8 +29,8 @@ SELECT
   END AS city_id,
   CASE
     WHEN au.raw_user_meta_data->>'permissions' IN ('view_only', 'approve_requests', 'full_access')
-    THEN (au.raw_user_meta_data->>'permissions')::permission_level
-    ELSE 'full_access'::permission_level
+    THEN (au.raw_user_meta_data->>'permissions')::user_permission
+    ELSE 'full_access'::user_permission
   END AS permissions,
   au.raw_user_meta_data->>'phone' AS phone,
   CASE
