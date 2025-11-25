@@ -186,20 +186,46 @@ export async function POST(request: NextRequest) {
     // But let's verify it was created
     await new Promise(resolve => setTimeout(resolve, 500)) // Wait for trigger
 
-    const { data: newUserProfile, error: profileError } = await supabase
+    let newUserProfile = null
+    const { data: profileData, error: profileError } = await supabase
       .from('users')
       .select('*')
       .eq('id', authData.user.id)
       .single()
 
     if (profileError) {
-      console.error('User created in Auth but not in users table:', profileError)
-      // Try to clean up
-      await supabase.auth.admin.deleteUser(authData.user.id)
-      return NextResponse.json(
-        { success: false, error: 'שגיאה ביצירת פרופיל משתמש' },
-        { status: 500 }
-      )
+      console.error('User created in Auth but not in users table, creating manually:', profileError)
+
+      // FALLBACK: Create user manually in public.users if trigger failed
+      const { data: manualProfile, error: manualError } = await supabase
+        .from('users')
+        .insert({
+          id: authData.user.id,
+          email: body.email,
+          full_name: body.full_name,
+          role: body.role,
+          city_id: body.city_id || null,
+          permissions: permissions,
+          phone: body.phone || null,
+          manager_role: body.manager_role || null,
+          is_active: true,
+        })
+        .select()
+        .single()
+
+      if (manualError) {
+        console.error('Failed to create user manually:', manualError)
+        // Try to clean up
+        await supabase.auth.admin.deleteUser(authData.user.id)
+        return NextResponse.json(
+          { success: false, error: 'שגיאה ביצירת פרופיל משתמש' },
+          { status: 500 }
+        )
+      }
+
+      newUserProfile = manualProfile
+    } else {
+      newUserProfile = profileData
     }
 
     // Update city manager details if this is a city manager with manager_role
