@@ -90,18 +90,29 @@ export default function CityPage() {
 
   const fetchEquipment = async () => {
     const { data, error } = await supabase
-      .from('equipment')
+      .from('city_equipment')
       .select(`
         *,
-        category:equipment_categories(*)
+        global_equipment:global_equipment_pool!inner(
+          *,
+          category:equipment_categories(*)
+        )
       `)
       .eq('city_id', cityId)
-      .order('name')
+      .order('display_order')
 
     if (error) {
       console.error('Error fetching equipment:', error)
     } else {
-      setEquipment(data || [])
+      // Flatten the structure for compatibility with existing code
+      const flattenedData = (data || []).map((item: any) => ({
+        ...item,
+        ...item.global_equipment,
+        city_equipment_id: item.id,
+        quantity: item.quantity,
+        display_order: item.display_order
+      }))
+      setEquipment(flattenedData)
     }
   }
 
