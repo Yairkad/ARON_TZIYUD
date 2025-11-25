@@ -108,9 +108,17 @@ export async function POST(request: NextRequest) {
     }
     if (token_lat !== undefined) {
       updateData.token_lat = token_lat
+      // Also update public_lat for map display (if not already set or syncing with token)
+      if (token_lat !== null) {
+        updateData.public_lat = token_lat
+      }
     }
     if (token_lng !== undefined) {
       updateData.token_lng = token_lng
+      // Also update public_lng for map display (if not already set or syncing with token)
+      if (token_lng !== null) {
+        updateData.public_lng = token_lng
+      }
     }
     if (request_mode !== undefined) {
       updateData.request_mode = request_mode

@@ -3,6 +3,99 @@ import { supabaseServer, createServiceClient } from '@/lib/supabase-server'
 import bcrypt from 'bcryptjs'
 import { logEmail } from '@/lib/email'
 
+/**
+ * Extract coordinates from a Google Maps URL
+ */
+function extractCoordinatesFromUrl(url: string): { lat: number; lng: number } | null {
+  if (!url) return null
+
+  try {
+    // Pattern 1: /@lat,lng,zoom format
+    const pattern1 = /@(-?\d+\.?\d*),(-?\d+\.?\d*),/
+    const match1 = url.match(pattern1)
+    if (match1) {
+      return {
+        lat: parseFloat(match1[1]),
+        lng: parseFloat(match1[2])
+      }
+    }
+
+    // Pattern 2: ?q=lat,lng format
+    const pattern2 = /[?&]q=(-?\d+\.?\d*),(-?\d+\.?\d*)/
+    const match2 = url.match(pattern2)
+    if (match2) {
+      return {
+        lat: parseFloat(match2[1]),
+        lng: parseFloat(match2[2])
+      }
+    }
+
+    // Pattern 3: /place/.../@lat,lng format
+    const pattern3 = /\/place\/[^/]+\/@(-?\d+\.?\d*),(-?\d+\.?\d*)/
+    const match3 = url.match(pattern3)
+    if (match3) {
+      return {
+        lat: parseFloat(match3[1]),
+        lng: parseFloat(match3[2])
+      }
+    }
+
+    // Pattern 4: ll=lat,lng format
+    const pattern4 = /[?&]ll=(-?\d+\.?\d*),(-?\d+\.?\d*)/
+    const match4 = url.match(pattern4)
+    if (match4) {
+      return {
+        lat: parseFloat(match4[1]),
+        lng: parseFloat(match4[2])
+      }
+    }
+
+    return null
+  } catch (error) {
+    console.error('Error extracting coordinates:', error)
+    return null
+  }
+}
+
+/**
+ * Expand short URL and extract coordinates
+ */
+async function expandAndExtractCoords(url: string): Promise<{ lat: number; lng: number } | null> {
+  if (!url) return null
+
+  try {
+    // Check if this is a short URL that needs expansion
+    const isShortUrl = url.includes('maps.app.goo.gl') ||
+                       url.includes('goo.gl/maps') ||
+                       url.includes('app.goo.gl')
+
+    let urlToProcess = url
+
+    if (isShortUrl) {
+      // Expand the short URL by following redirects
+      try {
+        const response = await fetch(url, {
+          method: 'HEAD',
+          redirect: 'follow',
+          headers: {
+            'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36'
+          }
+        })
+        urlToProcess = response.url
+      } catch (fetchError) {
+        console.error('Error expanding URL:', fetchError)
+        // Fall through to try extracting from original URL
+      }
+    }
+
+    // Extract coordinates from the URL
+    return extractCoordinatesFromUrl(urlToProcess)
+  } catch (error) {
+    console.error('Error in expandAndExtractCoords:', error)
+    return null
+  }
+}
+
 export async function POST(request: NextRequest) {
   try {
     const {
@@ -54,6 +147,24 @@ export async function POST(request: NextRequest) {
       )
     }
 
+    // Try to extract coordinates from token_location_url for map display
+    let token_lat: number | null = null
+    let token_lng: number | null = null
+    let public_lat: number | null = null
+    let public_lng: number | null = null
+
+    if (token_location_url) {
+      const coords = await expandAndExtractCoords(token_location_url)
+      if (coords) {
+        token_lat = coords.lat
+        token_lng = coords.lng
+        // Also set public coordinates for map display
+        public_lat = coords.lat
+        public_lng = coords.lng
+        console.log(`Extracted coordinates from token_location_url: ${token_lat}, ${token_lng}`)
+      }
+    }
+
     // הוספת העיר
     const { data, error } = await supabaseServer
       .from('cities')
@@ -65,6 +176,10 @@ export async function POST(request: NextRequest) {
         manager2_phone: manager2_phone || null,
         location_url: location_url || null,
         token_location_url: token_location_url || null,
+        token_lat,
+        token_lng,
+        public_lat,
+        public_lng,
         is_active: true
       }])
       .select()
