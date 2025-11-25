@@ -215,10 +215,22 @@ export async function POST(request: NextRequest) {
 
       if (manualError) {
         console.error('Failed to create user manually:', manualError)
+        console.error('Manual error details:', JSON.stringify(manualError, null, 2))
+        console.error('Attempted to insert:', {
+          id: authData.user.id,
+          email: body.email,
+          full_name: body.full_name,
+          role: body.role,
+          city_id: body.city_id || null,
+          permissions: permissions,
+          phone: body.phone || null,
+          manager_role: body.manager_role || null,
+          is_active: true,
+        })
         // Try to clean up
         await supabase.auth.admin.deleteUser(authData.user.id)
         return NextResponse.json(
-          { success: false, error: 'שגיאה ביצירת פרופיל משתמש' },
+          { success: false, error: `שגיאה ביצירת פרופיל משתמש: ${manualError.message || 'Unknown error'}` },
           { status: 500 }
         )
       }
