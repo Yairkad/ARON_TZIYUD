@@ -971,69 +971,69 @@ export default function SuperAdminPage() {
         </header>
 
         {/* Tab Navigation - Sticky on scroll with safe area for mobile status bar */}
-        <div className="sticky top-0 z-50 bg-gradient-to-br from-purple-50 via-pink-50 to-blue-50 pt-safe pb-4 -mx-8 px-4 md:px-8 mb-8 shadow-sm">
+        <div className="sticky top-0 z-50 bg-gradient-to-br from-purple-50 via-pink-50 to-blue-50 pt-safe pb-3 px-3 md:px-8 mb-8 shadow-sm">
           {/* Mobile: Horizontal scrollable icons only */}
           <div className="md:hidden flex gap-2 overflow-x-auto pb-2 scrollbar-hide">
             <Button
               onClick={() => setActiveTab('cities')}
-              className={`flex-shrink-0 w-14 h-14 rounded-full font-semibold transition-all duration-300 ${
+              className={`flex-shrink-0 w-12 h-12 rounded-lg font-semibold transition-all duration-300 ${
                 activeTab === 'cities'
-                  ? 'bg-gradient-to-r from-purple-600 to-pink-600 text-white shadow-lg shadow-purple-500/50 scale-110'
-                  : 'bg-white text-gray-600 border-2 border-gray-200'
+                  ? 'bg-gradient-to-br from-purple-600 to-pink-600 text-white shadow-md'
+                  : 'bg-white text-gray-600 border border-gray-300'
               }`}
             >
-              <span className="text-2xl">🏙️</span>
+              <span className="text-xl">🏙️</span>
             </Button>
             <Button
               onClick={() => setActiveTab('users')}
-              className={`flex-shrink-0 w-14 h-14 rounded-full font-semibold transition-all duration-300 ${
+              className={`flex-shrink-0 w-12 h-12 rounded-lg font-semibold transition-all duration-300 ${
                 activeTab === 'users'
-                  ? 'bg-gradient-to-r from-purple-600 to-pink-600 text-white shadow-lg shadow-purple-500/50 scale-110'
-                  : 'bg-white text-gray-600 border-2 border-gray-200'
+                  ? 'bg-gradient-to-br from-purple-600 to-pink-600 text-white shadow-md'
+                  : 'bg-white text-gray-600 border border-gray-300'
               }`}
             >
-              <span className="text-2xl">👥</span>
+              <span className="text-xl">👥</span>
             </Button>
             <Button
               onClick={() => router.push('/super-admin/global-equipment')}
-              className="flex-shrink-0 w-14 h-14 rounded-full font-semibold transition-all duration-300 bg-white text-gray-600 border-2 border-gray-200"
+              className="flex-shrink-0 w-12 h-12 rounded-lg font-semibold transition-all duration-300 bg-white text-gray-600 border border-gray-300"
             >
-              <span className="text-2xl">📦</span>
+              <span className="text-xl">📦</span>
             </Button>
             <Button
               onClick={() => setActiveTab('notifications')}
-              className={`flex-shrink-0 w-14 h-14 rounded-full font-semibold transition-all duration-300 relative ${
+              className={`flex-shrink-0 w-12 h-12 rounded-lg font-semibold transition-all duration-300 relative ${
                 activeTab === 'notifications'
-                  ? 'bg-gradient-to-r from-purple-600 to-pink-600 text-white shadow-lg shadow-purple-500/50 scale-110'
-                  : 'bg-white text-gray-600 border-2 border-gray-200'
+                  ? 'bg-gradient-to-br from-purple-600 to-pink-600 text-white shadow-md'
+                  : 'bg-white text-gray-600 border border-gray-300'
               }`}
             >
-              <span className="text-2xl">🔔</span>
+              <span className="text-xl">🔔</span>
               {unreadCount > 0 && (
-                <span className="absolute -top-1 -left-1 bg-red-500 text-white text-xs font-bold rounded-full h-5 w-5 flex items-center justify-center">
+                <span className="absolute -top-1 -right-1 bg-red-500 text-white text-xs font-bold rounded-full h-5 w-5 flex items-center justify-center">
                   {unreadCount}
                 </span>
               )}
             </Button>
             <Button
               onClick={() => setActiveTab('settings')}
-              className={`flex-shrink-0 w-14 h-14 rounded-full font-semibold transition-all duration-300 ${
+              className={`flex-shrink-0 w-12 h-12 rounded-lg font-semibold transition-all duration-300 ${
                 activeTab === 'settings'
-                  ? 'bg-gradient-to-r from-purple-600 to-pink-600 text-white shadow-lg shadow-purple-500/50 scale-110'
-                  : 'bg-white text-gray-600 border-2 border-gray-200'
+                  ? 'bg-gradient-to-br from-purple-600 to-pink-600 text-white shadow-md'
+                  : 'bg-white text-gray-600 border border-gray-300'
               }`}
             >
-              <span className="text-2xl">⚙️</span>
+              <span className="text-xl">⚙️</span>
             </Button>
             <Button
               onClick={() => setActiveTab('emails')}
-              className={`flex-shrink-0 w-14 h-14 rounded-full font-semibold transition-all duration-300 ${
+              className={`flex-shrink-0 w-12 h-12 rounded-lg font-semibold transition-all duration-300 ${
                 activeTab === 'emails'
-                  ? 'bg-gradient-to-r from-purple-600 to-pink-600 text-white shadow-lg shadow-purple-500/50 scale-110'
-                  : 'bg-white text-gray-600 border-2 border-gray-200'
+                  ? 'bg-gradient-to-br from-purple-600 to-pink-600 text-white shadow-md'
+                  : 'bg-white text-gray-600 border border-gray-300'
               }`}
             >
-              <span className="text-2xl">📧</span>
+              <span className="text-xl">📧</span>
             </Button>
           </div>
 
