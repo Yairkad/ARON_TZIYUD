@@ -47,6 +47,10 @@ export default function SuperAdminPage() {
     manager_role: '' as '' | 'manager1' | 'manager2',
   })
   const [userFilter, setUserFilter] = useState<'all' | 'city_manager' | 'super_admin'>('all')
+  const [userCityFilter, setUserCityFilter] = useState<string>('all')
+  const [userSearchQuery, setUserSearchQuery] = useState<string>('')
+  const [userSortBy, setUserSortBy] = useState<'name' | 'email' | 'created_at'>('name')
+  const [userSortOrder, setUserSortOrder] = useState<'asc' | 'desc'>('asc')
   const [currentUser, setCurrentUser] = useState<any>(null)
 
   // Email Logs State
@@ -843,10 +847,51 @@ export default function SuperAdminPage() {
     }, 100)
   }
 
-  const filteredUsers = users.filter(user => {
-    if (userFilter === 'all') return true
-    return user.role === userFilter
-  })
+  const filteredUsers = users
+    .filter(user => {
+      // Filter by role
+      if (userFilter !== 'all' && user.role !== userFilter) return false
+
+      // Filter by city
+      if (userCityFilter !== 'all') {
+        if (!user.city || user.city.id !== userCityFilter) {
+          // Also check in managed_cities
+          if (!user.managed_cities || !user.managed_cities.some((c: any) => c.id === userCityFilter)) {
+            return false
+          }
+        }
+      }
+
+      // Filter by search query (name or email)
+      if (userSearchQuery) {
+        const query = userSearchQuery.toLowerCase()
+        const matchesName = user.full_name?.toLowerCase().includes(query)
+        const matchesEmail = user.email?.toLowerCase().includes(query)
+        if (!matchesName && !matchesEmail) return false
+      }
+
+      return true
+    })
+    .sort((a, b) => {
+      let compareA, compareB
+
+      if (userSortBy === 'name') {
+        compareA = a.full_name || ''
+        compareB = b.full_name || ''
+      } else if (userSortBy === 'email') {
+        compareA = a.email || ''
+        compareB = b.email || ''
+      } else if (userSortBy === 'created_at') {
+        compareA = a.created_at || ''
+        compareB = b.created_at || ''
+      }
+
+      if (userSortOrder === 'asc') {
+        return compareA.localeCompare(compareB, 'he')
+      } else {
+        return compareB.localeCompare(compareA, 'he')
+      }
+    })
 
   // Load users when switching to users tab
   useEffect(() => {
@@ -1638,33 +1683,79 @@ export default function SuperAdminPage() {
 
         {activeTab === 'users' && (
           <>
-            {/* Add User Button & Filter */}
-            <div className="mb-6 flex flex-col sm:flex-row gap-4 items-start sm:items-center justify-between">
-              <Button
-                onClick={() => {
-                  setShowAddUser(!showAddUser)
-                  setEditingUser(null)
-                  setUserForm({
-                    email: '',
-                    password: '',
-                    full_name: '',
-                    role: 'city_manager',
-                    city_id: '',
-                    permissions: 'full_access',
-                    phone: '',
-                    manager_role: '',
-                  })
-                }}
-                className="bg-gradient-to-r from-green-500 to-emerald-500 hover:from-green-600 hover:to-emerald-600 text-white font-bold px-6 py-3 rounded-xl shadow-lg hover:shadow-xl transition-all duration-200"
-              >
-                {showAddUser ? '❌ ביטול' : '➕ הוספת משתמש חדש'}
-              </Button>
+            {/* Add User Button & Filters */}
+            <div className="mb-6 space-y-4">
+              {/* Top row: Add button and count */}
+              <div className="flex flex-col sm:flex-row gap-4 items-start sm:items-center justify-between">
+                <Button
+                  onClick={() => {
+                    setShowAddUser(!showAddUser)
+                    setEditingUser(null)
+                    setUserForm({
+                      email: '',
+                      password: '',
+                      full_name: '',
+                      role: 'city_manager',
+                      city_id: '',
+                      permissions: 'full_access',
+                      phone: '',
+                      manager_role: '',
+                    })
+                  }}
+                  className="bg-gradient-to-r from-green-500 to-emerald-500 hover:from-green-600 hover:to-emerald-600 text-white font-bold px-6 py-3 rounded-xl shadow-lg hover:shadow-xl transition-all duration-200"
+                >
+                  {showAddUser ? '❌ ביטול' : '➕ הוספת משתמש חדש'}
+                </Button>
 
-              {/* User count - only city managers shown */}
-              <div className="px-4 py-2 bg-gradient-to-r from-purple-50 to-pink-50 rounded-lg border-2 border-purple-200">
-                <span className="text-gray-700 font-semibold">
-                  סה"כ מנהלי ערים: <span className="text-purple-600">{users.length}</span>
-                </span>
+                {/* User count */}
+                <div className="px-4 py-2 bg-gradient-to-r from-purple-50 to-pink-50 rounded-lg border-2 border-purple-200">
+                  <span className="text-gray-700 font-semibold">
+                    מציג: <span className="text-purple-600">{filteredUsers.length}</span> מתוך <span className="text-purple-600">{users.length}</span>
+                  </span>
+                </div>
+              </div>
+
+              {/* Filters row */}
+              <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-3">
+                {/* Search filter */}
+                <Input
+                  placeholder="🔍 חיפוש לפי שם או מייל..."
+                  value={userSearchQuery}
+                  onChange={(e) => setUserSearchQuery(e.target.value)}
+                  className="h-10 border-2 border-gray-200 rounded-lg"
+                />
+
+                {/* City filter */}
+                <select
+                  value={userCityFilter}
+                  onChange={(e) => setUserCityFilter(e.target.value)}
+                  className="h-10 border-2 border-gray-200 rounded-lg px-3 bg-white"
+                >
+                  <option value="all">🏙️ כל הערים</option>
+                  {cities.map(city => (
+                    <option key={city.id} value={city.id}>{city.name}</option>
+                  ))}
+                </select>
+
+                {/* Sort by filter */}
+                <select
+                  value={userSortBy}
+                  onChange={(e) => setUserSortBy(e.target.value as any)}
+                  className="h-10 border-2 border-gray-200 rounded-lg px-3 bg-white"
+                >
+                  <option value="name">📝 מיון לפי שם</option>
+                  <option value="email">📧 מיון לפי מייל</option>
+                  <option value="created_at">📅 מיון לפי תאריך יצירה</option>
+                </select>
+
+                {/* Sort order */}
+                <Button
+                  onClick={() => setUserSortOrder(userSortOrder === 'asc' ? 'desc' : 'asc')}
+                  variant="outline"
+                  className="h-10 border-2 border-gray-200"
+                >
+                  {userSortOrder === 'asc' ? '⬆️ עולה (א-ת)' : '⬇️ יורד (ת-א)'}
+                </Button>
               </div>
             </div>
 

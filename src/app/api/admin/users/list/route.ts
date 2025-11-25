@@ -66,12 +66,41 @@ export async function GET(request: NextRequest) {
   try {
     const supabase = createServiceClient()
 
-    // Get all users (city managers only)
-    const { data: users, error: usersError } = await supabase
+    // Get query parameters for filtering and sorting
+    const searchParams = request.nextUrl.searchParams
+    const cityFilter = searchParams.get('city_id')
+    const searchQuery = searchParams.get('search')
+    const sortBy = searchParams.get('sort') || 'name' // Default: alphabetical by name
+    const sortOrder = searchParams.get('order') || 'asc'
+
+    // Build query
+    let query = supabase
       .from('users')
       .select('*')
       .eq('role', 'city_manager')
-      .order('created_at', { ascending: false })
+
+    // Apply filters
+    if (cityFilter) {
+      query = query.eq('city_id', cityFilter)
+    }
+
+    if (searchQuery) {
+      query = query.or(`full_name.ilike.%${searchQuery}%,email.ilike.%${searchQuery}%`)
+    }
+
+    // Apply sorting
+    if (sortBy === 'name') {
+      query = query.order('full_name', { ascending: sortOrder === 'asc' })
+    } else if (sortBy === 'email') {
+      query = query.order('email', { ascending: sortOrder === 'asc' })
+    } else if (sortBy === 'created_at') {
+      query = query.order('created_at', { ascending: sortOrder === 'asc' })
+    } else {
+      // Default: alphabetical by name
+      query = query.order('full_name', { ascending: true })
+    }
+
+    const { data: users, error: usersError } = await query
 
     if (usersError) {
       console.error('Error fetching users:', usersError)
