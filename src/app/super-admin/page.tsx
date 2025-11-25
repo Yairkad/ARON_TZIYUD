@@ -2272,35 +2272,36 @@ export default function SuperAdminPage() {
                           key={log.id}
                           className={`bg-gradient-to-r ${log.status === 'sent' ? 'from-green-50 to-emerald-50 border-green-200' : 'from-red-50 to-rose-50 border-red-200'} rounded-xl p-4 border-2`}
                         >
-                          <div className="flex flex-col lg:flex-row justify-between items-start lg:items-center gap-3">
-                            <div className="flex-1">
-                              <div className="flex items-center gap-3 mb-2">
-                                <span className="text-xl">
-                                  {log.status === 'sent' ? '✅' : '❌'}
-                                </span>
-                                <div className="flex-1">
-                                  <p className="font-bold text-gray-800">{log.recipient_name || 'לא צוין'}</p>
-                                  <p className="text-sm text-gray-600">{log.recipient_email}</p>
-                                </div>
-                                <div className="flex gap-2">
-                                  <Button
-                                    size="sm"
-                                    variant="outline"
-                                    onClick={() => toggleEmailExpand(log.id)}
-                                    className="h-8"
-                                  >
-                                    {isExpanded ? '📄 הסתר פרטים' : '📋 הצג פרטים'}
-                                  </Button>
-                                  <Button
-                                    size="sm"
-                                    variant="destructive"
-                                    onClick={() => handleDeleteEmailLog(log.id)}
-                                    className="h-8 bg-red-500 hover:bg-red-600"
-                                  >
-                                    🗑️ מחק
-                                  </Button>
-                                </div>
-                              </div>
+                          {/* Header with name, email, and status */}
+                          <div className="flex items-start gap-3 mb-3">
+                            <span className="text-xl flex-shrink-0">
+                              {log.status === 'sent' ? '✅' : '❌'}
+                            </span>
+                            <div className="flex-1 min-w-0">
+                              <p className="font-bold text-gray-800 truncate">{log.recipient_name || 'לא צוין'}</p>
+                              <p className="text-sm text-gray-600 truncate">{log.recipient_email}</p>
+                            </div>
+                          </div>
+
+                          {/* Action buttons - responsive */}
+                          <div className="flex flex-col sm:flex-row gap-2 mb-2">
+                            <Button
+                              size="sm"
+                              variant="outline"
+                              onClick={() => toggleEmailExpand(log.id)}
+                              className="h-10 flex-1 sm:flex-initial"
+                            >
+                              {isExpanded ? '📄 הסתר פרטים' : '📋 הצג פרטים'}
+                            </Button>
+                            <Button
+                              size="sm"
+                              variant="destructive"
+                              onClick={() => handleDeleteEmailLog(log.id)}
+                              className="h-10 bg-red-500 hover:bg-red-600 flex-1 sm:flex-initial"
+                            >
+                              🗑️ מחק
+                            </Button>
+                          </div>
 
                               {/* תצוגה מצומצמת */}
                               <div className="text-sm text-gray-700 mb-2">
