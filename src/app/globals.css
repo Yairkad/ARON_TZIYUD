@@ -139,3 +139,20 @@ html {
   position: relative;
   z-index: 1;
 }
+
+/* Safe area for mobile notch/status bar */
+.pt-safe {
+  padding-top: env(safe-area-inset-top, 1rem);
+}
+
+.pb-safe {
+  padding-bottom: env(safe-area-inset-bottom, 1rem);
+}
+
+.pl-safe {
+  padding-left: env(safe-area-inset-left, 1rem);
+}
+
+.pr-safe {
+  padding-right: env(safe-area-inset-right, 1rem);
+}

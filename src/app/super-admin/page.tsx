@@ -966,84 +966,158 @@ export default function SuperAdminPage() {
           </div>
         </header>
 
-        {/* Tab Navigation - Sticky on scroll */}
-        <div className="sticky top-0 z-50 bg-gradient-to-br from-purple-50 via-pink-50 to-blue-50 pb-4 -mx-8 px-8 mb-8">
-          <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-6 gap-3">
-          <Button
-            onClick={() => setActiveTab('cities')}
-            className={`py-6 rounded-xl font-semibold text-lg transition-all duration-300 ${
-              activeTab === 'cities'
-                ? 'bg-gradient-to-r from-purple-600 to-pink-600 text-white shadow-lg shadow-purple-500/50 scale-105'
-                : 'bg-white text-gray-600 border-2 border-gray-200 hover:border-purple-300 hover:bg-purple-50'
-            }`}
-          >
-            <span className="text-2xl ml-2">🏙️</span> ניהול ערים
-          </Button>
-          <Button
-            onClick={() => setActiveTab('users')}
-            className={`py-6 rounded-xl font-semibold text-lg transition-all duration-300 ${
-              activeTab === 'users'
-                ? 'bg-gradient-to-r from-purple-600 to-pink-600 text-white shadow-lg shadow-purple-500/50 scale-105'
-                : 'bg-white text-gray-600 border-2 border-gray-200 hover:border-purple-300 hover:bg-purple-50'
-            }`}
-          >
-            <span className="text-2xl ml-2">👥</span> ניהול משתמשים
-          </Button>
-          <Button
-            onClick={() => router.push('/super-admin/global-equipment')}
-            className="py-6 rounded-xl font-semibold text-lg transition-all duration-300 bg-white text-gray-600 border-2 border-gray-200 hover:border-purple-300 hover:bg-purple-50"
-          >
-            <span className="text-2xl ml-2">📦</span> מאגר ציוד
-          </Button>
-          <Button
-            onClick={() => setActiveTab('notifications')}
-            className={`py-6 rounded-xl font-semibold text-lg transition-all duration-300 relative ${
-              activeTab === 'notifications'
-                ? 'bg-gradient-to-r from-purple-600 to-pink-600 text-white shadow-lg shadow-purple-500/50 scale-105'
-                : 'bg-white text-gray-600 border-2 border-gray-200 hover:border-purple-300 hover:bg-purple-50'
-            }`}
-          >
-            <span className="text-2xl ml-2">🔔</span> התראות
-            {unreadCount > 0 && (
-              <span className="absolute top-2 left-2 bg-red-500 text-white text-xs font-bold rounded-full h-6 w-6 flex items-center justify-center">
-                {unreadCount}
-              </span>
-            )}
-          </Button>
-          <Button
-            onClick={() => setActiveTab('settings')}
-            className={`py-6 rounded-xl font-semibold text-lg transition-all duration-300 ${
-              activeTab === 'settings'
-                ? 'bg-gradient-to-r from-purple-600 to-pink-600 text-white shadow-lg shadow-purple-500/50 scale-105'
-                : 'bg-white text-gray-600 border-2 border-gray-200 hover:border-purple-300 hover:bg-purple-50'
-            }`}
-          >
-            <span className="text-2xl ml-2">⚙️</span> הגדרות
-          </Button>
-          <Button
-            onClick={() => setActiveTab('emails')}
-            className={`py-6 rounded-xl font-semibold text-lg transition-all duration-300 ${
-              activeTab === 'emails'
-                ? 'bg-gradient-to-r from-purple-600 to-pink-600 text-white shadow-lg shadow-purple-500/50 scale-105'
-                : 'bg-white text-gray-600 border-2 border-gray-200 hover:border-purple-300 hover:bg-purple-50'
-            }`}
-          >
-            <span className="text-2xl ml-2">📧</span> מיילים
-          </Button>
+        {/* Tab Navigation - Sticky on scroll with safe area for mobile status bar */}
+        <div className="sticky top-0 z-50 bg-gradient-to-br from-purple-50 via-pink-50 to-blue-50 pt-safe pb-4 -mx-8 px-4 md:px-8 mb-8 shadow-sm">
+          {/* Mobile: Horizontal scrollable icons only */}
+          <div className="md:hidden flex gap-2 overflow-x-auto pb-2 scrollbar-hide">
+            <Button
+              onClick={() => setActiveTab('cities')}
+              className={`flex-shrink-0 w-14 h-14 rounded-full font-semibold transition-all duration-300 ${
+                activeTab === 'cities'
+                  ? 'bg-gradient-to-r from-purple-600 to-pink-600 text-white shadow-lg shadow-purple-500/50 scale-110'
+                  : 'bg-white text-gray-600 border-2 border-gray-200'
+              }`}
+            >
+              <span className="text-2xl">🏙️</span>
+            </Button>
+            <Button
+              onClick={() => setActiveTab('users')}
+              className={`flex-shrink-0 w-14 h-14 rounded-full font-semibold transition-all duration-300 ${
+                activeTab === 'users'
+                  ? 'bg-gradient-to-r from-purple-600 to-pink-600 text-white shadow-lg shadow-purple-500/50 scale-110'
+                  : 'bg-white text-gray-600 border-2 border-gray-200'
+              }`}
+            >
+              <span className="text-2xl">👥</span>
+            </Button>
+            <Button
+              onClick={() => router.push('/super-admin/global-equipment')}
+              className="flex-shrink-0 w-14 h-14 rounded-full font-semibold transition-all duration-300 bg-white text-gray-600 border-2 border-gray-200"
+            >
+              <span className="text-2xl">📦</span>
+            </Button>
+            <Button
+              onClick={() => setActiveTab('notifications')}
+              className={`flex-shrink-0 w-14 h-14 rounded-full font-semibold transition-all duration-300 relative ${
+                activeTab === 'notifications'
+                  ? 'bg-gradient-to-r from-purple-600 to-pink-600 text-white shadow-lg shadow-purple-500/50 scale-110'
+                  : 'bg-white text-gray-600 border-2 border-gray-200'
+              }`}
+            >
+              <span className="text-2xl">🔔</span>
+              {unreadCount > 0 && (
+                <span className="absolute -top-1 -left-1 bg-red-500 text-white text-xs font-bold rounded-full h-5 w-5 flex items-center justify-center">
+                  {unreadCount}
+                </span>
+              )}
+            </Button>
+            <Button
+              onClick={() => setActiveTab('settings')}
+              className={`flex-shrink-0 w-14 h-14 rounded-full font-semibold transition-all duration-300 ${
+                activeTab === 'settings'
+                  ? 'bg-gradient-to-r from-purple-600 to-pink-600 text-white shadow-lg shadow-purple-500/50 scale-110'
+                  : 'bg-white text-gray-600 border-2 border-gray-200'
+              }`}
+            >
+              <span className="text-2xl">⚙️</span>
+            </Button>
+            <Button
+              onClick={() => setActiveTab('emails')}
+              className={`flex-shrink-0 w-14 h-14 rounded-full font-semibold transition-all duration-300 ${
+                activeTab === 'emails'
+                  ? 'bg-gradient-to-r from-purple-600 to-pink-600 text-white shadow-lg shadow-purple-500/50 scale-110'
+                  : 'bg-white text-gray-600 border-2 border-gray-200'
+              }`}
+            >
+              <span className="text-2xl">📧</span>
+            </Button>
+          </div>
+
+          {/* Desktop: Grid with text */}
+          <div className="hidden md:grid md:grid-cols-3 lg:grid-cols-6 gap-3">
+            <Button
+              onClick={() => setActiveTab('cities')}
+              className={`py-6 rounded-xl font-semibold text-lg transition-all duration-300 ${
+                activeTab === 'cities'
+                  ? 'bg-gradient-to-r from-purple-600 to-pink-600 text-white shadow-lg shadow-purple-500/50 scale-105'
+                  : 'bg-white text-gray-600 border-2 border-gray-200 hover:border-purple-300 hover:bg-purple-50'
+              }`}
+            >
+              <span className="text-2xl ml-2">🏙️</span> ניהול ערים
+            </Button>
+            <Button
+              onClick={() => setActiveTab('users')}
+              className={`py-6 rounded-xl font-semibold text-lg transition-all duration-300 ${
+                activeTab === 'users'
+                  ? 'bg-gradient-to-r from-purple-600 to-pink-600 text-white shadow-lg shadow-purple-500/50 scale-105'
+                  : 'bg-white text-gray-600 border-2 border-gray-200 hover:border-purple-300 hover:bg-purple-50'
+              }`}
+            >
+              <span className="text-2xl ml-2">👥</span> ניהול משתמשים
+            </Button>
+            <Button
+              onClick={() => router.push('/super-admin/global-equipment')}
+              className="py-6 rounded-xl font-semibold text-lg transition-all duration-300 bg-white text-gray-600 border-2 border-gray-200 hover:border-purple-300 hover:bg-purple-50"
+            >
+              <span className="text-2xl ml-2">📦</span> מאגר ציוד
+            </Button>
+            <Button
+              onClick={() => setActiveTab('notifications')}
+              className={`py-6 rounded-xl font-semibold text-lg transition-all duration-300 relative ${
+                activeTab === 'notifications'
+                  ? 'bg-gradient-to-r from-purple-600 to-pink-600 text-white shadow-lg shadow-purple-500/50 scale-105'
+                  : 'bg-white text-gray-600 border-2 border-gray-200 hover:border-purple-300 hover:bg-purple-50'
+              }`}
+            >
+              <span className="text-2xl ml-2">🔔</span> התראות
+              {unreadCount > 0 && (
+                <span className="absolute top-2 left-2 bg-red-500 text-white text-xs font-bold rounded-full h-6 w-6 flex items-center justify-center">
+                  {unreadCount}
+                </span>
+              )}
+            </Button>
+            <Button
+              onClick={() => setActiveTab('settings')}
+              className={`py-6 rounded-xl font-semibold text-lg transition-all duration-300 ${
+                activeTab === 'settings'
+                  ? 'bg-gradient-to-r from-purple-600 to-pink-600 text-white shadow-lg shadow-purple-500/50 scale-105'
+                  : 'bg-white text-gray-600 border-2 border-gray-200 hover:border-purple-300 hover:bg-purple-50'
+              }`}
+            >
+              <span className="text-2xl ml-2">⚙️</span> הגדרות
+            </Button>
+            <Button
+              onClick={() => setActiveTab('emails')}
+              className={`py-6 rounded-xl font-semibold text-lg transition-all duration-300 ${
+                activeTab === 'emails'
+                  ? 'bg-gradient-to-r from-purple-600 to-pink-600 text-white shadow-lg shadow-purple-500/50 scale-105'
+                  : 'bg-white text-gray-600 border-2 border-gray-200 hover:border-purple-300 hover:bg-purple-50'
+              }`}
+            >
+              <span className="text-2xl ml-2">📧</span> מיילים
+            </Button>
           </div>
         </div>
 
         {activeTab === 'cities' && (
           <>
-            {/* Add City Button */}
-            <div className="mb-6">
-          <Button
-            onClick={() => setShowAddCity(!showAddCity)}
-            className="bg-gradient-to-r from-green-500 to-emerald-500 hover:from-green-600 hover:to-emerald-600 text-white font-bold px-6 py-3 rounded-xl shadow-lg hover:shadow-xl transition-all duration-200"
-          >
-            {showAddCity ? '❌ ביטול' : '➕ הוספת עיר חדשה'}
-          </Button>
-        </div>
+            {/* Add City Button - Desktop */}
+            <div className="mb-6 hidden md:block">
+              <Button
+                onClick={() => setShowAddCity(!showAddCity)}
+                className="bg-gradient-to-r from-green-500 to-emerald-500 hover:from-green-600 hover:to-emerald-600 text-white font-bold px-6 py-3 rounded-xl shadow-lg hover:shadow-xl transition-all duration-200"
+              >
+                {showAddCity ? '❌ ביטול' : '➕ הוספת עיר חדשה'}
+              </Button>
+            </div>
+
+            {/* Add City FAB - Mobile */}
+            <Button
+              onClick={() => setShowAddCity(!showAddCity)}
+              className="md:hidden fixed bottom-6 left-6 z-40 w-16 h-16 rounded-full bg-gradient-to-r from-green-500 to-emerald-500 hover:from-green-600 hover:to-emerald-600 text-white font-bold shadow-2xl hover:shadow-3xl transition-all duration-300 hover:scale-110 flex items-center justify-center"
+            >
+              <span className="text-3xl">{showAddCity ? '❌' : '➕'}</span>
+            </Button>
 
         {/* Add City Form */}
         {showAddCity && (
@@ -1687,6 +1761,7 @@ export default function SuperAdminPage() {
             <div className="mb-6 space-y-4">
               {/* Top row: Add button and count */}
               <div className="flex flex-col sm:flex-row gap-4 items-start sm:items-center justify-between">
+                {/* Add User Button - Desktop */}
                 <Button
                   onClick={() => {
                     setShowAddUser(!showAddUser)
@@ -1702,9 +1777,30 @@ export default function SuperAdminPage() {
                       manager_role: '',
                     })
                   }}
-                  className="bg-gradient-to-r from-green-500 to-emerald-500 hover:from-green-600 hover:to-emerald-600 text-white font-bold px-6 py-3 rounded-xl shadow-lg hover:shadow-xl transition-all duration-200"
+                  className="hidden md:flex bg-gradient-to-r from-green-500 to-emerald-500 hover:from-green-600 hover:to-emerald-600 text-white font-bold px-6 py-3 rounded-xl shadow-lg hover:shadow-xl transition-all duration-200"
                 >
                   {showAddUser ? '❌ ביטול' : '➕ הוספת משתמש חדש'}
+                </Button>
+
+                {/* Add User FAB - Mobile */}
+                <Button
+                  onClick={() => {
+                    setShowAddUser(!showAddUser)
+                    setEditingUser(null)
+                    setUserForm({
+                      email: '',
+                      password: '',
+                      full_name: '',
+                      role: 'city_manager',
+                      city_id: '',
+                      permissions: 'full_access',
+                      phone: '',
+                      manager_role: '',
+                    })
+                  }}
+                  className="md:hidden fixed bottom-6 left-6 z-40 w-16 h-16 rounded-full bg-gradient-to-r from-green-500 to-emerald-500 hover:from-green-600 hover:to-emerald-600 text-white font-bold shadow-2xl hover:shadow-3xl transition-all duration-300 hover:scale-110 flex items-center justify-center"
+                >
+                  <span className="text-3xl">{showAddUser ? '❌' : '➕'}</span>
                 </Button>
 
                 {/* User count */}
