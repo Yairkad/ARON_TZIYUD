@@ -971,9 +971,9 @@ export default function SuperAdminPage() {
         </header>
 
         {/* Tab Navigation - Sticky on scroll with safe area for mobile status bar */}
-        <div className="sticky top-0 z-50 bg-gradient-to-br from-purple-50 via-pink-50 to-blue-50 pt-safe pb-3 px-3 md:px-8 mb-8 shadow-sm">
+        <div className="sticky top-0 z-50 bg-gradient-to-br from-purple-50 via-pink-50 to-blue-50 pt-safe md:px-8 mb-8 shadow-sm">
           {/* Mobile: Horizontal scrollable icons only */}
-          <div className="md:hidden flex gap-2 overflow-x-auto pb-2 scrollbar-hide">
+          <div className="md:hidden flex items-center justify-center gap-2 overflow-x-auto py-3 px-3 scrollbar-hide">
             <Button
               onClick={() => setActiveTab('cities')}
               className={`flex-shrink-0 w-12 h-12 p-2 rounded-lg font-semibold transition-all duration-300 flex items-center justify-center ${
