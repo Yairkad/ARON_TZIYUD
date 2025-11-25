@@ -966,8 +966,9 @@ export default function SuperAdminPage() {
           </div>
         </header>
 
-        {/* Tab Navigation */}
-        <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-6 gap-3 mb-8">
+        {/* Tab Navigation - Sticky on scroll */}
+        <div className="sticky top-0 z-50 bg-gradient-to-br from-purple-50 via-pink-50 to-blue-50 pb-4 -mx-8 px-8 mb-8">
+          <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-6 gap-3">
           <Button
             onClick={() => setActiveTab('cities')}
             className={`py-6 rounded-xl font-semibold text-lg transition-all duration-300 ${
@@ -1029,6 +1030,7 @@ export default function SuperAdminPage() {
           >
             <span className="text-2xl ml-2">📧</span> מיילים
           </Button>
+          </div>
         </div>
 
         {activeTab === 'cities' && (
@@ -2130,59 +2132,76 @@ export default function SuperAdminPage() {
                     {filteredUsers.map((user) => (
                       <div
                         key={user.id}
-                        className="bg-gradient-to-r from-purple-50 to-pink-50 rounded-xl p-6 border-2 border-purple-200 hover:shadow-lg transition-all duration-200"
+                        className="bg-gradient-to-r from-purple-50 to-pink-50 rounded-xl p-4 md:p-6 border-2 border-purple-200 hover:shadow-lg transition-all duration-200"
                       >
-                        <div className="flex flex-col lg:flex-row justify-between items-start lg:items-center gap-4">
-                          <div className="flex-1">
-                            <div className="flex items-center gap-3 mb-2">
-                              <span className="text-2xl">
+                        <div className="flex flex-col gap-3">
+                          {/* Header - Always visible */}
+                          <div className="flex items-start justify-between gap-3">
+                            <div className="flex items-center gap-2 flex-1 min-w-0">
+                              <span className="text-xl md:text-2xl flex-shrink-0">
                                 {user.role === 'super_admin' ? '👑' : '👤'}
                               </span>
-                              <div>
-                                <h3 className="text-xl font-bold text-gray-800">{user.full_name}</h3>
-                                <p className="text-sm text-gray-600">{user.email}</p>
+                              <div className="min-w-0 flex-1">
+                                <h3 className="text-base md:text-xl font-bold text-gray-800 truncate">{user.full_name}</h3>
+                                <p className="text-xs md:text-sm text-gray-600 truncate">{user.email}</p>
                               </div>
-                              {!user.is_active && (
-                                <span className="bg-red-500 text-white text-xs px-2 py-1 rounded">מושבת</span>
-                              )}
                             </div>
-
-                            <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-2 mt-3">
-                              <div className="text-sm">
-                                <span className="font-semibold text-gray-700">תפקיד:</span>{' '}
-                                <span className="text-purple-600">
-                                  {user.role === 'super_admin' ? 'מנהל ראשי' : 'מנהל עיר'}
-                                </span>
-                              </div>
-
-                              {user.managed_cities && user.managed_cities.length > 0 && (
-                                <div className="text-sm">
-                                  <span className="font-semibold text-gray-700">ערים מנוהלות:</span>{' '}
-                                  <span className="text-purple-600">
-                                    {user.managed_cities.map((c: any) => c.name).join(', ')}
-                                  </span>
-                                </div>
-                              )}
-
-                              <div className="text-sm">
-                                <span className="font-semibold text-gray-700">הרשאות:</span>{' '}
-                                <span className="text-purple-600">
-                                  {user.permissions === 'view_only' && 'צפיה בלבד'}
-                                  {user.permissions === 'approve_requests' && 'אישור בקשות'}
-                                  {user.permissions === 'full_access' && 'גישה מלאה'}
-                                </span>
-                              </div>
-
-                              {user.phone && (
-                                <div className="text-sm">
-                                  <span className="font-semibold text-gray-700">טלפון:</span>{' '}
-                                  <span className="text-purple-600">{user.phone}</span>
-                                </div>
-                              )}
-                            </div>
+                            {!user.is_active && (
+                              <span className="bg-red-500 text-white text-xs px-2 py-1 rounded flex-shrink-0">מושבת</span>
+                            )}
                           </div>
 
-                          <div className="flex gap-2 flex-wrap">
+                          {/* Info - Compact on mobile, full on desktop */}
+                          <div className="hidden md:grid md:grid-cols-2 lg:grid-cols-4 gap-2">
+                            <div className="text-sm">
+                              <span className="font-semibold text-gray-700">תפקיד:</span>{' '}
+                              <span className="text-purple-600">
+                                {user.role === 'super_admin' ? 'מנהל ראשי' : 'מנהל עיר'}
+                              </span>
+                            </div>
+
+                            {user.managed_cities && user.managed_cities.length > 0 && (
+                              <div className="text-sm">
+                                <span className="font-semibold text-gray-700">ערים מנוהלות:</span>{' '}
+                                <span className="text-purple-600">
+                                  {user.managed_cities.map((c: any) => c.name).join(', ')}
+                                </span>
+                              </div>
+                            )}
+
+                            <div className="text-sm">
+                              <span className="font-semibold text-gray-700">הרשאות:</span>{' '}
+                              <span className="text-purple-600">
+                                {user.permissions === 'view_only' && 'צפיה בלבד'}
+                                {user.permissions === 'approve_requests' && 'אישור בקשות'}
+                                {user.permissions === 'full_access' && 'גישה מלאה'}
+                              </span>
+                            </div>
+
+                            {user.phone && (
+                              <div className="text-sm">
+                                <span className="font-semibold text-gray-700">טלפון:</span>{' '}
+                                <span className="text-purple-600">{user.phone}</span>
+                              </div>
+                            )}
+                          </div>
+
+                          {/* Mobile compact info */}
+                          <div className="md:hidden flex flex-wrap gap-2 text-xs">
+                            {user.managed_cities && user.managed_cities.length > 0 && (
+                              <span className="bg-purple-100 text-purple-700 px-2 py-1 rounded">
+                                🏙️ {user.managed_cities.map((c: any) => c.name).join(', ')}
+                              </span>
+                            )}
+                            {user.phone && (
+                              <span className="bg-blue-100 text-blue-700 px-2 py-1 rounded">
+                                📱 {user.phone}
+                              </span>
+                            )}
+                          </div>
+
+                          {/* Action buttons - Compact on mobile */}
+                          <div className="flex gap-1.5 md:gap-2 flex-wrap w-full">
                             <Button
                               type="button"
                               onClick={(e) => {
@@ -2191,9 +2210,10 @@ export default function SuperAdminPage() {
                                 handleEditUser(user)
                                 setShowAddUser(false)
                               }}
-                              className="bg-gradient-to-r from-blue-500 to-cyan-500 hover:from-blue-600 hover:to-cyan-600 text-white font-semibold px-4 py-2 rounded-lg transition-all duration-200 hover:scale-105"
+                              className="bg-gradient-to-r from-blue-500 to-cyan-500 hover:from-blue-600 hover:to-cyan-600 text-white font-semibold text-xs md:text-sm px-2 md:px-4 py-1.5 md:py-2 rounded-lg transition-all duration-200 hover:scale-105 flex-1 md:flex-none"
                             >
-                              ✏️ ערוך
+                              <span className="md:hidden">✏️</span>
+                              <span className="hidden md:inline">✏️ ערוך</span>
                             </Button>
                             <Button
                               type="button"
@@ -2237,9 +2257,10 @@ export default function SuperAdminPage() {
                                   setLoading(false)
                                 }
                               }}
-                              className="bg-gradient-to-r from-amber-500 to-orange-500 hover:from-amber-600 hover:to-orange-600 text-white font-semibold px-4 py-2 rounded-lg transition-all duration-200 hover:scale-105"
+                              className="bg-gradient-to-r from-amber-500 to-orange-500 hover:from-amber-600 hover:to-orange-600 text-white font-semibold text-xs md:text-sm px-2 md:px-4 py-1.5 md:py-2 rounded-lg transition-all duration-200 hover:scale-105 flex-1 md:flex-none"
                             >
-                              🔑 אפס סיסמה
+                              <span className="md:hidden">🔑</span>
+                              <span className="hidden md:inline">🔑 אפס סיסמה</span>
                             </Button>
                             <Button
                               type="button"
@@ -2275,9 +2296,10 @@ export default function SuperAdminPage() {
                                   setLoading(false)
                                 }
                               }}
-                              className="bg-gradient-to-r from-emerald-500 to-teal-500 hover:from-emerald-600 hover:to-teal-600 text-white font-semibold px-4 py-2 rounded-lg transition-all duration-200 hover:scale-105"
+                              className="bg-gradient-to-r from-emerald-500 to-teal-500 hover:from-emerald-600 hover:to-teal-600 text-white font-semibold text-xs md:text-sm px-2 md:px-4 py-1.5 md:py-2 rounded-lg transition-all duration-200 hover:scale-105 flex-1 md:flex-none"
                             >
-                              📧 שלח לינק
+                              <span className="md:hidden">📧</span>
+                              <span className="hidden md:inline">📧 שלח לינק</span>
                             </Button>
                             <Button
                               type="button"
@@ -2286,9 +2308,10 @@ export default function SuperAdminPage() {
                                 e.stopPropagation()
                                 handleDeleteUser(user)
                               }}
-                              className="bg-gradient-to-r from-red-500 to-rose-500 hover:from-red-600 hover:to-rose-600 text-white font-semibold px-4 py-2 rounded-lg transition-all duration-200 hover:scale-105"
+                              className="bg-gradient-to-r from-red-500 to-rose-500 hover:from-red-600 hover:to-rose-600 text-white font-semibold text-xs md:text-sm px-2 md:px-4 py-1.5 md:py-2 rounded-lg transition-all duration-200 hover:scale-105 flex-1 md:flex-none"
                             >
-                              🗑️ מחק
+                              <span className="md:hidden">🗑️</span>
+                              <span className="hidden md:inline">🗑️ מחק</span>
                             </Button>
                           </div>
                         </div>
