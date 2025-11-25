@@ -78,6 +78,7 @@ export interface Equipment {
   category_id?: string | null
   image_url?: string | null
   display_order?: number
+  city_equipment_id?: string  // ID from city_equipment table (for quantity updates)
   created_at: string
   updated_at: string
 }

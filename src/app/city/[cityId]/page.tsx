@@ -106,11 +106,18 @@ export default function CityPage() {
     } else {
       // Flatten the structure for compatibility with existing code
       const flattenedData = (data || []).map((item: any) => ({
-        ...item,
-        ...item.global_equipment,
+        // Use global equipment ID as primary ID (for selection and history)
+        id: item.global_equipment.id,
+        // Keep city equipment ID for quantity updates
         city_equipment_id: item.id,
+        // Override with city-specific data
         quantity: item.quantity,
-        display_order: item.display_order
+        display_order: item.display_order,
+        equipment_status: item.equipment_status || 'working',
+        // Spread all global equipment data
+        ...item.global_equipment,
+        // Preserve category
+        category: item.global_equipment.category
       }))
       setEquipment(flattenedData)
     }
@@ -186,11 +193,11 @@ export default function CityPage() {
           continue
         }
 
-        // Update equipment quantity
+        // Update equipment quantity in city_equipment table
         const { error: updateError } = await supabase
-          .from('equipment')
+          .from('city_equipment')
           .update({ quantity: selectedEquipment.quantity - quantityToTake })
-          .eq('id', itemId)
+          .eq('id', selectedEquipment.city_equipment_id)
 
         if (updateError) {
           console.error('Error updating equipment quantity:', updateError)
