@@ -8,6 +8,7 @@
 
 import { NextRequest, NextResponse } from 'next/server'
 import { createServiceClient } from '@/lib/supabase-server'
+import { logEmail } from '@/lib/email'
 
 interface CreateUserBody {
   email: string
@@ -266,6 +267,48 @@ export async function POST(request: NextRequest) {
       }
     }
 
+    // Send password reset email via Supabase
+    const { error: resetError } = await supabase.auth.resetPasswordForEmail(
+      body.email,
+      {
+        redirectTo: `${process.env.NEXT_PUBLIC_APP_URL}/reset-password`
+      }
+    )
+
+    // Get city name for email log
+    let cityName = 'N/A'
+    if (body.city_id) {
+      const { data: cityData } = await supabase
+        .from('cities')
+        .select('name')
+        .eq('id', body.city_id)
+        .single()
+      cityName = cityData?.name || 'N/A'
+    }
+
+    // Log the email
+    await logEmail({
+      recipientEmail: body.email,
+      recipientName: body.full_name,
+      emailType: 'welcome',
+      subject: 'הגדרת סיסמה - ארון ציוד ידידים',
+      status: resetError ? 'failed' : 'sent',
+      errorMessage: resetError?.message,
+      sentBy: adminUser?.email || 'system',
+      metadata: {
+        user_id: authData.user.id,
+        city_id: body.city_id || null,
+        city_name: cityName,
+        role: body.role,
+        manager_role: body.manager_role || null,
+        created_by: adminUser?.full_name || adminUser?.email || 'System'
+      }
+    })
+
+    if (resetError) {
+      console.error('Error sending password reset email:', resetError)
+    }
+
     // Log the activity
     await supabase
       .from('activity_logs')
@@ -277,6 +320,7 @@ export async function POST(request: NextRequest) {
           created_user_email: body.email,
           created_user_role: body.role,
           created_user_permissions: permissions,
+          email_sent: !resetError,
         },
       })
 
@@ -291,6 +335,7 @@ export async function POST(request: NextRequest) {
         permissions: newUserProfile.permissions,
         is_active: newUserProfile.is_active,
       },
+      emailSent: !resetError,
     })
 
   } catch (error) {
