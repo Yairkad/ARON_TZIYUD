@@ -1,107 +1,107 @@
-import { NextRequest, NextResponse } from 'next/server'
-import { createClient } from '@supabase/supabase-js'
+/**
+ * API Route: Subscribe to Push Notifications
+ * POST /api/push/subscribe
+ * 
+ * Saves a push subscription to the database
+ */
 
-const supabase = createClient(
-  process.env.NEXT_PUBLIC_SUPABASE_URL!,
-  process.env.SUPABASE_SERVICE_ROLE_KEY!
-)
+import { NextRequest, NextResponse } from 'next/server'
+import { createServiceClient } from '@/lib/supabase-server'
 
 export async function POST(request: NextRequest) {
   try {
-    const { cityId, subscription } = await request.json()
+    const accessToken = request.cookies.get('sb-access-token')?.value
 
-    console.log('📱 Push subscribe request:', { cityId, hasSubscription: !!subscription })
-
-    if (!cityId || !subscription) {
+    if (\!accessToken) {
       return NextResponse.json(
-        { error: 'חסרים פרטים נדרשים' },
+        { success: false, error: 'לא מורשה - נדרשת התחברות' },
+        { status: 401 }
+      )
+    }
+
+    const supabase = createServiceClient()
+    const { data: { user }, error: authError } = await supabase.auth.getUser(accessToken)
+
+    if (authError || \!user) {
+      return NextResponse.json(
+        { success: false, error: 'לא מורשה - נדרשת התחברות' },
+        { status: 401 }
+      )
+    }
+
+    const body = await request.json()
+    const { subscription, userAgent } = body
+
+    if (\!subscription || \!subscription.endpoint || \!subscription.keys) {
+      return NextResponse.json(
+        { success: false, error: 'נתוני subscription חסרים' },
         { status: 400 }
       )
     }
 
-    // Extract subscription details
-    const { endpoint, keys } = subscription
-    const { p256dh, auth } = keys
-
-    console.log('📱 Subscription details:', { endpoint: endpoint?.substring(0, 50), hasKeys: !!keys })
-
-    // Get user agent for tracking
-    const userAgent = request.headers.get('user-agent') || 'Unknown'
-
-    // Upsert the subscription (update if exists, insert if not)
-    const { error } = await supabase
+    // Check if subscription already exists
+    const { data: existingSub } = await supabase
       .from('push_subscriptions')
-      .upsert({
-        city_id: cityId,
-        endpoint,
-        p256dh,
-        auth,
+      .select('id')
+      .eq('endpoint', subscription.endpoint)
+      .single()
+
+    if (existingSub) {
+      // Update existing subscription
+      const { error: updateError } = await supabase
+        .from('push_subscriptions')
+        .update({
+          p256dh: subscription.keys.p256dh,
+          auth: subscription.keys.auth,
+          user_agent: userAgent,
+          is_active: true,
+          updated_at: new Date().toISOString(),
+        })
+        .eq('id', existingSub.id)
+
+      if (updateError) {
+        console.error('Error updating subscription:', updateError)
+        return NextResponse.json(
+          { success: false, error: 'שגיאה בעדכון subscription' },
+          { status: 500 }
+        )
+      }
+
+      return NextResponse.json({
+        success: true,
+        message: 'Subscription עודכן בהצלחה',
+      })
+    }
+
+    // Insert new subscription
+    const { error: insertError } = await supabase
+      .from('push_subscriptions')
+      .insert({
+        user_id: user.id,
+        endpoint: subscription.endpoint,
+        p256dh: subscription.keys.p256dh,
+        auth: subscription.keys.auth,
         user_agent: userAgent,
-        last_used_at: new Date().toISOString()
-      }, {
-        onConflict: 'city_id,endpoint',
-        ignoreDuplicates: false
       })
 
-    if (error) {
-      console.error('❌ Error saving push subscription:', error)
+    if (insertError) {
+      console.error('Error inserting subscription:', insertError)
       return NextResponse.json(
-        { error: `שגיאה בשמירת ההרשמה להתראות: ${error.message}` },
+        { success: false, error: 'שגיאה בשמירת subscription' },
         { status: 500 }
       )
     }
 
-    console.log('✅ Push subscription saved successfully')
-
     return NextResponse.json({
       success: true,
-      message: 'ההרשמה להתראות נשמרה בהצלחה'
+      message: 'Subscription נשמר בהצלחה',
     })
-
   } catch (error) {
     console.error('Push subscribe error:', error)
     return NextResponse.json(
-      { error: 'שגיאת שרת' },
+      { success: false, error: 'שגיאת שרת פנימית' },
       { status: 500 }
     )
   }
 }
 
-// Delete subscription
-export async function DELETE(request: NextRequest) {
-  try {
-    const { endpoint } = await request.json()
-
-    if (!endpoint) {
-      return NextResponse.json(
-        { error: 'חסר endpoint' },
-        { status: 400 }
-      )
-    }
-
-    const { error } = await supabase
-      .from('push_subscriptions')
-      .delete()
-      .eq('endpoint', endpoint)
-
-    if (error) {
-      console.error('Error deleting push subscription:', error)
-      return NextResponse.json(
-        { error: 'שגיאה במחיקת ההרשמה' },
-        { status: 500 }
-      )
-    }
-
-    return NextResponse.json({
-      success: true,
-      message: 'ההרשמה להתראות הוסרה'
-    })
-
-  } catch (error) {
-    console.error('Push unsubscribe error:', error)
-    return NextResponse.json(
-      { error: 'שגיאת שרת' },
-      { status: 500 }
-    )
-  }
-}
