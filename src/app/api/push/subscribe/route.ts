@@ -12,7 +12,7 @@ export async function POST(request: NextRequest) {
   try {
     const accessToken = request.cookies.get('sb-access-token')?.value
 
-    if (\!accessToken) {
+    if (!accessToken) {
       return NextResponse.json(
         { success: false, error: 'לא מורשה - נדרשת התחברות' },
         { status: 401 }
@@ -22,7 +22,7 @@ export async function POST(request: NextRequest) {
     const supabase = createServiceClient()
     const { data: { user }, error: authError } = await supabase.auth.getUser(accessToken)
 
-    if (authError || \!user) {
+    if (authError || !user) {
       return NextResponse.json(
         { success: false, error: 'לא מורשה - נדרשת התחברות' },
         { status: 401 }
@@ -32,7 +32,7 @@ export async function POST(request: NextRequest) {
     const body = await request.json()
     const { subscription, userAgent } = body
 
-    if (\!subscription || \!subscription.endpoint || \!subscription.keys) {
+    if (!subscription || !subscription.endpoint || !subscription.keys) {
       return NextResponse.json(
         { success: false, error: 'נתוני subscription חסרים' },
         { status: 400 }

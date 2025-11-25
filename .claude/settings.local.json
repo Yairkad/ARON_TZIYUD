@@ -14,7 +14,16 @@
       "Bash(cmd /c \"npm run build\")",
       "Bash(git -C \"C:\\Users\\יאיר קדוש\\ARON_TZIYUD\" commit -m \"$(cat <<''EOF''\nAdd: Automatic password reset email when creating new user\n\n- Sends password reset email via Supabase Auth after user creation\n- Logs email sending status in email_logs table\n- Includes user and city details in email metadata\n- Returns emailSent status in API response\n\nNow matches the behavior of creating city with new manager email.\n\n🤖 Generated with [Claude Code](https://claude.com/claude-code)\n\nCo-Authored-By: Claude <noreply@anthropic.com>\nEOF\n)\")",
       "Bash(git -C \"C:\\Users\\יאיר קדוש\\ARON_TZIYUD\" add -A)",
-      "Bash(git -C \"C:\\Users\\יאיר קדוש\\ARON_TZIYUD\" status)"
+      "Bash(git -C \"C:\\Users\\יאיר קדוש\\ARON_TZIYUD\" status)",
+      "Bash(git -C \"C:\\Users\\יאיר קדוש\\ARON_TZIYUD\" commit -m \"$(cat <<''EOF''\nCleanup: Remove obsolete documentation and SQL files\n\nDeleted files:\n- 23 old documentation files (*.md) - outdated setup guides, changelogs\n- 1 SQL migration file (add-token-column.sql) - already applied\n\nKept important files:\n- README.md - main project documentation\n- USER_GUIDE.md - user manual\n- PUSH_NOTIFICATIONS_SETUP.md - push setup guide\n- SESSION_FIX.md - session management docs\n- database.sql - main schema\n- create-missing-enums.sql - enum setup\n- fix-user-sync-trigger-safe.sql - trigger fix\n- check-enums.sql - enum verification\n- create-push-subscriptions-table.sql - push table\n- create-email-logs-table.sql - email logging\n\n🤖 Generated with [Claude Code](https://claude.com/claude-code)\n\nCo-Authored-By: Claude <noreply@anthropic.com>\nEOF\n)\")",
+      "Bash(git -C \"C:\\Users\\יאיר קדוש\\ARON_TZIYUD\" commit -m \"$(cat <<''EOF''\nFix: Make email log buttons responsive for mobile\n\n- Separated action buttons from header section\n- Buttons now stack vertically on mobile (flex-col)\n- Buttons remain horizontal on larger screens (sm:flex-row)\n- Added truncate to prevent text overflow\n- Increased button height to h-10 for better touch targets\n- Buttons take full width on mobile, auto width on desktop\n\nImproves usability on mobile devices.\n\n🤖 Generated with [Claude Code](https://claude.com/claude-code)\n\nCo-Authored-By: Claude <noreply@anthropic.com>\nEOF\n)\")",
+      "Bash(cmd /c \"cd \"\"C:\\Users\\יאיר קדוש\\ARON_TZIYUD\"\" && npm run build\")",
+      "Bash(npm run build:*)",
+      "Bash(eslint:*)",
+      "Bash(node:*)",
+      "Bash(cat:*)",
+      "Bash(grep:*)",
+      "Bash(git add:*)"
     ],
     "deny": [],
     "ask": []

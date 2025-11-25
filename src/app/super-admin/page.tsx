@@ -2303,64 +2303,62 @@ export default function SuperAdminPage() {
                             </Button>
                           </div>
 
-                              {/* תצוגה מצומצמת */}
-                              <div className="text-sm text-gray-700 mb-2">
-                                <span className="font-semibold">נושא:</span> {log.subject}
+                          {/* תצוגה מצומצמת */}
+                          <div className="text-sm text-gray-700 mb-2">
+                            <span className="font-semibold">נושא:</span> {log.subject}
+                          </div>
+
+                          {/* תצוגה מורחבת */}
+                          {isExpanded && (
+                            <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-2 mt-3 pt-3 border-t border-gray-200">
+                              <div className="text-sm">
+                                <span className="font-semibold text-gray-700">סוג:</span>{' '}
+                                <span className="text-purple-600">
+                                  {log.email_type === 'password_reset' && 'איפוס סיסמה'}
+                                  {log.email_type === 'welcome' && 'ברוך הבא'}
+                                  {log.email_type === 'email_update' && 'עדכון מייל'}
+                                  {log.email_type === 'verification' && 'אימות'}
+                                  {log.email_type === 'other' && 'אחר'}
+                                </span>
                               </div>
-
-                              {/* תצוגה מורחבת */}
-                              {isExpanded && (
-                                <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-2 mt-3 pt-3 border-t border-gray-200">
-                                  <div className="text-sm">
-                                    <span className="font-semibold text-gray-700">סוג:</span>{' '}
-                                    <span className="text-purple-600">
-                                      {log.email_type === 'password_reset' && 'איפוס סיסמה'}
-                                      {log.email_type === 'welcome' && 'ברוך הבא'}
-                                      {log.email_type === 'email_update' && 'עדכון מייל'}
-                                      {log.email_type === 'verification' && 'אימות'}
-                                      {log.email_type === 'other' && 'אחר'}
-                                    </span>
-                                  </div>
-                                  <div className="text-sm">
-                                    <span className="font-semibold text-gray-700">נשלח ע"י:</span>{' '}
-                                    <span className="text-gray-600">{log.sent_by || 'מערכת'}</span>
-                                  </div>
-                                  <div className="text-sm">
-                                    <span className="font-semibold text-gray-700">תאריך:</span>{' '}
-                                    <span className="text-gray-600">
-                                      {new Date(log.created_at).toLocaleDateString('he-IL', {
-                                        day: '2-digit',
-                                        month: '2-digit',
-                                        year: 'numeric',
-                                        hour: '2-digit',
-                                        minute: '2-digit'
-                                      })}
-                                    </span>
-                                  </div>
-                                  <div className="text-sm">
-                                    <span className="font-semibold text-gray-700">סטטוס:</span>{' '}
-                                    <span className={log.status === 'sent' ? 'text-green-600' : 'text-red-600'}>
-                                      {log.status === 'sent' ? 'נשלח בהצלחה' : 'נכשל'}
-                                    </span>
-                                  </div>
-                                  {log.metadata && Object.keys(log.metadata).length > 0 && (
-                                    <div className="text-sm col-span-full">
-                                      <span className="font-semibold text-gray-700">מידע נוסף:</span>{' '}
-                                      <pre className="text-xs bg-gray-100 p-2 rounded mt-1 overflow-x-auto">
-                                        {JSON.stringify(log.metadata, null, 2)}
-                                      </pre>
-                                    </div>
-                                  )}
-                                </div>
-                              )}
-
-                              {log.error_message && (
-                                <div className="mt-2 text-sm text-red-600 bg-red-50 p-2 rounded">
-                                  <span className="font-semibold">שגיאה:</span> {log.error_message}
+                              <div className="text-sm">
+                                <span className="font-semibold text-gray-700">נשלח על ידי:</span>{' '}
+                                <span className="text-gray-600">{log.sent_by || 'מערכת'}</span>
+                              </div>
+                              <div className="text-sm">
+                                <span className="font-semibold text-gray-700">תאריך:</span>{' '}
+                                <span className="text-gray-600">
+                                  {new Date(log.created_at).toLocaleDateString('he-IL', {
+                                    day: '2-digit',
+                                    month: '2-digit',
+                                    year: 'numeric',
+                                    hour: '2-digit',
+                                    minute: '2-digit'
+                                  })}
+                                </span>
+                              </div>
+                              <div className="text-sm">
+                                <span className="font-semibold text-gray-700">סטטוס:</span>{' '}
+                                <span className={log.status === 'sent' ? 'text-green-600' : 'text-red-600'}>
+                                  {log.status === 'sent' ? 'נשלח בהצלחה' : 'נכשל'}
+                                </span>
+                              </div>
+                              {log.metadata && Object.keys(log.metadata).length > 0 && (
+                                <div className="text-sm col-span-full">
+                                  <span className="font-semibold text-gray-700">מידע נוסף:</span>{' '}
+                                  <pre className="text-xs bg-gray-100 p-2 rounded mt-1 overflow-x-auto">
+                                    {JSON.stringify(log.metadata, null, 2)}
+                                  </pre>
                                 </div>
                               )}
                             </div>
-                          </div>
+                          )}
+
+                          {log.error_message && (
+                            <div className="mt-2 text-sm text-red-600 bg-red-50 p-2 rounded">
+                              <span className="font-semibold">שגיאה:</span> {log.error_message}
+                            </div>
+                          )}
                         </div>
                       )
                     })}
