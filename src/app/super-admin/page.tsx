@@ -1,6 +1,6 @@
 'use client'
 
-import { useState, useEffect } from 'react'
+import { useState, useEffect, useRef } from 'react'
 import { useRouter } from 'next/navigation'
 import Link from 'next/link'
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card'
@@ -31,6 +31,10 @@ export default function SuperAdminPage() {
   const [cityFilter, setCityFilter] = useState<'all' | 'active' | 'inactive'>('all')
   const [citySearchQuery, setCitySearchQuery] = useState('')
   const [expandedCities, setExpandedCities] = useState<Set<string>>(new Set())
+
+  // Refs for scrolling to forms
+  const addCityFormRef = useRef<HTMLDivElement>(null)
+  const addUserFormRef = useRef<HTMLDivElement>(null)
 
   // Users Management State
   const [users, setUsers] = useState<any[]>([])
@@ -1113,19 +1117,35 @@ export default function SuperAdminPage() {
 
             {/* Add City FAB - Mobile */}
             <Button
-              onClick={() => setShowAddCity(!showAddCity)}
-              className="md:hidden fixed bottom-6 left-6 z-40 w-16 h-16 rounded-full bg-gradient-to-r from-green-500 to-emerald-500 hover:from-green-600 hover:to-emerald-600 text-white font-bold shadow-2xl hover:shadow-3xl transition-all duration-300 hover:scale-110 flex items-center justify-center"
+              onClick={() => {
+                setShowAddCity(!showAddCity)
+                if (!showAddCity) {
+                  // Scroll to form after it's rendered
+                  setTimeout(() => {
+                    addCityFormRef.current?.scrollIntoView({ behavior: 'smooth', block: 'start' })
+                  }, 100)
+                }
+              }}
+              className="md:hidden fixed bottom-6 left-6 z-40 w-14 h-14 rounded-full bg-gradient-to-br from-green-500 to-emerald-600 hover:from-green-600 hover:to-emerald-700 text-white shadow-lg hover:shadow-xl transition-all duration-200 flex items-center justify-center border-2 border-white"
             >
-              <span className="text-3xl">{showAddCity ? '❌' : '➕'}</span>
+              {showAddCity ? (
+                <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
+                </svg>
+              ) : (
+                <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 4v16m8-8H4" />
+                </svg>
+              )}
             </Button>
 
         {/* Add City Form */}
         {showAddCity && (
-          <Card className="mb-8 border-0 shadow-2xl rounded-2xl overflow-hidden bg-white">
-            <CardHeader className="bg-gradient-to-r from-green-50 to-emerald-50 pb-4">
-              <CardTitle className="text-xl font-bold text-gray-800">➕ הוספת עיר חדשה</CardTitle>
+          <Card ref={addCityFormRef} className="mb-8 border-0 shadow-xl rounded-lg overflow-hidden bg-white">
+            <CardHeader className="bg-gradient-to-r from-green-50 to-emerald-50 py-4 px-4 md:px-6">
+              <CardTitle className="text-lg md:text-xl font-bold text-gray-800">➕ הוספת עיר חדשה</CardTitle>
             </CardHeader>
-            <CardContent className="p-6">
+            <CardContent className="p-4 md:p-6">
               <form onSubmit={handleAddCity} className="space-y-4">
                 <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                   <div className="space-y-2 md:col-span-2">
@@ -1134,7 +1154,7 @@ export default function SuperAdminPage() {
                       value={newCity.name}
                       onChange={(e) => setNewCity({ ...newCity, name: e.target.value })}
                       placeholder="לדוגמה: ירושלים"
-                      className="h-12"
+                      className="h-11 rounded-md"
                       required
                     />
                   </div>
@@ -1144,7 +1164,7 @@ export default function SuperAdminPage() {
                       value={newCity.manager1_name}
                       onChange={(e) => setNewCity({ ...newCity, manager1_name: e.target.value })}
                       placeholder="לדוגמה: יוסי כהן"
-                      className="h-12"
+                      className="h-11 rounded-md"
                       required
                     />
                   </div>
@@ -1162,7 +1182,7 @@ export default function SuperAdminPage() {
                       placeholder="0501234567"
                       pattern="[0-9]{10}"
                       maxLength={10}
-                      className="h-12"
+                      className="h-11 rounded-md"
                       required
                     />
                   </div>
@@ -1173,7 +1193,7 @@ export default function SuperAdminPage() {
                       value={newCity.manager1_email || ''}
                       onChange={(e) => setNewCity({ ...newCity, manager1_email: e.target.value })}
                       placeholder="manager1@example.com"
-                      className="h-12"
+                      className="h-11 rounded-md"
                     />
                     <p className="text-xs text-green-600">אם תזין מייל, ייווצר משתמש חדש וסיסמה זמנית תישלח למייל</p>
                   </div>
@@ -1183,7 +1203,7 @@ export default function SuperAdminPage() {
                       value={newCity.manager2_name}
                       onChange={(e) => setNewCity({ ...newCity, manager2_name: e.target.value })}
                       placeholder="לדוגמה: דוד לוי"
-                      className="h-12"
+                      className="h-11 rounded-md"
                     />
                   </div>
                   <div className="space-y-2">
@@ -1200,7 +1220,7 @@ export default function SuperAdminPage() {
                       placeholder="0507654321"
                       pattern="[0-9]{10}"
                       maxLength={10}
-                      className="h-12"
+                      className="h-11 rounded-md"
                     />
                   </div>
                   <div className="space-y-2 md:col-span-2">
@@ -1210,7 +1230,7 @@ export default function SuperAdminPage() {
                       value={newCity.manager2_email || ''}
                       onChange={(e) => setNewCity({ ...newCity, manager2_email: e.target.value })}
                       placeholder="manager2@example.com"
-                      className="h-12"
+                      className="h-11 rounded-md"
                     />
                     <p className="text-xs text-green-600">אם תזין מייל, ייווצר משתמש חדש וסיסמה זמנית תישלח למייל</p>
                   </div>
@@ -1221,7 +1241,7 @@ export default function SuperAdminPage() {
                       value={newCity.location_url}
                       onChange={(e) => setNewCity({ ...newCity, location_url: e.target.value })}
                       placeholder="https://maps.google.com/?q=31.7683,35.2137"
-                      className="h-12"
+                      className="h-11 rounded-md"
                     />
                     <p className="text-xs text-gray-500">יוצג בדף הראשי לכל המשתמשים (השאר ריק להסתרה)</p>
                   </div>
@@ -1797,10 +1817,24 @@ export default function SuperAdminPage() {
                       phone: '',
                       manager_role: '',
                     })
+                    if (!showAddUser) {
+                      // Scroll to form after it's rendered
+                      setTimeout(() => {
+                        addUserFormRef.current?.scrollIntoView({ behavior: 'smooth', block: 'start' })
+                      }, 100)
+                    }
                   }}
-                  className="md:hidden fixed bottom-6 left-6 z-40 w-16 h-16 rounded-full bg-gradient-to-r from-green-500 to-emerald-500 hover:from-green-600 hover:to-emerald-600 text-white font-bold shadow-2xl hover:shadow-3xl transition-all duration-300 hover:scale-110 flex items-center justify-center"
+                  className="md:hidden fixed bottom-6 left-6 z-40 w-14 h-14 rounded-full bg-gradient-to-br from-green-500 to-emerald-600 hover:from-green-600 hover:to-emerald-700 text-white shadow-lg hover:shadow-xl transition-all duration-200 flex items-center justify-center border-2 border-white"
                 >
-                  <span className="text-3xl">{showAddUser ? '❌' : '➕'}</span>
+                  {showAddUser ? (
+                    <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
+                    </svg>
+                  ) : (
+                    <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 4v16m8-8H4" />
+                    </svg>
+                  )}
                 </Button>
 
                 {/* User count */}
@@ -1857,16 +1891,16 @@ export default function SuperAdminPage() {
 
             {/* Add/Edit User Form */}
             {(showAddUser || editingUser) && (
-              <Card className="mb-6 border-2 border-purple-200 bg-gradient-to-r from-purple-50 to-pink-50 shadow-lg" data-edit-user-form>
-                <CardHeader>
-                  <CardTitle className="text-2xl font-bold text-gray-800">
+              <Card ref={addUserFormRef} className="mb-6 border-0 shadow-xl rounded-lg bg-gradient-to-r from-purple-50 to-pink-50" data-edit-user-form>
+                <CardHeader className="py-4 px-4 md:px-6">
+                  <CardTitle className="text-lg md:text-xl font-bold text-gray-800">
                     {editingUser ? '✏️ עריכת משתמש' : '➕ הוספת משתמש חדש'}
                   </CardTitle>
                   <CardDescription>
                     {editingUser ? 'ערוך את פרטי המשתמש' : 'מלא את כל הפרטים ליצירת משתמש חדש'}
                   </CardDescription>
                 </CardHeader>
-                <CardContent>
+                <CardContent className="p-4 md:p-6">
                   <form onSubmit={editingUser ? handleUpdateUser : handleCreateUser} className="space-y-4">
                     <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                       <div className="space-y-2">
@@ -1876,7 +1910,7 @@ export default function SuperAdminPage() {
                           value={userForm.full_name}
                           onChange={(e) => setUserForm({ ...userForm, full_name: e.target.value })}
                           placeholder="שם מלא"
-                          className="h-12 border-2 border-gray-200 rounded-xl focus:border-purple-500 transition-colors"
+                          className="h-11 rounded-md"
                           required
                         />
                       </div>
@@ -1890,7 +1924,7 @@ export default function SuperAdminPage() {
                           value={userForm.email}
                           onChange={(e) => setUserForm({ ...userForm, email: e.target.value })}
                           placeholder="email@example.com"
-                          className="h-12 border-2 border-gray-200 rounded-xl focus:border-purple-500 transition-colors"
+                          className="h-11 rounded-md"
                           required
                         />
                         {editingUser && (
@@ -1931,7 +1965,7 @@ export default function SuperAdminPage() {
                           value={userForm.phone}
                           onChange={(e) => setUserForm({ ...userForm, phone: e.target.value })}
                           placeholder="05xxxxxxxx"
-                          className="h-12 border-2 border-gray-200 rounded-xl focus:border-purple-500 transition-colors"
+                          className="h-11 rounded-md"
                         />
                       </div>
 
