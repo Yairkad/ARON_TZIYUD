@@ -452,33 +452,37 @@ export default function CityAdminPage() {
 
     setLoading(true)
     try {
-      // Step 1: Check if equipment exists in global pool, or create it
+      // Step 1: Check if equipment exists in global pool, or create it via API
       let globalEquipmentId: string
 
-      const { data: existingGlobal } = await supabase
-        .from('global_equipment_pool')
-        .select('id')
-        .ilike('name', newEquipment.name.trim())
-        .eq('status', 'active')
-        .single()
+      // First check if exists
+      const checkResponse = await fetch(`/api/global-equipment?status=active`)
+      const checkData = await checkResponse.json()
+      const existingGlobal = checkData.equipment?.find(
+        (eq: any) => eq.name.toLowerCase() === newEquipment.name.trim().toLowerCase()
+      )
 
       if (existingGlobal) {
         globalEquipmentId = existingGlobal.id
       } else {
-        // Create new global equipment
-        const { data: newGlobal, error: createError } = await supabase
-          .from('global_equipment_pool')
-          .insert({
+        // Create new global equipment via API (handles RLS properly)
+        const createResponse = await fetch('/api/global-equipment', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({
             name: newEquipment.name.trim(),
             category_id: newEquipment.category_id || null,
-            image_url: newEquipment.image_url || null,
-            status: 'active'
+            image_url: newEquipment.image_url || null
           })
-          .select('id')
-          .single()
+        })
 
-        if (createError) throw createError
-        globalEquipmentId = newGlobal.id
+        if (!createResponse.ok) {
+          const errorData = await createResponse.json()
+          throw new Error(errorData.error || 'שגיאה ביצירת ציוד במאגר')
+        }
+
+        const createData = await createResponse.json()
+        globalEquipmentId = createData.equipment.id
       }
 
       // Step 2: Link to city using API

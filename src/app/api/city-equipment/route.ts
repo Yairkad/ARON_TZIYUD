@@ -88,8 +88,20 @@ export async function POST(request: Request) {
       return NextResponse.json({ error: 'לא מורשה' }, { status: 401 })
     }
 
+    // Use service client to bypass RLS for database operations
+    const serviceClient = createClient(
+      process.env.NEXT_PUBLIC_SUPABASE_URL!,
+      process.env.SUPABASE_SERVICE_ROLE_KEY!,
+      {
+        auth: {
+          autoRefreshToken: false,
+          persistSession: false
+        }
+      }
+    )
+
     // Check permissions
-    const { data: userData } = await supabase
+    const { data: userData } = await serviceClient
       .from('users')
       .select('role, city_id, permissions')
       .eq('id', user.id)
@@ -109,7 +121,7 @@ export async function POST(request: Request) {
     }
 
     // Verify global equipment exists and is active
-    const { data: globalEquipment } = await supabase
+    const { data: globalEquipment } = await serviceClient
       .from('global_equipment_pool')
       .select('id, name, status')
       .eq('id', global_equipment_id)
@@ -124,7 +136,7 @@ export async function POST(request: Request) {
     }
 
     // Insert city equipment link
-    const { data: newLink, error } = await supabase
+    const { data: newLink, error } = await serviceClient
       .from('city_equipment')
       .insert({
         city_id,
@@ -173,8 +185,20 @@ export async function PUT(request: Request) {
       return NextResponse.json({ error: 'לא מורשה' }, { status: 401 })
     }
 
+    // Use service client to bypass RLS for database operations
+    const serviceClient = createClient(
+      process.env.NEXT_PUBLIC_SUPABASE_URL!,
+      process.env.SUPABASE_SERVICE_ROLE_KEY!,
+      {
+        auth: {
+          autoRefreshToken: false,
+          persistSession: false
+        }
+      }
+    )
+
     // Get current equipment to verify city
-    const { data: currentEquipment } = await supabase
+    const { data: currentEquipment } = await serviceClient
       .from('city_equipment')
       .select('city_id')
       .eq('id', id)
@@ -185,7 +209,7 @@ export async function PUT(request: Request) {
     }
 
     // Check permissions
-    const { data: userData } = await supabase
+    const { data: userData } = await serviceClient
       .from('users')
       .select('role, city_id, permissions')
       .eq('id', user.id)
@@ -209,7 +233,7 @@ export async function PUT(request: Request) {
     if (quantity !== undefined) updateData.quantity = quantity
     if (display_order !== undefined) updateData.display_order = display_order
 
-    const { data: updatedEquipment, error } = await supabase
+    const { data: updatedEquipment, error } = await serviceClient
       .from('city_equipment')
       .update(updateData)
       .eq('id', id)
