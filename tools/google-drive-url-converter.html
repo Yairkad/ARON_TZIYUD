@@ -3,7 +3,8 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>ממיר קישורי Google Drive - ARON TZIYUD</title>
+    <title>ממיר קישורי Google Drive</title>
+    <link href="https://fonts.googleapis.com/css2?family=Rubik:wght@400;500;600;700&display=swap" rel="stylesheet">
     <style>
         * {
             margin: 0;
@@ -12,168 +13,163 @@
         }
 
         body {
-            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Arial, sans-serif;
-            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            font-family: 'Rubik', sans-serif;
+            background: linear-gradient(135deg, #f0f9ff 0%, #e0f2fe 100%);
             min-height: 100vh;
             padding: 20px;
         }
 
         .container {
-            max-width: 900px;
+            max-width: 600px;
             margin: 0 auto;
             background: white;
             border-radius: 20px;
             padding: 30px;
-            box-shadow: 0 20px 60px rgba(0,0,0,0.3);
+            box-shadow: 0 10px 40px rgba(0,0,0,0.1);
         }
 
         h1 {
-            color: #667eea;
-            margin-bottom: 10px;
-            font-size: 32px;
+            color: #0c4a6e;
+            margin-bottom: 20px;
+            font-size: 24px;
+            text-align: center;
         }
 
         .instructions {
-            background: #f0f4ff;
-            border-right: 4px solid #667eea;
-            padding: 20px;
-            margin: 20px 0;
-            border-radius: 10px;
-        }
-
-        .instructions h2 {
-            color: #667eea;
-            margin-bottom: 10px;
-            font-size: 20px;
-        }
-
-        .instructions ol {
-            margin-right: 20px;
-        }
-
-        .instructions li {
-            margin: 8px 0;
-            line-height: 1.6;
+            background: #f0f9ff;
+            border-right: 4px solid #0ea5e9;
+            padding: 15px;
+            margin-bottom: 20px;
+            border-radius: 8px;
+            font-size: 14px;
+            color: #64748b;
+            line-height: 1.8;
         }
 
         .converter-section {
-            margin: 30px 0;
+            margin: 20px 0;
         }
 
         label {
             display: block;
-            font-weight: bold;
+            font-weight: 600;
             margin-bottom: 8px;
-            color: #333;
+            color: #0c4a6e;
         }
 
-        input, textarea {
+        input {
             width: 100%;
-            padding: 12px;
+            padding: 14px;
             border: 2px solid #e0e0e0;
-            border-radius: 8px;
+            border-radius: 10px;
             font-size: 14px;
             font-family: monospace;
             transition: border-color 0.3s;
+            direction: ltr;
         }
 
-        input:focus, textarea:focus {
+        input:focus {
             outline: none;
-            border-color: #667eea;
+            border-color: #0ea5e9;
         }
 
-        textarea {
-            min-height: 120px;
-            resize: vertical;
+        .btn-group {
+            display: flex;
+            gap: 10px;
+            margin-top: 15px;
         }
 
         .btn {
-            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            flex: 1;
+            background: linear-gradient(135deg, #0ea5e9 0%, #0284c7 100%);
             color: white;
             border: none;
-            padding: 12px 30px;
+            padding: 14px 20px;
             font-size: 16px;
-            font-weight: bold;
-            border-radius: 8px;
+            font-weight: 600;
+            border-radius: 10px;
             cursor: pointer;
-            margin: 10px 5px;
             transition: all 0.3s ease;
         }
 
         .btn:hover {
-            transform: scale(1.05);
-            box-shadow: 0 4px 12px rgba(102, 126, 234, 0.5);
+            transform: translateY(-2px);
+            box-shadow: 0 4px 15px rgba(14, 165, 233, 0.4);
         }
 
         .btn-success {
-            background: linear-gradient(135deg, #11998e 0%, #38ef7d 100%);
+            background: linear-gradient(135deg, #10b981 0%, #059669 100%);
         }
 
         .result {
-            background: #f9f9f9;
-            border: 2px solid #11998e;
-            border-radius: 8px;
+            background: #f0fdf4;
+            border: 2px solid #10b981;
+            border-radius: 10px;
             padding: 15px;
-            margin-top: 15px;
+            margin-top: 20px;
             word-break: break-all;
         }
 
         .result-label {
-            color: #11998e;
-            font-weight: bold;
+            color: #059669;
+            font-weight: 600;
             margin-bottom: 8px;
+            font-size: 14px;
         }
 
-        .example {
-            background: #fff3cd;
-            border: 2px solid #ffc107;
-            padding: 15px;
-            border-radius: 8px;
-            margin: 20px 0;
+        #convertedUrl {
+            font-family: monospace;
+            font-size: 13px;
+            direction: ltr;
+            text-align: left;
         }
 
-        .example h3 {
-            color: #856404;
-            margin-bottom: 10px;
+        .error {
+            background: #fef2f2;
+            border: 2px solid #ef4444;
+            color: #dc2626;
+            padding: 12px;
+            border-radius: 10px;
+            margin-top: 15px;
         }
 
-        .example code {
-            background: white;
-            padding: 2px 6px;
-            border-radius: 4px;
-            font-size: 12px;
+        .success-msg {
+            background: #f0fdf4;
+            border: 2px solid #10b981;
+            color: #059669;
+            padding: 12px;
+            border-radius: 10px;
+            margin-top: 15px;
+            text-align: center;
+            font-weight: 600;
         }
 
         .preview-section {
-            margin-top: 30px;
-            padding: 20px;
-            background: #f0f4ff;
+            margin-top: 25px;
+            padding: 15px;
+            background: #f8fafc;
             border-radius: 10px;
+            text-align: center;
+        }
+
+        .preview-section h3 {
+            color: #64748b;
+            margin-bottom: 15px;
+            font-size: 14px;
         }
 
         .preview-section img {
             max-width: 100%;
-            height: auto;
+            max-height: 200px;
             border-radius: 8px;
             box-shadow: 0 4px 12px rgba(0,0,0,0.1);
         }
 
-        .error {
-            background: #ffe6e6;
-            border: 2px solid #ff4444;
-            color: #cc0000;
-            padding: 12px;
-            border-radius: 8px;
-            margin-top: 10px;
-        }
-
-        .success {
-            background: #e6ffe6;
-            border: 2px solid #44ff44;
-            color: #008800;
-            padding: 12px;
-            border-radius: 8px;
-            margin-top: 10px;
+        .footer {
+            text-align: center;
+            margin-top: 20px;
+            color: #94a3b8;
+            font-size: 12px;
         }
     </style>
 </head>
@@ -182,71 +178,41 @@
         <h1>🔗 ממיר קישורי Google Drive</h1>
 
         <div class="instructions">
-            <h2>📋 איך להשתמש:</h2>
-            <ol>
-                <li>לך לתיקיית Google Drive עם התמונות</li>
-                <li>לחץ ימין על תמונה → <strong>קבל קישור</strong></li>
-                <li>ודא ש<strong>כל מי שיש לו את הקישור יכול לצפות</strong></li>
-                <li>העתק את הקישור והדבק אותו למטה</li>
-                <li>לחץ על "המר לקישור ישיר"</li>
-                <li>העתק את הקישור הממומר ושמור אותו בניהול הציוד</li>
-            </ol>
-        </div>
-
-        <div class="example">
-            <h3>📌 דוגמה:</h3>
-            <p><strong>קישור רגיל של Google Drive:</strong></p>
-            <code>https://drive.google.com/file/d/1ABC123xyz/view?usp=sharing</code>
-            <br><br>
-            <p><strong>קישור ישיר לתמונה (אחרי המרה):</strong></p>
-            <code>https://lh3.googleusercontent.com/d/1ABC123xyz</code>
-            <br><br>
-            <p style="color: #11998e; font-weight: bold;">✅ פורמט זה נבדק ועובד בצורה מושלמת!</p>
+            <strong>שלבים:</strong> העלה תמונה ל-Google Drive → לחץ ימני → שתף → העתק קישור → הדבק כאן → לחץ "המר"
         </div>
 
         <div class="converter-section">
-            <label for="driveUrl">🔗 הדבק כאן קישור מ-Google Drive:</label>
+            <label for="driveUrl">הדבק קישור Google Drive:</label>
             <input
                 type="text"
                 id="driveUrl"
-                placeholder="https://drive.google.com/file/d/1ABC123xyz/view?usp=sharing"
+                placeholder="https://drive.google.com/file/d/..."
             >
 
-            <button class="btn" onclick="convertUrl()">🔄 המר לקישור ישיר</button>
-            <button class="btn btn-success" onclick="copyResult()">📋 העתק תוצאה</button>
+            <div class="btn-group">
+                <button class="btn" onclick="convertUrl()">🔄 המר</button>
+                <button class="btn btn-success" onclick="copyResult()">📋 העתק</button>
+            </div>
 
             <div id="result"></div>
         </div>
 
-        <div class="converter-section">
-            <h2 style="color: #667eea; margin-bottom: 15px;">📦 המרה המונית (מספר קישורים)</h2>
-            <label for="bulkUrls">הדבק כאן מספר קישורים (אחד בכל שורה):</label>
-            <textarea
-                id="bulkUrls"
-                placeholder="https://drive.google.com/file/d/1ABC123xyz/view?usp=sharing
-https://drive.google.com/file/d/2DEF456uvw/view?usp=sharing
-https://drive.google.com/file/d/3GHI789rst/view?usp=sharing"
-            ></textarea>
-
-            <button class="btn" onclick="convertBulk()">🔄 המר הכל</button>
-            <button class="btn btn-success" onclick="copyBulkResult()">📋 העתק הכל</button>
-
-            <div id="bulkResult"></div>
+        <div class="preview-section" id="previewSection" style="display: none;">
+            <h3>👁️ תצוגה מקדימה:</h3>
+            <img id="previewImage" src="" alt="Preview">
         </div>
 
-        <div class="preview-section" id="previewSection" style="display: none;">
-            <h3 style="color: #667eea; margin-bottom: 15px;">👁️ תצוגה מקדימה:</h3>
-            <img id="previewImage" src="" alt="Preview">
+        <div class="footer">
+            מערכת ארון ציוד - ידידים סיוע בדרכים
         </div>
     </div>
 
     <script>
         function extractFileId(url) {
-            // Extract file ID from various Google Drive URL formats
             const patterns = [
-                /\/file\/d\/([a-zA-Z0-9_-]+)/,  // Standard format
-                /id=([a-zA-Z0-9_-]+)/,           // Query parameter format
-                /\/d\/([a-zA-Z0-9_-]+)/          // Short format
+                /\/file\/d\/([a-zA-Z0-9_-]+)/,
+                /id=([a-zA-Z0-9_-]+)/,
+                /\/d\/([a-zA-Z0-9_-]+)/
             ];
 
             for (const pattern of patterns) {
@@ -259,7 +225,6 @@ https://drive.google.com/file/d/3GHI789rst/view?usp=sharing"
         }
 
         function convertToDirect(fileId) {
-            // Convert to lh3.googleusercontent format (VERIFIED WORKING!)
             return `https://lh3.googleusercontent.com/d/${fileId}`;
         }
 
@@ -268,28 +233,27 @@ https://drive.google.com/file/d/3GHI789rst/view?usp=sharing"
             const resultDiv = document.getElementById('result');
 
             if (!input) {
-                resultDiv.innerHTML = '<div class="error">❌ אנא הדבק קישור מ-Google Drive</div>';
+                resultDiv.innerHTML = '<div class="error">❌ הדבק קישור מ-Google Drive</div>';
                 return;
             }
 
             const fileId = extractFileId(input);
 
             if (!fileId) {
-                resultDiv.innerHTML = '<div class="error">❌ לא הצלחתי לזהות את מזהה הקובץ. ודא שהקישור תקין.</div>';
+                resultDiv.innerHTML = '<div class="error">❌ קישור לא תקין</div>';
                 return;
             }
 
             const directUrl = convertToDirect(fileId);
 
             resultDiv.innerHTML = `
-                <div class="success">✅ ההמרה הצליחה!</div>
+                <div class="success-msg">✅ ההמרה הצליחה!</div>
                 <div class="result">
-                    <div class="result-label">🔗 קישור ישיר לשימוש:</div>
+                    <div class="result-label">קישור ישיר:</div>
                     <div id="convertedUrl">${directUrl}</div>
                 </div>
             `;
 
-            // Show preview
             const previewSection = document.getElementById('previewSection');
             const previewImage = document.getElementById('previewImage');
             previewSection.style.display = 'block';
@@ -299,77 +263,29 @@ https://drive.google.com/file/d/3GHI789rst/view?usp=sharing"
         function copyResult() {
             const resultText = document.getElementById('convertedUrl');
             if (!resultText) {
-                alert('❌ אין תוצאה להעתקה. המר קישור תחילה.');
+                alert('❌ אין תוצאה להעתקה');
                 return;
             }
 
             navigator.clipboard.writeText(resultText.textContent).then(() => {
-                alert('✅ הקישור הועתק ללוח!');
+                alert('✅ הקישור הועתק!');
             }).catch(() => {
-                // Fallback for older browsers
                 const textArea = document.createElement('textarea');
                 textArea.value = resultText.textContent;
                 document.body.appendChild(textArea);
                 textArea.select();
                 document.execCommand('copy');
                 document.body.removeChild(textArea);
-                alert('✅ הקישור הועתק ללוח!');
+                alert('✅ הקישור הועתק!');
             });
         }
 
-        function convertBulk() {
-            const input = document.getElementById('bulkUrls').value.trim();
-            const resultDiv = document.getElementById('bulkResult');
-
-            if (!input) {
-                resultDiv.innerHTML = '<div class="error">❌ אנא הדבק קישורים (אחד בכל שורה)</div>';
-                return;
+        // Auto convert on Enter key
+        document.getElementById('driveUrl').addEventListener('keypress', function(e) {
+            if (e.key === 'Enter') {
+                convertUrl();
             }
-
-            const urls = input.split('\n').filter(line => line.trim());
-            const results = [];
-            let successCount = 0;
-            let failCount = 0;
-
-            urls.forEach((url, index) => {
-                const fileId = extractFileId(url.trim());
-                if (fileId) {
-                    results.push(convertToDirect(fileId));
-                    successCount++;
-                } else {
-                    results.push(`❌ ERROR: ${url}`);
-                    failCount++;
-                }
-            });
-
-            const statusMsg = failCount > 0
-                ? `<div class="error">⚠️ הומרו ${successCount} קישורים בהצלחה, ${failCount} נכשלו</div>`
-                : `<div class="success">✅ כל ${successCount} הקישורים הומרו בהצלחה!</div>`;
-
-            resultDiv.innerHTML = `
-                ${statusMsg}
-                <div class="result">
-                    <div class="result-label">🔗 קישורים ישירים (אחד בכל שורה):</div>
-                    <textarea id="bulkConvertedUrls" readonly style="min-height: 200px;">${results.join('\n')}</textarea>
-                </div>
-            `;
-        }
-
-        function copyBulkResult() {
-            const resultText = document.getElementById('bulkConvertedUrls');
-            if (!resultText) {
-                alert('❌ אין תוצאה להעתקה. המר קישורים תחילה.');
-                return;
-            }
-
-            navigator.clipboard.writeText(resultText.value).then(() => {
-                alert('✅ כל הקישורים הועתקו ללוח!');
-            }).catch(() => {
-                resultText.select();
-                document.execCommand('copy');
-                alert('✅ כל הקישורים הועתקו ללוח!');
-            });
-        }
+        });
     </script>
 </body>
 </html>

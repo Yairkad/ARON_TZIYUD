@@ -136,8 +136,8 @@
         }
 
         .status-faulty {
-            background: linear-gradient(135deg, #fee2e2 0%, #fecaca 100%);
-            border: 2px solid #ef4444;
+            background: linear-gradient(135deg, #ffedd5 0%, #fed7aa 100%);
+            border: 2px solid #f97316;
         }
 
         .status-consumable {
@@ -340,7 +340,8 @@
                 <div class="step-number">2</div>
                 <div class="step-content">
                     <h3>הוספת פריט חדש למאגר</h3>
-                    <p>אם הפריט לא קיים במאגר - לחץ <strong>"הוסף פריט חדש"</strong>. הזן שם, בחר קטגוריה והעלה תמונה. הפריט יתווסף גם למאגר הראשי וגם לארון שלך.</p>
+                    <p>אם הפריט לא קיים במאגר - לחץ <strong>"הוסף פריט חדש"</strong>. הזן שם, בחר קטגוריה והוסף קישור לתמונה. הפריט יתווסף גם למאגר הראשי וגם לארון שלך.</p>
+                    <p style="margin-top: 0.5rem; font-size: 0.9rem;">💡 <strong>תמונה:</strong> יש להזין קישור לתמונה (URL). העלה תמונה ל-Google Drive → לחץ ימני → שתף → העתק קישור → השתמש ב<a href="/tools/google-drive-url-converter.html" target="_blank" style="color: #0ea5e9;">ממיר קישורים</a> לקבלת קישור ישיר.</p>
                 </div>
             </div>
 
@@ -374,9 +375,9 @@
                 </div>
 
                 <div class="status-box status-consumable">
-                    <div class="icon">📦</div>
+                    <div class="icon">☑️</div>
                     <div class="title">מתכלה</div>
-                    <div class="desc">פריט חד-פעמי שלא מוחזר (כבלים, סוללות וכו')</div>
+                    <div class="desc">פריט חד-פעמי שלא מוחזר - מסומן בצ'קבוקס עם הערה</div>
                 </div>
             </div>
 
@@ -384,7 +385,7 @@
                 <div class="tip-icon">💡</div>
                 <div class="tip-content">
                     <h4>מתי לסמן כמתכלה?</h4>
-                    <p>פריטים מתכלים הם פריטים שנמסרים למשתמש ולא מצופה שיוחזרו - למשל: כבלי מתח, סוללות, נורות, פיוזים. פריטים אלו לא יופיעו בהיסטוריית ההשאלות כ"ממתינים להחזרה".</p>
+                    <p>פריטים מתכלים הם פריטים שנמסרים למשתמש ולא מצופה שיוחזרו - למשל: ברגי סיליקון, פיוזים וכדומה. פריטים אלו לא יופיעו בהיסטוריית ההשאלות כ"ממתינים להחזרה".</p>
                 </div>
             </div>
         </div>
@@ -408,7 +409,7 @@
                 <div class="step-number">2</div>
                 <div class="step-content">
                     <h3>שינוי סטטוס</h3>
-                    <p>לחץ על כפתור הסטטוס (תקין/תקול) כדי להחליף. פריט תקול יסומן באדום ולא יוצג למשתמשים לבחירה.</p>
+                    <p>לחץ על כפתור הסטטוס (תקין/תקול) כדי להחליף. פריט תקול יסומן <strong>בכתום</strong> ולא יוצג למשתמשים לבחירה.</p>
                 </div>
             </div>
 
@@ -416,14 +417,13 @@
                 <div class="step-number">3</div>
                 <div class="step-content">
                     <h3>הגדרת מתכלה</h3>
-                    <p>לחץ על האייקון בעמודת "מתכלה" כדי לשנות. פריט מתכלה יסומן בצהוב.</p>
+                    <p>סמן את הצ'קבוקס בעמודת "מתכלה" והוסף הערה. סימון זה מציין שהפריט חד-פעמי ולא צפוי להחזרה.</p>
                 </div>
             </div>
 
             <div class="action-example">
                 <span class="btn-example btn-green">✅ תקין</span>
-                <span class="btn-example btn-red">⚠️ תקול</span>
-                <span class="btn-example btn-gray">📦 מתכלה</span>
+                <span class="btn-example" style="background: #f97316; color: white;">⚠️ תקול</span>
                 <span class="btn-example btn-blue">🗑️ מחק</span>
             </div>
         </div>
@@ -466,8 +466,8 @@
             <div class="tip-box" style="margin-top: 1rem;">
                 <div class="tip-icon">💡</div>
                 <div class="tip-content">
-                    <h4>טיפ: העתקת ציוד מעיר אחרת</h4>
-                    <p>אם יש עיר עם רשימת ציוד דומה - השתמש בכפתור <strong>"העתק ציוד מעיר"</strong> כדי להעתיק את כל הפריטים שלה בלחיצה אחת!</p>
+                    <h4>טיפ: בחירה מהירה מהמאגר</h4>
+                    <p>במאגר הראשי תוכל לחפש ולסנן פריטים לפי קטגוריה. כל פריט שתוסיף מהמאגר יגיע עם התמונה והפרטים המוכנים!</p>
                 </div>
             </div>
         </div>
@@ -484,12 +484,6 @@
                     <div class="feature-icon">📋</div>
                     <div class="feature-title">ייצוא לאקסל</div>
                     <div class="feature-desc">הורד את רשימת הציוד כקובץ Excel</div>
-                </div>
-
-                <div class="feature">
-                    <div class="feature-icon">🔄</div>
-                    <div class="feature-title">סידור מחדש</div>
-                    <div class="feature-desc">גרור פריטים לשינוי סדר התצוגה</div>
                 </div>
 
                 <div class="feature">
