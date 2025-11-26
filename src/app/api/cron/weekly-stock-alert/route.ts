@@ -45,12 +45,14 @@ export async function GET(request: NextRequest) {
         continue
       }
 
-      // Get low stock consumable equipment for this city
+      // Get low stock equipment for this city (using new structure)
       const { data: lowStockItems, error: stockError } = await supabaseServer
-        .from('equipment')
-        .select('name, quantity')
+        .from('city_equipment')
+        .select(`
+          quantity,
+          global_equipment:global_equipment_pool(name)
+        `)
         .eq('city_id', city.id)
-        .eq('is_consumable', true)
         .lt('quantity', LOW_STOCK_THRESHOLD)
         .order('quantity', { ascending: true })
 
@@ -76,7 +78,7 @@ export async function GET(request: NextRequest) {
 
       // Build alert message
       const itemsList = lowStockItems
-        .map(item => `• ${item.name}: ${item.quantity} יחידות`)
+        .map((item: any) => `• ${item.global_equipment?.name || 'ציוד'}: ${item.quantity} יחידות`)
         .join('\n')
 
       const details = `נמצאו ${lowStockItems.length} פריטים במלאי נמוך:\n\n${itemsList}\n\nמומלץ להשלים מלאי בהקדם.`

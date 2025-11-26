@@ -129,6 +129,8 @@ export default function CityAdminPage() {
   const [isCityDetailsExpanded, setIsCityDetailsExpanded] = useState(false)
   const [equipmentSearchQuery, setEquipmentSearchQuery] = useState('')
   const [currentUser, setCurrentUser] = useState<any>(null)
+  const [distanceSaveTimer, setDistanceSaveTimer] = useState<NodeJS.Timeout | null>(null)
+  const [distanceSaveStatus, setDistanceSaveStatus] = useState<'idle' | 'saving' | 'saved' | 'error'>('idle')
   const [showAccountSettings, setShowAccountSettings] = useState(false)
   const [accountForm, setAccountForm] = useState({
     full_name: '',
@@ -450,26 +452,57 @@ export default function CityAdminPage() {
 
     setLoading(true)
     try {
-      const { error } = await supabase
-        .from('equipment')
-        .insert({
-          name: newEquipment.name,
-          quantity: newEquipment.quantity,
-          city_id: cityId,
-          equipment_status: newEquipment.equipment_status,
-          is_consumable: newEquipment.is_consumable,
-          category_id: newEquipment.category_id || null,
-          image_url: newEquipment.image_url || null
-        })
+      // Step 1: Check if equipment exists in global pool, or create it
+      let globalEquipmentId: string
 
-      if (error) throw error
+      const { data: existingGlobal } = await supabase
+        .from('global_equipment_pool')
+        .select('id')
+        .ilike('name', newEquipment.name.trim())
+        .eq('status', 'active')
+        .single()
+
+      if (existingGlobal) {
+        globalEquipmentId = existingGlobal.id
+      } else {
+        // Create new global equipment
+        const { data: newGlobal, error: createError } = await supabase
+          .from('global_equipment_pool')
+          .insert({
+            name: newEquipment.name.trim(),
+            category_id: newEquipment.category_id || null,
+            image_url: newEquipment.image_url || null,
+            status: 'active'
+          })
+          .select('id')
+          .single()
+
+        if (createError) throw createError
+        globalEquipmentId = newGlobal.id
+      }
+
+      // Step 2: Link to city using API
+      const response = await fetch('/api/city-equipment', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          city_id: cityId,
+          global_equipment_id: globalEquipmentId,
+          quantity: newEquipment.quantity
+        })
+      })
+
+      if (!response.ok) {
+        const data = await response.json()
+        throw new Error(data.error || 'שגיאה בהוספת ציוד')
+      }
 
       alert('הציוד נוסף בהצלחה!')
       setNewEquipment({ name: '', quantity: 1, equipment_status: 'working', is_consumable: false, category_id: '', image_url: '' })
       fetchEquipment()
-    } catch (error) {
+    } catch (error: any) {
       console.error('Error adding equipment:', error)
-      alert('אירעה שגיאה בהוספת הציוד')
+      alert(error.message || 'אירעה שגיאה בהוספת הציוד')
     } finally {
       setLoading(false)
     }
@@ -489,26 +522,27 @@ export default function CityAdminPage() {
 
     setLoading(true)
     try {
-      const { error } = await supabase
-        .from('equipment')
-        .update({
-          name,
-          quantity,
-          equipment_status,
-          is_consumable,
-          category_id: category_id || null,
-          image_url: image_url || null
+      // Update city_equipment quantity using API
+      const response = await fetch('/api/city-equipment', {
+        method: 'PUT',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          id,
+          quantity
         })
-        .eq('id', id)
+      })
 
-      if (error) throw error
+      if (!response.ok) {
+        const data = await response.json()
+        throw new Error(data.error || 'שגיאה בעדכון ציוד')
+      }
 
       alert('הציוד עודכן בהצלחה!')
       setEditingEquipment(null)
       fetchEquipment()
-    } catch (error) {
+    } catch (error: any) {
       console.error('Error updating equipment:', error)
-      alert('אירעה שגיאה בעדכון הציוד')
+      alert(error.message || 'אירעה שגיאה בעדכון הציוד')
     } finally {
       setLoading(false)
     }
@@ -547,10 +581,10 @@ export default function CityAdminPage() {
   const handleUpdateHistoryStatus = async (id: string, status: 'borrowed' | 'returned') => {
     setLoading(true)
     try {
-      // Get the borrow record to find the equipment_id
+      // Get the borrow record to find the equipment_id (now global_equipment_id)
       const { data: borrowRecord, error: fetchError } = await supabase
         .from('borrow_history')
-        .select('*, equipment_id')
+        .select('*, equipment_id, global_equipment_id')
         .eq('id', id)
         .single()
 
@@ -568,29 +602,39 @@ export default function CityAdminPage() {
 
       if (error) throw error
 
-      // If status changed to 'returned', increment equipment quantity
-      if (status === 'returned' && borrowRecord.equipment_id) {
-        const equipmentItem = equipment.find(eq => eq.id === borrowRecord.equipment_id)
-        if (equipmentItem) {
-          const { error: qtyUpdateError } = await supabase
-            .from('equipment')
-            .update({ quantity: equipmentItem.quantity + 1 })
-            .eq('id', borrowRecord.equipment_id)
+      // Find the equipment in our local state - ID is global_equipment_id
+      const globalEquipmentId = borrowRecord.global_equipment_id || borrowRecord.equipment_id
+      const equipmentItem = equipment.find(eq => eq.id === globalEquipmentId || eq.global_equipment_id === globalEquipmentId)
 
-          if (qtyUpdateError) throw qtyUpdateError
+      // If status changed to 'returned', increment equipment quantity
+      if (status === 'returned' && equipmentItem) {
+        const response = await fetch('/api/city-equipment', {
+          method: 'PUT',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({
+            id: equipmentItem.id,
+            quantity: equipmentItem.quantity + 1
+          })
+        })
+        if (!response.ok) {
+          console.error('Failed to update quantity')
         }
       }
 
       // If status changed to 'borrowed', decrement equipment quantity
-      if (status === 'borrowed' && borrowRecord.equipment_id && borrowRecord.status === 'returned') {
-        const equipmentItem = equipment.find(eq => eq.id === borrowRecord.equipment_id)
-        if (equipmentItem && equipmentItem.quantity > 0) {
-          const { error: qtyUpdateError } = await supabase
-            .from('equipment')
-            .update({ quantity: equipmentItem.quantity - 1 })
-            .eq('id', borrowRecord.equipment_id)
-
-          if (qtyUpdateError) throw qtyUpdateError
+      if (status === 'borrowed' && equipmentItem && borrowRecord.status === 'returned') {
+        if (equipmentItem.quantity > 0) {
+          const response = await fetch('/api/city-equipment', {
+            method: 'PUT',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({
+              id: equipmentItem.id,
+              quantity: equipmentItem.quantity - 1
+            })
+          })
+          if (!response.ok) {
+            console.error('Failed to update quantity')
+          }
         }
       }
 
@@ -615,7 +659,7 @@ export default function CityAdminPage() {
       // Get the borrow record to find the equipment_id and status
       const { data: borrowRecord, error: fetchError } = await supabase
         .from('borrow_history')
-        .select('*')
+        .select('*, equipment_id, global_equipment_id')
         .eq('id', id)
         .single()
 
@@ -626,6 +670,10 @@ export default function CityAdminPage() {
         return
       }
 
+      // Find the equipment in our local state
+      const globalEquipmentId = borrowRecord.global_equipment_id || borrowRecord.equipment_id
+      const equipmentItem = equipment.find(eq => eq.id === globalEquipmentId || eq.global_equipment_id === globalEquipmentId)
+
       if (approve) {
         // Approve return - update status to 'returned' and restore quantity
         const { error: updateError } = await supabase
@@ -635,24 +683,20 @@ export default function CityAdminPage() {
 
         if (updateError) throw updateError
 
-        // Restore equipment quantity and update status if needed
-        const equipmentItem = equipment.find(eq => eq.id === borrowRecord.equipment_id)
+        // Restore equipment quantity using city_equipment API
         if (equipmentItem) {
-          const updateData: any = {
-            quantity: equipmentItem.quantity + 1
+          const response = await fetch('/api/city-equipment', {
+            method: 'PUT',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({
+              id: equipmentItem.id,
+              quantity: equipmentItem.quantity + 1
+            })
+          })
+
+          if (!response.ok) {
+            console.error('Failed to update quantity')
           }
-
-          // Update equipment status if user reported it as faulty
-          if (borrowRecord.equipment_status === 'faulty') {
-            updateData.equipment_status = 'faulty'
-          }
-
-          const { error: qtyUpdateError } = await supabase
-            .from('equipment')
-            .update(updateData)
-            .eq('id', borrowRecord.equipment_id)
-
-          if (qtyUpdateError) throw qtyUpdateError
         }
 
         alert('ההחזרה אושרה והציוד חזר למלאי!')
@@ -845,6 +889,7 @@ export default function CityAdminPage() {
 
       alert('הפרטים עודכנו בהצלחה!')
       setIsEditingLocation(false)
+      setIsCityDetailsExpanded(false) // Collapse the form after successful save
       fetchCity()
       setLoading(false)
     } catch (error) {
@@ -872,51 +917,53 @@ export default function CityAdminPage() {
 
     setLoading(true)
     try {
-      // Fetch equipment from selected city
-      const { data: sourceEquipment, error: fetchError } = await supabase
-        .from('equipment')
-        .select('name, quantity, equipment_status, is_consumable')
-        .eq('city_id', selectedCityToCopy)
+      // Fetch equipment from selected city using new structure
+      const response = await fetch(`/api/city-equipment?cityId=${selectedCityToCopy}`)
+      const result = await response.json()
 
-      if (fetchError) throw fetchError
+      if (!response.ok) throw new Error(result.error)
 
-      if (!sourceEquipment || sourceEquipment.length === 0) {
+      const sourceEquipment = result.equipment || []
+
+      if (sourceEquipment.length === 0) {
         alert('העיר שנבחרה אין בה ציוד להעתקה')
         setLoading(false)
         return
       }
 
-      // Get existing equipment names in current city to avoid duplicates
-      const existingNames = equipment.map(e => e.name.toLowerCase())
+      // Get existing global_equipment_ids in current city to avoid duplicates
+      const existingGlobalIds = equipment.map(e => e.global_equipment_id)
 
       // Filter out equipment that already exists
-      const newEquipment = sourceEquipment.filter(
-        item => !existingNames.includes(item.name.toLowerCase())
+      const newEquipmentItems = sourceEquipment.filter(
+        (item: any) => !existingGlobalIds.includes(item.global_equipment_id)
       )
 
-      if (newEquipment.length === 0) {
+      if (newEquipmentItems.length === 0) {
         alert('כל הציוד מהעיר שנבחרה כבר קיים בעיר שלך')
         setLoading(false)
         return
       }
 
-      // Prepare equipment data with current city_id
-      const equipmentToInsert = newEquipment.map(item => ({
-        name: item.name,
-        quantity: item.quantity,
-        equipment_status: item.equipment_status || 'working',
-        is_consumable: item.is_consumable || false,
-        city_id: cityId
-      }))
+      // Add each equipment item to this city
+      let successCount = 0
+      for (const item of newEquipmentItems) {
+        const addResponse = await fetch('/api/city-equipment', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({
+            city_id: cityId,
+            global_equipment_id: item.global_equipment_id,
+            quantity: item.quantity
+          })
+        })
 
-      // Insert new equipment
-      const { error: insertError } = await supabase
-        .from('equipment')
-        .insert(equipmentToInsert)
+        if (addResponse.ok) {
+          successCount++
+        }
+      }
 
-      if (insertError) throw insertError
-
-      alert(`הצלחה! ${newEquipment.length} פריטי ציוד הועתקו בהצלחה`)
+      alert(`הצלחה! ${successCount} פריטי ציוד הועתקו בהצלחה`)
       setShowCopyEquipment(false)
       setSelectedCityToCopy('')
       fetchEquipment()
@@ -2435,20 +2482,39 @@ export default function CityAdminPage() {
                             <button
                               type="button"
                               disabled={!canEdit || (city.max_request_distance_km ?? 5) <= 0}
-                              onClick={async () => {
+                              onClick={() => {
                                 if (!canEdit) return
                                 const currentValue = city.max_request_distance_km ?? 5
                                 const newValue = Math.max(0, currentValue - 1)
                                 setCity({ ...city, max_request_distance_km: newValue })
-                                try {
-                                  const response = await fetch('/api/city/update-details', {
-                                    method: 'POST',
-                                    headers: { 'Content-Type': 'application/json' },
-                                    credentials: 'include',
-                                    body: JSON.stringify({ cityId, max_request_distance_km: newValue })
-                                  })
-                                  if (!response.ok) fetchCity()
-                                } catch { fetchCity() }
+                                setDistanceSaveStatus('idle')
+
+                                // Clear existing timer
+                                if (distanceSaveTimer) clearTimeout(distanceSaveTimer)
+
+                                // Set new debounced save after 2 seconds
+                                const timer = setTimeout(async () => {
+                                  setDistanceSaveStatus('saving')
+                                  try {
+                                    const response = await fetch('/api/city/update-details', {
+                                      method: 'POST',
+                                      headers: { 'Content-Type': 'application/json' },
+                                      credentials: 'include',
+                                      body: JSON.stringify({ cityId, max_request_distance_km: newValue })
+                                    })
+                                    if (response.ok) {
+                                      setDistanceSaveStatus('saved')
+                                      setTimeout(() => setDistanceSaveStatus('idle'), 2000)
+                                    } else {
+                                      setDistanceSaveStatus('error')
+                                      fetchCity()
+                                    }
+                                  } catch {
+                                    setDistanceSaveStatus('error')
+                                    fetchCity()
+                                  }
+                                }, 2000)
+                                setDistanceSaveTimer(timer)
                               }}
                               className="w-12 h-12 flex items-center justify-center text-2xl font-bold text-gray-600 hover:bg-gray-100 transition-colors disabled:opacity-30 disabled:cursor-not-allowed"
                             >
@@ -2460,20 +2526,39 @@ export default function CityAdminPage() {
                             <button
                               type="button"
                               disabled={!canEdit}
-                              onClick={async () => {
+                              onClick={() => {
                                 if (!canEdit) return
                                 const currentValue = city.max_request_distance_km ?? 5
                                 const newValue = currentValue + 1
                                 setCity({ ...city, max_request_distance_km: newValue })
-                                try {
-                                  const response = await fetch('/api/city/update-details', {
-                                    method: 'POST',
-                                    headers: { 'Content-Type': 'application/json' },
-                                    credentials: 'include',
-                                    body: JSON.stringify({ cityId, max_request_distance_km: newValue })
-                                  })
-                                  if (!response.ok) fetchCity()
-                                } catch { fetchCity() }
+                                setDistanceSaveStatus('idle')
+
+                                // Clear existing timer
+                                if (distanceSaveTimer) clearTimeout(distanceSaveTimer)
+
+                                // Set new debounced save after 2 seconds
+                                const timer = setTimeout(async () => {
+                                  setDistanceSaveStatus('saving')
+                                  try {
+                                    const response = await fetch('/api/city/update-details', {
+                                      method: 'POST',
+                                      headers: { 'Content-Type': 'application/json' },
+                                      credentials: 'include',
+                                      body: JSON.stringify({ cityId, max_request_distance_km: newValue })
+                                    })
+                                    if (response.ok) {
+                                      setDistanceSaveStatus('saved')
+                                      setTimeout(() => setDistanceSaveStatus('idle'), 2000)
+                                    } else {
+                                      setDistanceSaveStatus('error')
+                                      fetchCity()
+                                    }
+                                  } catch {
+                                    setDistanceSaveStatus('error')
+                                    fetchCity()
+                                  }
+                                }, 2000)
+                                setDistanceSaveTimer(timer)
                               }}
                               className="w-12 h-12 flex items-center justify-center text-2xl font-bold text-gray-600 hover:bg-gray-100 transition-colors disabled:opacity-30 disabled:cursor-not-allowed"
                             >
@@ -2490,6 +2575,18 @@ export default function CityAdminPage() {
                               ? `מוגבל ל-${city.max_request_distance_km ?? 5} ק"מ`
                               : 'ללא הגבלה'}
                           </span>
+                          {/* Save Status Indicator */}
+                          {distanceSaveStatus !== 'idle' && (
+                            <span className={`text-sm px-3 py-1 rounded-full font-semibold ${
+                              distanceSaveStatus === 'saving' ? 'bg-yellow-100 text-yellow-700' :
+                              distanceSaveStatus === 'saved' ? 'bg-green-100 text-green-700' :
+                              'bg-red-100 text-red-700'
+                            }`}>
+                              {distanceSaveStatus === 'saving' ? '⏳ שומר...' :
+                               distanceSaveStatus === 'saved' ? '✓ נשמר' :
+                               '✗ שגיאה'}
+                            </span>
+                          )}
                         </div>
                         <p className="text-xs text-amber-600 mt-1">
                           💡 לצורך מניעת ספאם, המערכת תבקש מהמשתמש לאשר גישה למיקום לפני שליחת בקשה
@@ -2499,115 +2596,74 @@ export default function CityAdminPage() {
                   )}
                 </div>
 
-                {/* Hide Navigation Toggle */}
-                <div className="bg-gradient-to-r from-amber-50 to-orange-50 rounded-xl p-6 border-2 border-amber-200">
-                  <h3 className="text-lg font-bold text-gray-800 mb-4">🗺️ הצגת ניווט בדף השאלות</h3>
-                  <div className="flex items-center justify-between p-4 bg-white rounded-xl">
-                    <div>
-                      <div className="font-semibold text-gray-800">הסתר כפתורי ניווט (Google Maps / Waze)</div>
-                      <div className="text-sm text-gray-500">הסתר אפשרויות ניווט מדף השאלות - פרטי המנהלים יישארו גלויים</div>
-                    </div>
-                    <button
-                      onClick={async () => {
-                        // Check permissions
-                        if (!canEdit) {
-                          alert('אין לך הרשאה לבצע פעולה זו - נדרשת הרשאת עריכה מלאה')
-                          return
-                        }
-
-                        const newValue = !city?.hide_navigation
-                        console.log('🔄 Toggling hide_navigation:', { current: city?.hide_navigation, new: newValue, cityId })
-
-                        // Update local state immediately for instant feedback
-                        setCity({ ...city!, hide_navigation: newValue })
-
-                        try {
-                          const response = await fetch('/api/city/update-details', {
-                            method: 'POST',
-                            headers: { 'Content-Type': 'application/json' },
-                            credentials: 'include',
-                            body: JSON.stringify({
-                              cityId,
-                              hide_navigation: newValue
-                            })
-                          })
-
-                          const data = await response.json()
-                          console.log('📡 Server response:', { status: response.status, data })
-
-                          if (response.ok) {
-                            alert(newValue ? '✅ ניווט הוסתר' : '✅ ניווט מוצג')
-                            fetchCity() // Refresh to ensure sync
-                          } else {
-                            // Revert on error
-                            console.error('❌ Update failed:', data)
-                            alert(`שגיאה בעדכון: ${data.error || 'שגיאה לא ידועה'}`)
-                            fetchCity()
+                {/* Navigation & Push Notifications - Side by Side */}
+                <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                  {/* Hide Navigation Toggle */}
+                  <div className="bg-gradient-to-r from-amber-50 to-orange-50 rounded-xl p-4 border-2 border-amber-200">
+                    <div className="flex items-center justify-between">
+                      <div className="flex-1 min-w-0">
+                        <div className="font-semibold text-gray-800 text-sm">🗺️ הסתר ניווט</div>
+                        <div className="text-xs text-gray-500 truncate">הסתר Google Maps / Waze</div>
+                      </div>
+                      <button
+                        onClick={async () => {
+                          if (!canEdit) {
+                            alert('אין לך הרשאה לבצע פעולה זו')
+                            return
                           }
-                        } catch (error) {
-                          console.error('❌ Error updating hide_navigation:', error)
-                          alert('שגיאה בעדכון')
-                          fetchCity() // Revert to server value
-                        }
-                      }}
-                      className={`px-6 py-2 rounded-xl font-semibold transition-all ${
-                        city?.hide_navigation
-                          ? 'bg-green-500 text-white'
-                          : 'bg-gray-300 text-gray-600'
-                      }`}
-                    >
-                      {city?.hide_navigation ? 'ON' : 'OFF'}
-                    </button>
+                          const newValue = !city?.hide_navigation
+                          setCity({ ...city!, hide_navigation: newValue })
+                          try {
+                            const response = await fetch('/api/city/update-details', {
+                              method: 'POST',
+                              headers: { 'Content-Type': 'application/json' },
+                              credentials: 'include',
+                              body: JSON.stringify({ cityId, hide_navigation: newValue })
+                            })
+                            if (!response.ok) fetchCity()
+                          } catch { fetchCity() }
+                        }}
+                        className={`flex-shrink-0 px-4 py-2 rounded-xl font-semibold text-sm transition-all ${
+                          city?.hide_navigation
+                            ? 'bg-green-500 text-white'
+                            : 'bg-gray-300 text-gray-600'
+                        }`}
+                      >
+                        {city?.hide_navigation ? 'ON' : 'OFF'}
+                      </button>
+                    </div>
                   </div>
-                </div>
 
-                {/* Enable Push Notifications Toggle */}
-                <div className="bg-gradient-to-r from-blue-50 to-indigo-50 rounded-xl p-6 border-2 border-blue-200">
-                  <h3 className="text-lg font-bold text-gray-800 mb-4">🔔 התראות דחיפה (Push Notifications)</h3>
-                  <div className="flex items-center justify-between p-4 bg-white rounded-xl">
-                    <div>
-                      <div className="font-semibold text-gray-800">אפשר התראות דחיפה עבור העיר</div>
-                      <div className="text-sm text-gray-500">כאשר מופעל, מנהלי העיר יוכלו להירשם להתראות על בקשות חדשות</div>
-                    </div>
-                    <button
-                      onClick={async () => {
-                        const newValue = !city?.enable_push_notifications
-
-                        // Update local state immediately for instant feedback
-                        setCity({ ...city!, enable_push_notifications: newValue })
-
-                        try {
-                          const response = await fetch('/api/city/update-details', {
-                            method: 'POST',
-                            headers: { 'Content-Type': 'application/json' },
-                            credentials: 'include',
-                            body: JSON.stringify({
-                              cityId,
-                              enable_push_notifications: newValue
+                  {/* Enable Push Notifications Toggle */}
+                  <div className="bg-gradient-to-r from-blue-50 to-indigo-50 rounded-xl p-4 border-2 border-blue-200">
+                    <div className="flex items-center justify-between">
+                      <div className="flex-1 min-w-0">
+                        <div className="font-semibold text-gray-800 text-sm">🔔 התראות דחיפה</div>
+                        <div className="text-xs text-gray-500 truncate">התראות על בקשות חדשות</div>
+                      </div>
+                      <button
+                        onClick={async () => {
+                          const newValue = !city?.enable_push_notifications
+                          setCity({ ...city!, enable_push_notifications: newValue })
+                          try {
+                            const response = await fetch('/api/city/update-details', {
+                              method: 'POST',
+                              headers: { 'Content-Type': 'application/json' },
+                              credentials: 'include',
+                              body: JSON.stringify({ cityId, enable_push_notifications: newValue })
                             })
-                          })
-
-                          if (response.ok) {
-                            alert(newValue ? '✅ התראות הופעלו' : '✅ התראות כובו')
-                          } else {
-                            // Revert on error
-                            alert('שגיאה בעדכון')
-                            fetchCity()
-                          }
-                        } catch (error) {
-                          console.error('Error updating enable_push_notifications:', error)
-                          alert('שגיאה בעדכון')
-                          fetchCity() // Revert to server value
-                        }
-                      }}
-                      className={`px-6 py-2 rounded-xl font-semibold transition-all ${
-                        city?.enable_push_notifications
-                          ? 'bg-green-500 text-white'
-                          : 'bg-gray-300 text-gray-600'
-                      }`}
-                    >
-                      {city?.enable_push_notifications ? 'ON' : 'OFF'}
-                    </button>
+                            if (!response.ok) fetchCity()
+                          } catch { fetchCity() }
+                        }}
+                        className={`flex-shrink-0 px-4 py-2 rounded-xl font-semibold text-sm transition-all ${
+                          city?.enable_push_notifications
+                            ? 'bg-green-500 text-white'
+                            : 'bg-gray-300 text-gray-600'
+                        }`}
+                      >
+                        {city?.enable_push_notifications ? 'ON' : 'OFF'}
+                      </button>
+                    </div>
                   </div>
                 </div>
 

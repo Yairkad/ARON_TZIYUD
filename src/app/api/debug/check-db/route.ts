@@ -64,20 +64,40 @@ export async function GET() {
       }
     }
 
-    // Check 3: Equipment table
+    // Check 3: City Equipment table (new structure)
     try {
-      const { data: equipment, error: equipmentError } = await supabase
-        .from('equipment')
-        .select('id, name, city_id, quantity')
+      const { data: cityEquipment, error: ceError } = await supabase
+        .from('city_equipment')
+        .select('id, city_id, global_equipment_id, quantity')
         .limit(5)
 
-      results.checks.equipment = {
-        success: !equipmentError,
-        error: equipmentError?.message,
-        count: equipment?.length || 0
+      results.checks.cityEquipment = {
+        success: !ceError,
+        error: ceError?.message,
+        count: cityEquipment?.length || 0
       }
     } catch (error: any) {
-      results.checks.equipment = {
+      results.checks.cityEquipment = {
+        success: false,
+        error: error.message
+      }
+    }
+
+    // Check 3b: Global Equipment Pool
+    try {
+      const { data: globalEquipment, error: geError } = await supabase
+        .from('global_equipment_pool')
+        .select('id, name, status')
+        .eq('status', 'active')
+        .limit(5)
+
+      results.checks.globalEquipment = {
+        success: !geError,
+        error: geError?.message,
+        count: globalEquipment?.length || 0
+      }
+    } catch (error: any) {
+      results.checks.globalEquipment = {
         success: false,
         error: error.message
       }
@@ -135,7 +155,8 @@ export async function GET() {
       hasSuperAdmin: results.checks.superAdmin?.exists || false,
       totalUsers: results.checks.users?.count || 0,
       totalCities: results.checks.cities?.count || 0,
-      totalEquipment: results.checks.equipment?.count || 0
+      totalCityEquipment: results.checks.cityEquipment?.count || 0,
+      totalGlobalEquipment: results.checks.globalEquipment?.count || 0
     }
 
     return NextResponse.json({

@@ -25,10 +25,7 @@ export async function POST(request: NextRequest) {
       .select(`
         *,
         city:cities(*),
-        items:request_items(
-          *,
-          equipment:equipment(*)
-        )
+        items:request_items(*)
       `)
       .eq('token_hash', tokenHash)
       .single()
@@ -58,20 +55,42 @@ export async function POST(request: NextRequest) {
 
     // Process each equipment item
     for (const item of equipmentRequest.items) {
+      // The equipment_id in request_items is now global_equipment_id
+      const globalEquipmentId = item.global_equipment_id || item.equipment_id
+
+      // Get city_equipment for this item
+      const { data: cityEquipment, error: ceError } = await supabase
+        .from('city_equipment')
+        .select(`
+          *,
+          global_equipment:global_equipment_pool(*)
+        `)
+        .eq('global_equipment_id', globalEquipmentId)
+        .eq('city_id', equipmentRequest.city_id)
+        .single()
+
+      if (ceError || !cityEquipment) {
+        console.error('City equipment not found:', globalEquipmentId, ceError)
+        return NextResponse.json(
+          { error: 'ציוד לא נמצא בעיר' },
+          { status: 404 }
+        )
+      }
+
       // 1. Decrease equipment inventory
-      const newQuantity = item.equipment.quantity - item.quantity
+      const newQuantity = cityEquipment.quantity - item.quantity
 
       if (newQuantity < 0) {
         return NextResponse.json(
-          { error: `אין מספיק יחידות של ${item.equipment.name}` },
+          { error: `אין מספיק יחידות של ${cityEquipment.global_equipment?.name || 'ציוד'}` },
           { status: 400 }
         )
       }
 
       const { error: updateError } = await supabase
-        .from('equipment')
+        .from('city_equipment')
         .update({ quantity: newQuantity })
-        .eq('id', item.equipment_id)
+        .eq('id', cityEquipment.id)
 
       if (updateError) {
         console.error('Error updating equipment:', updateError)
@@ -84,8 +103,6 @@ export async function POST(request: NextRequest) {
       // 2. Create borrow_history record
       console.log('Creating borrow_history with city_id:', equipmentRequest.city_id)
 
-      // For consumable items, auto-return immediately
-      const isConsumable = item.equipment.is_consumable
       const currentTime = new Date().toISOString()
 
       const { error: historyError } = await supabase
@@ -93,12 +110,12 @@ export async function POST(request: NextRequest) {
         .insert({
           name: equipmentRequest.requester_name,
           phone: equipmentRequest.requester_phone,
-          equipment_id: item.equipment_id,
-          equipment_name: item.equipment.name,
+          equipment_id: globalEquipmentId, // Keep for backwards compatibility
+          global_equipment_id: globalEquipmentId, // New field
+          equipment_name: cityEquipment.global_equipment?.name || '',
           city_id: equipmentRequest.city_id,
-          status: isConsumable ? 'returned' : 'borrowed',
+          status: 'borrowed',
           borrow_date: currentTime,
-          return_date: isConsumable ? currentTime : null,
           equipment_status: 'working'
         })
 
@@ -107,8 +124,8 @@ export async function POST(request: NextRequest) {
         console.error('Failed data:', {
           name: equipmentRequest.requester_name,
           phone: equipmentRequest.requester_phone,
-          equipment_id: item.equipment_id,
-          equipment_name: item.equipment.name,
+          equipment_id: globalEquipmentId,
+          equipment_name: cityEquipment.global_equipment?.name,
           city_id: equipmentRequest.city_id
         })
         return NextResponse.json(

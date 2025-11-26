@@ -45,24 +45,14 @@ export async function POST(request: NextRequest) {
       .single()
 
     if (eqError || !cityEquipment) {
-      // Fallback: try old equipment table
-      const { data: oldEquipment, error: oldEqError } = await supabaseServer
-        .from('equipment')
-        .select('city_id')
-        .eq('id', body.items[0].equipment_id)
-        .single()
-
-      if (oldEqError || !oldEquipment) {
-        console.error('Equipment not found:', body.items[0].equipment_id, eqError, oldEqError)
-        return NextResponse.json(
-          { error: 'ציוד לא נמצא' },
-          { status: 404 }
-        )
-      }
-      var cityId = oldEquipment.city_id
-    } else {
-      var cityId = cityEquipment.city_id
+      console.error('Equipment not found:', body.items[0].equipment_id, eqError)
+      return NextResponse.json(
+        { error: 'ציוד לא נמצא' },
+        { status: 404 }
+      )
     }
+
+    const cityId = cityEquipment.city_id
 
     // Get city settings
     const { data: city, error: cityError } = await supabaseServer
