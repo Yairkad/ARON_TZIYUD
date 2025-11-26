@@ -80,6 +80,7 @@ export interface Equipment {
   image_url?: string | null
   display_order?: number
   city_equipment_id?: string  // ID from city_equipment table (for quantity updates)
+  global_equipment_id?: string  // ID from global_equipment_pool (for lookups)
   created_at: string
   updated_at: string
 }
