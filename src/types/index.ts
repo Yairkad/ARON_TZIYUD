@@ -23,6 +23,7 @@ export interface City {
   hide_navigation?: boolean
   enable_push_notifications?: boolean
   admin_emails?: string[] | null
+  max_request_distance_km?: number | null  // Maximum distance for requests (km). NULL or 0 = no limit
   created_at: string
   updated_at: string
 }
@@ -184,6 +185,8 @@ export interface CreateRequestForm {
   requester_name: string
   requester_phone: string
   call_id?: string
+  requester_lat?: number  // User's location for distance verification
+  requester_lng?: number
   items: {
     equipment_id: string
     quantity: number

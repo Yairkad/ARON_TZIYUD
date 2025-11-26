@@ -2424,6 +2424,71 @@ export default function CityAdminPage() {
                           {city.require_call_id ? 'ON' : 'OFF'}
                         </button>
                       </div>
+
+                      {/* Max Request Distance */}
+                      <div className="space-y-2">
+                        <label className={`block text-sm font-semibold ${!canEdit ? 'text-gray-400' : 'text-gray-700'}`}>📍 הגבלת טווח לבקשות (ק"מ)</label>
+                        <p className="text-xs text-gray-500 mb-2">הגדר טווח מקסימלי שבו המשתמש צריך להימצא מהארון כדי לשלוח בקשה. הזן 0 לביטול הגבלה.</p>
+                        <div className="flex items-center gap-3">
+                          <Input
+                            type="number"
+                            min="0"
+                            step="0.5"
+                            value={city.max_request_distance_km ?? 5}
+                            disabled={!canEdit}
+                            onChange={(e) => {
+                              if (!canEdit) {
+                                alert('אין לך הרשאה לערוך - נדרשת הרשאת עריכה מלאה')
+                                return
+                              }
+                              const value = parseFloat(e.target.value) || 0
+                              setCity({ ...city, max_request_distance_km: value })
+                            }}
+                            onBlur={async (e) => {
+                              if (!canEdit) return
+                              const value = parseFloat(e.target.value) || 0
+                              try {
+                                const response = await fetch('/api/city/update-details', {
+                                  method: 'POST',
+                                  headers: { 'Content-Type': 'application/json' },
+                                  credentials: 'include',
+                                  body: JSON.stringify({
+                                    cityId,
+                                    max_request_distance_km: value
+                                  })
+                                })
+
+                                if (response.ok) {
+                                  alert(value > 0 ? `✅ טווח הוגבל ל-${value} ק"מ` : '✅ הגבלת טווח בוטלה')
+                                  fetchCity()
+                                } else {
+                                  alert('שגיאה בעדכון')
+                                  fetchCity()
+                                }
+                              } catch (error) {
+                                console.error('Error updating max_request_distance_km:', error)
+                                alert('שגיאה בעדכון')
+                                fetchCity()
+                              }
+                            }}
+                            placeholder="5"
+                            className="w-24 h-12 border-2 border-gray-200 rounded-xl text-center"
+                          />
+                          <span className="text-gray-600">ק"מ</span>
+                          <span className={`text-sm px-3 py-1 rounded-full ${
+                            (city.max_request_distance_km ?? 5) > 0
+                              ? 'bg-blue-100 text-blue-700'
+                              : 'bg-gray-100 text-gray-600'
+                          }`}>
+                            {(city.max_request_distance_km ?? 5) > 0
+                              ? `מוגבל ל-${city.max_request_distance_km ?? 5} ק"מ`
+                              : 'ללא הגבלה'}
+                          </span>
+                        </div>
+                        <p className="text-xs text-amber-600 mt-1">
+                          💡 לצורך מניעת ספאם, המערכת תבקש מהמשתמש לאשר גישה למיקום לפני שליחת בקשה
+                        </p>
+                      </div>
                     </div>
                   )}
                 </div>

@@ -366,6 +366,54 @@ export default function CityPage() {
     setLoading(true)
 
     try {
+      // Check if city has distance limit and get user location if needed
+      let userLocation: { lat: number; lng: number } | null = null
+      const maxDistance = city?.max_request_distance_km
+
+      if (maxDistance && maxDistance > 0) {
+        // City has distance limit - need to get user location
+        if (!navigator.geolocation) {
+          throw new Error('הדפדפן שלך לא תומך בשירותי מיקום. אנא נסה דפדפן אחר.')
+        }
+
+        // Show explanation and request location
+        const confirmed = window.confirm(
+          `לצורך מניעת ספאם ובקשות מיותרות, המערכת מוודאת שאתה בטווח של ${maxDistance} ק"מ מהארון.\n\nהאם לאשר גישה למיקום?`
+        )
+
+        if (!confirmed) {
+          throw new Error('יש לאשר גישה למיקום כדי לשלוח בקשה')
+        }
+
+        // Get current position
+        userLocation = await new Promise<{ lat: number; lng: number }>((resolve, reject) => {
+          navigator.geolocation.getCurrentPosition(
+            (position) => {
+              resolve({
+                lat: position.coords.latitude,
+                lng: position.coords.longitude
+              })
+            },
+            (error) => {
+              let message = 'לא ניתן לקבל את המיקום שלך.'
+              if (error.code === error.PERMISSION_DENIED) {
+                message = 'גישה למיקום נדחתה. אנא אשר גישה למיקום בהגדרות הדפדפן ונסה שוב.'
+              } else if (error.code === error.POSITION_UNAVAILABLE) {
+                message = 'מיקום לא זמין. אנא ודא ששירותי המיקום פעילים.'
+              } else if (error.code === error.TIMEOUT) {
+                message = 'תם הזמן לקבלת מיקום. אנא נסה שוב.'
+              }
+              reject(new Error(message))
+            },
+            {
+              enableHighAccuracy: true,
+              timeout: 10000,
+              maximumAge: 60000
+            }
+          )
+        })
+      }
+
       const items = Array.from(selectedItems).map(equipmentId => ({
         equipment_id: equipmentId,
         quantity: itemQuantities[equipmentId] || 1
@@ -378,6 +426,8 @@ export default function CityPage() {
           requester_name: requestForm.requester_name,
           requester_phone: requestForm.requester_phone,
           call_id: requestForm.call_id || undefined,
+          requester_lat: userLocation?.lat,
+          requester_lng: userLocation?.lng,
           items
         })
       })

@@ -28,7 +28,8 @@ export async function POST(request: NextRequest) {
       cabinet_code,
       require_call_id,
       hide_navigation,
-      enable_push_notifications
+      enable_push_notifications,
+      max_request_distance_km
     } = body
 
     if (!cityId) {
@@ -148,6 +149,9 @@ export async function POST(request: NextRequest) {
     if (enable_push_notifications !== undefined) {
       updateData.enable_push_notifications = enable_push_notifications
     }
+    if (max_request_distance_km !== undefined) {
+      updateData.max_request_distance_km = max_request_distance_km
+    }
 
     // עדכון העיר
     const { error: updateError } = await supabase
@@ -204,7 +208,8 @@ export async function POST(request: NextRequest) {
     if (updateData.cabinet_code !== undefined && city.cabinet_code !== updateData.cabinet_code) changedFields.push('קוד ארון')
     if (updateData.require_call_id !== undefined && city.require_call_id !== updateData.require_call_id) changedFields.push('דרישת מזהה קריאה')
     if (updateData.hide_navigation !== undefined && city.hide_navigation !== updateData.hide_navigation) changedFields.push('הצגת ניווט')
-    if (updateData.enable_push_notifications !== undefined && city.enable_push_notifications !== updateData.enable_push_notifications) changedFields.push('הת ראות דחיפה')
+    if (updateData.enable_push_notifications !== undefined && city.enable_push_notifications !== updateData.enable_push_notifications) changedFields.push('התראות דחיפה')
+    if (updateData.max_request_distance_km !== undefined && city.max_request_distance_km !== updateData.max_request_distance_km) changedFields.push('טווח מרחק לבקשות')
 
     if (changedFields.length > 0) {
       const { error: notificationError } = await supabase

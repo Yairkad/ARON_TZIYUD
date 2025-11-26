@@ -4,6 +4,22 @@ import { createRequestToken } from '@/lib/token'
 import { CreateRequestForm } from '@/types'
 
 /**
+ * Calculate distance between two points using Haversine formula
+ * @returns distance in kilometers
+ */
+function calculateDistance(lat1: number, lng1: number, lat2: number, lng2: number): number {
+  const R = 6371 // Earth's radius in km
+  const dLat = (lat2 - lat1) * Math.PI / 180
+  const dLng = (lng2 - lng1) * Math.PI / 180
+  const a =
+    Math.sin(dLat / 2) * Math.sin(dLat / 2) +
+    Math.cos(lat1 * Math.PI / 180) * Math.cos(lat2 * Math.PI / 180) *
+    Math.sin(dLng / 2) * Math.sin(dLng / 2)
+  const c = 2 * Math.atan2(Math.sqrt(a), Math.sqrt(1 - a))
+  return R * c
+}
+
+/**
  * POST /api/requests/create
  * Creates a new equipment request with a secure token
  */
@@ -38,7 +54,7 @@ export async function POST(request: NextRequest) {
     // Get city settings
     const { data: city, error: cityError } = await supabaseServer
       .from('cities')
-      .select('require_call_id, request_mode')
+      .select('require_call_id, request_mode, max_request_distance_km, token_lat, token_lng')
       .eq('id', cityId)
       .single()
 
@@ -63,6 +79,43 @@ export async function POST(request: NextRequest) {
         { error: 'עיר זו פועלת במצב השאלה ישיר' },
         { status: 400 }
       )
+    }
+
+    // Check distance limit if configured
+    const maxDistance = city.max_request_distance_km
+    if (maxDistance && maxDistance > 0) {
+      // Distance check is enabled for this city
+      if (!body.requester_lat || !body.requester_lng) {
+        return NextResponse.json(
+          { error: 'נדרש אישור מיקום לשליחת בקשה. אנא אשר גישה למיקום ונסה שוב.' },
+          { status: 400 }
+        )
+      }
+
+      if (!city.token_lat || !city.token_lng) {
+        // City doesn't have location set, skip distance check
+        console.log(`City ${cityId} has distance limit but no token location set, skipping check`)
+      } else {
+        const distance = calculateDistance(
+          body.requester_lat,
+          body.requester_lng,
+          city.token_lat,
+          city.token_lng
+        )
+
+        console.log(`Distance check: user at (${body.requester_lat}, ${body.requester_lng}), cabinet at (${city.token_lat}, ${city.token_lng}), distance: ${distance.toFixed(2)}km, max: ${maxDistance}km`)
+
+        if (distance > maxDistance) {
+          return NextResponse.json(
+            {
+              error: `אתה נמצא רחוק מדי מהארון (${distance.toFixed(1)} ק"מ). הטווח המקסימלי לבקשה הוא ${maxDistance} ק"מ.`,
+              distance: distance.toFixed(2),
+              maxDistance
+            },
+            { status: 400 }
+          )
+        }
+      }
     }
 
     // Validate all items - OPTIMIZED: Batch query instead of N+1
