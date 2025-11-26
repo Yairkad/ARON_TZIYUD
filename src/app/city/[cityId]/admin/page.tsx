@@ -1361,7 +1361,7 @@ export default function CityAdminPage() {
                         className="w-full h-12 border-2 border-gray-200 rounded-xl focus:border-blue-500 transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
                       />
                       <p className="text-xs text-gray-500 mt-1 mr-2">
-                        💡 טיפ: העלה תמונה ל-Google Drive, לחץ ימין → שתף → העתק קישור
+                        💡 העלה תמונה ל-Google Drive → שתף → העתק קישור → <a href="/tools/google-drive-url-converter.html" target="_blank" className="text-blue-500 hover:underline">המר לקישור ישיר</a>
                       </p>
                     </div>
 
@@ -1591,7 +1591,7 @@ export default function CityAdminPage() {
                             </select>
                           </div>
                           <div>
-                            <label className="block text-xs font-medium text-gray-600 mb-1">🖼️ כתובת URL של תמונה</label>
+                            <label className="block text-xs font-medium text-gray-600 mb-1">🖼️ כתובת URL של תמונה <a href="/tools/google-drive-url-converter.html" target="_blank" className="text-blue-500 hover:underline">(ממיר)</a></label>
                             <Input
                               value={editingEquipment.image_url || ''}
                               onChange={(e) => setEditingEquipment({ ...editingEquipment, image_url: e.target.value })}
@@ -1869,7 +1869,7 @@ export default function CityAdminPage() {
                                   className="w-full h-12 border-2 border-blue-400 rounded-lg text-sm bg-white"
                                 />
                                 <p className="text-xs text-gray-600">
-                                  💡 טיפ: העלה תמונה ל-Google Drive, לחץ ימין → שתף → העתק קישור → השתמש בכלי ההמרה
+                                  💡 העלה תמונה ל-Google Drive → שתף → העתק קישור → <a href="/tools/google-drive-url-converter.html" target="_blank" className="text-blue-500 hover:underline">המר לקישור ישיר</a>
                                 </p>
                               </div>
                             </td>
