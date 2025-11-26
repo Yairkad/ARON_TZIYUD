@@ -2428,52 +2428,58 @@ export default function CityAdminPage() {
                       {/* Max Request Distance */}
                       <div className="space-y-2">
                         <label className={`block text-sm font-semibold ${!canEdit ? 'text-gray-400' : 'text-gray-700'}`}>📍 הגבלת טווח לבקשות (ק"מ)</label>
-                        <p className="text-xs text-gray-500 mb-2">הגדר טווח מקסימלי שבו המשתמש צריך להימצא מהארון כדי לשלוח בקשה. הזן 0 לביטול הגבלה.</p>
+                        <p className="text-xs text-gray-500 mb-2">הגדר טווח מקסימלי שבו המשתמש צריך להימצא מהארון כדי לשלוח בקשה. הגדר 0 לביטול הגבלה.</p>
                         <div className="flex items-center gap-3">
-                          <Input
-                            type="number"
-                            min="0"
-                            step="0.5"
-                            value={city.max_request_distance_km ?? 5}
-                            disabled={!canEdit}
-                            onChange={(e) => {
-                              if (!canEdit) {
-                                alert('אין לך הרשאה לערוך - נדרשת הרשאת עריכה מלאה')
-                                return
-                              }
-                              const value = parseFloat(e.target.value) || 0
-                              setCity({ ...city, max_request_distance_km: value })
-                            }}
-                            onBlur={async (e) => {
-                              if (!canEdit) return
-                              const value = parseFloat(e.target.value) || 0
-                              try {
-                                const response = await fetch('/api/city/update-details', {
-                                  method: 'POST',
-                                  headers: { 'Content-Type': 'application/json' },
-                                  credentials: 'include',
-                                  body: JSON.stringify({
-                                    cityId,
-                                    max_request_distance_km: value
+                          {/* Stepper Control */}
+                          <div className="flex items-center border-2 border-gray-200 rounded-xl overflow-hidden">
+                            <button
+                              type="button"
+                              disabled={!canEdit || (city.max_request_distance_km ?? 5) <= 0}
+                              onClick={async () => {
+                                if (!canEdit) return
+                                const currentValue = city.max_request_distance_km ?? 5
+                                const newValue = Math.max(0, currentValue - 1)
+                                setCity({ ...city, max_request_distance_km: newValue })
+                                try {
+                                  const response = await fetch('/api/city/update-details', {
+                                    method: 'POST',
+                                    headers: { 'Content-Type': 'application/json' },
+                                    credentials: 'include',
+                                    body: JSON.stringify({ cityId, max_request_distance_km: newValue })
                                   })
-                                })
-
-                                if (response.ok) {
-                                  alert(value > 0 ? `✅ טווח הוגבל ל-${value} ק"מ` : '✅ הגבלת טווח בוטלה')
-                                  fetchCity()
-                                } else {
-                                  alert('שגיאה בעדכון')
-                                  fetchCity()
-                                }
-                              } catch (error) {
-                                console.error('Error updating max_request_distance_km:', error)
-                                alert('שגיאה בעדכון')
-                                fetchCity()
-                              }
-                            }}
-                            placeholder="5"
-                            className="w-24 h-12 border-2 border-gray-200 rounded-xl text-center"
-                          />
+                                  if (!response.ok) fetchCity()
+                                } catch { fetchCity() }
+                              }}
+                              className="w-12 h-12 flex items-center justify-center text-2xl font-bold text-gray-600 hover:bg-gray-100 transition-colors disabled:opacity-30 disabled:cursor-not-allowed"
+                            >
+                              −
+                            </button>
+                            <div className="w-16 h-12 flex items-center justify-center border-x-2 border-gray-200 font-bold text-lg text-gray-800">
+                              {city.max_request_distance_km ?? 5}
+                            </div>
+                            <button
+                              type="button"
+                              disabled={!canEdit}
+                              onClick={async () => {
+                                if (!canEdit) return
+                                const currentValue = city.max_request_distance_km ?? 5
+                                const newValue = currentValue + 1
+                                setCity({ ...city, max_request_distance_km: newValue })
+                                try {
+                                  const response = await fetch('/api/city/update-details', {
+                                    method: 'POST',
+                                    headers: { 'Content-Type': 'application/json' },
+                                    credentials: 'include',
+                                    body: JSON.stringify({ cityId, max_request_distance_km: newValue })
+                                  })
+                                  if (!response.ok) fetchCity()
+                                } catch { fetchCity() }
+                              }}
+                              className="w-12 h-12 flex items-center justify-center text-2xl font-bold text-gray-600 hover:bg-gray-100 transition-colors disabled:opacity-30 disabled:cursor-not-allowed"
+                            >
+                              +
+                            </button>
+                          </div>
                           <span className="text-gray-600">ק"מ</span>
                           <span className={`text-sm px-3 py-1 rounded-full ${
                             (city.max_request_distance_km ?? 5) > 0
