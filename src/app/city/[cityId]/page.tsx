@@ -379,16 +379,7 @@ export default function CityPage() {
           throw new Error('הדפדפן שלך לא תומך בשירותי מיקום. אנא נסה דפדפן אחר.')
         }
 
-        // Show explanation and request location
-        const confirmed = window.confirm(
-          `לצורך מניעת ספאם ובקשות מיותרות, המערכת מוודאת שאתה בטווח של ${maxDistance} ק"מ מהארון.\n\nהאם לאשר גישה למיקום?`
-        )
-
-        if (!confirmed) {
-          throw new Error('יש לאשר גישה למיקום כדי לשלוח בקשה')
-        }
-
-        // Get current position
+        // Get current position - browser will show its own permission dialog
         userLocation = await new Promise<{ lat: number; lng: number }>((resolve, reject) => {
           navigator.geolocation.getCurrentPosition(
             (position) => {
@@ -410,7 +401,7 @@ export default function CityPage() {
             },
             {
               enableHighAccuracy: true,
-              timeout: 10000,
+              timeout: 15000,
               maximumAge: 60000
             }
           )
@@ -1472,16 +1463,23 @@ export default function CityPage() {
                           {/* Quick Submit Button */}
                           {city?.request_mode === 'request' && (
                             <button
-                              onClick={() => {
-                                // Scroll to form and focus
-                                const form = document.getElementById('request-form')
+                              type="button"
+                              disabled={loading}
+                              onClick={(e) => {
+                                e.preventDefault()
+                                // Submit the form directly
+                                const form = document.querySelector('form[class*="space-y-6"]') as HTMLFormElement
                                 if (form) {
-                                  form.scrollIntoView({ behavior: 'smooth', block: 'start' })
+                                  form.requestSubmit()
                                 }
                               }}
-                              className="flex-shrink-0 bg-gradient-to-r from-green-500 to-emerald-500 hover:from-green-600 hover:to-emerald-600 text-white font-bold px-3 py-2 rounded-xl shadow-lg transition-all text-xs"
+                              className="flex-shrink-0 bg-blue-500 hover:bg-blue-600 disabled:bg-blue-300 text-white font-bold h-10 w-10 rounded-xl shadow-lg transition-all flex items-center justify-center"
                             >
-                              📝 שלח
+                              {loading ? (
+                                <span className="animate-spin">⏳</span>
+                              ) : (
+                                <span className="text-lg">➤</span>
+                              )}
                             </button>
                           )}
                         </div>
