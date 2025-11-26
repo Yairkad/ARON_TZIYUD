@@ -53,6 +53,9 @@ export default function CityPage() {
   const [returnImage, setReturnImage] = useState<File | null>(null)
   const [uploadingImage, setUploadingImage] = useState(false)
 
+  // Distance error modal
+  const [distanceError, setDistanceError] = useState<{ distance: number; maxDistance: number } | null>(null)
+
   useEffect(() => {
     if (cityId) {
       fetchCity()
@@ -435,6 +438,15 @@ export default function CityPage() {
       const data = await response.json()
 
       if (!response.ok) {
+        // Check if it's a distance error - show nice modal
+        if (data.distance && data.maxDistance) {
+          setDistanceError({
+            distance: parseFloat(data.distance),
+            maxDistance: data.maxDistance
+          })
+          setLoading(false)
+          return
+        }
         throw new Error(data.error || 'שגיאה ביצירת בקשה')
       }
 
@@ -443,7 +455,12 @@ export default function CityPage() {
 
     } catch (error: any) {
       console.error('Error creating request:', error)
-      alert(error.message || 'אירעה שגיאה ביצירת הבקשה')
+      // Check if error message contains distance info
+      if (error.message && error.message.includes('רחוק מדי')) {
+        alert(error.message)
+      } else {
+        alert(error.message || 'אירעה שגיאה ביצירת הבקשה')
+      }
     } finally {
       setLoading(false)
     }
@@ -701,7 +718,7 @@ export default function CityPage() {
 
         {/* === REQUEST MODE === */}
         {isRequestMode && activeTab === 'borrow' && !requestCreated && (
-          <Card className="border-0 shadow-2xl rounded-2xl overflow-visible bg-white/90 backdrop-blur-sm">
+          <Card id="request-form" className="border-0 shadow-2xl rounded-2xl overflow-visible bg-white/90 backdrop-blur-sm">
             <CardHeader className="bg-gradient-to-r from-blue-50 to-indigo-50 pb-6">
               <CardTitle className="text-2xl font-bold text-gray-800">בקשה חדשה לציוד</CardTitle>
               <CardDescription className="text-gray-600 text-base">מלא את הפרטים ובחר ציוד מהרשימה</CardDescription>
@@ -1435,19 +1452,38 @@ export default function CityPage() {
                   {selectedItems.size > 0 && activeTab === 'borrow' && (
                     <div className="relative sm:hidden pb-2 pt-2">
                       <div className="bg-blue-50 border-2 border-blue-200 rounded-xl p-2">
-                        <p className="text-xs font-semibold text-gray-700 mb-1.5">✅ נבחרו ({selectedItems.size}):</p>
-                        <div className="flex flex-wrap gap-1.5 max-h-20 overflow-y-auto">
-                          {Array.from(selectedItems).map(id => {
-                            const item = equipment.find(eq => eq.id === id)
-                            return (
-                              <div key={id} className="bg-white px-2 py-0.5 rounded-md border border-blue-300 text-xs">
-                                <span className="font-medium">{item?.name}</span>
-                                {item?.is_consumable && (
-                                  <span className="text-blue-600 font-bold mr-1">×{itemQuantities[id] || 1}</span>
-                                )}
-                              </div>
-                            )
-                          })}
+                        <div className="flex items-start justify-between gap-2">
+                          <div className="flex-1">
+                            <p className="text-xs font-semibold text-gray-700 mb-1.5">✅ נבחרו ({selectedItems.size}):</p>
+                            <div className="flex flex-wrap gap-1.5 max-h-20 overflow-y-auto">
+                              {Array.from(selectedItems).map(id => {
+                                const item = equipment.find(eq => eq.id === id)
+                                return (
+                                  <div key={id} className="bg-white px-2 py-0.5 rounded-md border border-blue-300 text-xs">
+                                    <span className="font-medium">{item?.name}</span>
+                                    {item?.is_consumable && (
+                                      <span className="text-blue-600 font-bold mr-1">×{itemQuantities[id] || 1}</span>
+                                    )}
+                                  </div>
+                                )
+                              })}
+                            </div>
+                          </div>
+                          {/* Quick Submit Button */}
+                          {city?.request_mode === 'request' && (
+                            <button
+                              onClick={() => {
+                                // Scroll to form and focus
+                                const form = document.getElementById('request-form')
+                                if (form) {
+                                  form.scrollIntoView({ behavior: 'smooth', block: 'start' })
+                                }
+                              }}
+                              className="flex-shrink-0 bg-gradient-to-r from-green-500 to-emerald-500 hover:from-green-600 hover:to-emerald-600 text-white font-bold px-3 py-2 rounded-xl shadow-lg transition-all text-xs"
+                            >
+                              📝 שלח
+                            </button>
+                          )}
                         </div>
                       </div>
                     </div>
@@ -1605,6 +1641,59 @@ export default function CityPage() {
           requireRecent={true}
           maxAgeMinutes={5}
         />
+      )}
+
+      {/* Distance Error Modal */}
+      {distanceError && (
+        <div className="fixed inset-0 bg-black/50 backdrop-blur-sm z-50 flex items-center justify-center p-4">
+          <div className="bg-white rounded-2xl shadow-2xl max-w-sm w-full overflow-hidden animate-in fade-in zoom-in duration-200">
+            {/* Header */}
+            <div className="bg-gradient-to-r from-orange-500 to-red-500 p-6 text-center">
+              <div className="text-6xl mb-2">📍</div>
+              <h2 className="text-xl font-bold text-white">מצטערים!</h2>
+            </div>
+
+            {/* Content */}
+            <div className="p-6 text-center">
+              <p className="text-gray-800 text-lg font-semibold mb-4">
+                אתה נמצא רחוק מדי מהארון
+              </p>
+
+              <div className="bg-gray-100 rounded-xl p-4 mb-4">
+                <div className="flex justify-between items-center mb-2">
+                  <span className="text-gray-600">המרחק שלך:</span>
+                  <span className="font-bold text-red-600">{distanceError.distance.toFixed(1)} ק"מ</span>
+                </div>
+                <div className="flex justify-between items-center">
+                  <span className="text-gray-600">טווח מותר:</span>
+                  <span className="font-bold text-green-600">{distanceError.maxDistance} ק"מ</span>
+                </div>
+              </div>
+
+              <p className="text-gray-600 text-sm mb-6">
+                נסה לגשת לארון קרוב יותר למיקומך, או פנה למנהל הארון לקבלת סיוע.
+              </p>
+
+              {/* Manager Contact */}
+              {city?.manager1_phone && (
+                <a
+                  href={`tel:${city.manager1_phone}`}
+                  className="flex items-center justify-center gap-2 bg-blue-500 hover:bg-blue-600 text-white font-bold py-3 px-6 rounded-xl transition-colors mb-3"
+                >
+                  <span>📞</span>
+                  <span>התקשר למנהל</span>
+                </a>
+              )}
+
+              <button
+                onClick={() => setDistanceError(null)}
+                className="w-full bg-gray-200 hover:bg-gray-300 text-gray-800 font-semibold py-3 px-6 rounded-xl transition-colors"
+              >
+                הבנתי
+              </button>
+            </div>
+          </div>
+        </div>
       )}
     </div>
   )
