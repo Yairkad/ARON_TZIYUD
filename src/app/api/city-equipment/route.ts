@@ -168,12 +168,12 @@ export async function POST(request: Request) {
   }
 }
 
-// PUT - Update city equipment (quantity, display_order)
+// PUT - Update city equipment (quantity, display_order, equipment_status, is_consumable)
 export async function PUT(request: Request) {
   try {
     const supabase = await createAuthClient()
     const body = await request.json()
-    const { id, quantity, display_order } = body
+    const { id, quantity, display_order, equipment_status, is_consumable } = body
 
     if (!id) {
       return NextResponse.json({ error: 'מזהה ציוד חובה' }, { status: 400 })
@@ -232,6 +232,8 @@ export async function PUT(request: Request) {
     const updateData: any = { updated_at: new Date().toISOString() }
     if (quantity !== undefined) updateData.quantity = quantity
     if (display_order !== undefined) updateData.display_order = display_order
+    if (equipment_status !== undefined) updateData.equipment_status = equipment_status
+    if (is_consumable !== undefined) updateData.is_consumable = is_consumable
 
     const { data: updatedEquipment, error } = await serviceClient
       .from('city_equipment')

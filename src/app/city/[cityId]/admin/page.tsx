@@ -259,8 +259,8 @@ export default function CityAdminPage() {
         name: item.global_equipment?.name || '',
         quantity: item.quantity,
         city_id: item.city_id,
-        equipment_status: 'working' as const,
-        is_consumable: false,
+        equipment_status: item.equipment_status || 'working',
+        is_consumable: item.is_consumable || false,
         category_id: item.global_equipment?.category_id,
         image_url: item.global_equipment?.image_url,
         display_order: item.display_order,
@@ -526,18 +526,24 @@ export default function CityAdminPage() {
 
     setLoading(true)
     try {
-      // Update city_equipment quantity using API
+      console.log('🔧 Updating equipment:', { id, name, quantity, equipment_status, is_consumable })
+
+      // Update city_equipment using API
       const response = await fetch('/api/city-equipment', {
         method: 'PUT',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
           id,
-          quantity
+          quantity,
+          equipment_status,
+          is_consumable
         })
       })
 
+      const data = await response.json()
+      console.log('🔧 Update response:', data)
+
       if (!response.ok) {
-        const data = await response.json()
         throw new Error(data.error || 'שגיאה בעדכון ציוד')
       }
 
@@ -2963,12 +2969,12 @@ export default function CityAdminPage() {
                         {loading ? '⏳ שומר...' : '💾 שמור שינויים'}
                       </Button>
 
-                        <div className="bg-blue-50 rounded-lg p-3 border border-blue-200">
-                          <p className="text-xs text-blue-800">
-                            ℹ️ <strong>שים לב:</strong> שינוי פרטים ישלח התראה למנהל הראשי
-                          </p>
-                        </div>
-                      </form>
+                      <div className="bg-blue-50 rounded-lg p-3 border border-blue-200">
+                        <p className="text-xs text-blue-800">
+                          ℹ️ <strong>שים לב:</strong> שינוי פרטים ישלח התראה למנהל הראשי
+                        </p>
+                      </div>
+                    </form>
                     )}
                   </CardContent>
                 </Card>
