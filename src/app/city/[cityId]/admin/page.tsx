@@ -1699,6 +1699,16 @@ export default function CityAdminPage() {
                         <th className="text-center p-4 font-bold text-gray-700">🔧 סטטוס</th>
                         <th className="text-center p-4 font-bold text-gray-700">🔄 מתכלה</th>
                         <th className="text-center p-4 font-bold text-gray-700">⚙️ פעולות</th>
+                        <th className="text-center p-2">
+                          <button
+                            type="button"
+                            onClick={() => window.open('/guides/equipment-guide.html', '_blank')}
+                            className="inline-flex items-center justify-center w-6 h-6 rounded-full bg-blue-100 hover:bg-blue-200 text-blue-600 text-sm font-bold transition-colors"
+                            title="מדריך ניהול ציוד"
+                          >
+                            ?
+                          </button>
+                        </th>
                       </tr>
                     </thead>
                     <tbody>
@@ -1845,10 +1855,11 @@ export default function CityAdminPage() {
                               )}
                             </div>
                           </td>
+                          <td></td>
                         </tr>
                         {editingEquipment?.id === item.id && (
                           <tr className="border-b bg-blue-50">
-                            <td colSpan={6} className="p-4">
+                            <td colSpan={7} className="p-4">
                               <div className="flex flex-col gap-2">
                                 <label className="text-sm font-semibold text-gray-700">🖼️ כתובת URL של תמונה:</label>
                                 <Input
