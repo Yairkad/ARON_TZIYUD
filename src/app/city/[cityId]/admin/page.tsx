@@ -2526,7 +2526,6 @@ export default function CityAdminPage() {
                       </div>
                     </div>
                   )}
-                </div>
 
                 {/* Navigation & Push Notifications - Side by Side */}
                 <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
@@ -2666,51 +2665,51 @@ export default function CityAdminPage() {
                       <form onSubmit={handleUpdateCityDetails} className="space-y-4">
                         <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                           {/* Manager 1 */}
-                        <div className="space-y-2">
-                          <label className="block text-sm font-semibold text-gray-700">👤 שם מנהל ראשון *</label>
-                          <Input
-                            type="text"
-                            value={editCityForm.manager1_name}
-                            onChange={(e) => setEditCityForm({ ...editCityForm, manager1_name: e.target.value })}
-                            placeholder="שם מלא"
-                            className="h-12 border-2 border-gray-200 rounded-xl focus:border-indigo-500 transition-colors"
-                            required
-                          />
-                        </div>
-                        <div className="space-y-2">
-                          <label className="block text-sm font-semibold text-gray-700">📞 טלפון מנהל ראשון *</label>
-                          <Input
-                            type="tel"
-                            value={editCityForm.manager1_phone}
-                            onChange={(e) => setEditCityForm({ ...editCityForm, manager1_phone: e.target.value })}
-                            placeholder="0501234567"
-                            className="h-12 border-2 border-gray-200 rounded-xl focus:border-indigo-500 transition-colors"
-                            required
-                          />
-                        </div>
+                          <div className="space-y-2">
+                            <label className="block text-sm font-semibold text-gray-700">👤 שם מנהל ראשון *</label>
+                            <Input
+                              type="text"
+                              value={editCityForm.manager1_name}
+                              onChange={(e) => setEditCityForm({ ...editCityForm, manager1_name: e.target.value })}
+                              placeholder="שם מלא"
+                              className="h-12 border-2 border-gray-200 rounded-xl focus:border-indigo-500 transition-colors"
+                              required
+                            />
+                          </div>
+                          <div className="space-y-2">
+                            <label className="block text-sm font-semibold text-gray-700">📞 טלפון מנהל ראשון *</label>
+                            <Input
+                              type="tel"
+                              value={editCityForm.manager1_phone}
+                              onChange={(e) => setEditCityForm({ ...editCityForm, manager1_phone: e.target.value })}
+                              placeholder="0501234567"
+                              className="h-12 border-2 border-gray-200 rounded-xl focus:border-indigo-500 transition-colors"
+                              required
+                            />
+                          </div>
 
-                        {/* Manager 2 */}
-                        <div className="space-y-2">
-                          <label className="block text-sm font-semibold text-gray-700">👤 שם מנהל שני (אופציונלי)</label>
-                          <Input
-                            type="text"
-                            value={editCityForm.manager2_name}
-                            onChange={(e) => setEditCityForm({ ...editCityForm, manager2_name: e.target.value })}
-                            placeholder="שם מלא"
-                            className="h-12 border-2 border-gray-200 rounded-xl focus:border-indigo-500 transition-colors"
-                          />
+                          {/* Manager 2 */}
+                          <div className="space-y-2">
+                            <label className="block text-sm font-semibold text-gray-700">👤 שם מנהל שני (אופציונלי)</label>
+                            <Input
+                              type="text"
+                              value={editCityForm.manager2_name}
+                              onChange={(e) => setEditCityForm({ ...editCityForm, manager2_name: e.target.value })}
+                              placeholder="שם מלא"
+                              className="h-12 border-2 border-gray-200 rounded-xl focus:border-indigo-500 transition-colors"
+                            />
+                          </div>
+                          <div className="space-y-2">
+                            <label className="block text-sm font-semibold text-gray-700">📞 טלפון מנהל שני (אופציונלי)</label>
+                            <Input
+                              type="tel"
+                              value={editCityForm.manager2_phone}
+                              onChange={(e) => setEditCityForm({ ...editCityForm, manager2_phone: e.target.value })}
+                              placeholder="0501234567"
+                              className="h-12 border-2 border-gray-200 rounded-xl focus:border-indigo-500 transition-colors"
+                            />
+                          </div>
                         </div>
-                        <div className="space-y-2">
-                          <label className="block text-sm font-semibold text-gray-700">📞 טלפון מנהל שני (אופציונלי)</label>
-                          <Input
-                            type="tel"
-                            value={editCityForm.manager2_phone}
-                            onChange={(e) => setEditCityForm({ ...editCityForm, manager2_phone: e.target.value })}
-                            placeholder="0501234567"
-                            className="h-12 border-2 border-gray-200 rounded-xl focus:border-indigo-500 transition-colors"
-                          />
-                        </div>
-                      </div>
 
                       {/* Location Settings Section with Edit/Save Buttons */}
                       <div className="border-2 border-indigo-200 rounded-xl p-4 bg-indigo-50/50">

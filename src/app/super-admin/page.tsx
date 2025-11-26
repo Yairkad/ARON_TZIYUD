@@ -1246,7 +1246,17 @@ export default function SuperAdminPage() {
                     <p className="text-xs text-gray-500">יוצג בדף הראשי לכל המשתמשים (השאר ריק להסתרה)</p>
                   </div>
                   <div className="space-y-2 md:col-span-2">
-                    <label className="block text-sm font-semibold text-gray-700">🔐 קישור למיקום הארון - טוקן בלבד <span className="text-gray-400 text-xs">(אופציונלי)</span></label>
+                    <label className="flex items-center gap-2 text-sm font-semibold text-gray-700">
+                      🔐 קישור למיקום הארון - טוקן בלבד <span className="text-gray-400 text-xs">(אופציונלי)</span>
+                      <button
+                        type="button"
+                        onClick={() => window.open('/guides/add-location-guide.html', '_blank')}
+                        className="inline-flex items-center justify-center w-5 h-5 rounded-full bg-purple-100 hover:bg-purple-200 text-purple-600 text-xs font-bold transition-colors"
+                        title="מדריך הוספת מיקום"
+                      >
+                        ?
+                      </button>
+                    </label>
                     <Input
                       type="url"
                       value={newCity.token_location_url || ''}
