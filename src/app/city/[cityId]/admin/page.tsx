@@ -2244,128 +2244,50 @@ export default function CityAdminPage() {
             </CardHeader>
             <CardContent className="p-6">
               <div className="space-y-6">
-                {/* Request Mode Settings */}
-                <div className="bg-gradient-to-r from-blue-50 to-indigo-50 rounded-xl p-6 border-2 border-blue-200">
-                  <h3 className="text-lg font-bold text-gray-800 mb-4">🎯 מצב פעולה של המערכת</h3>
-                  <p className="text-sm text-gray-600 mb-4">בחר כיצד משתמשים ישאלו ציוד מהארון</p>
-
-                  <div className="grid grid-cols-1 md:grid-cols-2 gap-4 mb-6">
-                    {/* Direct Mode */}
-                    <button
-                      onClick={async () => {
-                        // Check permissions
-                        if (!canEdit) {
-                          alert('אין לך הרשאה לבצע פעולה זו - נדרשת הרשאת עריכה מלאה')
-                          return
-                        }
-
-                        if (city?.request_mode === 'direct') {
-                          alert('המערכת כבר במצב השאלה ישירה')
-                          return
-                        }
-
-                        if (confirm('האם להחליף למצב השאלה ישירה? משתמשים יוכלו לשאול ציוד מיידית ללא אישור')) {
-                          try {
-                            const response = await fetch('/api/city/update-details', {
-                              method: 'POST',
-                              headers: { 'Content-Type': 'application/json' },
-                              credentials: 'include',
-                              body: JSON.stringify({
-                                cityId,
-                                request_mode: 'direct'
-                              })
-                            })
-
-                            const data = await response.json()
-
-                            if (!response.ok) {
-                              throw new Error(data.error || 'שגיאה בעדכון')
-                            }
-
-                            alert('✅ המצב עודכן להשאלה ישירה')
-                            await fetchCity()
-                            window.location.reload()
-                          } catch (error: any) {
-                            console.error('Update error:', error)
-                            alert('שגיאה בעדכון: ' + error.message)
-                          }
-                        }
-                      }}
-                      disabled={!canEdit}
-                      className={`p-6 rounded-xl border-2 font-semibold transition-all text-right ${
-                        city?.request_mode === 'direct'
-                          ? 'bg-green-100 border-green-500 shadow-lg scale-105'
-                          : 'bg-white border-gray-300 hover:border-green-300'
-                      } disabled:opacity-50 disabled:cursor-not-allowed`}
-                    >
-                      <div className="text-4xl mb-2">⚡</div>
-                      <div className="text-xl font-bold mb-2">השאלה ישירה</div>
-                      <div className="text-sm text-gray-600">
-                        משתמשים שואלים ציוד מיידית ללא צורך באישור מנהל
+                {/* Request Mode Settings - Compact Toggle */}
+                <div className="flex items-center justify-between p-4 bg-gradient-to-r from-blue-50 to-indigo-50 rounded-xl border border-blue-200">
+                  <div className="flex items-center gap-3">
+                    <span className="text-xl">{city?.request_mode === 'direct' ? '⚡' : '📝'}</span>
+                    <div>
+                      <div className="font-semibold text-gray-800">מצב פעולה</div>
+                      <div className="text-xs text-gray-500">
+                        {city?.request_mode === 'direct' ? 'השאלה ישירה - ללא אישור' : 'מצב בקשות - דרוש אישור'}
                       </div>
-                      {city?.request_mode === 'direct' && (
-                        <div className="mt-3 text-green-600 font-bold">✓ פעיל כעת</div>
-                      )}
-                    </button>
-
-                    {/* Request Mode */}
-                    <button
-                      onClick={async () => {
-                        // Check permissions
-                        if (!canEdit) {
-                          alert('אין לך הרשאה לבצע פעולה זו - נדרשת הרשאת עריכה מלאה')
-                          return
-                        }
-
-                        if (city?.request_mode === 'request') {
-                          alert('המערכת כבר במצב בקשות')
-                          return
-                        }
-
-                        if (confirm('האם להחליף למצב בקשות? משתמשים ישלחו בקשות שידרשו אישור מנהל')) {
-                          try {
-                            const response = await fetch('/api/city/update-details', {
-                              method: 'POST',
-                              headers: { 'Content-Type': 'application/json' },
-                              credentials: 'include',
-                              body: JSON.stringify({
-                                cityId,
-                                request_mode: 'request'
-                              })
-                            })
-
-                            const data = await response.json()
-
-                            if (!response.ok) {
-                              throw new Error(data.error || 'שגיאה בעדכון')
-                            }
-
-                            alert('✅ המצב עודכן למצב בקשות')
-                            await fetchCity()
-                            window.location.reload()
-                          } catch (error: any) {
-                            console.error('Update error:', error)
-                            alert('שגיאה בעדכון: ' + error.message)
-                          }
-                        }
-                      }}
-                      disabled={!canEdit}
-                      className={`p-6 rounded-xl border-2 font-semibold transition-all text-right ${
-                        city?.request_mode === 'request'
-                          ? 'bg-purple-100 border-purple-500 shadow-lg scale-105'
-                          : 'bg-white border-gray-300 hover:border-purple-300'
-                      } disabled:opacity-50 disabled:cursor-not-allowed`}
-                    >
-                      <div className="text-4xl mb-2">📝</div>
-                      <div className="text-xl font-bold mb-2">מצב בקשות</div>
-                      <div className="text-sm text-gray-600">
-                        משתמשים שולחים בקשות עם טוקן - מנהל מאשר/דוחה
-                      </div>
-                      {city?.request_mode === 'request' && (
-                        <div className="mt-3 text-purple-600 font-bold">✓ פעיל כעת</div>
-                      )}
-                    </button>
+                    </div>
                   </div>
+                  <button
+                    onClick={async () => {
+                      if (!canEdit) {
+                        alert('אין לך הרשאה לבצע פעולה זו - נדרשת הרשאת עריכה מלאה')
+                        return
+                      }
+                      const newMode = city?.request_mode === 'direct' ? 'request' : 'direct'
+                      const modeText = newMode === 'direct' ? 'השאלה ישירה' : 'מצב בקשות'
+                      if (confirm(`האם להחליף ל${modeText}?`)) {
+                        try {
+                          const response = await fetch('/api/city/update-details', {
+                            method: 'POST',
+                            headers: { 'Content-Type': 'application/json' },
+                            credentials: 'include',
+                            body: JSON.stringify({ cityId, request_mode: newMode })
+                          })
+                          if (!response.ok) throw new Error('שגיאה בעדכון')
+                          await fetchCity()
+                        } catch (error: any) {
+                          alert('שגיאה בעדכון: ' + error.message)
+                        }
+                      }
+                    }}
+                    disabled={!canEdit}
+                    className={`relative w-14 h-7 rounded-full transition-colors duration-200 ${
+                      city?.request_mode === 'request' ? 'bg-purple-500' : 'bg-green-500'
+                    } disabled:opacity-50`}
+                  >
+                    <span className={`absolute top-0.5 w-6 h-6 bg-white rounded-full shadow transition-transform duration-200 ${
+                      city?.request_mode === 'request' ? 'right-0.5' : 'left-0.5'
+                    }`} />
+                  </button>
+                </div>
 
                   {/* Request Mode Additional Settings */}
                   {city?.request_mode === 'request' && (
@@ -2860,7 +2782,17 @@ export default function CityAdminPage() {
 
                           {/* Token Location URL - separate field for token page */}
                           <div className="space-y-2">
-                            <label className="block text-sm font-semibold text-gray-700">🔐 כתובת ארון בטוקן</label>
+                            <label className="flex items-center gap-2 text-sm font-semibold text-gray-700">
+                              🔐 כתובת ארון בטוקן
+                              <button
+                                type="button"
+                                onClick={() => window.open('/guides/add-location-guide.html', '_blank')}
+                                className="inline-flex items-center justify-center w-5 h-5 rounded-full bg-purple-100 hover:bg-purple-200 text-purple-600 text-xs font-bold transition-colors"
+                                title="מדריך הוספת מיקום"
+                              >
+                                ?
+                              </button>
+                            </label>
                             <Input
                               type="url"
                               value={editCityForm.token_location_url || ''}
