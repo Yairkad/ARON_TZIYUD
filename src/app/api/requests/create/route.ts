@@ -135,35 +135,30 @@ export async function POST(request: NextRequest) {
     const equipmentIds = body.items.map(item => item.equipment_id)
 
     // Fetch all equipment from city_equipment (new structure)
+    // Note: city_equipment doesn't have equipment_status column, items are always assumed working
     const { data: cityEquipmentList, error: fetchError } = await supabaseServer
       .from('city_equipment')
-      .select(`
-        id,
-        global_equipment_id,
-        quantity,
-        equipment_status,
-        global_equipment:global_equipment_pool(
-          id,
-          name
-        )
-      `)
+      .select('id, global_equipment_id, quantity')
       .in('global_equipment_id', equipmentIds)
       .eq('city_id', cityId)
 
     if (fetchError) {
       console.error('Error fetching city equipment:', fetchError)
+      console.error('Query params:', { equipmentIds, cityId })
       return NextResponse.json(
-        { error: 'שגיאה בטעינת נתוני ציוד' },
+        { error: 'שגיאה בטעינת נתוני ציוד: ' + fetchError.message },
         { status: 500 }
       )
     }
+
+    console.log('Found city equipment:', cityEquipmentList?.length || 0, 'items for', equipmentIds.length, 'requested')
 
     // Create map for quick lookup - key is global_equipment_id
     const equipmentMap = new Map(cityEquipmentList?.map(eq => [eq.global_equipment_id, {
       id: eq.global_equipment_id,
       quantity: eq.quantity,
       is_consumable: false, // city_equipment doesn't track this, assume non-consumable
-      equipment_status: eq.equipment_status || 'working'
+      equipment_status: 'working' as const // city_equipment items are always working
     }]) || [])
 
     // Validate each item
