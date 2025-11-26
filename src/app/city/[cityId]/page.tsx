@@ -446,8 +446,10 @@ export default function CityPage() {
 
     } catch (error: any) {
       console.error('Error creating request:', error)
-      // Check if error message contains distance info
-      if (error.message && error.message.includes('רחוק מדי')) {
+      // Check if it's a location permission error
+      if (error.message && error.message.includes('גישה למיקום נדחתה')) {
+        alert('🔒 גישה למיקום נדחתה\n\nכדי לשלוח בקשה יש לאפשר גישה למיקום:\n\n1. לחץ על סמל המנעול/מידע ליד כתובת האתר\n2. מצא "מיקום" או "Location"\n3. שנה ל-"אפשר" או "Allow"\n4. רענן את הדף ונסה שוב')
+      } else if (error.message && error.message.includes('רחוק מדי')) {
         alert(error.message)
       } else {
         alert(error.message || 'אירעה שגיאה ביצירת הבקשה')
