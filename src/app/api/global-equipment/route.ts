@@ -129,21 +129,17 @@ export async function POST(request: Request) {
     // Determine status based on role
     const status = userData.role === 'super_admin' ? 'active' : 'pending_approval'
 
-    // For super_admin, use service client to bypass RLS
-    // For city_manager, use auth client (they can only insert pending items)
-    let insertClient = supabase
-    if (userData.role === 'super_admin') {
-      insertClient = createClient(
-        process.env.NEXT_PUBLIC_SUPABASE_URL!,
-        process.env.SUPABASE_SERVICE_ROLE_KEY!,
-        {
-          auth: {
-            autoRefreshToken: false,
-            persistSession: false
-          }
+    // Use service client to bypass RLS for all authenticated users
+    const insertClient = createClient(
+      process.env.NEXT_PUBLIC_SUPABASE_URL!,
+      process.env.SUPABASE_SERVICE_ROLE_KEY!,
+      {
+        auth: {
+          autoRefreshToken: false,
+          persistSession: false
         }
-      )
-    }
+      }
+    )
 
     // Insert equipment
     const { data: newEquipment, error } = await insertClient
