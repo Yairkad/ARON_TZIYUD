@@ -5,6 +5,11 @@ import { requireFullAccess } from '@/lib/auth-middleware'
 export async function POST(request: NextRequest) {
   const supabase = createServiceClient()
   try {
+    console.log('📝 Update city details - Request received')
+    const body = await request.json()
+    console.log('📝 Request body keys:', Object.keys(body))
+    console.log('📝 location_image size:', body.location_image ? body.location_image.length : 0)
+
     const {
       cityId,
       manager1_name,
@@ -14,7 +19,6 @@ export async function POST(request: NextRequest) {
       location_url,
       token_location_url,
       location_image,
-      location_description,
       lat,
       lng,
       token_lat,
@@ -24,11 +28,19 @@ export async function POST(request: NextRequest) {
       require_call_id,
       hide_navigation,
       enable_push_notifications
-    } = await request.json()
+    } = body
 
     if (!cityId) {
       return NextResponse.json(
         { error: 'מזהה עיר הוא שדה חובה' },
+        { status: 400 }
+      )
+    }
+
+    // Check if location_image is too large (max 2MB base64 ≈ 2.7MB string)
+    if (location_image && location_image.length > 3000000) {
+      return NextResponse.json(
+        { error: 'תמונת המיקום גדולה מדי. הגבלה: 2MB' },
         { status: 400 }
       )
     }
@@ -96,9 +108,6 @@ export async function POST(request: NextRequest) {
     }
     if (location_image !== undefined) {
       updateData.location_image = location_image && typeof location_image === 'string' ? location_image : null
-    }
-    if (location_description !== undefined) {
-      updateData.location_description = location_description && typeof location_description === 'string' ? location_description.trim() : null
     }
     if (lat !== undefined) {
       updateData.lat = lat
@@ -213,10 +222,12 @@ export async function POST(request: NextRequest) {
       success: true,
       message: 'הפרטים עודכנו בהצלחה'
     })
-  } catch (error) {
+  } catch (error: any) {
     console.error('Update city details error:', error)
+    console.error('Error message:', error?.message)
+    console.error('Error stack:', error?.stack)
     return NextResponse.json(
-      { error: 'שגיאה בתהליך עדכון הפרטים' },
+      { error: `שגיאה בתהליך עדכון הפרטים: ${error?.message || 'Unknown error'}` },
       { status: 500 }
     )
   }
