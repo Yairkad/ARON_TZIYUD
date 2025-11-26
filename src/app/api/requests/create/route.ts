@@ -36,20 +36,33 @@ export async function POST(request: NextRequest) {
     }
 
     // Extract city_id from the first item's equipment
-    const { data: equipment, error: eqError } = await supabaseServer
-      .from('equipment')
+    // The equipment_id is the global_equipment_pool ID, find via city_equipment
+    const { data: cityEquipment, error: eqError } = await supabaseServer
+      .from('city_equipment')
       .select('city_id')
-      .eq('id', body.items[0].equipment_id)
+      .eq('global_equipment_id', body.items[0].equipment_id)
+      .limit(1)
       .single()
 
-    if (eqError || !equipment) {
-      return NextResponse.json(
-        { error: 'ציוד לא נמצא' },
-        { status: 404 }
-      )
-    }
+    if (eqError || !cityEquipment) {
+      // Fallback: try old equipment table
+      const { data: oldEquipment, error: oldEqError } = await supabaseServer
+        .from('equipment')
+        .select('city_id')
+        .eq('id', body.items[0].equipment_id)
+        .single()
 
-    const cityId = equipment.city_id
+      if (oldEqError || !oldEquipment) {
+        console.error('Equipment not found:', body.items[0].equipment_id, eqError, oldEqError)
+        return NextResponse.json(
+          { error: 'ציוד לא נמצא' },
+          { status: 404 }
+        )
+      }
+      var cityId = oldEquipment.city_id
+    } else {
+      var cityId = cityEquipment.city_id
+    }
 
     // Get city settings
     const { data: city, error: cityError } = await supabaseServer
@@ -121,22 +134,37 @@ export async function POST(request: NextRequest) {
     // Validate all items - OPTIMIZED: Batch query instead of N+1
     const equipmentIds = body.items.map(item => item.equipment_id)
 
-    // Fetch all equipment in a single query
-    const { data: equipmentList, error: fetchError } = await supabaseServer
-      .from('equipment')
-      .select('id, quantity, is_consumable, equipment_status')
-      .in('id', equipmentIds)
+    // Fetch all equipment from city_equipment (new structure)
+    const { data: cityEquipmentList, error: fetchError } = await supabaseServer
+      .from('city_equipment')
+      .select(`
+        id,
+        global_equipment_id,
+        quantity,
+        equipment_status,
+        global_equipment:global_equipment_pool(
+          id,
+          name
+        )
+      `)
+      .in('global_equipment_id', equipmentIds)
       .eq('city_id', cityId)
 
     if (fetchError) {
+      console.error('Error fetching city equipment:', fetchError)
       return NextResponse.json(
         { error: 'שגיאה בטעינת נתוני ציוד' },
         { status: 500 }
       )
     }
 
-    // Create map for quick lookup
-    const equipmentMap = new Map(equipmentList?.map(eq => [eq.id, eq]) || [])
+    // Create map for quick lookup - key is global_equipment_id
+    const equipmentMap = new Map(cityEquipmentList?.map(eq => [eq.global_equipment_id, {
+      id: eq.global_equipment_id,
+      quantity: eq.quantity,
+      is_consumable: false, // city_equipment doesn't track this, assume non-consumable
+      equipment_status: eq.equipment_status || 'working'
+    }]) || [])
 
     // Validate each item
     for (const item of body.items) {
@@ -216,9 +244,11 @@ export async function POST(request: NextRequest) {
     }
 
     // Create request items
+    // equipment_id stores the global_equipment_pool ID
     const itemsToInsert = body.items.map(item => ({
       request_id: newRequest.id,
-      equipment_id: item.equipment_id,
+      equipment_id: item.equipment_id, // This is global_equipment_id
+      global_equipment_id: item.equipment_id, // Explicit field for new structure
       quantity: item.quantity
     }))
 
