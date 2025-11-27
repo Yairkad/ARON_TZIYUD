@@ -118,6 +118,9 @@ export default function CityAdminPage() {
   const [showCopyEquipment, setShowCopyEquipment] = useState(false)
   const [showEquipmentPoolModal, setShowEquipmentPoolModal] = useState(false)
   const [showManualAddForm, setShowManualAddForm] = useState(false)
+  const [globalPoolSuggestions, setGlobalPoolSuggestions] = useState<any[]>([])
+  const [showSuggestions, setShowSuggestions] = useState(false)
+  const [globalPoolCache, setGlobalPoolCache] = useState<any[]>([])
   const [dismissedAlerts, setDismissedAlerts] = useState<Set<string>>(new Set())
   const [pendingRequestsCount, setPendingRequestsCount] = useState(0)
   const [expandedGroups, setExpandedGroups] = useState<Set<string>>(new Set())
@@ -152,9 +155,54 @@ export default function CityAdminPage() {
       fetchAllCities()
       fetchPendingRequestsCount()
       fetchCategories()
+      fetchGlobalPoolForSuggestions()
     }
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [isAuthenticated, cityId, currentUser])
+
+  // Fetch global pool for autocomplete suggestions
+  const fetchGlobalPoolForSuggestions = async () => {
+    try {
+      const response = await fetch('/api/global-equipment?status=active&includeCategories=true')
+      if (response.ok) {
+        const data = await response.json()
+        setGlobalPoolCache(data.equipment || [])
+      }
+    } catch (error) {
+      console.error('Error fetching global pool:', error)
+    }
+  }
+
+  // Filter suggestions based on input
+  const handleEquipmentNameChange = (value: string) => {
+    setNewEquipment({ ...newEquipment, name: value })
+
+    if (value.trim().length >= 2) {
+      // Filter global pool items that match the search and aren't already in this city
+      const existingNames = equipment.map(e => e.name.toLowerCase())
+      const suggestions = globalPoolCache.filter(item =>
+        item.name.toLowerCase().includes(value.toLowerCase()) &&
+        !existingNames.includes(item.name.toLowerCase())
+      ).slice(0, 5)
+
+      setGlobalPoolSuggestions(suggestions)
+      setShowSuggestions(suggestions.length > 0)
+    } else {
+      setGlobalPoolSuggestions([])
+      setShowSuggestions(false)
+    }
+  }
+
+  // Select a suggestion from the dropdown
+  const selectSuggestion = (item: any) => {
+    setNewEquipment({
+      ...newEquipment,
+      name: item.name,
+      category_id: item.category_id || '',
+      image_url: item.image_url || ''
+    })
+    setShowSuggestions(false)
+  }
 
   // Auto-refresh pending requests count every 15 seconds when in request mode
   useEffect(() => {
@@ -1338,15 +1386,63 @@ export default function CityAdminPage() {
               </CardHeader>
               {showManualAddForm && (
               <CardContent className="p-6">
+                <div className="bg-blue-50 border border-blue-200 rounded-xl p-3 mb-4">
+                  <p className="text-sm text-blue-800">
+                    💡 <strong>טיפ:</strong> התחל להקליד שם ציוד ותקבל הצעות מהמאגר הגלובלי. אם הציוד לא קיים, הוא יישלח לאישור מנהל ראשי.
+                  </p>
+                </div>
                 <form onSubmit={handleAddEquipment} className="flex flex-col gap-4">
                   <div className="flex flex-col sm:flex-row gap-4">
-                    <Input
-                      value={newEquipment.name}
-                      onChange={(e) => setNewEquipment({ ...newEquipment, name: e.target.value })}
-                      placeholder="שם הציוד"
-                      disabled={!canEdit}
-                      className="flex-1 h-12 border-2 border-gray-200 rounded-xl focus:border-blue-500 transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
-                    />
+                    <div className="flex-1 relative">
+                      <Input
+                        value={newEquipment.name}
+                        onChange={(e) => handleEquipmentNameChange(e.target.value)}
+                        onFocus={() => {
+                          if (globalPoolSuggestions.length > 0) setShowSuggestions(true)
+                        }}
+                        onBlur={() => {
+                          // Delay hiding to allow click on suggestion
+                          setTimeout(() => setShowSuggestions(false), 200)
+                        }}
+                        placeholder="🔍 הקלד שם ציוד..."
+                        disabled={!canEdit}
+                        className="w-full h-12 border-2 border-gray-200 rounded-xl focus:border-blue-500 transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
+                        autoComplete="off"
+                      />
+                      {/* Autocomplete dropdown */}
+                      {showSuggestions && globalPoolSuggestions.length > 0 && (
+                        <div className="absolute z-50 w-full mt-1 bg-white border-2 border-blue-300 rounded-xl shadow-lg overflow-hidden">
+                          <div className="bg-blue-50 px-3 py-2 border-b border-blue-200">
+                            <p className="text-xs text-blue-700 font-medium">📦 נמצא במאגר הגלובלי:</p>
+                          </div>
+                          {globalPoolSuggestions.map((item) => (
+                            <button
+                              key={item.id}
+                              type="button"
+                              onClick={() => selectSuggestion(item)}
+                              className="w-full px-3 py-2 text-right hover:bg-blue-50 transition-colors flex items-center gap-2 border-b border-gray-100 last:border-0"
+                            >
+                              {item.image_url && (
+                                <img src={item.image_url} alt="" className="w-8 h-8 object-cover rounded" />
+                              )}
+                              <div className="flex-1">
+                                <span className="font-medium text-gray-800">{item.name}</span>
+                                {item.category?.name && (
+                                  <span className="text-xs text-gray-500 mr-2">({item.category.name})</span>
+                                )}
+                              </div>
+                              <span className="text-green-600 text-xs">✓ קיים</span>
+                            </button>
+                          ))}
+                        </div>
+                      )}
+                      {/* Show "new item" indicator when no suggestions */}
+                      {newEquipment.name.trim().length >= 2 && globalPoolSuggestions.length === 0 && !showSuggestions && (
+                        <p className="text-xs text-amber-600 mt-1">
+                          ⭐ פריט חדש - יישלח לאישור מנהל ראשי
+                        </p>
+                      )}
+                    </div>
                     <Input
                       type="number"
                       value={newEquipment.quantity}
