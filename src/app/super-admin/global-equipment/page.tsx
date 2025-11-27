@@ -732,7 +732,16 @@ export default function GlobalEquipmentPage() {
                       </select>
                     </div>
                     <div>
-                      <label className="block text-sm font-medium mb-1.5 text-gray-700">תמונה (URL)</label>
+                      <label className="block text-sm font-medium mb-1.5 text-gray-700">
+                        תמונה (URL) - {' '}
+                        <a
+                          href="/tools/google-drive-url-converter.html"
+                          target="_blank"
+                          className="text-blue-600 hover:underline font-normal"
+                        >
+                          ממיר קישורי גוגל דרייב ←
+                        </a>
+                      </label>
                       <Input
                         value={equipmentForm.image_url}
                         onChange={(e) => setEquipmentForm({ ...equipmentForm, image_url: e.target.value })}
@@ -842,7 +851,16 @@ export default function GlobalEquipmentPage() {
                                   </select>
                                 </div>
                                 <div>
-                                  <label className="block text-xs font-medium mb-1 text-gray-700">תמונה (URL)</label>
+                                  <label className="block text-xs font-medium mb-1 text-gray-700">
+                                    תמונה (URL) - {' '}
+                                    <a
+                                      href="/tools/google-drive-url-converter.html"
+                                      target="_blank"
+                                      className="text-blue-600 hover:underline font-normal"
+                                    >
+                                      ממיר ←
+                                    </a>
+                                  </label>
                                   <Input
                                     value={equipmentForm.image_url}
                                     onChange={(e) => setEquipmentForm({ ...equipmentForm, image_url: e.target.value })}
