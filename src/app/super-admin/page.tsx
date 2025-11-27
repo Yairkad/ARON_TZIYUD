@@ -1308,24 +1308,27 @@ export default function SuperAdminPage() {
             </div>
 
             {/* Filter Buttons */}
-            <div className="flex gap-2 mb-6">
+            <div className="flex gap-1 sm:gap-2 mb-6">
               <Button
                 onClick={() => setCityFilter('all')}
-                className={`flex-1 ${cityFilter === 'all' ? 'bg-gradient-to-r from-purple-600 to-pink-600 text-white' : 'bg-white text-gray-600 border-2 border-gray-200'}`}
+                className={`flex-1 text-xs sm:text-sm px-1 sm:px-3 h-9 sm:h-10 ${cityFilter === 'all' ? 'bg-gradient-to-r from-purple-600 to-pink-600 text-white' : 'bg-white text-gray-600 border-2 border-gray-200'}`}
               >
-                הכל ({cities.length})
+                <span className="hidden sm:inline">הכל ({cities.length})</span>
+                <span className="sm:hidden">הכל</span>
               </Button>
               <Button
                 onClick={() => setCityFilter('active')}
-                className={`flex-1 ${cityFilter === 'active' ? 'bg-gradient-to-r from-green-600 to-emerald-600 text-white' : 'bg-white text-gray-600 border-2 border-gray-200'}`}
+                className={`flex-1 text-xs sm:text-sm px-1 sm:px-3 h-9 sm:h-10 ${cityFilter === 'active' ? 'bg-gradient-to-r from-green-600 to-emerald-600 text-white' : 'bg-white text-gray-600 border-2 border-gray-200'}`}
               >
-                🟢 פעילות ({cities.filter(c => c.is_active).length})
+                <span className="hidden sm:inline">🟢 פעילות ({cities.filter(c => c.is_active).length})</span>
+                <span className="sm:hidden">🟢 פעילות</span>
               </Button>
               <Button
                 onClick={() => setCityFilter('inactive')}
-                className={`flex-1 ${cityFilter === 'inactive' ? 'bg-gradient-to-r from-gray-600 to-slate-600 text-white' : 'bg-white text-gray-600 border-2 border-gray-200'}`}
+                className={`flex-1 text-xs sm:text-sm px-1 sm:px-3 h-9 sm:h-10 ${cityFilter === 'inactive' ? 'bg-gradient-to-r from-gray-600 to-slate-600 text-white' : 'bg-white text-gray-600 border-2 border-gray-200'}`}
               >
-                🔴 מושבתות ({cities.filter(c => !c.is_active).length})
+                <span className="hidden sm:inline">🔴 מושבתות ({cities.filter(c => !c.is_active).length})</span>
+                <span className="sm:hidden">🔴 מושבתות</span>
               </Button>
             </div>
 
@@ -1463,19 +1466,18 @@ export default function SuperAdminPage() {
                             )}
                           </div>
                           <p className="text-sm text-gray-500 mb-4">🔐 סיסמה: ••••••</p>
-                          <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-5 gap-2">
+                          <div className="flex flex-wrap gap-2">
                             <Button
                               onClick={() => router.push(`/city/${city.id}/admin`)}
-                              className="bg-gradient-to-r from-purple-600 to-pink-600 hover:from-purple-700 hover:to-pink-700 text-white font-bold text-sm md:text-base h-10 md:h-auto"
+                              className="bg-gradient-to-r from-purple-600 to-pink-600 hover:from-purple-700 hover:to-pink-700 text-white font-bold text-xs sm:text-sm px-2 sm:px-4 h-9 sm:h-10 flex-shrink-0"
                             >
-                              <span className="hidden sm:inline">🚪 כניסה לניהול</span>
-                              <span className="sm:hidden">🚪 ניהול</span>
+                              🚪 ניהול
                             </Button>
                             {currentUser?.permissions !== 'view_only' && (
                               <>
                                 <Button
                                   onClick={() => setEditingCity(city)}
-                                  className="bg-blue-500 hover:bg-blue-600 text-sm md:text-base h-10 md:h-auto"
+                                  className="bg-blue-500 hover:bg-blue-600 text-xs sm:text-sm px-2 sm:px-4 h-9 sm:h-10 flex-shrink-0"
                                 >
                                   ✏️ ערוך
                                 </Button>
@@ -1518,22 +1520,21 @@ export default function SuperAdminPage() {
                                     }
                                   }}
                                   disabled={loading}
-                                  className="bg-gradient-to-r from-amber-500 to-orange-500 hover:from-amber-600 hover:to-orange-600 text-sm md:text-base h-10 md:h-auto"
+                                  className="bg-gradient-to-r from-amber-500 to-orange-500 hover:from-amber-600 hover:to-orange-600 text-xs sm:text-sm px-2 sm:px-4 h-9 sm:h-10 flex-shrink-0"
                                 >
-                                  🔑 אפס סיסמה
+                                  🔑 סיסמה
                                 </Button>
                                 <Button
                                   onClick={() => handleToggleActive(city)}
                                   disabled={loading}
-                                  className={`text-sm md:text-base h-10 md:h-auto ${city.is_active ? 'bg-orange-500 hover:bg-orange-600' : 'bg-green-500 hover:bg-green-600'}`}
+                                  className={`text-xs sm:text-sm px-2 sm:px-4 h-9 sm:h-10 flex-shrink-0 ${city.is_active ? 'bg-orange-500 hover:bg-orange-600' : 'bg-green-500 hover:bg-green-600'}`}
                                 >
-                                  <span className="hidden sm:inline">{city.is_active ? '🔴 השבת' : '🟢 הפעל'}</span>
-                                  <span className="sm:hidden">{city.is_active ? '🔴' : '🟢'}</span>
+                                  {city.is_active ? '🔴 השבת' : '🟢 הפעל'}
                                 </Button>
                                 <Button
                                   onClick={() => handleDeleteCity(city)}
                                   disabled={loading}
-                                  className="bg-red-500 hover:bg-red-600 text-sm md:text-base h-10 md:h-auto"
+                                  className="bg-red-500 hover:bg-red-600 text-xs sm:text-sm px-2 sm:px-4 h-9 sm:h-10 flex-shrink-0"
                                 >
                                   🗑️ מחק
                                 </Button>

@@ -1,14 +1,13 @@
 'use client'
 
-import { useEffect, useState, Suspense } from 'react'
-import { useRouter, useSearchParams } from 'next/navigation'
+import { useEffect, useState, Suspense, useRef } from 'react'
+import { useRouter } from 'next/navigation'
 import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
 import { supabase } from '@/lib/supabase'
 
 function ResetPasswordContent() {
   const router = useRouter()
-  const searchParams = useSearchParams()
 
   const [newPassword, setNewPassword] = useState('')
   const [confirmPassword, setConfirmPassword] = useState('')
@@ -16,18 +15,52 @@ function ResetPasswordContent() {
   const [success, setSuccess] = useState(false)
   const [error, setError] = useState('')
   const [hasToken, setHasToken] = useState(false)
+  const [isReady, setIsReady] = useState(false)
+  const sessionHandled = useRef(false)
 
-  // Check for token hash in URL (Supabase Auth sends #access_token=...)
+  // Wait for Supabase to process the recovery token from URL automatically
+  // detectSessionInUrl: true in supabase.ts handles this
   useEffect(() => {
-    const hashParams = new URLSearchParams(window.location.hash.substring(1))
-    const accessToken = hashParams.get('access_token')
-    const type = hashParams.get('type')
+    let mounted = true
 
-    // Check if this is a password recovery link
-    if (accessToken && type === 'recovery') {
-      setHasToken(true)
-    } else {
-      setHasToken(false)
+    const checkSession = async () => {
+      // Give Supabase time to process the URL hash (detectSessionInUrl)
+      // This prevents race conditions with manual setSession calls
+      const hashParams = new URLSearchParams(window.location.hash.substring(1))
+      const accessToken = hashParams.get('access_token')
+      const type = hashParams.get('type')
+
+      if (accessToken && type === 'recovery') {
+        // Wait for Supabase to auto-process the session from URL
+        // detectSessionInUrl: true handles this automatically
+        await new Promise(resolve => setTimeout(resolve, 500))
+
+        if (!mounted) return
+
+        // Check if session was set by detectSessionInUrl
+        const { data: { session } } = await supabase.auth.getSession()
+
+        if (session) {
+          // Session already set by detectSessionInUrl, we're ready
+          sessionHandled.current = true
+          setHasToken(true)
+        } else {
+          // Session not set yet, try to set it manually
+          setHasToken(true)
+        }
+      } else {
+        setHasToken(false)
+      }
+
+      if (mounted) {
+        setIsReady(true)
+      }
+    }
+
+    checkSession()
+
+    return () => {
+      mounted = false
     }
   }, [])
 
@@ -49,27 +82,29 @@ function ResetPasswordContent() {
     setError('')
 
     try {
-      // Extract access_token from URL hash
-      const hashParams = new URLSearchParams(window.location.hash.substring(1))
-      const accessToken = hashParams.get('access_token')
+      // Only set session manually if it wasn't already handled by detectSessionInUrl
+      if (!sessionHandled.current) {
+        const hashParams = new URLSearchParams(window.location.hash.substring(1))
+        const accessToken = hashParams.get('access_token')
 
-      if (!accessToken) {
-        setError('טוקן איפוס חסר או לא תקין')
-        setLoading(false)
-        return
-      }
+        if (!accessToken) {
+          setError('טוקן איפוס חסר או לא תקין')
+          setLoading(false)
+          return
+        }
 
-      // Set the session with the recovery token
-      const { error: sessionError } = await supabase.auth.setSession({
-        access_token: accessToken,
-        refresh_token: hashParams.get('refresh_token') || ''
-      })
+        // Set the session with the recovery token
+        const { error: sessionError } = await supabase.auth.setSession({
+          access_token: accessToken,
+          refresh_token: hashParams.get('refresh_token') || ''
+        })
 
-      if (sessionError) {
-        console.error('Session error:', sessionError)
-        setError('שגיאה באימות הטוקן')
-        setLoading(false)
-        return
+        if (sessionError) {
+          console.error('Session error:', sessionError)
+          setError('שגיאה באימות הטוקן')
+          setLoading(false)
+          return
+        }
       }
 
       // Update the user's password
@@ -98,13 +133,15 @@ function ResetPasswordContent() {
         setSuccess(true)
 
         // Redirect based on role after 2 seconds
+        // Use window.location.href instead of router.push to force full page reload
+        // This prevents React state conflicts and ensures clean session state
         setTimeout(() => {
           if (userData?.role === 'super_admin') {
-            router.push('/super-admin')
+            window.location.href = '/super-admin'
           } else if (userData?.role === 'city_manager') {
-            router.push('/city')
+            window.location.href = '/city'
           } else {
-            router.push('/login')
+            window.location.href = '/login'
           }
         }, 2000)
       } else {
@@ -116,6 +153,15 @@ function ResetPasswordContent() {
     } finally {
       setLoading(false)
     }
+  }
+
+  // Still checking for token - show loading
+  if (!isReady) {
+    return (
+      <div className="min-h-screen bg-gradient-to-b from-blue-50 to-white flex items-center justify-center p-4">
+        <div className="animate-spin rounded-full h-16 w-16 border-b-4 border-blue-600"></div>
+      </div>
+    )
   }
 
   // No token provided
