@@ -1502,7 +1502,17 @@ export default function CityAdminPage() {
             <Card className="border-0 shadow-2xl rounded-2xl overflow-hidden bg-white/90 backdrop-blur-sm">
               <CardHeader className="bg-gradient-to-r from-blue-50 to-indigo-50 pb-6">
                 <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4">
-                  <CardTitle className="text-2xl font-bold text-gray-800">📋 רשימת ציוד</CardTitle>
+                  <div className="flex items-center gap-2">
+                    <CardTitle className="text-2xl font-bold text-gray-800">📋 רשימת ציוד</CardTitle>
+                    <button
+                      type="button"
+                      onClick={() => window.open('/guides/equipment-guide.html', '_blank')}
+                      className="inline-flex items-center justify-center w-7 h-7 rounded-full bg-blue-100 hover:bg-blue-200 text-blue-600 text-sm font-bold transition-colors"
+                      title="מדריך ניהול ציוד"
+                    >
+                      ?
+                    </button>
+                  </div>
                   <div className="relative w-full sm:w-64">
                     <Input
                       type="text"
