@@ -84,7 +84,7 @@ export async function POST(request: Request) {
   try {
     const supabase = await createAuthClient()
     const body = await request.json()
-    const { name, image_url, category_id } = body
+    const { name, image_url, category_id, is_consumable = false } = body
 
     // Validate input
     if (!name || name.trim() === '') {
@@ -148,6 +148,7 @@ export async function POST(request: Request) {
         name: name.trim(),
         image_url,
         category_id,
+        is_consumable,
         status,
         created_by: user.id
       })

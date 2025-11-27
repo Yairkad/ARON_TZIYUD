@@ -120,10 +120,10 @@ export async function POST(request: Request) {
       return NextResponse.json({ error: 'נדרשת הרשאת עריכה מלאה' }, { status: 403 })
     }
 
-    // Verify global equipment exists and is active
+    // Verify global equipment exists and is active (or pending_approval for the creator)
     const { data: globalEquipment } = await serviceClient
       .from('global_equipment_pool')
-      .select('id, name, status')
+      .select('id, name, status, created_by')
       .eq('id', global_equipment_id)
       .single()
 
@@ -131,7 +131,9 @@ export async function POST(request: Request) {
       return NextResponse.json({ error: 'פריט לא נמצא במאגר' }, { status: 404 })
     }
 
-    if (globalEquipment.status !== 'active') {
+    // Allow active equipment OR pending_approval if created by the same user
+    const isCreator = globalEquipment.created_by === user.id
+    if (globalEquipment.status !== 'active' && !(globalEquipment.status === 'pending_approval' && isCreator)) {
       return NextResponse.json({ error: 'פריט זה לא פעיל במאגר' }, { status: 400 })
     }
 

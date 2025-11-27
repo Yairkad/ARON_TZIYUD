@@ -520,7 +520,8 @@ export default function CityAdminPage() {
           body: JSON.stringify({
             name: newEquipment.name.trim(),
             category_id: newEquipment.category_id || null,
-            image_url: newEquipment.image_url || null
+            image_url: newEquipment.image_url || null,
+            is_consumable: newEquipment.is_consumable
           })
         })
 
