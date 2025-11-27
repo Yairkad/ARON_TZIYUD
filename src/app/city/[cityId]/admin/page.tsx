@@ -492,7 +492,9 @@ export default function CityAdminPage() {
         body: JSON.stringify({
           city_id: cityId,
           global_equipment_id: globalEquipmentId,
-          quantity: newEquipment.quantity
+          quantity: newEquipment.quantity,
+          equipment_status: newEquipment.equipment_status,
+          is_consumable: newEquipment.is_consumable
         })
       })
 
@@ -526,9 +528,13 @@ export default function CityAdminPage() {
 
     setLoading(true)
     try {
-      console.log('🔧 Updating equipment:', { id, name, quantity, equipment_status, is_consumable })
+      console.log('🔧 Updating equipment:', { id, name, quantity, equipment_status, is_consumable, image_url })
 
-      // Update city_equipment using API
+      // Find the equipment to get its global_equipment_id
+      const equipmentItem = equipment.find(e => e.city_equipment_id === id || e.id === id)
+      const globalEquipmentId = equipmentItem?.global_equipment_id || equipmentItem?.id
+
+      // Update city_equipment using API (quantity, status, consumable)
       const response = await fetch('/api/city-equipment', {
         method: 'PUT',
         headers: { 'Content-Type': 'application/json' },
@@ -541,10 +547,31 @@ export default function CityAdminPage() {
       })
 
       const data = await response.json()
-      console.log('🔧 Update response:', data)
+      console.log('🔧 City equipment update response:', data)
 
       if (!response.ok) {
         throw new Error(data.error || 'שגיאה בעדכון ציוד')
+      }
+
+      // If image_url was provided, update it in global_equipment_pool
+      if (image_url !== undefined && globalEquipmentId) {
+        console.log('🖼️ Updating image for global equipment:', globalEquipmentId)
+        const imageResponse = await fetch('/api/global-equipment', {
+          method: 'PUT',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({
+            id: globalEquipmentId,
+            image_url
+          })
+        })
+
+        const imageData = await imageResponse.json()
+        console.log('🖼️ Image update response:', imageData)
+
+        if (!imageResponse.ok) {
+          // Don't fail the whole operation, just warn
+          console.warn('Warning: Could not update image:', imageData.error)
+        }
       }
 
       alert('הציוד עודכן בהצלחה!')

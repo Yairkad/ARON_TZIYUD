@@ -171,7 +171,7 @@ export async function POST(request: Request) {
   }
 }
 
-// PUT - Update equipment (Super Admin only)
+// PUT - Update equipment (Super Admin can update all, City Manager can update image only)
 export async function PUT(request: Request) {
   try {
     const supabase = await createAuthClient()
@@ -190,16 +190,43 @@ export async function PUT(request: Request) {
 
     const { data: userData } = await supabase
       .from('users')
-      .select('role')
+      .select('role, city_id, permissions')
       .eq('id', user.id)
       .single()
 
-    if (userData?.role !== 'super_admin') {
-      return NextResponse.json({ error: 'רק מנהל ראשי יכול לערוך פריטים במאגר' }, { status: 403 })
+    if (!userData) {
+      return NextResponse.json({ error: 'משתמש לא נמצא' }, { status: 404 })
     }
 
-    // Check if new name conflicts with existing equipment
-    if (name) {
+    const isSuperAdmin = userData.role === 'super_admin'
+    const isCityManager = userData.role === 'city_manager' && userData.permissions === 'full_access'
+
+    // City managers can only update image_url, not name or category
+    if (!isSuperAdmin && !isCityManager) {
+      return NextResponse.json({ error: 'אין הרשאה לערוך פריטים במאגר' }, { status: 403 })
+    }
+
+    // City managers can only update image_url
+    if (!isSuperAdmin && (name !== undefined || category_id !== undefined)) {
+      return NextResponse.json({ error: 'מנהל עיר יכול לעדכן רק תמונה של ציוד' }, { status: 403 })
+    }
+
+    // For city managers, verify they have this equipment in their city
+    if (!isSuperAdmin) {
+      const { data: cityEquipment } = await supabase
+        .from('city_equipment')
+        .select('id')
+        .eq('city_id', userData.city_id)
+        .eq('global_equipment_id', id)
+        .single()
+
+      if (!cityEquipment) {
+        return NextResponse.json({ error: 'אין לך הרשאה לעדכן ציוד זה - הוא לא קיים בעיר שלך' }, { status: 403 })
+      }
+    }
+
+    // Check if new name conflicts with existing equipment (super admin only)
+    if (name && isSuperAdmin) {
       const { data: existing } = await supabase
         .from('global_equipment_pool')
         .select('id')
@@ -216,11 +243,11 @@ export async function PUT(request: Request) {
 
     // Update equipment
     const updateData: any = { updated_at: new Date().toISOString() }
-    if (name !== undefined) updateData.name = name.trim()
+    if (name !== undefined && isSuperAdmin) updateData.name = name.trim()
     if (image_url !== undefined) updateData.image_url = image_url
-    if (category_id !== undefined) updateData.category_id = category_id
+    if (category_id !== undefined && isSuperAdmin) updateData.category_id = category_id
 
-    // Use service client for super_admin operations
+    // Use service client for database operations
     const updateClient = createClient(
       process.env.NEXT_PUBLIC_SUPABASE_URL!,
       process.env.SUPABASE_SERVICE_ROLE_KEY!,

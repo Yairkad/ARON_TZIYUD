@@ -76,7 +76,7 @@ export async function POST(request: Request) {
   try {
     const supabase = await createAuthClient()
     const body = await request.json()
-    const { city_id, global_equipment_id, quantity = 0, display_order } = body
+    const { city_id, global_equipment_id, quantity = 0, display_order, equipment_status = 'working', is_consumable = false } = body
 
     if (!city_id || !global_equipment_id) {
       return NextResponse.json({ error: 'חסרים פרמטרים' }, { status: 400 })
@@ -142,7 +142,9 @@ export async function POST(request: Request) {
         city_id,
         global_equipment_id,
         quantity,
-        display_order
+        display_order,
+        equipment_status,
+        is_consumable
       })
       .select(`
         *,
