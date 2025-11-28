@@ -2543,46 +2543,44 @@ export default function SuperAdminPage() {
                                 e.preventDefault()
                                 e.stopPropagation()
 
-                                const newPassword = prompt('הזן סיסמה חדשה (השאר ריק עבור 123456):') ?? '123456'
-
-                                if (newPassword.length < 4) {
-                                  alert('הסיסמה חייבת להכיל לפחות 4 תווים')
-                                  return
-                                }
-
-                                if (!confirm(`האם לאפס את הסיסמה של ${user.full_name}?\nסיסמה חדשה: ${newPassword}`)) return
+                                const action = user.is_active ? 'לחסום' : 'להפעיל'
+                                if (!confirm(`האם ${action} את המשתמש ${user.full_name}?`)) return
 
                                 setLoading(true)
                                 try {
-                                  const response = await fetch('/api/admin/users/reset-password', {
-                                    method: 'POST',
+                                  const response = await fetch('/api/admin/users/update', {
+                                    method: 'PUT',
                                     headers: { 'Content-Type': 'application/json' },
                                     credentials: 'include',
                                     body: JSON.stringify({
                                       user_id: user.id,
-                                      new_password: newPassword
+                                      is_active: !user.is_active
                                     }),
                                   })
 
                                   const data = await response.json()
 
                                   if (!response.ok) {
-                                    alert(data.error || 'שגיאה באיפוס סיסמה')
+                                    alert(data.error || 'שגיאה בעדכון משתמש')
                                     return
                                   }
 
-                                  alert(data.message)
+                                  alert(`המשתמש ${user.is_active ? 'נחסם' : 'הופעל'} בהצלחה`)
+                                  fetchUsers()
                                 } catch (error) {
-                                  console.error('Error resetting password:', error)
-                                  alert('אירעה שגיאה באיפוס הסיסמה')
+                                  console.error('Error updating user:', error)
+                                  alert('אירעה שגיאה בעדכון המשתמש')
                                 } finally {
                                   setLoading(false)
                                 }
                               }}
-                              className="bg-gradient-to-r from-amber-500 to-orange-500 hover:from-amber-600 hover:to-orange-600 text-white font-semibold text-xs md:text-sm px-2 md:px-4 py-1.5 md:py-2 rounded-lg transition-all duration-200 hover:scale-105 flex-1 md:flex-none"
+                              className={`${user.is_active
+                                ? 'bg-gradient-to-r from-amber-500 to-orange-500 hover:from-amber-600 hover:to-orange-600'
+                                : 'bg-gradient-to-r from-green-500 to-emerald-500 hover:from-green-600 hover:to-emerald-600'
+                              } text-white font-semibold text-xs md:text-sm px-2 md:px-4 py-1.5 md:py-2 rounded-lg transition-all duration-200 hover:scale-105 flex-1 md:flex-none`}
                             >
-                              <span className="md:hidden">🔑</span>
-                              <span className="hidden md:inline">🔑 אפס סיסמה</span>
+                              <span className="md:hidden">{user.is_active ? '🚫' : '✅'}</span>
+                              <span className="hidden md:inline">{user.is_active ? '🚫 חסום' : '✅ הפעל'}</span>
                             </Button>
                             <Button
                               type="button"
@@ -2814,14 +2812,6 @@ export default function SuperAdminPage() {
                                   subject: '🙏 תודה על השימוש בארון הציוד',
                                   message: 'שלום,\n\nרצינו להודות לך על השימוש במערכת ארון הציוד של ידידים.\n\nהציוד שלנו עוזר לאנשים רבים בזכות מתנדבים כמוך.\n\nתודה!'
                                 },
-                                reset_password: {
-                                  subject: '🔑 קישור לאיפוס סיסמה',
-                                  message: `שלום,\n\nקיבלת בקשה לאיפוס סיסמה?\n\nלחץ על הקישור הבא לאיפוס הסיסמה שלך:\n${appUrl}/reset-password\n\n⚠️ שים לב: אם לא ביקשת לאפס סיסמה, התעלם מהודעה זו.\n\nבברכה,\nצוות ארון הציוד`
-                                },
-                                first_login: {
-                                  subject: '🚀 פרטי כניסה ראשונה למערכת',
-                                  message: `שלום,\n\nnנוצר עבורך חשבון במערכת ארון הציוד.\n\n🔗 קישור לכניסה למערכת:\n${appUrl}/login\n\n📧 שם משתמש: [הכנס כאן את כתובת המייל]\n🔑 סיסמה זמנית: [הכנס כאן את הסיסמה]\n\n⚠️ חשוב: מומלץ לשנות את הסיסמה מיד לאחר הכניסה הראשונה.\n\nבברכה,\nצוות ארון הציוד`
-                                },
                                 custom: {
                                   subject: '',
                                   message: ''
@@ -2837,8 +2827,6 @@ export default function SuperAdminPage() {
                           >
                             <option value="">-- בחר תבנית --</option>
                             <option value="welcome">🎉 ברוך הבא</option>
-                            <option value="first_login">🚀 פרטי כניסה ראשונה</option>
-                            <option value="reset_password">🔑 איפוס סיסמה</option>
                             <option value="reminder">⏰ תזכורת החזרת ציוד</option>
                             <option value="update">📢 עדכון חשוב</option>
                             <option value="thanks">🙏 תודה</option>
