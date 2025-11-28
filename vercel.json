@@ -7,6 +7,14 @@
     {
       "path": "/api/cron/weekly-stock-alert",
       "schedule": "0 5 * * 0"
+    },
+    {
+      "path": "/api/cron/daily-alerts",
+      "schedule": "0 6 * * *"
+    },
+    {
+      "path": "/api/cron/monthly-report",
+      "schedule": "0 5 1 * *"
     }
   ]
 }

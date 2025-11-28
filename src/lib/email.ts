@@ -408,6 +408,315 @@ export async function sendLowStockEmail(
 }
 
 /**
+ * Send reminder email for consumables/low stock items that need refilling
+ * @param isFollowUp - true if this is a follow-up reminder (sent after 1 week)
+ */
+export async function sendStockRefillReminder(
+  managerEmail: string,
+  managerName: string,
+  cityName: string,
+  items: { name: string; quantity: number; minQuantity: number }[],
+  isFollowUp: boolean = false
+) {
+  const itemsList = items.map(item =>
+    `<tr style="border-bottom: 1px solid #eee;">
+      <td style="padding: 10px; text-align: right;">${item.name}</td>
+      <td style="padding: 10px; text-align: center; color: #dc2626; font-weight: bold;">${item.quantity}</td>
+      <td style="padding: 10px; text-align: center;">${item.minQuantity}</td>
+    </tr>`
+  ).join('')
+  const baseUrl = (process.env.NEXT_PUBLIC_APP_URL || '').trim()
+  const adminUrl = `${baseUrl}/login`
+
+  const urgencyBadge = isFollowUp
+    ? `<span style="background: #dc2626; color: white; padding: 5px 15px; border-radius: 20px; font-size: 14px;">⏰ תזכורת שנייה</span>`
+    : `<span style="background: #f59e0b; color: white; padding: 5px 15px; border-radius: 20px; font-size: 14px;">📋 תזכורת ראשונה</span>`
+
+  const html = `
+    <!DOCTYPE html>
+    <html dir="rtl" lang="he">
+    <head>
+      <meta charset="UTF-8">
+      <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    </head>
+    <body style="font-family: Arial, sans-serif; background-color: #f4f4f4; padding: 20px; margin: 0; direction: rtl; text-align: right;">
+      <div style="max-width: 600px; margin: 0 auto; background: white; border-radius: 10px; padding: 40px; box-shadow: 0 2px 10px rgba(0,0,0,0.1); direction: rtl; text-align: right;">
+        <div style="text-align: center; margin-bottom: 30px;">
+          <div style="font-size: 32px; font-weight: bold; color: #6366f1;">🏙️ ארון ציוד ידידים</div>
+        </div>
+
+        <div style="text-align: center; margin-bottom: 20px;">
+          ${urgencyBadge}
+        </div>
+
+        <div style="background: ${isFollowUp ? '#fee2e2' : '#fef3c7'}; border-right: 4px solid ${isFollowUp ? '#dc2626' : '#f59e0b'}; padding: 20px; margin: 20px 0; border-radius: 8px; direction: rtl; text-align: right;">
+          <h2 style="margin-top: 0; color: ${isFollowUp ? '#991b1b' : '#92400e'};">📦 נדרש מילוי מלאי - ${cityName}</h2>
+          <p style="margin-bottom: 0;">${isFollowUp ? 'עבר שבוע מאז התזכורת הקודמת. הפריטים הבאים עדיין דורשים מילוי:' : 'הפריטים הבאים הגיעו לרמת מלאי נמוכה ודורשים מילוי:'}</p>
+        </div>
+
+        <table style="width: 100%; border-collapse: collapse; margin: 20px 0;">
+          <thead>
+            <tr style="background: #f8f9fa;">
+              <th style="padding: 10px; text-align: right;">פריט</th>
+              <th style="padding: 10px; text-align: center;">כמות נוכחית</th>
+              <th style="padding: 10px; text-align: center;">מינימום</th>
+            </tr>
+          </thead>
+          <tbody>
+            ${itemsList}
+          </tbody>
+        </table>
+
+        <div style="text-align: center; margin: 20px 0;">
+          <a href="${adminUrl}" style="display: inline-block; background: linear-gradient(to left, #6366f1, #a855f7); color: white; padding: 15px 30px; text-decoration: none; border-radius: 8px; font-weight: bold;">📦 כניסה לניהול המלאי</a>
+        </div>
+
+        <div style="text-align: center; color: #666; font-size: 12px; margin-top: 30px; border-top: 1px solid #eee; padding-top: 20px;">
+          <p>מערכת ארון ציוד ידידים - ${new Date().getFullYear()}</p>
+        </div>
+      </div>
+    </body>
+    </html>
+  `
+
+  return sendEmail({
+    to: managerEmail,
+    subject: `${isFollowUp ? '⏰ תזכורת שנייה' : '📦 תזכורת'}: מילוי מלאי נדרש - ${cityName}`,
+    html
+  })
+}
+
+/**
+ * Send reminder email for faulty equipment that needs repair
+ * @param isFollowUp - true if this is a follow-up reminder (sent after 1 week)
+ */
+export async function sendFaultyEquipmentReminder(
+  managerEmail: string,
+  managerName: string,
+  cityName: string,
+  items: { name: string; faultyDays: number; notes?: string }[],
+  isFollowUp: boolean = false
+) {
+  const itemsList = items.map(item =>
+    `<tr style="border-bottom: 1px solid #eee;">
+      <td style="padding: 10px; text-align: right;">${item.name}</td>
+      <td style="padding: 10px; text-align: center; color: #dc2626; font-weight: bold;">${item.faultyDays} ימים</td>
+      <td style="padding: 10px; text-align: right; font-size: 12px; color: #666;">${item.notes || '-'}</td>
+    </tr>`
+  ).join('')
+  const baseUrl = (process.env.NEXT_PUBLIC_APP_URL || '').trim()
+  const adminUrl = `${baseUrl}/login`
+
+  const urgencyBadge = isFollowUp
+    ? `<span style="background: #dc2626; color: white; padding: 5px 15px; border-radius: 20px; font-size: 14px;">⏰ תזכורת שנייה</span>`
+    : `<span style="background: #f97316; color: white; padding: 5px 15px; border-radius: 20px; font-size: 14px;">🔧 תזכורת ראשונה</span>`
+
+  const html = `
+    <!DOCTYPE html>
+    <html dir="rtl" lang="he">
+    <head>
+      <meta charset="UTF-8">
+      <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    </head>
+    <body style="font-family: Arial, sans-serif; background-color: #f4f4f4; padding: 20px; margin: 0; direction: rtl; text-align: right;">
+      <div style="max-width: 600px; margin: 0 auto; background: white; border-radius: 10px; padding: 40px; box-shadow: 0 2px 10px rgba(0,0,0,0.1); direction: rtl; text-align: right;">
+        <div style="text-align: center; margin-bottom: 30px;">
+          <div style="font-size: 32px; font-weight: bold; color: #6366f1;">🏙️ ארון ציוד ידידים</div>
+        </div>
+
+        <div style="text-align: center; margin-bottom: 20px;">
+          ${urgencyBadge}
+        </div>
+
+        <div style="background: ${isFollowUp ? '#fee2e2' : '#ffedd5'}; border-right: 4px solid ${isFollowUp ? '#dc2626' : '#f97316'}; padding: 20px; margin: 20px 0; border-radius: 8px; direction: rtl; text-align: right;">
+          <h2 style="margin-top: 0; color: ${isFollowUp ? '#991b1b' : '#9a3412'};">🔧 ציוד תקול דורש תיקון - ${cityName}</h2>
+          <p style="margin-bottom: 0;">${isFollowUp ? 'עבר שבוע מאז התזכורת הקודמת. הציוד הבא עדיין מוגדר כתקול:' : 'הציוד הבא מוגדר כתקול למעלה מ-3 שבועות ודורש טיפול:'}</p>
+        </div>
+
+        <table style="width: 100%; border-collapse: collapse; margin: 20px 0;">
+          <thead>
+            <tr style="background: #f8f9fa;">
+              <th style="padding: 10px; text-align: right;">פריט</th>
+              <th style="padding: 10px; text-align: center;">זמן כתקול</th>
+              <th style="padding: 10px; text-align: right;">הערות</th>
+            </tr>
+          </thead>
+          <tbody>
+            ${itemsList}
+          </tbody>
+        </table>
+
+        <p style="text-align: right; direction: rtl;">מומלץ לשלוח את הציוד לתיקון או להחליף אותו.</p>
+
+        <div style="text-align: center; margin: 20px 0;">
+          <a href="${adminUrl}" style="display: inline-block; background: linear-gradient(to left, #6366f1, #a855f7); color: white; padding: 15px 30px; text-decoration: none; border-radius: 8px; font-weight: bold;">🔧 כניסה לניהול הציוד</a>
+        </div>
+
+        <div style="text-align: center; color: #666; font-size: 12px; margin-top: 30px; border-top: 1px solid #eee; padding-top: 20px;">
+          <p>מערכת ארון ציוד ידידים - ${new Date().getFullYear()}</p>
+        </div>
+      </div>
+    </body>
+    </html>
+  `
+
+  return sendEmail({
+    to: managerEmail,
+    subject: `${isFollowUp ? '⏰ תזכורת שנייה' : '🔧 תזכורת'}: ציוד תקול דורש תיקון - ${cityName}`,
+    html
+  })
+}
+
+/**
+ * Monthly statistics report email
+ */
+export interface MonthlyReportData {
+  cityName: string
+  periodStart: string
+  periodEnd: string
+  totalBorrows: number
+  totalReturns: number
+  pendingReturns: number
+  topBorrowedItems: { name: string; count: number }[]
+  lowStockItems: { name: string; quantity: number }[]
+  faultyItems: { name: string; days: number }[]
+  activeRequestsCount: number
+  approvedRequestsCount: number
+  rejectedRequestsCount: number
+}
+
+export async function sendMonthlyReportEmail(
+  managerEmail: string,
+  managerName: string,
+  data: MonthlyReportData
+) {
+  const baseUrl = (process.env.NEXT_PUBLIC_APP_URL || '').trim()
+  const adminUrl = `${baseUrl}/login`
+
+  const topItemsList = data.topBorrowedItems.length > 0
+    ? data.topBorrowedItems.map((item, i) =>
+      `<tr style="border-bottom: 1px solid #eee;">
+        <td style="padding: 8px; text-align: center;">${i + 1}</td>
+        <td style="padding: 8px; text-align: right;">${item.name}</td>
+        <td style="padding: 8px; text-align: center; font-weight: bold;">${item.count}</td>
+      </tr>`
+    ).join('')
+    : '<tr><td colspan="3" style="padding: 15px; text-align: center; color: #666;">אין נתונים</td></tr>'
+
+  const lowStockSection = data.lowStockItems.length > 0
+    ? `<div style="background: #fef3c7; border-right: 4px solid #f59e0b; padding: 15px; margin: 10px 0; border-radius: 8px;">
+        <h4 style="margin-top: 0; color: #92400e;">⚠️ פריטים במלאי נמוך (${data.lowStockItems.length})</h4>
+        <ul style="margin: 0; padding-right: 20px;">
+          ${data.lowStockItems.map(item => `<li>${item.name} - ${item.quantity} יחידות</li>`).join('')}
+        </ul>
+      </div>`
+    : ''
+
+  const faultySection = data.faultyItems.length > 0
+    ? `<div style="background: #fee2e2; border-right: 4px solid #ef4444; padding: 15px; margin: 10px 0; border-radius: 8px;">
+        <h4 style="margin-top: 0; color: #991b1b;">🔧 ציוד תקול (${data.faultyItems.length})</h4>
+        <ul style="margin: 0; padding-right: 20px;">
+          ${data.faultyItems.map(item => `<li>${item.name} - ${item.days} ימים</li>`).join('')}
+        </ul>
+      </div>`
+    : ''
+
+  const html = `
+    <!DOCTYPE html>
+    <html dir="rtl" lang="he">
+    <head>
+      <meta charset="UTF-8">
+      <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    </head>
+    <body style="font-family: Arial, sans-serif; background-color: #f4f4f4; padding: 20px; margin: 0; direction: rtl; text-align: right;">
+      <div style="max-width: 600px; margin: 0 auto; background: white; border-radius: 10px; padding: 40px; box-shadow: 0 2px 10px rgba(0,0,0,0.1); direction: rtl; text-align: right;">
+        <div style="text-align: center; margin-bottom: 30px;">
+          <div style="font-size: 32px; font-weight: bold; color: #6366f1;">🏙️ ארון ציוד ידידים</div>
+        </div>
+
+        <div style="background: linear-gradient(135deg, #6366f1, #a855f7); color: white; padding: 25px; border-radius: 12px; margin-bottom: 25px; text-align: center;">
+          <h1 style="margin: 0 0 10px 0; font-size: 24px;">📊 דוח חודשי - ${data.cityName}</h1>
+          <p style="margin: 0; opacity: 0.9;">${data.periodStart} - ${data.periodEnd}</p>
+        </div>
+
+        <h2 style="text-align: right; direction: rtl;">שלום ${managerName},</h2>
+        <p style="text-align: right; direction: rtl;">להלן סיכום הפעילות החודשית בארון הציוד:</p>
+
+        <!-- Summary Cards -->
+        <div style="display: flex; flex-wrap: wrap; gap: 10px; margin: 20px 0;">
+          <div style="flex: 1; min-width: 120px; background: #f0fdf4; padding: 15px; border-radius: 8px; text-align: center;">
+            <div style="font-size: 28px; font-weight: bold; color: #16a34a;">${data.totalBorrows}</div>
+            <div style="color: #166534; font-size: 14px;">השאלות</div>
+          </div>
+          <div style="flex: 1; min-width: 120px; background: #eff6ff; padding: 15px; border-radius: 8px; text-align: center;">
+            <div style="font-size: 28px; font-weight: bold; color: #2563eb;">${data.totalReturns}</div>
+            <div style="color: #1e40af; font-size: 14px;">החזרות</div>
+          </div>
+          <div style="flex: 1; min-width: 120px; background: #fef3c7; padding: 15px; border-radius: 8px; text-align: center;">
+            <div style="font-size: 28px; font-weight: bold; color: #d97706;">${data.pendingReturns}</div>
+            <div style="color: #92400e; font-size: 14px;">ממתינים להחזרה</div>
+          </div>
+        </div>
+
+        <!-- Request Stats -->
+        <div style="background: #f8fafc; padding: 15px; border-radius: 8px; margin: 20px 0;">
+          <h3 style="margin-top: 0;">📝 סטטיסטיקת בקשות</h3>
+          <div style="display: flex; justify-content: space-around; text-align: center;">
+            <div>
+              <div style="font-size: 20px; font-weight: bold; color: #16a34a;">${data.approvedRequestsCount}</div>
+              <div style="font-size: 12px; color: #666;">אושרו</div>
+            </div>
+            <div>
+              <div style="font-size: 20px; font-weight: bold; color: #dc2626;">${data.rejectedRequestsCount}</div>
+              <div style="font-size: 12px; color: #666;">נדחו</div>
+            </div>
+            <div>
+              <div style="font-size: 20px; font-weight: bold; color: #f59e0b;">${data.activeRequestsCount}</div>
+              <div style="font-size: 12px; color: #666;">ממתינות</div>
+            </div>
+          </div>
+        </div>
+
+        <!-- Top Borrowed Items -->
+        <h3 style="text-align: right; direction: rtl;">🏆 פריטים מושאלים ביותר</h3>
+        <table style="width: 100%; border-collapse: collapse; margin: 15px 0;">
+          <thead>
+            <tr style="background: #f8f9fa;">
+              <th style="padding: 8px; text-align: center; width: 40px;">#</th>
+              <th style="padding: 8px; text-align: right;">פריט</th>
+              <th style="padding: 8px; text-align: center;">השאלות</th>
+            </tr>
+          </thead>
+          <tbody>
+            ${topItemsList}
+          </tbody>
+        </table>
+
+        <!-- Alerts Section -->
+        ${lowStockSection}
+        ${faultySection}
+
+        <div style="text-align: center; margin: 25px 0;">
+          <a href="${adminUrl}" style="display: inline-block; background: linear-gradient(to left, #6366f1, #a855f7); color: white; padding: 15px 30px; text-decoration: none; border-radius: 8px; font-weight: bold;">📊 צפייה בדוחות מלאים</a>
+        </div>
+
+        <div style="text-align: center; color: #666; font-size: 12px; margin-top: 30px; border-top: 1px solid #eee; padding-top: 20px;">
+          <p>דוח זה נשלח אוטומטית בתחילת כל חודש</p>
+          <p>מערכת ארון ציוד ידידים - ${new Date().getFullYear()}</p>
+        </div>
+      </div>
+    </body>
+    </html>
+  `
+
+  return sendEmail({
+    to: managerEmail,
+    subject: `📊 דוח חודשי - ${data.cityName} (${data.periodStart} - ${data.periodEnd})`,
+    html
+  })
+}
+
+/**
  * Send custom email (for super admin direct sending)
  */
 export async function sendCustomEmail(
