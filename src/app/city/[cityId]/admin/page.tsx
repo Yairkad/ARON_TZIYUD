@@ -12,6 +12,7 @@ import { ArrowRight, FileDown, Bell, BellOff } from 'lucide-react'
 import Logo from '@/components/Logo'
 import { checkAuth, logout } from '@/lib/auth'
 import RequestsTab from '@/components/RequestsTab'
+import ReportsTab from '@/components/ReportsTab'
 import EquipmentPoolModal from '@/components/EquipmentPoolModal'
 import {
   isPushSupported,
@@ -96,7 +97,7 @@ export default function CityAdminPage() {
   const [isAuthenticated, setIsAuthenticated] = useState(false)
   const [isCheckingAuth, setIsCheckingAuth] = useState(true) // Add loading state for auth check
   const [loading, setLoading] = useState(false)
-  const [activeTab, setActiveTab] = useState<'equipment' | 'history' | 'requests' | 'settings'>('equipment')
+  const [activeTab, setActiveTab] = useState<'equipment' | 'history' | 'requests' | 'reports' | 'settings'>('equipment')
   const [newEquipment, setNewEquipment] = useState({ name: '', quantity: 1, equipment_status: 'working' as 'working' | 'faulty', is_consumable: false, category_id: '', image_url: '' })
   const [editingEquipment, setEditingEquipment] = useState<{ id: string; name: string; quantity: number; equipment_status: 'working' | 'faulty'; is_consumable: boolean; category_id?: string; image_url?: string } | null>(null)
   const [editCityForm, setEditCityForm] = useState({
@@ -1289,7 +1290,7 @@ export default function CityAdminPage() {
         </div>
 
 
-        <div className="grid grid-cols-2 md:grid-cols-4 gap-3 mb-8">
+        <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-5 gap-3 mb-8">
           <Button
             onClick={() => setActiveTab('equipment')}
             className={`py-6 rounded-xl font-semibold text-lg transition-all duration-300 ${
@@ -1327,6 +1328,16 @@ export default function CityAdminPage() {
               )}
             </Button>
           )}
+          <Button
+            onClick={() => setActiveTab('reports')}
+            className={`py-6 rounded-xl font-semibold text-lg transition-all duration-300 ${
+              activeTab === 'reports'
+                ? 'bg-gradient-to-r from-teal-600 to-cyan-600 text-white shadow-lg shadow-teal-500/50 scale-105'
+                : 'bg-white text-gray-600 border-2 border-gray-200 hover:border-teal-300 hover:bg-teal-50'
+            }`}
+          >
+            <span className="text-2xl ml-2">📊</span> דוחות
+          </Button>
           <Button
             onClick={() => setActiveTab('settings')}
             className={`py-6 rounded-xl font-semibold text-lg transition-all duration-300 ${
@@ -2384,6 +2395,13 @@ export default function CityAdminPage() {
             onRequestsUpdate={fetchPendingRequestsCount}
             canApprove={canApprove}
             canEdit={canEdit}
+          />
+        )}
+
+        {activeTab === 'reports' && city && (
+          <ReportsTab
+            cityId={cityId}
+            cityName={city.name}
           />
         )}
 
