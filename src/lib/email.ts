@@ -168,11 +168,11 @@ export async function sendPasswordResetEmail(email: string, token: string, manag
 }
 
 /**
- * Send welcome email with temporary password to new manager
+ * Send welcome email with password reset link to new manager
  */
-export async function sendWelcomeEmail(email: string, tempPassword: string, managerName: string, cityName: string) {
+export async function sendWelcomeEmail(email: string, resetToken: string, managerName: string, cityName: string) {
   const baseUrl = (process.env.NEXT_PUBLIC_APP_URL || '').trim()
-  const loginUrl = `${baseUrl}/login`
+  const resetUrl = `${baseUrl}/reset-password?token=${resetToken}`
 
   const html = `
     <!DOCTYPE html>
@@ -194,14 +194,20 @@ export async function sendWelcomeEmail(email: string, tempPassword: string, mana
         <div style="background: #f8f9fa; border-right: 4px solid #6366f1; padding: 20px; margin: 20px 0; direction: rtl; text-align: right;">
           <h3 style="margin-top: 0;">פרטי ההתחברות שלך:</h3>
           <p><strong>📧 כתובת מייל:</strong> ${email}</p>
-          <p><strong>🔑 סיסמה זמנית:</strong> <code style="background: white; padding: 5px 10px; border-radius: 4px; font-size: 16px;">${tempPassword}</code></p>
         </div>
 
-        <p style="text-align: right; direction: rtl;"><strong style="color: #dc2626;">⚠️ חשוב:</strong> מומלץ בחום להחליף את הסיסמה הזמנית לסיסמה אישית שלך מיד לאחר הכניסה הראשונה!</p>
+        <p style="text-align: right; direction: rtl;">כדי להתחיל להשתמש במערכת, יש להגדיר סיסמה לחשבון שלך:</p>
 
         <div style="text-align: center; margin: 20px 0;">
-          <a href="${loginUrl}" style="display: inline-block; background: linear-gradient(to left, #6366f1, #a855f7); color: white; padding: 15px 30px; text-decoration: none; border-radius: 8px; font-weight: bold;">🚀 התחבר למערכת</a>
+          <a href="${resetUrl}" style="display: inline-block; background: linear-gradient(to left, #6366f1, #a855f7); color: white; padding: 15px 30px; text-decoration: none; border-radius: 8px; font-weight: bold;">🔑 הגדרת סיסמה וכניסה למערכת</a>
         </div>
+
+        <p style="text-align: right; direction: rtl;">או העתק את הקישור הבא לדפדפן:</p>
+        <p style="background: #f0f0f0; padding: 10px; border-radius: 5px; word-break: break-all; direction: ltr; text-align: left;">
+          ${resetUrl}
+        </p>
+
+        <p style="text-align: right; direction: rtl;"><strong>לתשומת ליבך:</strong> הקישור תקף לשעה אחת בלבד.</p>
 
         <h3 style="text-align: right; direction: rtl;">מה אפשר לעשות במערכת?</h3>
         <ul style="text-align: right; direction: rtl; padding-right: 20px;">

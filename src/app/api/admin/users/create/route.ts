@@ -8,7 +8,8 @@
 
 import { NextRequest, NextResponse } from 'next/server'
 import { createServiceClient } from '@/lib/supabase-server'
-import { logEmail } from '@/lib/email'
+import { logEmail, sendWelcomeEmail } from '@/lib/email'
+import crypto from 'crypto'
 
 interface CreateUserBody {
   email: string
@@ -267,33 +268,56 @@ export async function POST(request: NextRequest) {
       }
     }
 
-    // Send password reset email via Supabase
-    const { error: resetError } = await supabase.auth.resetPasswordForEmail(
-      body.email,
-      {
-        redirectTo: `${process.env.NEXT_PUBLIC_APP_URL}/reset-password`
-      }
-    )
-
-    // Get city name for email log
-    let cityName = 'N/A'
+    // Get city name for welcome email
+    let cityName = 'המערכת'
     if (body.city_id) {
       const { data: cityData } = await supabase
         .from('cities')
         .select('name')
         .eq('id', body.city_id)
         .single()
-      cityName = cityData?.name || 'N/A'
+      cityName = cityData?.name || 'המערכת'
     }
+
+    // Generate reset token for welcome email
+    const resetToken = crypto.randomBytes(32).toString('hex')
+    const expiresAt = new Date()
+    expiresAt.setHours(expiresAt.getHours() + 1) // 1 hour expiration
+
+    // Store reset token in city_managers table if applicable
+    const { data: cityManager } = await supabase
+      .from('city_managers')
+      .select('id')
+      .eq('email', body.email)
+      .single()
+
+    if (cityManager) {
+      await supabase
+        .from('city_managers')
+        .update({
+          reset_token: resetToken,
+          reset_token_expires_at: expiresAt.toISOString(),
+          updated_at: new Date().toISOString()
+        })
+        .eq('id', cityManager.id)
+    }
+
+    // Send welcome email with reset link via Gmail SMTP
+    const emailResult = await sendWelcomeEmail(
+      body.email,
+      resetToken,
+      body.full_name,
+      cityName
+    )
 
     // Log the email
     await logEmail({
       recipientEmail: body.email,
       recipientName: body.full_name,
       emailType: 'welcome',
-      subject: 'הגדרת סיסמה - ארון ציוד ידידים',
-      status: resetError ? 'failed' : 'sent',
-      errorMessage: resetError?.message,
+      subject: `🎉 ברוך הבא למערכת ארון הציוד - ${cityName}`,
+      status: emailResult.success ? 'sent' : 'failed',
+      errorMessage: emailResult.error,
       sentBy: adminUser?.email || 'system',
       metadata: {
         user_id: authData.user.id,
@@ -305,8 +329,8 @@ export async function POST(request: NextRequest) {
       }
     })
 
-    if (resetError) {
-      console.error('Error sending password reset email:', resetError)
+    if (!emailResult.success) {
+      console.error('Error sending welcome email:', emailResult.error)
     }
 
     // Log the activity
@@ -320,7 +344,7 @@ export async function POST(request: NextRequest) {
           created_user_email: body.email,
           created_user_role: body.role,
           created_user_permissions: permissions,
-          email_sent: !resetError,
+          email_sent: emailResult.success,
         },
       })
 
@@ -335,7 +359,7 @@ export async function POST(request: NextRequest) {
         permissions: newUserProfile.permissions,
         is_active: newUserProfile.is_active,
       },
-      emailSent: !resetError,
+      emailSent: emailResult.success,
     })
 
   } catch (error) {
