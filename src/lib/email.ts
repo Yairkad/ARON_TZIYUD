@@ -63,7 +63,8 @@ export async function logEmail(options: EmailLogOptions): Promise<void> {
  * Send email verification link to city manager
  */
 export async function sendVerificationEmail(email: string, token: string, managerName: string) {
-  const verificationUrl = `${process.env.NEXT_PUBLIC_APP_URL}/verify-email?token=${token}`
+  const baseUrl = (process.env.NEXT_PUBLIC_APP_URL || '').trim()
+  const verificationUrl = `${baseUrl}/verify-email?token=${token}`
 
   const html = `
     <!DOCTYPE html>
@@ -117,7 +118,8 @@ export async function sendVerificationEmail(email: string, token: string, manage
  * Send password reset link to city manager
  */
 export async function sendPasswordResetEmail(email: string, token: string, managerName: string) {
-  const resetUrl = `${process.env.NEXT_PUBLIC_APP_URL}/reset-password?token=${token}`
+  const baseUrl = (process.env.NEXT_PUBLIC_APP_URL || '').trim()
+  const resetUrl = `${baseUrl}/reset-password?token=${token}`
 
   const html = `
     <!DOCTYPE html>
@@ -169,7 +171,8 @@ export async function sendPasswordResetEmail(email: string, token: string, manag
  * Send welcome email with temporary password to new manager
  */
 export async function sendWelcomeEmail(email: string, tempPassword: string, managerName: string, cityName: string) {
-  const loginUrl = `${process.env.NEXT_PUBLIC_APP_URL}/login`
+  const baseUrl = (process.env.NEXT_PUBLIC_APP_URL || '').trim()
+  const loginUrl = `${baseUrl}/login`
 
   const html = `
     <!DOCTYPE html>
@@ -228,7 +231,8 @@ export async function sendWelcomeEmail(email: string, tempPassword: string, mana
  * Send email update notification to new email address
  */
 export async function sendEmailUpdateNotification(newEmail: string, userName: string) {
-  const loginUrl = `${process.env.NEXT_PUBLIC_APP_URL}/login`
+  const baseUrl = (process.env.NEXT_PUBLIC_APP_URL || '').trim()
+  const loginUrl = `${baseUrl}/login`
 
   const html = `
     <!DOCTYPE html>
@@ -289,7 +293,8 @@ export async function sendNewRequestEmail(
   items: { name: string; quantity: number }[]
 ) {
   const itemsList = items.map(item => `<li style="padding: 5px 0;">${item.name} (כמות: ${item.quantity})</li>`).join('')
-  const adminUrl = `${process.env.NEXT_PUBLIC_APP_URL}/login`
+  const baseUrl = (process.env.NEXT_PUBLIC_APP_URL || '').trim()
+  const adminUrl = `${baseUrl}/login`
 
   const html = `
     <!DOCTYPE html>
@@ -349,7 +354,8 @@ export async function sendLowStockEmail(
   const itemsList = items.map(item =>
     `<li style="padding: 5px 0;"><strong>${item.name}</strong> - נשארו ${item.quantity} (מינימום: ${item.minQuantity})</li>`
   ).join('')
-  const adminUrl = `${process.env.NEXT_PUBLIC_APP_URL}/login`
+  const baseUrl = (process.env.NEXT_PUBLIC_APP_URL || '').trim()
+  const adminUrl = `${baseUrl}/login`
 
   const html = `
     <!DOCTYPE html>
