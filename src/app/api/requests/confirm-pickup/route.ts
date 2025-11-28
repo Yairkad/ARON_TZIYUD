@@ -1,6 +1,7 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { createClient } from '@supabase/supabase-js'
 import { hashToken } from '@/lib/token'
+import { sendLowStockEmail } from '@/lib/email'
 
 const supabase = createClient(
   process.env.NEXT_PUBLIC_SUPABASE_URL!,
@@ -149,6 +150,41 @@ export async function POST(request: NextRequest) {
         { error: 'שגיאה בעדכון הבקשה' },
         { status: 500 }
       )
+    }
+
+    // 4. Check for low stock and send email notification
+    try {
+      const LOW_STOCK_THRESHOLD = 2 // Alert when quantity <= 2
+
+      // Get all city equipment with low stock
+      const { data: lowStockItems } = await supabase
+        .from('city_equipment')
+        .select(`
+          quantity,
+          global_equipment:global_equipment_pool(name)
+        `)
+        .eq('city_id', equipmentRequest.city_id)
+        .lte('quantity', LOW_STOCK_THRESHOLD)
+
+      if (lowStockItems && lowStockItems.length > 0 && equipmentRequest.city.manager_email) {
+        const itemsForEmail = lowStockItems.map(item => ({
+          name: (item.global_equipment as any)?.name || 'ציוד',
+          quantity: item.quantity,
+          minQuantity: LOW_STOCK_THRESHOLD
+        }))
+
+        await sendLowStockEmail(
+          equipmentRequest.city.manager_email,
+          equipmentRequest.city.manager_name || 'מנהל',
+          equipmentRequest.city.name || 'ארון ציוד',
+          itemsForEmail
+        ).catch(err => {
+          console.error('Failed to send low stock email:', err)
+        })
+      }
+    } catch (lowStockError) {
+      console.error('Error checking low stock:', lowStockError)
+      // Continue anyway - low stock check failure shouldn't block pickup
     }
 
     // Return success with city_id for redirect

@@ -308,6 +308,142 @@ export async function sendEmailUpdateNotification(newEmail: string, userName: st
 }
 
 /**
+ * Send notification email about new equipment request
+ */
+export async function sendNewRequestEmail(
+  managerEmail: string,
+  managerName: string,
+  requesterName: string,
+  requesterPhone: string,
+  cityName: string,
+  items: { name: string; quantity: number }[]
+) {
+  const itemsList = items.map(item => `<li>${item.name} (כמות: ${item.quantity})</li>`).join('')
+  const adminUrl = `${process.env.NEXT_PUBLIC_APP_URL}/login`
+
+  const html = `
+    <!DOCTYPE html>
+    <html dir="rtl" lang="he">
+    <head>
+      <meta charset="UTF-8">
+      <style>
+        body { font-family: Arial, sans-serif; background-color: #f4f4f4; padding: 20px; }
+        .container { max-width: 600px; margin: 0 auto; background: white; border-radius: 10px; padding: 40px; box-shadow: 0 2px 10px rgba(0,0,0,0.1); }
+        .header { text-align: center; margin-bottom: 30px; }
+        .logo { font-size: 32px; font-weight: bold; color: #6366f1; }
+        .alert-box { background: #fef3c7; border-right: 4px solid #f59e0b; padding: 20px; margin: 20px 0; border-radius: 8px; }
+        .button { display: inline-block; background: linear-gradient(to left, #6366f1, #a855f7); color: white; padding: 15px 30px; text-decoration: none; border-radius: 8px; font-weight: bold; margin: 20px 0; }
+        .footer { text-align: center; color: #666; font-size: 12px; margin-top: 30px; }
+        .items-list { background: #f8f9fa; padding: 15px 25px; border-radius: 8px; }
+      </style>
+    </head>
+    <body>
+      <div class="container">
+        <div class="header">
+          <div class="logo">🏙️ ארון ציוד ידידים</div>
+        </div>
+
+        <div class="alert-box">
+          <h2 style="margin-top: 0; color: #92400e;">📦 בקשת ציוד חדשה!</h2>
+          <p style="margin-bottom: 0;">התקבלה בקשה חדשה לציוד מ${cityName}</p>
+        </div>
+
+        <h3>פרטי המבקש:</h3>
+        <p><strong>👤 שם:</strong> ${requesterName}</p>
+        <p><strong>📱 טלפון:</strong> <a href="tel:${requesterPhone}">${requesterPhone}</a></p>
+
+        <h3>פריטים מבוקשים:</h3>
+        <ul class="items-list">
+          ${itemsList}
+        </ul>
+
+        <div style="text-align: center;">
+          <a href="${adminUrl}" class="button">📋 כניסה לניהול הבקשות</a>
+        </div>
+
+        <div class="footer">
+          <p>מערכת ארון ציוד ידידים - ${new Date().getFullYear()}</p>
+        </div>
+      </div>
+    </body>
+    </html>
+  `
+
+  return sendEmail({
+    to: managerEmail,
+    subject: `📦 בקשת ציוד חדשה - ${requesterName}`,
+    html
+  })
+}
+
+/**
+ * Send notification email about low stock
+ */
+export async function sendLowStockEmail(
+  managerEmail: string,
+  managerName: string,
+  cityName: string,
+  items: { name: string; quantity: number; minQuantity: number }[]
+) {
+  const itemsList = items.map(item =>
+    `<li><strong>${item.name}</strong> - נשארו ${item.quantity} (מינימום: ${item.minQuantity})</li>`
+  ).join('')
+  const adminUrl = `${process.env.NEXT_PUBLIC_APP_URL}/login`
+
+  const html = `
+    <!DOCTYPE html>
+    <html dir="rtl" lang="he">
+    <head>
+      <meta charset="UTF-8">
+      <style>
+        body { font-family: Arial, sans-serif; background-color: #f4f4f4; padding: 20px; }
+        .container { max-width: 600px; margin: 0 auto; background: white; border-radius: 10px; padding: 40px; box-shadow: 0 2px 10px rgba(0,0,0,0.1); }
+        .header { text-align: center; margin-bottom: 30px; }
+        .logo { font-size: 32px; font-weight: bold; color: #6366f1; }
+        .alert-box { background: #fee2e2; border-right: 4px solid #ef4444; padding: 20px; margin: 20px 0; border-radius: 8px; }
+        .button { display: inline-block; background: linear-gradient(to left, #6366f1, #a855f7); color: white; padding: 15px 30px; text-decoration: none; border-radius: 8px; font-weight: bold; margin: 20px 0; }
+        .footer { text-align: center; color: #666; font-size: 12px; margin-top: 30px; }
+        .items-list { background: #fef2f2; padding: 15px 25px; border-radius: 8px; color: #991b1b; }
+      </style>
+    </head>
+    <body>
+      <div class="container">
+        <div class="header">
+          <div class="logo">🏙️ ארון ציוד ידידים</div>
+        </div>
+
+        <div class="alert-box">
+          <h2 style="margin-top: 0; color: #991b1b;">⚠️ התראת מלאי נמוך!</h2>
+          <p style="margin-bottom: 0;">יש פריטים במלאי נמוך בארון ${cityName}</p>
+        </div>
+
+        <h3>פריטים שנגמרים:</h3>
+        <ul class="items-list">
+          ${itemsList}
+        </ul>
+
+        <p>מומלץ להזמין מלאי חדש בהקדם.</p>
+
+        <div style="text-align: center;">
+          <a href="${adminUrl}" class="button">📦 כניסה לניהול המלאי</a>
+        </div>
+
+        <div class="footer">
+          <p>מערכת ארון ציוד ידידים - ${new Date().getFullYear()}</p>
+        </div>
+      </div>
+    </body>
+    </html>
+  `
+
+  return sendEmail({
+    to: managerEmail,
+    subject: `⚠️ התראת מלאי נמוך - ${cityName}`,
+    html
+  })
+}
+
+/**
  * Generic email sending function using Gmail SMTP
  */
 async function sendEmail(options: EmailOptions): Promise<{ success: boolean; error?: string }> {

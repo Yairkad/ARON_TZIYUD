@@ -2,6 +2,7 @@ import { NextRequest, NextResponse } from 'next/server'
 import { supabaseServer } from '@/lib/supabase-server'
 import { createRequestToken } from '@/lib/token'
 import { CreateRequestForm } from '@/types'
+import { sendNewRequestEmail } from '@/lib/email'
 
 /**
  * Calculate distance between two points using Haversine formula
@@ -54,10 +55,10 @@ export async function POST(request: NextRequest) {
 
     const cityId = cityEquipment.city_id
 
-    // Get city settings
+    // Get city settings and manager info
     const { data: city, error: cityError } = await supabaseServer
       .from('cities')
-      .select('require_call_id, request_mode, max_request_distance_km, token_lat, token_lng')
+      .select('name, require_call_id, request_mode, max_request_distance_km, token_lat, token_lng, manager_email, manager_name')
       .eq('id', cityId)
       .single()
 
@@ -282,6 +283,36 @@ export async function POST(request: NextRequest) {
     } catch (pushError) {
       console.error('Error sending push notification:', pushError)
       // Continue anyway - push failure shouldn't block request creation
+    }
+
+    // Send email notification to city manager (fire and forget)
+    if (city.manager_email) {
+      try {
+        // Get equipment names for the email
+        const { data: equipmentNames } = await supabaseServer
+          .from('global_equipment_pool')
+          .select('id, name')
+          .in('id', body.items.map(i => i.equipment_id))
+
+        const itemsWithNames = body.items.map(item => ({
+          name: equipmentNames?.find(eq => eq.id === item.equipment_id)?.name || 'ציוד',
+          quantity: item.quantity
+        }))
+
+        await sendNewRequestEmail(
+          city.manager_email,
+          city.manager_name || 'מנהל',
+          body.requester_name,
+          body.requester_phone,
+          city.name || 'ארון ציוד',
+          itemsWithNames
+        ).catch(err => {
+          console.error('Failed to send email notification:', err)
+        })
+      } catch (emailError) {
+        console.error('Error sending email notification:', emailError)
+        // Continue anyway - email failure shouldn't block request creation
+      }
     }
 
     return NextResponse.json({
