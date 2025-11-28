@@ -71,6 +71,8 @@ export default function SuperAdminPage() {
   const [customEmailSubject, setCustomEmailSubject] = useState('')
   const [customEmailMessage, setCustomEmailMessage] = useState('')
   const [sendingCustomEmail, setSendingCustomEmail] = useState(false)
+  const [sendToAllUsers, setSendToAllUsers] = useState(false)
+  const [bulkEmailProgress, setBulkEmailProgress] = useState({ sent: 0, total: 0, failed: 0 })
 
   // Email Selection State
   const [selectedEmails, setSelectedEmails] = useState<Set<string>>(new Set())
@@ -111,6 +113,19 @@ export default function SuperAdminPage() {
     }
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [isAuthenticated])
+
+  // Fetch data when switching tabs
+  useEffect(() => {
+    if (isAuthenticated) {
+      if (activeTab === 'emails') {
+        fetchEmailLogs()
+        fetchUsers() // Need users for recipient dropdown
+      } else if (activeTab === 'users') {
+        fetchUsers()
+      }
+    }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [activeTab, isAuthenticated])
 
   const fetchCities = async () => {
     try {
@@ -629,11 +644,70 @@ export default function SuperAdminPage() {
   const handleSendCustomEmail = async (e: React.FormEvent) => {
     e.preventDefault()
 
-    if (!customEmailTo || !customEmailSubject || !customEmailMessage) {
-      alert('אנא מלא את כל השדות (נמען, נושא, תוכן)')
+    if (!sendToAllUsers && !customEmailTo) {
+      alert('אנא בחר נמען או הזן כתובת מייל')
       return
     }
 
+    if (!customEmailSubject || !customEmailMessage) {
+      alert('אנא מלא את כל השדות (נושא, תוכן)')
+      return
+    }
+
+    // Bulk send to all users
+    if (sendToAllUsers) {
+      if (!confirm(`האם אתה בטוח שברצונך לשלוח מייל לכל ${users.length} המשתמשים?`)) {
+        return
+      }
+
+      setSendingCustomEmail(true)
+      setBulkEmailProgress({ sent: 0, total: users.length, failed: 0 })
+
+      let sent = 0
+      let failed = 0
+
+      for (const user of users) {
+        try {
+          const response = await fetch('/api/admin/send-custom-email', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            credentials: 'include',
+            body: JSON.stringify({
+              to: user.email,
+              subject: customEmailSubject,
+              message: customEmailMessage,
+              recipientName: user.full_name || undefined
+            }),
+          })
+
+          if (response.ok) {
+            sent++
+          } else {
+            failed++
+          }
+        } catch {
+          failed++
+        }
+
+        setBulkEmailProgress({ sent, total: users.length, failed })
+      }
+
+      alert(`שליחה הושלמה!\n✅ נשלחו בהצלחה: ${sent}\n❌ נכשלו: ${failed}`)
+
+      // Reset form
+      setCustomEmailTo('')
+      setCustomEmailName('')
+      setCustomEmailSubject('')
+      setCustomEmailMessage('')
+      setSendToAllUsers(false)
+      setBulkEmailProgress({ sent: 0, total: 0, failed: 0 })
+      setShowCustomEmailForm(false)
+      fetchEmailLogs()
+      setSendingCustomEmail(false)
+      return
+    }
+
+    // Single email send
     setSendingCustomEmail(true)
     try {
       const response = await fetch('/api/admin/send-custom-email', {
@@ -2635,50 +2709,84 @@ export default function SuperAdminPage() {
                             בחר נמען מרשימת המשתמשים או הזן ידנית
                           </label>
                           <select
-                            value=""
+                            value={sendToAllUsers ? '__ALL__' : ''}
                             onChange={(e) => {
-                              const selectedUser = users.find(u => u.email === e.target.value)
-                              if (selectedUser) {
-                                setCustomEmailTo(selectedUser.email)
-                                setCustomEmailName(selectedUser.full_name || '')
+                              if (e.target.value === '__ALL__') {
+                                setSendToAllUsers(true)
+                                setCustomEmailTo('')
+                                setCustomEmailName('')
+                              } else {
+                                setSendToAllUsers(false)
+                                const selectedUser = users.find(u => u.email === e.target.value)
+                                if (selectedUser) {
+                                  setCustomEmailTo(selectedUser.email)
+                                  setCustomEmailName(selectedUser.full_name || '')
+                                }
                               }
                             }}
                             className="w-full h-10 border-2 border-gray-200 rounded-lg px-3 bg-white mb-2"
                           >
                             <option value="">-- בחר משתמש קיים --</option>
+                            <option value="__ALL__" className="font-bold bg-purple-100">📧 כל המשתמשים ({users.length})</option>
                             {users.map(user => (
                               <option key={user.id} value={user.email}>
                                 {user.full_name} ({user.email})
                               </option>
                             ))}
                           </select>
+                          {sendToAllUsers && (
+                            <div className="bg-purple-50 border border-purple-200 rounded-lg p-3 mt-2">
+                              <p className="text-sm text-purple-700 font-medium">
+                                📢 שליחה לכל {users.length} המשתמשים במערכת
+                              </p>
+                              <p className="text-xs text-purple-600 mt-1">
+                                המייל יישלח לכל המשתמשים בזה אחר זה. פעולה זו עשויה להימשך מספר דקות.
+                              </p>
+                              {bulkEmailProgress.total > 0 && (
+                                <div className="mt-3">
+                                  <div className="flex justify-between text-xs text-purple-600 mb-1">
+                                    <span>התקדמות: {bulkEmailProgress.sent + bulkEmailProgress.failed} / {bulkEmailProgress.total}</span>
+                                    <span>✅ {bulkEmailProgress.sent} | ❌ {bulkEmailProgress.failed}</span>
+                                  </div>
+                                  <div className="w-full bg-purple-200 rounded-full h-2">
+                                    <div
+                                      className="bg-purple-600 h-2 rounded-full transition-all duration-300"
+                                      style={{ width: `${((bulkEmailProgress.sent + bulkEmailProgress.failed) / bulkEmailProgress.total) * 100}%` }}
+                                    />
+                                  </div>
+                                </div>
+                              )}
+                            </div>
+                          )}
                         </div>
-                        <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                          <div>
-                            <label className="block text-sm font-medium text-gray-700 mb-1">
-                              כתובת מייל *
-                            </label>
-                            <Input
-                              type="email"
-                              value={customEmailTo}
-                              onChange={(e) => setCustomEmailTo(e.target.value)}
-                              placeholder="example@email.com"
-                              required
-                              dir="ltr"
-                            />
+                        {!sendToAllUsers && (
+                          <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                            <div>
+                              <label className="block text-sm font-medium text-gray-700 mb-1">
+                                כתובת מייל *
+                              </label>
+                              <Input
+                                type="email"
+                                value={customEmailTo}
+                                onChange={(e) => setCustomEmailTo(e.target.value)}
+                                placeholder="example@email.com"
+                                required={!sendToAllUsers}
+                                dir="ltr"
+                              />
+                            </div>
+                            <div>
+                              <label className="block text-sm font-medium text-gray-700 mb-1">
+                                שם הנמען (אופציונלי)
+                              </label>
+                              <Input
+                                type="text"
+                                value={customEmailName}
+                                onChange={(e) => setCustomEmailName(e.target.value)}
+                                placeholder="ישראל ישראלי"
+                              />
+                            </div>
                           </div>
-                          <div>
-                            <label className="block text-sm font-medium text-gray-700 mb-1">
-                              שם הנמען (אופציונלי)
-                            </label>
-                            <Input
-                              type="text"
-                              value={customEmailName}
-                              onChange={(e) => setCustomEmailName(e.target.value)}
-                              placeholder="ישראל ישראלי"
-                            />
-                          </div>
-                        </div>
+                        )}
 
                         {/* Template Selection */}
                         <div>
@@ -2688,10 +2796,11 @@ export default function SuperAdminPage() {
                           <select
                             value=""
                             onChange={(e) => {
+                              const appUrl = typeof window !== 'undefined' ? window.location.origin : ''
                               const templates: Record<string, { subject: string; message: string }> = {
                                 welcome: {
                                   subject: '🎉 ברוך הבא למערכת ארון הציוד',
-                                  message: 'ברוך הבא למערכת ארון הציוד של ידידים!\n\nאנחנו שמחים שהצטרפת אלינו. המערכת מאפשרת לך לנהל ולבקש ציוד בקלות.\n\nאם יש לך שאלות, אל תהסס ליצור קשר.'
+                                  message: `ברוך הבא למערכת ארון הציוד של ידידים!\n\nאנחנו שמחים שהצטרפת אלינו. המערכת מאפשרת לך לנהל ולבקש ציוד בקלות.\n\n🔗 קישור לכניסה למערכת:\n${appUrl}/login\n\nאם יש לך שאלות, אל תהסס ליצור קשר.`
                                 },
                                 reminder: {
                                   subject: '⏰ תזכורת - החזרת ציוד',
@@ -2699,11 +2808,19 @@ export default function SuperAdminPage() {
                                 },
                                 update: {
                                   subject: '📢 עדכון חשוב מארון הציוד',
-                                  message: 'שלום,\n\nרצינו לעדכן אותך בנוגע לשינויים/עדכונים במערכת ארון הציוד.\n\n[כתוב כאן את העדכון]\n\nבברכה,\nצוות ארון הציוד'
+                                  message: `שלום,\n\nרצינו לעדכן אותך בנוגע לשינויים/עדכונים במערכת ארון הציוד.\n\n[כתוב כאן את העדכון]\n\n🔗 קישור לכניסה למערכת:\n${appUrl}/login\n\nבברכה,\nצוות ארון הציוד`
                                 },
                                 thanks: {
                                   subject: '🙏 תודה על השימוש בארון הציוד',
                                   message: 'שלום,\n\nרצינו להודות לך על השימוש במערכת ארון הציוד של ידידים.\n\nהציוד שלנו עוזר לאנשים רבים בזכות מתנדבים כמוך.\n\nתודה!'
+                                },
+                                reset_password: {
+                                  subject: '🔑 קישור לאיפוס סיסמה',
+                                  message: `שלום,\n\nקיבלת בקשה לאיפוס סיסמה?\n\nלחץ על הקישור הבא לאיפוס הסיסמה שלך:\n${appUrl}/reset-password\n\n⚠️ שים לב: אם לא ביקשת לאפס סיסמה, התעלם מהודעה זו.\n\nבברכה,\nצוות ארון הציוד`
+                                },
+                                first_login: {
+                                  subject: '🚀 פרטי כניסה ראשונה למערכת',
+                                  message: `שלום,\n\nnנוצר עבורך חשבון במערכת ארון הציוד.\n\n🔗 קישור לכניסה למערכת:\n${appUrl}/login\n\n📧 שם משתמש: [הכנס כאן את כתובת המייל]\n🔑 סיסמה זמנית: [הכנס כאן את הסיסמה]\n\n⚠️ חשוב: מומלץ לשנות את הסיסמה מיד לאחר הכניסה הראשונה.\n\nבברכה,\nצוות ארון הציוד`
                                 },
                                 custom: {
                                   subject: '',
@@ -2720,6 +2837,8 @@ export default function SuperAdminPage() {
                           >
                             <option value="">-- בחר תבנית --</option>
                             <option value="welcome">🎉 ברוך הבא</option>
+                            <option value="first_login">🚀 פרטי כניסה ראשונה</option>
+                            <option value="reset_password">🔑 איפוס סיסמה</option>
                             <option value="reminder">⏰ תזכורת החזרת ציוד</option>
                             <option value="update">📢 עדכון חשוב</option>
                             <option value="thanks">🙏 תודה</option>
@@ -2765,7 +2884,9 @@ export default function SuperAdminPage() {
                             disabled={sendingCustomEmail}
                             className="bg-gradient-to-r from-purple-500 to-pink-500 hover:from-purple-600 hover:to-pink-600"
                           >
-                            {sendingCustomEmail ? '⏳ שולח...' : '📤 שלח מייל'}
+                            {sendingCustomEmail
+                              ? (sendToAllUsers ? `⏳ שולח... (${bulkEmailProgress.sent + bulkEmailProgress.failed}/${bulkEmailProgress.total})` : '⏳ שולח...')
+                              : (sendToAllUsers ? `📤 שלח לכל ${users.length} המשתמשים` : '📤 שלח מייל')}
                           </Button>
                         </div>
                       </form>
