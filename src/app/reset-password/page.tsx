@@ -1,13 +1,14 @@
 'use client'
 
 import { useEffect, useState, Suspense, useRef } from 'react'
-import { useRouter } from 'next/navigation'
+import { useRouter, useSearchParams } from 'next/navigation'
 import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
 import { supabase } from '@/lib/supabase'
 
 function ResetPasswordContent() {
   const router = useRouter()
+  const searchParams = useSearchParams()
 
   const [newPassword, setNewPassword] = useState('')
   const [confirmPassword, setConfirmPassword] = useState('')
@@ -16,21 +17,34 @@ function ResetPasswordContent() {
   const [error, setError] = useState('')
   const [hasToken, setHasToken] = useState(false)
   const [isReady, setIsReady] = useState(false)
+  const [tokenType, setTokenType] = useState<'supabase' | 'custom' | null>(null)
+  const [customToken, setCustomToken] = useState<string | null>(null)
   const sessionHandled = useRef(false)
 
-  // Wait for Supabase to process the recovery token from URL automatically
-  // detectSessionInUrl: true in supabase.ts handles this
+  // Check for tokens from URL - supports both Supabase Auth (#access_token) and custom (?token)
   useEffect(() => {
     let mounted = true
 
     const checkSession = async () => {
-      // Give Supabase time to process the URL hash (detectSessionInUrl)
-      // This prevents race conditions with manual setSession calls
+      // Check for custom token in query string (from email.ts sendPasswordResetEmail)
+      const queryToken = searchParams.get('token')
+
+      if (queryToken) {
+        // Custom token system - used by send-reset-email API
+        setTokenType('custom')
+        setCustomToken(queryToken)
+        setHasToken(true)
+        if (mounted) setIsReady(true)
+        return
+      }
+
+      // Check for Supabase Auth token in hash (#access_token)
       const hashParams = new URLSearchParams(window.location.hash.substring(1))
       const accessToken = hashParams.get('access_token')
       const type = hashParams.get('type')
 
       if (accessToken && type === 'recovery') {
+        setTokenType('supabase')
         // Wait for Supabase to auto-process the session from URL
         // detectSessionInUrl: true handles this automatically
         await new Promise(resolve => setTimeout(resolve, 500))
@@ -62,7 +76,7 @@ function ResetPasswordContent() {
     return () => {
       mounted = false
     }
-  }, [])
+  }, [searchParams])
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault()
@@ -82,6 +96,32 @@ function ResetPasswordContent() {
     setError('')
 
     try {
+      // Handle custom token (from email.ts sendPasswordResetEmail)
+      if (tokenType === 'custom' && customToken) {
+        const response = await fetch('/api/managers/reset-password', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ token: customToken, newPassword })
+        })
+
+        const data = await response.json()
+
+        if (!response.ok || !data.success) {
+          setError(data.error || 'שגיאה באיפוס הסיסמה')
+          setLoading(false)
+          return
+        }
+
+        setSuccess(true)
+
+        // Redirect to login after 2 seconds
+        setTimeout(() => {
+          window.location.href = '/login'
+        }, 2000)
+        return
+      }
+
+      // Handle Supabase Auth token (from resetPasswordForEmail)
       // Only set session manually if it wasn't already handled by detectSessionInUrl
       if (!sessionHandled.current) {
         const hashParams = new URLSearchParams(window.location.hash.substring(1))
