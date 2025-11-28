@@ -70,41 +70,34 @@ export async function sendVerificationEmail(email: string, token: string, manage
     <html dir="rtl" lang="he">
     <head>
       <meta charset="UTF-8">
-      <style>
-        body { font-family: Arial, sans-serif; background-color: #f4f4f4; padding: 20px; }
-        .container { max-width: 600px; margin: 0 auto; background: white; border-radius: 10px; padding: 40px; box-shadow: 0 2px 10px rgba(0,0,0,0.1); }
-        .header { text-align: center; margin-bottom: 30px; }
-        .logo { font-size: 32px; font-weight: bold; color: #6366f1; }
-        .button { display: inline-block; background: linear-gradient(to left, #6366f1, #a855f7); color: white; padding: 15px 30px; text-decoration: none; border-radius: 8px; font-weight: bold; margin: 20px 0; }
-        .footer { text-align: center; color: #666; font-size: 12px; margin-top: 30px; }
-      </style>
+      <meta name="viewport" content="width=device-width, initial-scale=1.0">
     </head>
-    <body>
-      <div class="container">
-        <div class="header">
-          <div class="logo">🏙️ ארון ציוד ידידים</div>
+    <body style="font-family: Arial, sans-serif; background-color: #f4f4f4; padding: 20px; margin: 0; direction: rtl; text-align: right;">
+      <div style="max-width: 600px; margin: 0 auto; background: white; border-radius: 10px; padding: 40px; box-shadow: 0 2px 10px rgba(0,0,0,0.1); direction: rtl; text-align: right;">
+        <div style="text-align: center; margin-bottom: 30px;">
+          <div style="font-size: 32px; font-weight: bold; color: #6366f1;">🏙️ ארון ציוד ידידים</div>
         </div>
 
-        <h2>שלום ${managerName},</h2>
+        <h2 style="text-align: right; direction: rtl;">שלום ${managerName},</h2>
 
-        <p>נוצר עבורך חשבון מנהל במערכת ארון הציוד.</p>
+        <p style="text-align: right; direction: rtl;">נוצר עבורך חשבון מנהל במערכת ארון הציוד.</p>
 
-        <p>כדי להפעיל את החשבון ולאמת את כתובת המייל שלך, לחץ על הכפתור הבא:</p>
+        <p style="text-align: right; direction: rtl;">כדי להפעיל את החשבון ולאמת את כתובת המייל שלך, לחץ על הכפתור הבא:</p>
 
-        <div style="text-align: center;">
-          <a href="${verificationUrl}" class="button">✅ אימות כתובת מייל</a>
+        <div style="text-align: center; margin: 20px 0;">
+          <a href="${verificationUrl}" style="display: inline-block; background: linear-gradient(to left, #6366f1, #a855f7); color: white; padding: 15px 30px; text-decoration: none; border-radius: 8px; font-weight: bold;">✅ אימות כתובת מייל</a>
         </div>
 
-        <p>או העתק את הקישור הבא לדפדפן:</p>
-        <p style="background: #f0f0f0; padding: 10px; border-radius: 5px; word-break: break-all;">
+        <p style="text-align: right; direction: rtl;">או העתק את הקישור הבא לדפדפן:</p>
+        <p style="background: #f0f0f0; padding: 10px; border-radius: 5px; word-break: break-all; direction: ltr; text-align: left;">
           ${verificationUrl}
         </p>
 
-        <p><strong>לתשומת ליבך:</strong> הקישור תקף ל-24 שעות בלבד.</p>
+        <p style="text-align: right; direction: rtl;"><strong>לתשומת ליבך:</strong> הקישור תקף ל-24 שעות בלבד.</p>
 
-        <p>לאחר אימות המייל, תוכל להגדיר סיסמה חדשה ולהתחבר למערכת.</p>
+        <p style="text-align: right; direction: rtl;">לאחר אימות המייל, תוכל להגדיר סיסמה חדשה ולהתחבר למערכת.</p>
 
-        <div class="footer">
+        <div style="text-align: center; color: #666; font-size: 12px; margin-top: 30px; border-top: 1px solid #eee; padding-top: 20px;">
           <p>אם לא ביקשת את המייל הזה, אנא התעלם ממנו.</p>
           <p>מערכת ארון ציוד ידידים - ${new Date().getFullYear()}</p>
         </div>
@@ -131,39 +124,32 @@ export async function sendPasswordResetEmail(email: string, token: string, manag
     <html dir="rtl" lang="he">
     <head>
       <meta charset="UTF-8">
-      <style>
-        body { font-family: Arial, sans-serif; background-color: #f4f4f4; padding: 20px; }
-        .container { max-width: 600px; margin: 0 auto; background: white; border-radius: 10px; padding: 40px; box-shadow: 0 2px 10px rgba(0,0,0,0.1); }
-        .header { text-align: center; margin-bottom: 30px; }
-        .logo { font-size: 32px; font-weight: bold; color: #6366f1; }
-        .button { display: inline-block; background: linear-gradient(to left, #6366f1, #a855f7); color: white; padding: 15px 30px; text-decoration: none; border-radius: 8px; font-weight: bold; margin: 20px 0; }
-        .footer { text-align: center; color: #666; font-size: 12px; margin-top: 30px; }
-      </style>
+      <meta name="viewport" content="width=device-width, initial-scale=1.0">
     </head>
-    <body>
-      <div class="container">
-        <div class="header">
-          <div class="logo">🏙️ ארון ציוד ידידים</div>
+    <body style="font-family: Arial, sans-serif; background-color: #f4f4f4; padding: 20px; margin: 0; direction: rtl; text-align: right;">
+      <div style="max-width: 600px; margin: 0 auto; background: white; border-radius: 10px; padding: 40px; box-shadow: 0 2px 10px rgba(0,0,0,0.1); direction: rtl; text-align: right;">
+        <div style="text-align: center; margin-bottom: 30px;">
+          <div style="font-size: 32px; font-weight: bold; color: #6366f1;">🏙️ ארון ציוד ידידים</div>
         </div>
 
-        <h2>שלום ${managerName},</h2>
+        <h2 style="text-align: right; direction: rtl;">שלום ${managerName},</h2>
 
-        <p>קיבלנו בקשה לאיפוס סיסמת החשבון שלך במערכת ארון הציוד.</p>
+        <p style="text-align: right; direction: rtl;">קיבלנו בקשה לאיפוס סיסמת החשבון שלך במערכת ארון הציוד.</p>
 
-        <p>כדי להגדיר סיסמה חדשה, לחץ על הכפתור הבא:</p>
+        <p style="text-align: right; direction: rtl;">כדי להגדיר סיסמה חדשה, לחץ על הכפתור הבא:</p>
 
-        <div style="text-align: center;">
-          <a href="${resetUrl}" class="button">🔑 איפוס סיסמה</a>
+        <div style="text-align: center; margin: 20px 0;">
+          <a href="${resetUrl}" style="display: inline-block; background: linear-gradient(to left, #6366f1, #a855f7); color: white; padding: 15px 30px; text-decoration: none; border-radius: 8px; font-weight: bold;">🔑 איפוס סיסמה</a>
         </div>
 
-        <p>או העתק את הקישור הבא לדפדפן:</p>
-        <p style="background: #f0f0f0; padding: 10px; border-radius: 5px; word-break: break-all;">
+        <p style="text-align: right; direction: rtl;">או העתק את הקישור הבא לדפדפן:</p>
+        <p style="background: #f0f0f0; padding: 10px; border-radius: 5px; word-break: break-all; direction: ltr; text-align: left;">
           ${resetUrl}
         </p>
 
-        <p><strong>לתשומת ליבך:</strong> הקישור תקף לשעה אחת בלבד.</p>
+        <p style="text-align: right; direction: rtl;"><strong>לתשומת ליבך:</strong> הקישור תקף לשעה אחת בלבד.</p>
 
-        <div class="footer">
+        <div style="text-align: center; color: #666; font-size: 12px; margin-top: 30px; border-top: 1px solid #eee; padding-top: 20px;">
           <p>אם לא ביקשת איפוס סיסמה, אנא התעלם ממייל זה והסיסמה שלך תישאר ללא שינוי.</p>
           <p>מערכת ארון ציוד ידידים - ${new Date().getFullYear()}</p>
         </div>
@@ -190,47 +176,39 @@ export async function sendWelcomeEmail(email: string, tempPassword: string, mana
     <html dir="rtl" lang="he">
     <head>
       <meta charset="UTF-8">
-      <style>
-        body { font-family: Arial, sans-serif; background-color: #f4f4f4; padding: 20px; }
-        .container { max-width: 600px; margin: 0 auto; background: white; border-radius: 10px; padding: 40px; box-shadow: 0 2px 10px rgba(0,0,0,0.1); }
-        .header { text-align: center; margin-bottom: 30px; }
-        .logo { font-size: 32px; font-weight: bold; color: #6366f1; }
-        .credentials { background: #f8f9fa; border-right: 4px solid #6366f1; padding: 20px; margin: 20px 0; }
-        .button { display: inline-block; background: linear-gradient(to left, #6366f1, #a855f7); color: white; padding: 15px 30px; text-decoration: none; border-radius: 8px; font-weight: bold; margin: 20px 0; }
-        .footer { text-align: center; color: #666; font-size: 12px; margin-top: 30px; }
-      </style>
+      <meta name="viewport" content="width=device-width, initial-scale=1.0">
     </head>
-    <body>
-      <div class="container">
-        <div class="header">
-          <div class="logo">🏙️ ארון ציוד ידידים</div>
+    <body style="font-family: Arial, sans-serif; background-color: #f4f4f4; padding: 20px; margin: 0; direction: rtl; text-align: right;">
+      <div style="max-width: 600px; margin: 0 auto; background: white; border-radius: 10px; padding: 40px; box-shadow: 0 2px 10px rgba(0,0,0,0.1); direction: rtl; text-align: right;">
+        <div style="text-align: center; margin-bottom: 30px;">
+          <div style="font-size: 32px; font-weight: bold; color: #6366f1;">🏙️ ארון ציוד ידידים</div>
         </div>
 
-        <h2>ברוך הבא ${managerName}! 🎉</h2>
+        <h2 style="text-align: right; direction: rtl;">ברוך הבא ${managerName}! 🎉</h2>
 
-        <p>נוצר עבורך חשבון מנהל עבור עיר <strong>${cityName}</strong> במערכת ארון הציוד.</p>
+        <p style="text-align: right; direction: rtl;">נוצר עבורך חשבון מנהל עבור עיר <strong>${cityName}</strong> במערכת ארון הציוד.</p>
 
-        <div class="credentials">
-          <h3>פרטי ההתחברות שלך:</h3>
+        <div style="background: #f8f9fa; border-right: 4px solid #6366f1; padding: 20px; margin: 20px 0; direction: rtl; text-align: right;">
+          <h3 style="margin-top: 0;">פרטי ההתחברות שלך:</h3>
           <p><strong>📧 כתובת מייל:</strong> ${email}</p>
           <p><strong>🔑 סיסמה זמנית:</strong> <code style="background: white; padding: 5px 10px; border-radius: 4px; font-size: 16px;">${tempPassword}</code></p>
         </div>
 
-        <p><strong style="color: #dc2626;">⚠️ חשוב:</strong> מומלץ בחום להחליף את הסיסמה הזמנית לסיסמה אישית שלך מיד לאחר הכניסה הראשונה!</p>
+        <p style="text-align: right; direction: rtl;"><strong style="color: #dc2626;">⚠️ חשוב:</strong> מומלץ בחום להחליף את הסיסמה הזמנית לסיסמה אישית שלך מיד לאחר הכניסה הראשונה!</p>
 
-        <div style="text-align: center;">
-          <a href="${loginUrl}" class="button">🚀 התחבר למערכת</a>
+        <div style="text-align: center; margin: 20px 0;">
+          <a href="${loginUrl}" style="display: inline-block; background: linear-gradient(to left, #6366f1, #a855f7); color: white; padding: 15px 30px; text-decoration: none; border-radius: 8px; font-weight: bold;">🚀 התחבר למערכת</a>
         </div>
 
-        <h3>מה אפשר לעשות במערכת?</h3>
-        <ul>
+        <h3 style="text-align: right; direction: rtl;">מה אפשר לעשות במערכת?</h3>
+        <ul style="text-align: right; direction: rtl; padding-right: 20px;">
           <li>📦 ניהול מלאי ציוד</li>
           <li>✅ אישור בקשות השאלה</li>
           <li>📊 צפייה בהיסטוריה ודוחות</li>
           <li>⚙️ הגדרות ופרטים אישיים</li>
         </ul>
 
-        <div class="footer">
+        <div style="text-align: center; color: #666; font-size: 12px; margin-top: 30px; border-top: 1px solid #eee; padding-top: 20px;">
           <p>זקוק לעזרה? צור קשר עם מנהל המערכת</p>
           <p>מערכת ארון ציוד ידידים - ${new Date().getFullYear()}</p>
         </div>
@@ -257,42 +235,34 @@ export async function sendEmailUpdateNotification(newEmail: string, userName: st
     <html dir="rtl" lang="he">
     <head>
       <meta charset="UTF-8">
-      <style>
-        body { font-family: Arial, sans-serif; background-color: #f4f4f4; padding: 20px; }
-        .container { max-width: 600px; margin: 0 auto; background: white; border-radius: 10px; padding: 40px; box-shadow: 0 2px 10px rgba(0,0,0,0.1); }
-        .header { text-align: center; margin-bottom: 30px; }
-        .logo { font-size: 32px; font-weight: bold; color: #6366f1; }
-        .info-box { background: #f0fdf4; border-right: 4px solid #22c55e; padding: 20px; margin: 20px 0; }
-        .button { display: inline-block; background: linear-gradient(to left, #6366f1, #a855f7); color: white; padding: 15px 30px; text-decoration: none; border-radius: 8px; font-weight: bold; margin: 20px 0; }
-        .footer { text-align: center; color: #666; font-size: 12px; margin-top: 30px; }
-      </style>
+      <meta name="viewport" content="width=device-width, initial-scale=1.0">
     </head>
-    <body>
-      <div class="container">
-        <div class="header">
-          <div class="logo">🏙️ ארון ציוד ידידים</div>
+    <body style="font-family: Arial, sans-serif; background-color: #f4f4f4; padding: 20px; margin: 0; direction: rtl; text-align: right;">
+      <div style="max-width: 600px; margin: 0 auto; background: white; border-radius: 10px; padding: 40px; box-shadow: 0 2px 10px rgba(0,0,0,0.1); direction: rtl; text-align: right;">
+        <div style="text-align: center; margin-bottom: 30px;">
+          <div style="font-size: 32px; font-weight: bold; color: #6366f1;">🏙️ ארון ציוד ידידים</div>
         </div>
 
-        <h2>שלום ${userName},</h2>
+        <h2 style="text-align: right; direction: rtl;">שלום ${userName},</h2>
 
-        <p>כתובת המייל שלך במערכת ארון הציוד עודכנה בהצלחה.</p>
+        <p style="text-align: right; direction: rtl;">כתובת המייל שלך במערכת ארון הציוד עודכנה בהצלחה.</p>
 
-        <div class="info-box">
-          <p><strong>📧 כתובת המייל החדשה שלך:</strong></p>
+        <div style="background: #f0fdf4; border-right: 4px solid #22c55e; padding: 20px; margin: 20px 0; direction: rtl; text-align: right;">
+          <p style="margin: 0;"><strong>📧 כתובת המייל החדשה שלך:</strong></p>
           <p style="font-size: 18px; margin: 10px 0;">${newEmail}</p>
         </div>
 
-        <p>מעכשיו תוכל להתחבר למערכת עם כתובת המייל החדשה.</p>
+        <p style="text-align: right; direction: rtl;">מעכשיו תוכל להתחבר למערכת עם כתובת המייל החדשה.</p>
 
-        <div style="text-align: center;">
-          <a href="${loginUrl}" class="button">🚀 התחבר למערכת</a>
+        <div style="text-align: center; margin: 20px 0;">
+          <a href="${loginUrl}" style="display: inline-block; background: linear-gradient(to left, #6366f1, #a855f7); color: white; padding: 15px 30px; text-decoration: none; border-radius: 8px; font-weight: bold;">🚀 התחבר למערכת</a>
         </div>
 
-        <p style="color: #dc2626; font-size: 14px;">
+        <p style="color: #dc2626; font-size: 14px; text-align: right; direction: rtl;">
           <strong>⚠️ אם לא ביקשת לשנות את כתובת המייל שלך, אנא צור קשר עם מנהל המערכת מיד.</strong>
         </p>
 
-        <div class="footer">
+        <div style="text-align: center; color: #666; font-size: 12px; margin-top: 30px; border-top: 1px solid #eee; padding-top: 20px;">
           <p>מערכת ארון ציוד ידידים - ${new Date().getFullYear()}</p>
         </div>
       </div>
@@ -318,7 +288,7 @@ export async function sendNewRequestEmail(
   cityName: string,
   items: { name: string; quantity: number }[]
 ) {
-  const itemsList = items.map(item => `<li>${item.name} (כמות: ${item.quantity})</li>`).join('')
+  const itemsList = items.map(item => `<li style="padding: 5px 0;">${item.name} (כמות: ${item.quantity})</li>`).join('')
   const adminUrl = `${process.env.NEXT_PUBLIC_APP_URL}/login`
 
   const html = `
@@ -326,42 +296,33 @@ export async function sendNewRequestEmail(
     <html dir="rtl" lang="he">
     <head>
       <meta charset="UTF-8">
-      <style>
-        body { font-family: Arial, sans-serif; background-color: #f4f4f4; padding: 20px; }
-        .container { max-width: 600px; margin: 0 auto; background: white; border-radius: 10px; padding: 40px; box-shadow: 0 2px 10px rgba(0,0,0,0.1); }
-        .header { text-align: center; margin-bottom: 30px; }
-        .logo { font-size: 32px; font-weight: bold; color: #6366f1; }
-        .alert-box { background: #fef3c7; border-right: 4px solid #f59e0b; padding: 20px; margin: 20px 0; border-radius: 8px; }
-        .button { display: inline-block; background: linear-gradient(to left, #6366f1, #a855f7); color: white; padding: 15px 30px; text-decoration: none; border-radius: 8px; font-weight: bold; margin: 20px 0; }
-        .footer { text-align: center; color: #666; font-size: 12px; margin-top: 30px; }
-        .items-list { background: #f8f9fa; padding: 15px 25px; border-radius: 8px; }
-      </style>
+      <meta name="viewport" content="width=device-width, initial-scale=1.0">
     </head>
-    <body>
-      <div class="container">
-        <div class="header">
-          <div class="logo">🏙️ ארון ציוד ידידים</div>
+    <body style="font-family: Arial, sans-serif; background-color: #f4f4f4; padding: 20px; margin: 0; direction: rtl; text-align: right;">
+      <div style="max-width: 600px; margin: 0 auto; background: white; border-radius: 10px; padding: 40px; box-shadow: 0 2px 10px rgba(0,0,0,0.1); direction: rtl; text-align: right;">
+        <div style="text-align: center; margin-bottom: 30px;">
+          <div style="font-size: 32px; font-weight: bold; color: #6366f1;">🏙️ ארון ציוד ידידים</div>
         </div>
 
-        <div class="alert-box">
+        <div style="background: #fef3c7; border-right: 4px solid #f59e0b; padding: 20px; margin: 20px 0; border-radius: 8px; direction: rtl; text-align: right;">
           <h2 style="margin-top: 0; color: #92400e;">📦 בקשת ציוד חדשה!</h2>
-          <p style="margin-bottom: 0;">התקבלה בקשה חדשה לציוד מ${cityName}</p>
+          <p style="margin-bottom: 0;">התקבלה בקשה חדשה לציוד מארון ${cityName}</p>
         </div>
 
-        <h3>פרטי המבקש:</h3>
-        <p><strong>👤 שם:</strong> ${requesterName}</p>
-        <p><strong>📱 טלפון:</strong> <a href="tel:${requesterPhone}">${requesterPhone}</a></p>
+        <h3 style="text-align: right; direction: rtl;">פרטי המבקש:</h3>
+        <p style="text-align: right; direction: rtl;"><strong>👤 שם:</strong> ${requesterName}</p>
+        <p style="text-align: right; direction: rtl;"><strong>📱 טלפון:</strong> <a href="tel:${requesterPhone}" style="color: #6366f1;">${requesterPhone}</a></p>
 
-        <h3>פריטים מבוקשים:</h3>
-        <ul class="items-list">
+        <h3 style="text-align: right; direction: rtl;">פריטים מבוקשים:</h3>
+        <ul style="background: #f8f9fa; padding: 15px 35px 15px 15px; border-radius: 8px; direction: rtl; text-align: right; list-style-position: inside;">
           ${itemsList}
         </ul>
 
-        <div style="text-align: center;">
-          <a href="${adminUrl}" class="button">📋 כניסה לניהול הבקשות</a>
+        <div style="text-align: center; margin: 20px 0;">
+          <a href="${adminUrl}" style="display: inline-block; background: linear-gradient(to left, #6366f1, #a855f7); color: white; padding: 15px 30px; text-decoration: none; border-radius: 8px; font-weight: bold;">📋 כניסה לניהול הבקשות</a>
         </div>
 
-        <div class="footer">
+        <div style="text-align: center; color: #666; font-size: 12px; margin-top: 30px; border-top: 1px solid #eee; padding-top: 20px;">
           <p>מערכת ארון ציוד ידידים - ${new Date().getFullYear()}</p>
         </div>
       </div>
@@ -386,7 +347,7 @@ export async function sendLowStockEmail(
   items: { name: string; quantity: number; minQuantity: number }[]
 ) {
   const itemsList = items.map(item =>
-    `<li><strong>${item.name}</strong> - נשארו ${item.quantity} (מינימום: ${item.minQuantity})</li>`
+    `<li style="padding: 5px 0;"><strong>${item.name}</strong> - נשארו ${item.quantity} (מינימום: ${item.minQuantity})</li>`
   ).join('')
   const adminUrl = `${process.env.NEXT_PUBLIC_APP_URL}/login`
 
@@ -395,40 +356,31 @@ export async function sendLowStockEmail(
     <html dir="rtl" lang="he">
     <head>
       <meta charset="UTF-8">
-      <style>
-        body { font-family: Arial, sans-serif; background-color: #f4f4f4; padding: 20px; }
-        .container { max-width: 600px; margin: 0 auto; background: white; border-radius: 10px; padding: 40px; box-shadow: 0 2px 10px rgba(0,0,0,0.1); }
-        .header { text-align: center; margin-bottom: 30px; }
-        .logo { font-size: 32px; font-weight: bold; color: #6366f1; }
-        .alert-box { background: #fee2e2; border-right: 4px solid #ef4444; padding: 20px; margin: 20px 0; border-radius: 8px; }
-        .button { display: inline-block; background: linear-gradient(to left, #6366f1, #a855f7); color: white; padding: 15px 30px; text-decoration: none; border-radius: 8px; font-weight: bold; margin: 20px 0; }
-        .footer { text-align: center; color: #666; font-size: 12px; margin-top: 30px; }
-        .items-list { background: #fef2f2; padding: 15px 25px; border-radius: 8px; color: #991b1b; }
-      </style>
+      <meta name="viewport" content="width=device-width, initial-scale=1.0">
     </head>
-    <body>
-      <div class="container">
-        <div class="header">
-          <div class="logo">🏙️ ארון ציוד ידידים</div>
+    <body style="font-family: Arial, sans-serif; background-color: #f4f4f4; padding: 20px; margin: 0; direction: rtl; text-align: right;">
+      <div style="max-width: 600px; margin: 0 auto; background: white; border-radius: 10px; padding: 40px; box-shadow: 0 2px 10px rgba(0,0,0,0.1); direction: rtl; text-align: right;">
+        <div style="text-align: center; margin-bottom: 30px;">
+          <div style="font-size: 32px; font-weight: bold; color: #6366f1;">🏙️ ארון ציוד ידידים</div>
         </div>
 
-        <div class="alert-box">
+        <div style="background: #fee2e2; border-right: 4px solid #ef4444; padding: 20px; margin: 20px 0; border-radius: 8px; direction: rtl; text-align: right;">
           <h2 style="margin-top: 0; color: #991b1b;">⚠️ התראת מלאי נמוך!</h2>
           <p style="margin-bottom: 0;">יש פריטים במלאי נמוך בארון ${cityName}</p>
         </div>
 
-        <h3>פריטים שנגמרים:</h3>
-        <ul class="items-list">
+        <h3 style="text-align: right; direction: rtl;">פריטים שנגמרים:</h3>
+        <ul style="background: #fef2f2; padding: 15px 35px 15px 15px; border-radius: 8px; color: #991b1b; direction: rtl; text-align: right; list-style-position: inside;">
           ${itemsList}
         </ul>
 
-        <p>מומלץ להזמין מלאי חדש בהקדם.</p>
+        <p style="text-align: right; direction: rtl;">מומלץ להזמין מלאי חדש בהקדם.</p>
 
-        <div style="text-align: center;">
-          <a href="${adminUrl}" class="button">📦 כניסה לניהול המלאי</a>
+        <div style="text-align: center; margin: 20px 0;">
+          <a href="${adminUrl}" style="display: inline-block; background: linear-gradient(to left, #6366f1, #a855f7); color: white; padding: 15px 30px; text-decoration: none; border-radius: 8px; font-weight: bold;">📦 כניסה לניהול המלאי</a>
         </div>
 
-        <div class="footer">
+        <div style="text-align: center; color: #666; font-size: 12px; margin-top: 30px; border-top: 1px solid #eee; padding-top: 20px;">
           <p>מערכת ארון ציוד ידידים - ${new Date().getFullYear()}</p>
         </div>
       </div>
@@ -439,6 +391,49 @@ export async function sendLowStockEmail(
   return sendEmail({
     to: managerEmail,
     subject: `⚠️ התראת מלאי נמוך - ${cityName}`,
+    html
+  })
+}
+
+/**
+ * Send custom email (for super admin direct sending)
+ */
+export async function sendCustomEmail(
+  to: string,
+  subject: string,
+  message: string,
+  recipientName?: string
+) {
+  const html = `
+    <!DOCTYPE html>
+    <html dir="rtl" lang="he">
+    <head>
+      <meta charset="UTF-8">
+      <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    </head>
+    <body style="font-family: Arial, sans-serif; background-color: #f4f4f4; padding: 20px; margin: 0; direction: rtl; text-align: right;">
+      <div style="max-width: 600px; margin: 0 auto; background: white; border-radius: 10px; padding: 40px; box-shadow: 0 2px 10px rgba(0,0,0,0.1); direction: rtl; text-align: right;">
+        <div style="text-align: center; margin-bottom: 30px;">
+          <div style="font-size: 32px; font-weight: bold; color: #6366f1;">🏙️ ארון ציוד ידידים</div>
+        </div>
+
+        ${recipientName ? `<h2 style="text-align: right; direction: rtl;">שלום ${recipientName},</h2>` : ''}
+
+        <div style="text-align: right; direction: rtl; white-space: pre-wrap; line-height: 1.8;">
+${message}
+        </div>
+
+        <div style="text-align: center; color: #666; font-size: 12px; margin-top: 30px; border-top: 1px solid #eee; padding-top: 20px;">
+          <p>מערכת ארון ציוד ידידים - ${new Date().getFullYear()}</p>
+        </div>
+      </div>
+    </body>
+    </html>
+  `
+
+  return sendEmail({
+    to,
+    subject,
     html
   })
 }

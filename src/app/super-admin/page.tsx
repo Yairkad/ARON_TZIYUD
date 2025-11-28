@@ -64,6 +64,18 @@ export default function SuperAdminPage() {
   const [emailSearchQuery, setEmailSearchQuery] = useState('')
   const [expandedEmails, setExpandedEmails] = useState<Set<string>>(new Set())
 
+  // Custom Email State
+  const [showCustomEmailForm, setShowCustomEmailForm] = useState(false)
+  const [customEmailTo, setCustomEmailTo] = useState('')
+  const [customEmailName, setCustomEmailName] = useState('')
+  const [customEmailSubject, setCustomEmailSubject] = useState('')
+  const [customEmailMessage, setCustomEmailMessage] = useState('')
+  const [sendingCustomEmail, setSendingCustomEmail] = useState(false)
+
+  // Email Selection State
+  const [selectedEmails, setSelectedEmails] = useState<Set<string>>(new Set())
+  const [deletingSelectedEmails, setDeletingSelectedEmails] = useState(false)
+
   // Password visibility state for all password fields
   const [showChangePasswordCurrent, setShowChangePasswordCurrent] = useState(false)
   const [showChangePasswordNew, setShowChangePasswordNew] = useState(false)
@@ -612,6 +624,101 @@ export default function SuperAdminPage() {
       newExpanded.add(emailId)
     }
     setExpandedEmails(newExpanded)
+  }
+
+  const handleSendCustomEmail = async (e: React.FormEvent) => {
+    e.preventDefault()
+
+    if (!customEmailTo || !customEmailSubject || !customEmailMessage) {
+      alert('אנא מלא את כל השדות (נמען, נושא, תוכן)')
+      return
+    }
+
+    setSendingCustomEmail(true)
+    try {
+      const response = await fetch('/api/admin/send-custom-email', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        credentials: 'include',
+        body: JSON.stringify({
+          to: customEmailTo,
+          subject: customEmailSubject,
+          message: customEmailMessage,
+          recipientName: customEmailName || undefined
+        }),
+      })
+
+      const data = await response.json()
+
+      if (!response.ok) {
+        alert(data.error || 'שגיאה בשליחת המייל')
+        return
+      }
+
+      alert('המייל נשלח בהצלחה!')
+      // Reset form
+      setCustomEmailTo('')
+      setCustomEmailName('')
+      setCustomEmailSubject('')
+      setCustomEmailMessage('')
+      setShowCustomEmailForm(false)
+      // Refresh email logs
+      fetchEmailLogs()
+    } catch (error) {
+      console.error('Error sending custom email:', error)
+      alert('שגיאה בשליחת המייל')
+    } finally {
+      setSendingCustomEmail(false)
+    }
+  }
+
+  const toggleEmailSelection = (emailId: string) => {
+    const newSelected = new Set(selectedEmails)
+    if (newSelected.has(emailId)) {
+      newSelected.delete(emailId)
+    } else {
+      newSelected.add(emailId)
+    }
+    setSelectedEmails(newSelected)
+  }
+
+  const toggleSelectAllEmails = () => {
+    if (selectedEmails.size === emailLogs.length) {
+      setSelectedEmails(new Set())
+    } else {
+      setSelectedEmails(new Set(emailLogs.map(log => log.id)))
+    }
+  }
+
+  const handleDeleteSelectedEmails = async () => {
+    if (selectedEmails.size === 0) return
+    if (!confirm(`האם אתה בטוח שברצונך למחוק ${selectedEmails.size} מיילים?`)) return
+
+    setDeletingSelectedEmails(true)
+    try {
+      // Delete each selected email
+      const deletePromises = Array.from(selectedEmails).map(async (logId) => {
+        const response = await fetch('/api/admin/email-logs/delete', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          credentials: 'include',
+          body: JSON.stringify({ log_id: logId }),
+        })
+        return response.ok
+      })
+
+      await Promise.all(deletePromises)
+      alert(`${selectedEmails.size} מיילים נמחקו בהצלחה`)
+      setSelectedEmails(new Set())
+      fetchEmailLogs()
+    } catch (error) {
+      console.error('Error deleting selected emails:', error)
+      alert('שגיאה במחיקת המיילים')
+    } finally {
+      setDeletingSelectedEmails(false)
+    }
   }
 
   const handleCreateUser = async (e: React.FormEvent) => {
@@ -2497,14 +2604,102 @@ export default function SuperAdminPage() {
                     </select>
                     <Button
                       onClick={fetchEmailLogs}
-                      className="bg-gradient-to-r from-purple-500 to-pink-500 hover:from-purple-600 hover:to-pink-600"
+                      variant="outline"
+                      className="border-purple-300"
                     >
                       🔄 רענון
+                    </Button>
+                    <Button
+                      onClick={() => setShowCustomEmailForm(!showCustomEmailForm)}
+                      className="bg-gradient-to-r from-purple-500 to-pink-500 hover:from-purple-600 hover:to-pink-600"
+                    >
+                      ✉️ שלח מייל חדש
                     </Button>
                   </div>
                 </div>
               </CardHeader>
               <CardContent className="p-6">
+                {/* Custom Email Form */}
+                {showCustomEmailForm && (
+                  <Card className="mb-6 bg-gradient-to-r from-blue-50 to-indigo-50 border-2 border-blue-200">
+                    <CardHeader className="pb-2">
+                      <CardTitle className="text-lg flex items-center gap-2">
+                        <span>✉️</span> שליחת מייל חדש
+                      </CardTitle>
+                    </CardHeader>
+                    <CardContent>
+                      <form onSubmit={handleSendCustomEmail} className="space-y-4">
+                        <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                          <div>
+                            <label className="block text-sm font-medium text-gray-700 mb-1">
+                              כתובת מייל *
+                            </label>
+                            <Input
+                              type="email"
+                              value={customEmailTo}
+                              onChange={(e) => setCustomEmailTo(e.target.value)}
+                              placeholder="example@email.com"
+                              required
+                              dir="ltr"
+                            />
+                          </div>
+                          <div>
+                            <label className="block text-sm font-medium text-gray-700 mb-1">
+                              שם הנמען (אופציונלי)
+                            </label>
+                            <Input
+                              type="text"
+                              value={customEmailName}
+                              onChange={(e) => setCustomEmailName(e.target.value)}
+                              placeholder="ישראל ישראלי"
+                            />
+                          </div>
+                        </div>
+                        <div>
+                          <label className="block text-sm font-medium text-gray-700 mb-1">
+                            נושא *
+                          </label>
+                          <Input
+                            type="text"
+                            value={customEmailSubject}
+                            onChange={(e) => setCustomEmailSubject(e.target.value)}
+                            placeholder="נושא ההודעה..."
+                            required
+                          />
+                        </div>
+                        <div>
+                          <label className="block text-sm font-medium text-gray-700 mb-1">
+                            תוכן ההודעה *
+                          </label>
+                          <textarea
+                            value={customEmailMessage}
+                            onChange={(e) => setCustomEmailMessage(e.target.value)}
+                            placeholder="כתוב את תוכן ההודעה כאן..."
+                            required
+                            rows={5}
+                            className="w-full border-2 border-gray-200 rounded-lg p-3 focus:ring-2 focus:ring-purple-500 focus:border-transparent"
+                          />
+                        </div>
+                        <div className="flex gap-2 justify-end">
+                          <Button
+                            type="button"
+                            variant="outline"
+                            onClick={() => setShowCustomEmailForm(false)}
+                          >
+                            ביטול
+                          </Button>
+                          <Button
+                            type="submit"
+                            disabled={sendingCustomEmail}
+                            className="bg-gradient-to-r from-purple-500 to-pink-500 hover:from-purple-600 hover:to-pink-600"
+                          >
+                            {sendingCustomEmail ? '⏳ שולח...' : '📤 שלח מייל'}
+                          </Button>
+                        </div>
+                      </form>
+                    </CardContent>
+                  </Card>
+                )}
                 {emailLogsLoading ? (
                   <div className="text-center py-12">
                     <div className="text-4xl mb-4 animate-spin">⏳</div>
@@ -2518,15 +2713,46 @@ export default function SuperAdminPage() {
                   </div>
                 ) : (
                   <div className="space-y-3">
+                    {/* Select All / Delete Selected Bar */}
+                    <div className="flex items-center gap-4 p-3 bg-gray-50 rounded-lg border">
+                      <label className="flex items-center gap-2 cursor-pointer">
+                        <input
+                          type="checkbox"
+                          checked={selectedEmails.size === emailLogs.length && emailLogs.length > 0}
+                          onChange={toggleSelectAllEmails}
+                          className="w-5 h-5 rounded border-gray-300 text-purple-600 focus:ring-purple-500"
+                        />
+                        <span className="text-sm font-medium">בחר הכל ({emailLogs.length})</span>
+                      </label>
+                      {selectedEmails.size > 0 && (
+                        <Button
+                          size="sm"
+                          variant="destructive"
+                          onClick={handleDeleteSelectedEmails}
+                          disabled={deletingSelectedEmails}
+                          className="bg-red-500 hover:bg-red-600"
+                        >
+                          {deletingSelectedEmails ? '⏳ מוחק...' : `🗑️ מחק ${selectedEmails.size} נבחרים`}
+                        </Button>
+                      )}
+                    </div>
+
                     {emailLogs.map((log) => {
                       const isExpanded = expandedEmails.has(log.id)
+                      const isSelected = selectedEmails.has(log.id)
                       return (
                         <div
                           key={log.id}
-                          className={`bg-gradient-to-r ${log.status === 'sent' ? 'from-green-50 to-emerald-50 border-green-200' : 'from-red-50 to-rose-50 border-red-200'} rounded-xl p-4 border-2`}
+                          className={`bg-gradient-to-r ${log.status === 'sent' ? 'from-green-50 to-emerald-50 border-green-200' : 'from-red-50 to-rose-50 border-red-200'} rounded-xl p-4 border-2 ${isSelected ? 'ring-2 ring-purple-500' : ''}`}
                         >
-                          {/* Header with name, email, and status */}
+                          {/* Header with checkbox, name, email, and status */}
                           <div className="flex items-start gap-3 mb-3">
+                            <input
+                              type="checkbox"
+                              checked={isSelected}
+                              onChange={() => toggleEmailSelection(log.id)}
+                              className="w-5 h-5 mt-1 rounded border-gray-300 text-purple-600 focus:ring-purple-500 cursor-pointer"
+                            />
                             <span className="text-xl flex-shrink-0">
                               {log.status === 'sent' ? '✅' : '❌'}
                             </span>
@@ -2537,7 +2763,7 @@ export default function SuperAdminPage() {
                           </div>
 
                           {/* Action buttons - responsive */}
-                          <div className="flex flex-col sm:flex-row gap-2 mb-2">
+                          <div className="flex flex-col sm:flex-row gap-2 mb-2 mr-8">
                             <Button
                               size="sm"
                               variant="outline"
