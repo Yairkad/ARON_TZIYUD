@@ -123,10 +123,10 @@ function ResetPasswordContent() {
       const { data: { user } } = await supabase.auth.getUser()
 
       if (user) {
-        // Fetch user role from database
+        // Fetch user role and city_id from database
         const { data: userData } = await supabase
           .from('users')
-          .select('role')
+          .select('role, city_id')
           .eq('id', user.id)
           .single()
 
@@ -138,8 +138,9 @@ function ResetPasswordContent() {
         setTimeout(() => {
           if (userData?.role === 'super_admin') {
             window.location.href = '/super-admin'
-          } else if (userData?.role === 'city_manager') {
-            window.location.href = '/city'
+          } else if (userData?.role === 'city_manager' && userData?.city_id) {
+            // Redirect directly to city admin page
+            window.location.href = `/city/${userData.city_id}/admin`
           } else {
             window.location.href = '/login'
           }
@@ -214,7 +215,7 @@ function ResetPasswordContent() {
 
           <div className="bg-green-50 border-2 border-green-200 rounded-xl p-4 mb-6">
             <p className="text-sm text-green-800 text-center">
-              <strong>מעביר אותך לדף הניהול...</strong>
+              <strong>מעביר אותך לעמוד הניהול של העיר שלך...</strong>
             </p>
             <div className="flex justify-center mt-3">
               <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-green-600"></div>
