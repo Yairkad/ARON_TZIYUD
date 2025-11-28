@@ -2629,6 +2629,30 @@ export default function SuperAdminPage() {
                     </CardHeader>
                     <CardContent>
                       <form onSubmit={handleSendCustomEmail} className="space-y-4">
+                        {/* Recipient Selection */}
+                        <div>
+                          <label className="block text-sm font-medium text-gray-700 mb-1">
+                            בחר נמען מרשימת המשתמשים או הזן ידנית
+                          </label>
+                          <select
+                            value=""
+                            onChange={(e) => {
+                              const selectedUser = users.find(u => u.email === e.target.value)
+                              if (selectedUser) {
+                                setCustomEmailTo(selectedUser.email)
+                                setCustomEmailName(selectedUser.full_name || '')
+                              }
+                            }}
+                            className="w-full h-10 border-2 border-gray-200 rounded-lg px-3 bg-white mb-2"
+                          >
+                            <option value="">-- בחר משתמש קיים --</option>
+                            {users.map(user => (
+                              <option key={user.id} value={user.email}>
+                                {user.full_name} ({user.email})
+                              </option>
+                            ))}
+                          </select>
+                        </div>
                         <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                           <div>
                             <label className="block text-sm font-medium text-gray-700 mb-1">
@@ -2655,6 +2679,54 @@ export default function SuperAdminPage() {
                             />
                           </div>
                         </div>
+
+                        {/* Template Selection */}
+                        <div>
+                          <label className="block text-sm font-medium text-gray-700 mb-1">
+                            בחר תבנית או כתוב הודעה חדשה
+                          </label>
+                          <select
+                            value=""
+                            onChange={(e) => {
+                              const templates: Record<string, { subject: string; message: string }> = {
+                                welcome: {
+                                  subject: '🎉 ברוך הבא למערכת ארון הציוד',
+                                  message: 'ברוך הבא למערכת ארון הציוד של ידידים!\n\nאנחנו שמחים שהצטרפת אלינו. המערכת מאפשרת לך לנהל ולבקש ציוד בקלות.\n\nאם יש לך שאלות, אל תהסס ליצור קשר.'
+                                },
+                                reminder: {
+                                  subject: '⏰ תזכורת - החזרת ציוד',
+                                  message: 'היי,\n\nזוהי תזכורת ידידותית להחזרת הציוד שהושאל.\n\nאם כבר החזרת את הציוד - מתנצלים על ההודעה המיותרת.\n\nתודה על שיתוף הפעולה!'
+                                },
+                                update: {
+                                  subject: '📢 עדכון חשוב מארון הציוד',
+                                  message: 'שלום,\n\nרצינו לעדכן אותך בנוגע לשינויים/עדכונים במערכת ארון הציוד.\n\n[כתוב כאן את העדכון]\n\nבברכה,\nצוות ארון הציוד'
+                                },
+                                thanks: {
+                                  subject: '🙏 תודה על השימוש בארון הציוד',
+                                  message: 'שלום,\n\nרצינו להודות לך על השימוש במערכת ארון הציוד של ידידים.\n\nהציוד שלנו עוזר לאנשים רבים בזכות מתנדבים כמוך.\n\nתודה!'
+                                },
+                                custom: {
+                                  subject: '',
+                                  message: ''
+                                }
+                              }
+                              const template = templates[e.target.value]
+                              if (template) {
+                                setCustomEmailSubject(template.subject)
+                                setCustomEmailMessage(template.message)
+                              }
+                            }}
+                            className="w-full h-10 border-2 border-gray-200 rounded-lg px-3 bg-white"
+                          >
+                            <option value="">-- בחר תבנית --</option>
+                            <option value="welcome">🎉 ברוך הבא</option>
+                            <option value="reminder">⏰ תזכורת החזרת ציוד</option>
+                            <option value="update">📢 עדכון חשוב</option>
+                            <option value="thanks">🙏 תודה</option>
+                            <option value="custom">✏️ הודעה חופשית</option>
+                          </select>
+                        </div>
+
                         <div>
                           <label className="block text-sm font-medium text-gray-700 mb-1">
                             נושא *
