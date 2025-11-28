@@ -8,7 +8,8 @@
 
 import { NextRequest, NextResponse } from 'next/server'
 import { createServiceClient } from '@/lib/supabase-server'
-import { logEmail } from '@/lib/email'
+import { logEmail, sendPasswordResetEmail } from '@/lib/email'
+import crypto from 'crypto'
 
 interface SendResetEmailBody {
   email: string
@@ -72,12 +73,35 @@ export async function POST(request: NextRequest) {
       )
     }
 
-    // Send password reset email via Supabase
-    const { error: resetError } = await supabase.auth.resetPasswordForEmail(
+    // Generate reset token
+    const resetToken = crypto.randomBytes(32).toString('hex')
+    const expiresAt = new Date()
+    expiresAt.setHours(expiresAt.getHours() + 1) // 1 hour
+
+    // Store token in city_managers table (for city managers)
+    const { data: cityManager } = await supabase
+      .from('city_managers')
+      .select('id, name')
+      .eq('email', body.email)
+      .single()
+
+    if (cityManager) {
+      // Update city_managers with reset token
+      await supabase
+        .from('city_managers')
+        .update({
+          reset_token: resetToken,
+          reset_token_expires_at: expiresAt.toISOString(),
+          updated_at: new Date().toISOString()
+        })
+        .eq('id', cityManager.id)
+    }
+
+    // Send password reset email via Gmail SMTP
+    const emailResult = await sendPasswordResetEmail(
       body.email,
-      {
-        redirectTo: `${process.env.NEXT_PUBLIC_APP_URL}/reset-password`
-      }
+      resetToken,
+      user.full_name || cityManager?.name || 'משתמש'
     )
 
     // Log the email
@@ -85,19 +109,19 @@ export async function POST(request: NextRequest) {
       recipientEmail: body.email,
       recipientName: user.full_name,
       emailType: 'password_reset',
-      subject: 'איפוס סיסמה - ארון ציוד ידידים',
-      status: resetError ? 'failed' : 'sent',
-      errorMessage: resetError?.message,
+      subject: '🔑 איפוס סיסמה - ארון ציוד ידידים',
+      status: emailResult.success ? 'sent' : 'failed',
+      errorMessage: emailResult.error,
       sentBy: adminProfile.email,
       metadata: {
         user_id: user.id
       }
     })
 
-    if (resetError) {
-      console.error('Error sending password reset email:', resetError)
+    if (!emailResult.success) {
+      console.error('Error sending password reset email:', emailResult.error)
       return NextResponse.json(
-        { success: false, error: `שגיאה בשליחת מייל: ${resetError.message}` },
+        { success: false, error: `שגיאה בשליחת מייל: ${emailResult.error}` },
         { status: 500 }
       )
     }
