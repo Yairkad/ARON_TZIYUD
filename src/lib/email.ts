@@ -1,7 +1,8 @@
 // Email sending utilities for city manager authentication
-// Using a simple approach - you can replace with SendGrid, Resend, etc.
+// Using Gmail SMTP via Nodemailer
 
 import { createClient } from '@supabase/supabase-js'
+import nodemailer from 'nodemailer'
 
 export interface EmailOptions {
   to: string
@@ -307,12 +308,12 @@ export async function sendEmailUpdateNotification(newEmail: string, userName: st
 }
 
 /**
- * Generic email sending function using Resend
+ * Generic email sending function using Gmail SMTP
  */
 async function sendEmail(options: EmailOptions): Promise<{ success: boolean; error?: string }> {
   try {
     // Development mode - log to console
-    if (process.env.NODE_ENV === 'development' && !process.env.RESEND_API_KEY) {
+    if (process.env.NODE_ENV === 'development' && !process.env.SMTP_PASSWORD) {
       console.log('\n📧 ====== EMAIL (Development Mode) ======')
       console.log('To:', options.to)
       console.log('Subject:', options.subject)
@@ -321,28 +322,32 @@ async function sendEmail(options: EmailOptions): Promise<{ success: boolean; err
       return { success: true }
     }
 
-    // Production mode - use Resend
-    if (!process.env.RESEND_API_KEY) {
-      console.error('❌ RESEND_API_KEY not configured')
+    // Check SMTP configuration
+    if (!process.env.SMTP_HOST || !process.env.SMTP_USER || !process.env.SMTP_PASSWORD) {
+      console.error('❌ SMTP not configured. Need: SMTP_HOST, SMTP_USER, SMTP_PASSWORD')
       return { success: false, error: 'Email service not configured' }
     }
 
-    const { Resend } = await import('resend')
-    const resend = new Resend(process.env.RESEND_API_KEY)
+    // Create transporter for Gmail SMTP
+    const transporter = nodemailer.createTransport({
+      host: process.env.SMTP_HOST,
+      port: 587,
+      secure: false,
+      auth: {
+        user: process.env.SMTP_USER,
+        pass: process.env.SMTP_PASSWORD,
+      },
+    })
 
-    const result = await resend.emails.send({
-      from: process.env.EMAIL_FROM || 'onboarding@resend.dev',
+    // Send email
+    const result = await transporter.sendMail({
+      from: process.env.EMAIL_FROM || process.env.SMTP_USER,
       to: options.to,
       subject: options.subject,
       html: options.html,
     })
 
-    if (result.error) {
-      console.error('Resend error:', result.error)
-      return { success: false, error: result.error.message }
-    }
-
-    console.log('✅ Email sent successfully:', result.data?.id)
+    console.log('✅ Email sent successfully:', result.messageId)
     return { success: true }
 
   } catch (error) {
