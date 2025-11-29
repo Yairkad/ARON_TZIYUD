@@ -38,7 +38,7 @@ export async function GET(request: NextRequest, { params }: StatisticsParams) {
     // Verify city exists
     const { data: city, error: cityError } = await supabase
       .from('cities')
-      .select('id, name, manager1_name, manager_email')
+      .select('id, name, manager1_name')
       .eq('id', cityId)
       .single()
 
