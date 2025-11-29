@@ -143,6 +143,24 @@ export async function GET(request: NextRequest, { params }: StatisticsParams) {
       }
     })
 
+    // Pending return approval items
+    const { data: pendingApprovalData } = await supabase
+      .from('borrow_history')
+      .select('id, equipment_name, name, phone, borrow_date')
+      .eq('city_id', cityId)
+      .eq('status', 'pending_approval')
+
+    const pendingApproval = (pendingApprovalData || []).map(item => {
+      const borrowDate = new Date(item.borrow_date)
+      const days = Math.floor((now.getTime() - borrowDate.getTime()) / (1000 * 60 * 60 * 24))
+      return {
+        equipmentName: item.equipment_name,
+        borrowerName: item.name,
+        borrowerPhone: item.phone,
+        days
+      }
+    })
+
     // === TREND DATA (last 6 months) ===
     const trendData: { month: string; borrows: number; returns: number }[] = []
     for (let i = 5; i >= 0; i--) {
@@ -225,7 +243,8 @@ export async function GET(request: NextRequest, { params }: StatisticsParams) {
       topBorrowedItems,
       equipment: {
         lowStock,
-        faulty: faultyItems
+        faulty: faultyItems,
+        pendingApproval
       },
       inventory: {
         totalItems,

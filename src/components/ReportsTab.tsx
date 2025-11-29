@@ -59,6 +59,16 @@ const exportToExcel = (stats: StatisticsData, cityName: string) => {
     csv += '\n'
   }
 
+  // Pending return approval
+  if (stats.equipment.pendingApproval?.length > 0) {
+    csv += 'ממתינים לאישור החזרה\n'
+    csv += 'שם פריט,שם שואל,ימים\n'
+    stats.equipment.pendingApproval.forEach(item => {
+      csv += `${item.equipmentName},${item.borrowerName},${item.days}\n`
+    })
+    csv += '\n'
+  }
+
   // Trends
   csv += 'מגמות - 6 חודשים אחרונים\n'
   csv += 'חודש,השאלות,החזרות\n'
@@ -103,6 +113,7 @@ interface StatisticsData {
   equipment: {
     lowStock: { name: string; quantity: number }[]
     faulty: { name: string; days: number }[]
+    pendingApproval: { equipmentName: string; borrowerName: string; borrowerPhone: string; days: number }[]
   }
   inventory: {
     totalItems: number
@@ -437,8 +448,32 @@ export default function ReportsTab({ cityId, cityName }: ReportsTabProps) {
       </div>
 
       {/* Alerts Section */}
-      {(stats.equipment.lowStock.length > 0 || stats.equipment.faulty.length > 0) && (
+      {(stats.equipment.lowStock.length > 0 || stats.equipment.faulty.length > 0 || stats.equipment.pendingApproval?.length > 0) && (
         <div className="grid md:grid-cols-2 gap-6">
+          {/* Pending Return Approval */}
+          {stats.equipment.pendingApproval?.length > 0 && (
+            <Card className="border-2 border-blue-200 shadow-lg rounded-2xl overflow-hidden">
+              <CardHeader className="bg-gradient-to-r from-blue-100 to-indigo-100">
+                <CardTitle className="text-lg flex items-center gap-2 text-blue-800">
+                  <span>⏳</span> ממתינים לאישור החזרה ({stats.equipment.pendingApproval.length})
+                </CardTitle>
+              </CardHeader>
+              <CardContent className="p-4">
+                <div className="space-y-2">
+                  {stats.equipment.pendingApproval.map((item, index) => (
+                    <div key={index} className="flex justify-between items-center p-2 bg-blue-50 rounded-lg">
+                      <div>
+                        <div className="font-medium">{item.equipmentName}</div>
+                        <div className="text-xs text-gray-500">{item.borrowerName}</div>
+                      </div>
+                      <span className="font-bold text-blue-700">{item.days} ימים</span>
+                    </div>
+                  ))}
+                </div>
+              </CardContent>
+            </Card>
+          )}
+
           {/* Low Stock (consumables only) */}
           {stats.equipment.lowStock.length > 0 && (
             <Card className="border-2 border-amber-200 shadow-lg rounded-2xl overflow-hidden">
