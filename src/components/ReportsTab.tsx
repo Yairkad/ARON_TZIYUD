@@ -119,6 +119,7 @@ export default function ReportsTab({ cityId, cityName }: ReportsTabProps) {
   const [loading, setLoading] = useState(true)
   const [error, setError] = useState<string | null>(null)
   const [stats, setStats] = useState<StatisticsData | null>(null)
+  const [activeFilter, setActiveFilter] = useState<string>('החודש הנוכחי')
   const [dateRange, setDateRange] = useState({
     start: new Date(new Date().getFullYear(), new Date().getMonth(), 1).toISOString().split('T')[0],
     end: new Date().toISOString().split('T')[0]
@@ -157,10 +158,12 @@ export default function ReportsTab({ cityId, cityName }: ReportsTabProps) {
   }
 
   const handleDateFilter = () => {
+    setActiveFilter('טווח מותאם אישית')
     fetchStatistics(dateRange.start, dateRange.end)
   }
 
   const handleQuickFilter = (days: number) => {
+    setActiveFilter(`${days} ימים אחרונים`)
     const end = new Date()
     const start = new Date()
     start.setDate(start.getDate() - days)
@@ -174,6 +177,7 @@ export default function ReportsTab({ cityId, cityName }: ReportsTabProps) {
   }
 
   const handleMonthFilter = (monthsBack: number) => {
+    setActiveFilter(monthsBack === 0 ? 'החודש הנוכחי' : 'חודש קודם')
     const now = new Date()
     const start = new Date(now.getFullYear(), now.getMonth() - monthsBack, 1)
     const end = new Date(now.getFullYear(), now.getMonth() - monthsBack + 1, 0)
@@ -244,15 +248,22 @@ export default function ReportsTab({ cityId, cityName }: ReportsTabProps) {
       </Card>
 
       {/* Date Filter */}
-      <Card className="border-0 shadow-lg rounded-2xl overflow-hidden">
+      <Card className="border-0 shadow-lg rounded-2xl overflow-hidden print:hidden">
         <CardContent className="p-4">
+          {/* Active filter indicator */}
+          <div className="mb-3 px-3 py-2 bg-indigo-50 rounded-lg inline-block">
+            <span className="text-sm text-indigo-700">
+              📅 מציג נתונים: <span className="font-bold">{activeFilter}</span>
+            </span>
+          </div>
+
           <div className="flex flex-wrap items-center gap-3">
             <span className="font-medium text-gray-700">סינון לפי תאריך:</span>
 
             {/* Quick filters */}
             <div className="flex flex-wrap gap-2">
               <Button
-                variant="outline"
+                variant={activeFilter === '7 ימים אחרונים' ? 'default' : 'outline'}
                 size="sm"
                 onClick={() => handleQuickFilter(7)}
                 className="text-xs"
@@ -260,7 +271,7 @@ export default function ReportsTab({ cityId, cityName }: ReportsTabProps) {
                 7 ימים
               </Button>
               <Button
-                variant="outline"
+                variant={activeFilter === '30 ימים אחרונים' ? 'default' : 'outline'}
                 size="sm"
                 onClick={() => handleQuickFilter(30)}
                 className="text-xs"
@@ -268,7 +279,7 @@ export default function ReportsTab({ cityId, cityName }: ReportsTabProps) {
                 30 ימים
               </Button>
               <Button
-                variant="outline"
+                variant={activeFilter === 'החודש הנוכחי' ? 'default' : 'outline'}
                 size="sm"
                 onClick={() => handleMonthFilter(0)}
                 className="text-xs"
@@ -276,7 +287,7 @@ export default function ReportsTab({ cityId, cityName }: ReportsTabProps) {
                 החודש
               </Button>
               <Button
-                variant="outline"
+                variant={activeFilter === 'חודש קודם' ? 'default' : 'outline'}
                 size="sm"
                 onClick={() => handleMonthFilter(1)}
                 className="text-xs"

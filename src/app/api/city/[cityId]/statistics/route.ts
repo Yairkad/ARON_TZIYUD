@@ -32,8 +32,23 @@ export async function GET(request: NextRequest, { params }: StatisticsParams) {
     const defaultStart = new Date(now.getFullYear(), now.getMonth(), 1)
     const defaultEnd = new Date(now.getFullYear(), now.getMonth() + 1, 0)
 
-    const periodStart = startDate ? new Date(startDate) : defaultStart
-    const periodEnd = endDate ? new Date(endDate) : defaultEnd
+    let periodStart: Date
+    let periodEnd: Date
+
+    if (startDate) {
+      periodStart = new Date(startDate)
+      periodStart.setHours(0, 0, 0, 0)
+    } else {
+      periodStart = defaultStart
+    }
+
+    if (endDate) {
+      periodEnd = new Date(endDate)
+      periodEnd.setHours(23, 59, 59, 999) // End of day
+    } else {
+      periodEnd = defaultEnd
+      periodEnd.setHours(23, 59, 59, 999)
+    }
 
     // Verify city exists
     const { data: city, error: cityError } = await supabase
