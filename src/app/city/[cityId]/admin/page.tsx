@@ -1336,13 +1336,18 @@ export default function CityAdminPage() {
           </Button>
           <Button
             onClick={() => setActiveTab('history')}
-            className={`py-6 rounded-xl font-semibold text-lg transition-all duration-300 ${
+            className={`py-6 rounded-xl font-semibold text-lg transition-all duration-300 relative ${
               activeTab === 'history'
                 ? 'bg-gradient-to-r from-blue-600 to-indigo-600 text-white shadow-lg shadow-blue-500/50 scale-105'
                 : 'bg-white text-gray-600 border-2 border-gray-200 hover:border-blue-300 hover:bg-blue-50'
             }`}
           >
             <span className="text-2xl ml-2">📊</span> היסטוריית השאלות
+            {borrowHistory.filter(item => item.status === 'pending_approval').length > 0 && (
+              <span className="absolute -top-2 -right-2 bg-blue-500 text-white text-xs font-bold rounded-full h-6 w-6 flex items-center justify-center animate-pulse shadow-lg">
+                {borrowHistory.filter(item => item.status === 'pending_approval').length}
+              </span>
+            )}
           </Button>
           {city?.request_mode === 'request' && (
             <Button
