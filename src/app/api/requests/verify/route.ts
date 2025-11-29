@@ -58,7 +58,7 @@ export async function POST(request: NextRequest) {
       .from('request_items')
       .select(`
         *,
-        global_equipment:global_equipment_pool(*)
+        global_equipment:global_equipment_pool!request_items_global_equipment_id_fkey(*)
       `)
       .eq('request_id', equipmentRequest.id)
 

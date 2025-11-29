@@ -47,7 +47,7 @@ export async function PATCH(request: NextRequest) {
         *,
         items:request_items(
           *,
-          equipment:equipment(*)
+          equipment:global_equipment_pool!request_items_global_equipment_id_fkey(*)
         )
       `)
       .eq('id', requestId)
@@ -267,7 +267,7 @@ export async function GET(request: NextRequest) {
         *,
         items:request_items(
           *,
-          equipment:equipment(*)
+          equipment:global_equipment_pool!request_items_global_equipment_id_fkey(*)
         )
       `)
       .eq('city_id', cityId)
