@@ -15,6 +15,7 @@ export default function SelectCityPage() {
   const [cities, setCities] = useState<City[]>([])
   const [loading, setLoading] = useState(true)
   const [error, setError] = useState('')
+  const [isBlocked, setIsBlocked] = useState(false)
 
   useEffect(() => {
     fetchCities()
@@ -29,9 +30,21 @@ export default function SelectCityPage() {
       const data = await response.json()
 
       if (!response.ok || !data.success) {
-        // If user is not authenticated or has no cities, redirect to login
-        if (response.status === 401 || response.status === 403) {
+        // If user is blocked (403 with specific message)
+        if (response.status === 403 && data.error === 'המשתמש לא פעיל') {
+          setIsBlocked(true)
+          setLoading(false)
+          return
+        }
+        // If user is not authenticated, redirect to login
+        if (response.status === 401) {
           router.push('/login')
+          return
+        }
+        // For other 403 errors (like not being a city manager)
+        if (response.status === 403) {
+          setError(data.error || 'אין הרשאה לגשת לדף זה')
+          setLoading(false)
           return
         }
         throw new Error(data.error || 'שגיאה בטעינת ערים')
@@ -86,6 +99,32 @@ export default function SelectCityPage() {
             <div className="text-center">
               <div className="text-6xl mb-4">⏳</div>
               <p className="text-gray-600 text-lg">טוען ערים...</p>
+            </div>
+          </CardContent>
+        </Card>
+      </div>
+    )
+  }
+
+  if (isBlocked) {
+    return (
+      <div className="min-h-screen bg-gradient-to-br from-red-50 via-orange-50 to-yellow-50 flex items-center justify-center p-4">
+        <Card className="w-full max-w-md shadow-2xl">
+          <CardContent className="p-8">
+            <div className="text-center">
+              <div className="text-6xl mb-4">🚫</div>
+              <h2 className="text-2xl font-bold text-gray-900 mb-4">החשבון חסום</h2>
+              <p className="text-gray-600 mb-6">
+                החשבון שלך נחסם על ידי מנהל המערכת.
+                <br />
+                לפרטים נוספים, אנא פנה למנהל.
+              </p>
+              <button
+                onClick={handleLogout}
+                className="w-full h-12 bg-gradient-to-r from-red-600 to-orange-600 hover:from-red-700 hover:to-orange-700 text-white font-bold rounded-xl shadow-lg hover:shadow-xl transition-all duration-200"
+              >
+                התנתק
+              </button>
             </div>
           </CardContent>
         </Card>
