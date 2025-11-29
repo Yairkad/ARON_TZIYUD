@@ -75,26 +75,62 @@ export async function PATCH(request: NextRequest) {
           )
         }
 
-        // Check equipment availability
+        // Check equipment availability from city_equipment table
+        // Note: global_equipment_pool doesn't have equipment_status/quantity - those are in city_equipment
+        const globalEquipmentIds = existingRequest.items.map((item: any) => item.global_equipment_id)
+
+        const { data: cityEquipmentList, error: cityEqError } = await supabaseServer
+          .from('city_equipment')
+          .select('global_equipment_id, quantity, equipment_status, is_consumable')
+          .eq('city_id', cityId)
+          .in('global_equipment_id', globalEquipmentIds)
+
+        if (cityEqError) {
+          console.error('Error fetching city equipment:', cityEqError)
+          return NextResponse.json(
+            { error: 'שגיאה בבדיקת זמינות ציוד' },
+            { status: 500 }
+          )
+        }
+
+        // Create map for quick lookup
+        const cityEquipmentMap = new Map(
+          cityEquipmentList?.map(eq => [eq.global_equipment_id, eq]) || []
+        )
+
         for (const item of existingRequest.items) {
-          const equipment = item.equipment
-          if (equipment.equipment_status !== 'working') {
+          const globalEquipment = item.equipment // From global_equipment_pool (has name)
+          const cityEquipment = cityEquipmentMap.get(item.global_equipment_id)
+
+          if (!cityEquipment) {
             return NextResponse.json(
-              { error: `הציוד "${equipment.name}" תקול ואינו זמין` },
+              { error: `הציוד "${globalEquipment?.name || 'לא ידוע'}" לא נמצא בארון זה` },
+              { status: 404 }
+            )
+          }
+
+          // Check equipment status (default to 'working' if not set)
+          const status = cityEquipment.equipment_status || 'working'
+          if (status !== 'working') {
+            return NextResponse.json(
+              { error: `הציוד "${globalEquipment?.name || 'לא ידוע'}" תקול ואינו זמין` },
               { status: 400 }
             )
           }
 
-          if (!equipment.is_consumable && equipment.quantity < 1) {
+          const isConsumable = cityEquipment.is_consumable || false
+          const quantity = cityEquipment.quantity || 0
+
+          if (!isConsumable && quantity < 1) {
             return NextResponse.json(
-              { error: `הציוד "${equipment.name}" אינו זמין במלאי` },
+              { error: `הציוד "${globalEquipment?.name || 'לא ידוע'}" אינו זמין במלאי` },
               { status: 400 }
             )
           }
 
-          if (equipment.is_consumable && equipment.quantity < item.quantity) {
+          if (isConsumable && quantity < item.quantity) {
             return NextResponse.json(
-              { error: `אין מספיק כמות מהציוד "${equipment.name}"` },
+              { error: `אין מספיק כמות מהציוד "${globalEquipment?.name || 'לא ידוע'}"` },
               { status: 400 }
             )
           }
