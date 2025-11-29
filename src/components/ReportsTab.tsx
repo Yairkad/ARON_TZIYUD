@@ -223,7 +223,7 @@ export default function ReportsTab({ cityId, cityName }: ReportsTabProps) {
                 <span className="text-3xl print:hidden">📊</span>
                 דוחות וסטטיסטיקות - {cityName}
               </CardTitle>
-              <p className="text-indigo-100 mt-2">{stats.period.start} - {stats.period.end}</p>
+              <p className="text-indigo-100 mt-2">📅 {activeFilter}</p>
             </div>
             <div className="flex gap-2 print:hidden">
               <Button
@@ -250,47 +250,36 @@ export default function ReportsTab({ cityId, cityName }: ReportsTabProps) {
       {/* Date Filter */}
       <Card className="border-0 shadow-lg rounded-2xl overflow-hidden print:hidden">
         <CardContent className="p-4">
-          {/* Active filter indicator */}
-          <div className="mb-3 px-3 py-2 bg-indigo-50 rounded-lg inline-block">
-            <span className="text-sm text-indigo-700">
-              📅 מציג נתונים: <span className="font-bold">{activeFilter}</span>
-            </span>
-          </div>
-
           <div className="flex flex-wrap items-center gap-3">
             <span className="font-medium text-gray-700">סינון לפי תאריך:</span>
 
             {/* Quick filters */}
             <div className="flex flex-wrap gap-2">
               <Button
-                variant={activeFilter === '7 ימים אחרונים' ? 'default' : 'outline'}
                 size="sm"
                 onClick={() => handleQuickFilter(7)}
-                className="text-xs"
+                className={`text-xs ${activeFilter === '7 ימים אחרונים' ? 'bg-indigo-600 text-white hover:bg-indigo-700' : 'bg-white border border-gray-300 text-gray-700 hover:bg-gray-50'}`}
               >
                 7 ימים
               </Button>
               <Button
-                variant={activeFilter === '30 ימים אחרונים' ? 'default' : 'outline'}
                 size="sm"
                 onClick={() => handleQuickFilter(30)}
-                className="text-xs"
+                className={`text-xs ${activeFilter === '30 ימים אחרונים' ? 'bg-indigo-600 text-white hover:bg-indigo-700' : 'bg-white border border-gray-300 text-gray-700 hover:bg-gray-50'}`}
               >
                 30 ימים
               </Button>
               <Button
-                variant={activeFilter === 'החודש הנוכחי' ? 'default' : 'outline'}
                 size="sm"
                 onClick={() => handleMonthFilter(0)}
-                className="text-xs"
+                className={`text-xs ${activeFilter === 'החודש הנוכחי' ? 'bg-indigo-600 text-white hover:bg-indigo-700' : 'bg-white border border-gray-300 text-gray-700 hover:bg-gray-50'}`}
               >
                 החודש
               </Button>
               <Button
-                variant={activeFilter === 'חודש קודם' ? 'default' : 'outline'}
                 size="sm"
                 onClick={() => handleMonthFilter(1)}
-                className="text-xs"
+                className={`text-xs ${activeFilter === 'חודש קודם' ? 'bg-indigo-600 text-white hover:bg-indigo-700' : 'bg-white border border-gray-300 text-gray-700 hover:bg-gray-50'}`}
               >
                 חודש קודם
               </Button>
