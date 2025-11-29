@@ -26,8 +26,8 @@ const exportToExcel = (stats: StatisticsData, cityName: string) => {
 
   // Inventory section
   csv += 'מלאי\n'
-  csv += 'סוגי פריטים,יחידות סה"כ,תקינים,תקולים,מתכלים\n'
-  csv += `${stats.inventory.totalItems},${stats.inventory.totalQuantity},${stats.inventory.workingItems},${stats.inventory.faultyItems},${stats.inventory.consumableItems}\n\n`
+  csv += 'סוגי פריטים,תקינים,תקולים\n'
+  csv += `${stats.inventory.totalItems},${stats.inventory.workingItems},${stats.inventory.faultyItems}\n\n`
 
   // Top borrowed items
   if (stats.topBorrowedItems.length > 0) {
@@ -418,14 +418,10 @@ export default function ReportsTab({ cityId, cityName }: ReportsTabProps) {
             </CardTitle>
           </CardHeader>
           <CardContent className="p-4">
-            <div className="grid grid-cols-2 gap-3">
+            <div className="grid grid-cols-3 gap-3">
               <div className="p-3 bg-gray-50 rounded-xl text-center">
                 <div className="text-2xl font-bold text-gray-700">{stats.inventory.totalItems}</div>
                 <div className="text-xs text-gray-500">סוגי פריטים</div>
-              </div>
-              <div className="p-3 bg-blue-50 rounded-xl text-center">
-                <div className="text-2xl font-bold text-blue-600">{stats.inventory.totalQuantity}</div>
-                <div className="text-xs text-blue-600">יחידות סה"כ</div>
               </div>
               <div className="p-3 bg-green-50 rounded-xl text-center">
                 <div className="text-2xl font-bold text-green-600">{stats.inventory.workingItems}</div>
