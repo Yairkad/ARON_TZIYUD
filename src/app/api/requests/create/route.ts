@@ -64,7 +64,7 @@ export async function POST(request: NextRequest) {
     // Get city settings and manager info
     const { data: city, error: cityError } = await supabaseServer
       .from('cities')
-      .select('name, require_call_id, request_mode, max_request_distance_km, token_lat, token_lng, manager_email, manager1_name')
+      .select('name, require_call_id, request_mode, max_request_distance_km, token_lat, token_lng, manager1_email, manager1_name')
       .eq('id', cityId)
       .single()
 
@@ -295,7 +295,7 @@ export async function POST(request: NextRequest) {
     }
 
     // Send email notification to city manager (fire and forget)
-    if (city.manager_email) {
+    if (city.manager1_email) {
       try {
         // Get equipment names for the email
         const { data: equipmentNames } = await supabaseServer
@@ -309,7 +309,7 @@ export async function POST(request: NextRequest) {
         }))
 
         await sendNewRequestEmail(
-          city.manager_email,
+          city.manager1_email,
           city.manager1_name || 'מנהל',
           body.requester_name,
           body.requester_phone,
