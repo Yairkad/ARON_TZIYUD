@@ -38,12 +38,17 @@ export async function POST(request: NextRequest) {
 
     // Extract city_id from the first item's equipment
     // The equipment_id is the global_equipment_pool ID, find via city_equipment
+    console.log('Request items:', body.items)
+    console.log('Looking for equipment_id:', body.items[0].equipment_id)
+
     const { data: cityEquipment, error: eqError } = await supabaseServer
       .from('city_equipment')
       .select('city_id')
       .eq('global_equipment_id', body.items[0].equipment_id)
       .limit(1)
-      .single()
+      .maybeSingle()
+
+    console.log('City equipment result:', cityEquipment, 'Error:', eqError)
 
     if (eqError || !cityEquipment) {
       console.error('Equipment not found:', body.items[0].equipment_id, eqError)
