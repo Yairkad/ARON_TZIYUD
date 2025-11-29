@@ -33,11 +33,19 @@ export default function UnifiedLoginPage() {
 
         const { data: userProfile } = await supabase
           .from('users')
-          .select('role, city_id')
+          .select('role, city_id, is_active')
           .eq('id', user.id)
           .single()
 
         if (userProfile) {
+          // If user is blocked, don't auto-redirect - let them see the login page
+          if (userProfile.is_active === false) {
+            // Sign out the blocked user
+            await supabase.auth.signOut()
+            setBackUrl('/')
+            return
+          }
+
           let redirectUrl = '/'
           if (userProfile.role === 'super_admin') {
             redirectUrl = '/super-admin'
