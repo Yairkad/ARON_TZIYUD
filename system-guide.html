@@ -1,0 +1,467 @@
+<!DOCTYPE html>
+<html lang="he" dir="rtl">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>מדריך מערכת ארון ציוד</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            min-height: 100vh;
+            padding: 20px;
+            line-height: 1.6;
+        }
+
+        .container {
+            max-width: 1000px;
+            margin: 0 auto;
+            background: white;
+            border-radius: 20px;
+            box-shadow: 0 20px 60px rgba(0,0,0,0.3);
+            overflow: hidden;
+        }
+
+        header {
+            background: linear-gradient(135deg, #1e3a5f 0%, #2d5a87 100%);
+            color: white;
+            padding: 40px;
+            text-align: center;
+        }
+
+        header h1 {
+            font-size: 2.5em;
+            margin-bottom: 10px;
+        }
+
+        header p {
+            opacity: 0.9;
+            font-size: 1.1em;
+        }
+
+        .content {
+            padding: 40px;
+        }
+
+        .section {
+            margin-bottom: 40px;
+        }
+
+        .section-title {
+            display: flex;
+            align-items: center;
+            gap: 12px;
+            font-size: 1.5em;
+            color: #1e3a5f;
+            margin-bottom: 20px;
+            padding-bottom: 10px;
+            border-bottom: 3px solid #667eea;
+        }
+
+        .cards {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
+            gap: 20px;
+        }
+
+        .card {
+            background: linear-gradient(145deg, #f8f9fa, #e9ecef);
+            border-radius: 15px;
+            padding: 25px;
+            border-right: 5px solid #667eea;
+            transition: transform 0.3s, box-shadow 0.3s;
+        }
+
+        .card:hover {
+            transform: translateY(-5px);
+            box-shadow: 0 10px 30px rgba(0,0,0,0.15);
+        }
+
+        .card h3 {
+            color: #1e3a5f;
+            margin-bottom: 12px;
+        }
+
+        .card ul {
+            list-style: none;
+        }
+
+        .card li {
+            padding: 6px 0;
+            padding-right: 20px;
+            position: relative;
+            color: #495057;
+        }
+
+        .card li::before {
+            content: "✓";
+            position: absolute;
+            right: 0;
+            color: #28a745;
+            font-weight: bold;
+        }
+
+        .role-section {
+            background: linear-gradient(145deg, #fff, #f8f9fa);
+            border-radius: 15px;
+            padding: 25px;
+            margin-bottom: 20px;
+            border: 1px solid #e9ecef;
+        }
+
+        .role-badge {
+            background: linear-gradient(135deg, #667eea, #764ba2);
+            color: white;
+            padding: 8px 16px;
+            border-radius: 25px;
+            font-weight: bold;
+            display: inline-block;
+            margin-bottom: 15px;
+        }
+
+        .feature-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(180px, 1fr));
+            gap: 10px;
+        }
+
+        .feature-item {
+            background: white;
+            padding: 10px 15px;
+            border-radius: 8px;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            border: 1px solid #e9ecef;
+            font-size: 0.95em;
+        }
+
+        .modes-container {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
+            gap: 20px;
+        }
+
+        .mode-box {
+            border-radius: 15px;
+            padding: 25px;
+            color: white;
+        }
+
+        .mode-box.direct {
+            background: linear-gradient(135deg, #28a745, #20c997);
+        }
+
+        .mode-box.request {
+            background: linear-gradient(135deg, #007bff, #6610f2);
+        }
+
+        .mode-box h3 {
+            margin-bottom: 15px;
+            font-size: 1.2em;
+        }
+
+        .mode-box ul {
+            list-style: none;
+        }
+
+        .mode-box li {
+            padding: 4px 0;
+            opacity: 0.95;
+        }
+
+        .workflow {
+            background: #f8f9fa;
+            border-radius: 10px;
+            padding: 20px;
+            margin-top: 15px;
+        }
+
+        .workflow h4 {
+            margin-bottom: 15px;
+            color: #1e3a5f;
+        }
+
+        .workflow-steps {
+            display: flex;
+            flex-wrap: wrap;
+            align-items: center;
+            gap: 10px;
+            justify-content: center;
+        }
+
+        .step {
+            background: white;
+            padding: 10px 15px;
+            border-radius: 8px;
+            border: 2px solid #667eea;
+            font-size: 0.9em;
+        }
+
+        .arrow {
+            color: #667eea;
+            font-weight: bold;
+        }
+
+        footer {
+            background: #1e3a5f;
+            color: white;
+            text-align: center;
+            padding: 20px;
+            font-size: 0.9em;
+        }
+
+        @media (max-width: 600px) {
+            header h1 { font-size: 1.8em; }
+            .content { padding: 20px; }
+            .workflow-steps { flex-direction: column; }
+            .arrow { transform: rotate(90deg); }
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <header>
+            <h1>מערכת ארון ציוד</h1>
+            <p>מערכת ניהול השאלות ציוד למתנדבי ידידים</p>
+        </header>
+
+        <div class="content">
+            <!-- מצבי פעולה -->
+            <section class="section">
+                <h2 class="section-title">מצבי פעולה</h2>
+                <div class="modes-container">
+                    <div class="mode-box direct">
+                        <h3>מצב ישיר</h3>
+                        <ul>
+                            <li>• השאלה מיידית ללא אישור</li>
+                            <li>• המשתמש לוקח ציוד ישירות</li>
+                            <li>• עדכון מלאי אוטומטי</li>
+                        </ul>
+                    </div>
+                    <div class="mode-box request">
+                        <h3>מצב בקשות</h3>
+                        <ul>
+                            <li>• דורש אישור מנהל</li>
+                            <li>• קוד כניסה לארון באישור</li>
+                            <li>• טוקן תקף ל-30 דקות</li>
+                        </ul>
+                    </div>
+                </div>
+            </section>
+
+            <!-- תפקידים -->
+            <section class="section">
+                <h2 class="section-title">תפקידים במערכת</h2>
+
+                <div class="role-section">
+                    <span class="role-badge">משתמש רגיל</span>
+                    <div class="feature-grid">
+                        <div class="feature-item">צפייה במלאי ציוד</div>
+                        <div class="feature-item">השאלת ציוד</div>
+                        <div class="feature-item">החזרת ציוד עם צילום</div>
+                        <div class="feature-item">יצירת בקשות</div>
+                        <div class="feature-item">מפת ארונות</div>
+                        <div class="feature-item">חיפוש ערים</div>
+                    </div>
+                </div>
+
+                <div class="role-section">
+                    <span class="role-badge">מנהל עיר</span>
+                    <div class="feature-grid">
+                        <div class="feature-item">ניהול ציוד ומלאי</div>
+                        <div class="feature-item">אישור/דחיית בקשות</div>
+                        <div class="feature-item">צפייה בהיסטוריה</div>
+                        <div class="feature-item">ייצוא לאקסל</div>
+                        <div class="feature-item">הגדרות עיר</div>
+                        <div class="feature-item">התראות פוש</div>
+                    </div>
+                </div>
+
+                <div class="role-section">
+                    <span class="role-badge">מנהל על</span>
+                    <div class="feature-grid">
+                        <div class="feature-item">ניהול כל הערים</div>
+                        <div class="feature-item">ניהול משתמשים</div>
+                        <div class="feature-item">לוג אימיילים</div>
+                        <div class="feature-item">מאגר ציוד גלובלי</div>
+                        <div class="feature-item">כלי מערכת</div>
+                        <div class="feature-item">התראות מערכת</div>
+                    </div>
+                </div>
+            </section>
+
+            <!-- יכולות עיקריות -->
+            <section class="section">
+                <h2 class="section-title">יכולות עיקריות</h2>
+                <div class="cards">
+                    <div class="card">
+                        <h3>ניהול ציוד</h3>
+                        <ul>
+                            <li>הוספה, עריכה ומחיקת פריטים</li>
+                            <li>קטגוריות עם אייקונים</li>
+                            <li>תמונות לציוד</li>
+                            <li>סימון ציוד מתכלה</li>
+                            <li>מעקב מלאי בזמן אמת</li>
+                        </ul>
+                    </div>
+
+                    <div class="card">
+                        <h3>מערכת השאלות</h3>
+                        <ul>
+                            <li>השאלת מספר פריטים בפעולה אחת</li>
+                            <li>בחירת כמויות לציוד מתכלה</li>
+                            <li>וידוא פרטים (שם ונייד)</li>
+                            <li>עדכון מלאי אוטומטי</li>
+                        </ul>
+                    </div>
+
+                    <div class="card">
+                        <h3>מערכת החזרות</h3>
+                        <ul>
+                            <li>חיפוש לפי מספר טלפון</li>
+                            <li>דיווח מצב ציוד (תקין/תקול)</li>
+                            <li>צילום חובה בהחזרה</li>
+                            <li>הערות לציוד פגום</li>
+                        </ul>
+                    </div>
+
+                    <div class="card">
+                        <h3>מערכת בקשות</h3>
+                        <ul>
+                            <li>טוקן ייחודי לכל בקשה</li>
+                            <li>שיתוף קישור לבקשה</li>
+                            <li>הארכת תוקף טוקן</li>
+                            <li>קוד ארון אוטומטי באישור</li>
+                        </ul>
+                    </div>
+
+                    <div class="card">
+                        <h3>מפה ומיקום</h3>
+                        <ul>
+                            <li>מפה אינטראקטיבית של ארונות</li>
+                            <li>מיקום המשתמש בזמן אמת</li>
+                            <li>ניווט ל-Google Maps/Waze</li>
+                            <li>פרטי קשר מהמפה</li>
+                        </ul>
+                    </div>
+
+                    <div class="card">
+                        <h3>דוחות וייצוא</h3>
+                        <ul>
+                            <li>ייצוא היסטוריה לאקסל</li>
+                            <li>ייצוא רשימת ציוד</li>
+                            <li>דוחות מוכנים להדפסה</li>
+                            <li>לוג פעילות מפורט</li>
+                        </ul>
+                    </div>
+                </div>
+            </section>
+
+            <!-- תהליכי עבודה -->
+            <section class="section">
+                <h2 class="section-title">תהליכי עבודה</h2>
+
+                <div class="workflow">
+                    <h4>השאלת ציוד (מצב ישיר)</h4>
+                    <div class="workflow-steps">
+                        <span class="step">בחירת עיר</span>
+                        <span class="arrow">←</span>
+                        <span class="step">בחירת ציוד</span>
+                        <span class="arrow">←</span>
+                        <span class="step">הזנת פרטים</span>
+                        <span class="arrow">←</span>
+                        <span class="step">אישור</span>
+                    </div>
+                </div>
+
+                <div class="workflow">
+                    <h4>בקשת ציוד (מצב בקשות)</h4>
+                    <div class="workflow-steps">
+                        <span class="step">בחירת ציוד</span>
+                        <span class="arrow">←</span>
+                        <span class="step">קבלת טוקן</span>
+                        <span class="arrow">←</span>
+                        <span class="step">המתנה לאישור</span>
+                        <span class="arrow">←</span>
+                        <span class="step">קוד ארון</span>
+                        <span class="arrow">←</span>
+                        <span class="step">איסוף</span>
+                    </div>
+                </div>
+
+                <div class="workflow">
+                    <h4>החזרת ציוד</h4>
+                    <div class="workflow-steps">
+                        <span class="step">חיפוש לפי טלפון</span>
+                        <span class="arrow">←</span>
+                        <span class="step">בחירת פריט</span>
+                        <span class="arrow">←</span>
+                        <span class="step">דיווח מצב</span>
+                        <span class="arrow">←</span>
+                        <span class="step">צילום</span>
+                        <span class="arrow">←</span>
+                        <span class="step">אישור</span>
+                    </div>
+                </div>
+            </section>
+
+            <!-- תכונות מיוחדות -->
+            <section class="section">
+                <h2 class="section-title">תכונות מיוחדות</h2>
+                <div class="cards">
+                    <div class="card">
+                        <h3>אינטגרציות</h3>
+                        <ul>
+                            <li>WhatsApp לתקשורת עם מנהל</li>
+                            <li>חיוג ישיר למנהל</li>
+                            <li>Google Maps / Waze לניווט</li>
+                            <li>Google Drive לתמונות</li>
+                        </ul>
+                    </div>
+
+                    <div class="card">
+                        <h3>התראות</h3>
+                        <ul>
+                            <li>התראות Push בדפדפן</li>
+                            <li>התראות על בקשות חדשות</li>
+                            <li>התראות על החזרות</li>
+                            <li>התראות מלאי שבועיות</li>
+                        </ul>
+                    </div>
+
+                    <div class="card">
+                        <h3>אבטחה</h3>
+                        <ul>
+                            <li>אימות אימייל למנהלים</li>
+                            <li>טוקנים עם תפוגה</li>
+                            <li>לוג פעילות עם IP</li>
+                            <li>איפוס סיסמה מאובטח</li>
+                        </ul>
+                    </div>
+
+                    <div class="card">
+                        <h3>נגישות ועיצוב</h3>
+                        <ul>
+                            <li>תמיכה מלאה בעברית (RTL)</li>
+                            <li>מותאם לנייד</li>
+                            <li>ממשק נגיש ופשוט</li>
+                            <li>עיצוב רספונסיבי</li>
+                        </ul>
+                    </div>
+                </div>
+            </section>
+        </div>
+
+        <footer>
+            <p>מערכת ארון ציוד </p>
+        </footer>
+    </div>
+</body>
+</html>
