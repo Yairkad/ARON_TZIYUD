@@ -53,12 +53,12 @@ export async function POST(request: NextRequest) {
       )
     }
 
-    // Fetch request items with equipment details
+    // Fetch request items with equipment details from global_equipment_pool
     const { data: items, error: itemsError } = await supabaseServer
       .from('request_items')
       .select(`
         *,
-        equipment:equipment(*)
+        global_equipment:global_equipment_pool(*)
       `)
       .eq('request_id', equipmentRequest.id)
 
@@ -70,9 +70,15 @@ export async function POST(request: NextRequest) {
       )
     }
 
+    // Map items to include equipment details
+    const itemsWithEquipment = (items || []).map(item => ({
+      ...item,
+      equipment: item.global_equipment // Rename for compatibility
+    }))
+
     const requestWithItems = {
       ...equipmentRequest,
-      items: items || []
+      items: itemsWithEquipment
     }
 
     return NextResponse.json({
