@@ -1,9 +1,78 @@
 'use client'
 
-import React, { useState, useEffect } from 'react'
+import React, { useState, useEffect, useRef } from 'react'
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
 import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
+
+// Excel export utility
+const exportToExcel = (stats: StatisticsData, cityName: string) => {
+  // Create CSV content
+  let csv = '\ufeff' // BOM for Hebrew support
+
+  // Header
+  csv += `דוח סטטיסטיקות - ${cityName}\n`
+  csv += `תקופה: ${stats.period.start} - ${stats.period.end}\n\n`
+
+  // Borrows section
+  csv += 'השאלות והחזרות\n'
+  csv += 'סה"כ השאלות,החזרות,ממתינים להחזרה,אחוז החזרה\n'
+  csv += `${stats.borrows.total},${stats.borrows.returned},${stats.borrows.pending},${stats.borrows.returnRate}%\n\n`
+
+  // Requests section
+  csv += 'בקשות\n'
+  csv += 'סה"כ בקשות,אושרו,נדחו,ממתינות,אחוז אישור\n'
+  csv += `${stats.requests.total},${stats.requests.approved},${stats.requests.rejected},${stats.requests.active},${stats.requests.approvalRate}%\n\n`
+
+  // Inventory section
+  csv += 'מלאי\n'
+  csv += 'סוגי פריטים,יחידות סה"כ,תקינים,תקולים,מתכלים\n'
+  csv += `${stats.inventory.totalItems},${stats.inventory.totalQuantity},${stats.inventory.workingItems},${stats.inventory.faultyItems},${stats.inventory.consumableItems}\n\n`
+
+  // Top borrowed items
+  if (stats.topBorrowedItems.length > 0) {
+    csv += 'פריטים מושאלים ביותר\n'
+    csv += 'שם פריט,מספר השאלות\n'
+    stats.topBorrowedItems.forEach(item => {
+      csv += `${item.name},${item.count}\n`
+    })
+    csv += '\n'
+  }
+
+  // Low stock items
+  if (stats.equipment.lowStock.length > 0) {
+    csv += 'פריטים מתכלים במלאי נמוך\n'
+    csv += 'שם פריט,כמות\n'
+    stats.equipment.lowStock.forEach(item => {
+      csv += `${item.name},${item.quantity}\n`
+    })
+    csv += '\n'
+  }
+
+  // Faulty items
+  if (stats.equipment.faulty.length > 0) {
+    csv += 'ציוד תקול\n'
+    csv += 'שם פריט,ימים תקול\n'
+    stats.equipment.faulty.forEach(item => {
+      csv += `${item.name},${item.days}\n`
+    })
+    csv += '\n'
+  }
+
+  // Trends
+  csv += 'מגמות - 6 חודשים אחרונים\n'
+  csv += 'חודש,השאלות,החזרות\n'
+  stats.trends.forEach(month => {
+    csv += `${month.month},${month.borrows},${month.returns}\n`
+  })
+
+  // Download
+  const blob = new Blob([csv], { type: 'text/csv;charset=utf-8;' })
+  const link = document.createElement('a')
+  link.href = URL.createObjectURL(blob)
+  link.download = `דוח_${cityName}_${new Date().toLocaleDateString('he-IL').replace(/\//g, '-')}.csv`
+  link.click()
+}
 
 interface ReportsTabProps {
   cityId: string
@@ -142,13 +211,35 @@ export default function ReportsTab({ cityId, cityName }: ReportsTabProps) {
   return (
     <div className="space-y-6">
       {/* Header */}
-      <Card className="border-0 shadow-lg rounded-2xl overflow-hidden">
-        <CardHeader className="bg-gradient-to-r from-indigo-600 to-purple-600 text-white">
-          <CardTitle className="text-2xl flex items-center gap-3">
-            <span className="text-3xl">📊</span>
-            דוחות וסטטיסטיקות - {cityName}
-          </CardTitle>
-          <p className="text-indigo-100 mt-2">{stats.period.start} - {stats.period.end}</p>
+      <Card className="border-0 shadow-lg rounded-2xl overflow-hidden print:shadow-none">
+        <CardHeader className="bg-gradient-to-r from-indigo-600 to-purple-600 text-white print:bg-indigo-600">
+          <div className="flex justify-between items-start">
+            <div>
+              <CardTitle className="text-2xl flex items-center gap-3">
+                <span className="text-3xl print:hidden">📊</span>
+                דוחות וסטטיסטיקות - {cityName}
+              </CardTitle>
+              <p className="text-indigo-100 mt-2">{stats.period.start} - {stats.period.end}</p>
+            </div>
+            <div className="flex gap-2 print:hidden">
+              <Button
+                variant="secondary"
+                size="sm"
+                onClick={() => exportToExcel(stats, cityName)}
+                className="bg-white/20 hover:bg-white/30 text-white border-0"
+              >
+                📥 Excel
+              </Button>
+              <Button
+                variant="secondary"
+                size="sm"
+                onClick={() => window.print()}
+                className="bg-white/20 hover:bg-white/30 text-white border-0"
+              >
+                🖨️ הדפסה
+              </Button>
+            </div>
+          </div>
         </CardHeader>
       </Card>
 
@@ -352,12 +443,12 @@ export default function ReportsTab({ cityId, cityName }: ReportsTabProps) {
       {/* Alerts Section */}
       {(stats.equipment.lowStock.length > 0 || stats.equipment.faulty.length > 0) && (
         <div className="grid md:grid-cols-2 gap-6">
-          {/* Low Stock */}
+          {/* Low Stock (consumables only) */}
           {stats.equipment.lowStock.length > 0 && (
             <Card className="border-2 border-amber-200 shadow-lg rounded-2xl overflow-hidden">
               <CardHeader className="bg-gradient-to-r from-amber-100 to-orange-100">
                 <CardTitle className="text-lg flex items-center gap-2 text-amber-800">
-                  <span>⚠️</span> פריטים במלאי נמוך ({stats.equipment.lowStock.length})
+                  <span>⚠️</span> מתכלים במלאי נמוך ({stats.equipment.lowStock.length})
                 </CardTitle>
               </CardHeader>
               <CardContent className="p-4">

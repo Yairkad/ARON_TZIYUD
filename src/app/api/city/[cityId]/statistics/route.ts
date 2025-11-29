@@ -90,7 +90,7 @@ export async function GET(request: NextRequest, { params }: StatisticsParams) {
     const activeRequests = requestsData?.filter(r => r.status === 'pending').length || 0
 
     // === EQUIPMENT STATUS ===
-    // Low stock items
+    // Low stock items (only consumables)
     const { data: lowStockItems } = await supabase
       .from('city_equipment')
       .select(`
@@ -99,6 +99,7 @@ export async function GET(request: NextRequest, { params }: StatisticsParams) {
         global_equipment:global_equipment_pool(name)
       `)
       .eq('city_id', cityId)
+      .eq('is_consumable', true)
       .lte('quantity', 2)
 
     const lowStock = (lowStockItems || []).map(item => ({
