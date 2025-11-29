@@ -59,6 +59,7 @@ export async function POST(request: NextRequest) {
     }
 
     const cityId = cityEquipment.city_id
+    console.log('Found cityId:', cityId)
 
     // Get city settings and manager info
     const { data: city, error: cityError } = await supabaseServer
@@ -67,7 +68,10 @@ export async function POST(request: NextRequest) {
       .eq('id', cityId)
       .single()
 
+    console.log('City query result:', city, 'Error:', cityError)
+
     if (cityError || !city) {
+      console.error('City not found for cityId:', cityId, 'Error:', cityError)
       return NextResponse.json(
         { error: 'עיר לא נמצאה' },
         { status: 404 }
