@@ -250,11 +250,10 @@ export async function POST(request: NextRequest) {
     }
 
     // Create request items
-    // equipment_id stores the global_equipment_pool ID
+    // Only use global_equipment_id (equipment_id has FK to old equipment table)
     const itemsToInsert = body.items.map(item => ({
       request_id: newRequest.id,
-      equipment_id: item.equipment_id, // This is global_equipment_id
-      global_equipment_id: item.equipment_id, // Explicit field for new structure
+      global_equipment_id: item.equipment_id,
       quantity: item.quantity
     }))
 
