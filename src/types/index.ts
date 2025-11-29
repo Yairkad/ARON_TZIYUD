@@ -167,9 +167,8 @@ export interface EquipmentRequest {
 export interface RequestItem {
   id: string
   request_id: string
-  equipment_id: string
+  global_equipment_id: string
   quantity: number
-  global_equipment_id?: string | null  // New field for global equipment pool
   created_at: string
 }
 

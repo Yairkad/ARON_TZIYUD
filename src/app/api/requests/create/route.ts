@@ -249,12 +249,9 @@ export async function POST(request: NextRequest) {
       )
     }
 
-    // Create request items
-    // equipment_id is required (NOT NULL) but has FK to old table
-    // We need to remove the FK constraint in Supabase, for now use global_equipment_id for both
+    // Create request items (using only global_equipment_id)
     const itemsToInsert = body.items.map(item => ({
       request_id: newRequest.id,
-      equipment_id: item.equipment_id, // Required field - need to remove FK constraint in DB
       global_equipment_id: item.equipment_id,
       quantity: item.quantity
     }))
