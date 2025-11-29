@@ -96,6 +96,7 @@ export default function CityAdminPage() {
   const [categories, setCategories] = useState<any[]>([])
   const [isAuthenticated, setIsAuthenticated] = useState(false)
   const [isCheckingAuth, setIsCheckingAuth] = useState(true) // Add loading state for auth check
+  const [isBlocked, setIsBlocked] = useState(false)
   const [loading, setLoading] = useState(false)
   const [activeTab, setActiveTab] = useState<'equipment' | 'history' | 'requests' | 'reports' | 'settings'>('equipment')
   const [newEquipment, setNewEquipment] = useState({ name: '', quantity: 1, equipment_status: 'working' as 'working' | 'faulty', is_consumable: false, category_id: '', image_url: '' })
@@ -454,8 +455,9 @@ export default function CityAdminPage() {
             credentials: 'include'
           })
 
+          const data = await response.json()
+
           if (response.ok) {
-            const data = await response.json()
             const managedCities = data.cities || []
             const managesThisCity = managedCities.some((c: any) => c.id === cityId)
 
@@ -467,6 +469,10 @@ export default function CityAdminPage() {
               console.log('❌ Access denied - user does not manage this city', { authenticated, userType, cityId, managedCities })
               setCurrentUser(null)
             }
+          } else if (response.status === 403 && data.error === 'המשתמש לא פעיל') {
+            console.log('🚫 User is blocked')
+            setIsBlocked(true)
+            setCurrentUser(null)
           } else {
             console.log('❌ Access denied - failed to fetch managed cities')
             setCurrentUser(null)
@@ -1118,6 +1124,33 @@ export default function CityAdminPage() {
         <div className="text-center">
           <div className="text-4xl mb-4">⏳</div>
           <p className="text-gray-600">בודק הרשאות...</p>
+        </div>
+      </div>
+    )
+  }
+
+  if (isBlocked) {
+    return (
+      <div className="min-h-screen bg-gradient-to-br from-red-50 via-orange-50 to-yellow-50 flex items-center justify-center p-4">
+        <div className="w-full max-w-md bg-white rounded-2xl shadow-2xl p-8">
+          <div className="text-center">
+            <div className="text-6xl mb-4">🚫</div>
+            <h2 className="text-2xl font-bold text-gray-900 mb-4">החשבון חסום</h2>
+            <p className="text-gray-600 mb-6">
+              החשבון שלך נחסם על ידי מנהל המערכת.
+              <br />
+              לפרטים נוספים, אנא פנה למנהל.
+            </p>
+            <button
+              onClick={async () => {
+                await fetch('/api/auth/logout', { method: 'POST', credentials: 'include' })
+                router.push('/login')
+              }}
+              className="w-full h-12 bg-gradient-to-r from-red-600 to-orange-600 hover:from-red-700 hover:to-orange-700 text-white font-bold rounded-xl shadow-lg hover:shadow-xl transition-all duration-200"
+            >
+              התנתק
+            </button>
+          </div>
         </div>
       </div>
     )
