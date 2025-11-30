@@ -75,7 +75,6 @@ export default function SuperAdminPage() {
   const [bulkEmailProgress, setBulkEmailProgress] = useState({ sent: 0, total: 0, failed: 0 })
   const [selectedUsersForEmail, setSelectedUsersForEmail] = useState<Set<string>>(new Set())
   const [showUserSelector, setShowUserSelector] = useState(false)
-  const [userSearchQuery, setUserSearchQuery] = useState('')
 
   // Email Selection State
   const [selectedEmails, setSelectedEmails] = useState<Set<string>>(new Set())
