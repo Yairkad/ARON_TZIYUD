@@ -75,6 +75,7 @@ export default function SuperAdminPage() {
   const [bulkEmailProgress, setBulkEmailProgress] = useState({ sent: 0, total: 0, failed: 0 })
   const [selectedUsersForEmail, setSelectedUsersForEmail] = useState<Set<string>>(new Set())
   const [showUserSelector, setShowUserSelector] = useState(false)
+  const [userSearchQuery, setUserSearchQuery] = useState('')
 
   // Email Selection State
   const [selectedEmails, setSelectedEmails] = useState<Set<string>>(new Set())
@@ -2731,7 +2732,6 @@ export default function SuperAdminPage() {
                       <option value="password_reset">איפוס סיסמה</option>
                       <option value="welcome">ברוך הבא</option>
                       <option value="email_update">עדכון מייל</option>
-                      <option value="verification">אימות</option>
                     </select>
                     <Button
                       onClick={fetchEmailLogs}
@@ -2766,24 +2766,8 @@ export default function SuperAdminPage() {
                             בחר נמענים
                           </label>
 
-                          {/* Quick Selection Buttons */}
-                          <div className="flex flex-wrap gap-2 mb-3">
-                            <Button
-                              type="button"
-                              size="sm"
-                              variant={sendToAllUsers ? "default" : "outline"}
-                              onClick={() => {
-                                setSendToAllUsers(!sendToAllUsers)
-                                if (!sendToAllUsers) {
-                                  setSelectedUsersForEmail(new Set())
-                                  setCustomEmailTo('')
-                                  setCustomEmailName('')
-                                }
-                              }}
-                              className={sendToAllUsers ? "bg-purple-600 hover:bg-purple-700" : ""}
-                            >
-                              📧 כל המשתמשים ({users.length})
-                            </Button>
+                          {/* Quick Selection Buttons - Same Row */}
+                          <div className="flex items-center gap-2 mb-3">
                             <Button
                               type="button"
                               size="sm"
@@ -2796,21 +2780,45 @@ export default function SuperAdminPage() {
                             >
                               👥 בחר משתמשים {selectedUsersForEmail.size > 0 && `(${selectedUsersForEmail.size})`}
                             </Button>
+                            <Button
+                              type="button"
+                              size="sm"
+                              variant={sendToAllUsers ? "default" : "outline"}
+                              onClick={() => {
+                                setSendToAllUsers(!sendToAllUsers)
+                                if (!sendToAllUsers) {
+                                  setSelectedUsersForEmail(new Set())
+                                  setCustomEmailTo('')
+                                  setCustomEmailName('')
+                                  setShowUserSelector(false)
+                                }
+                              }}
+                              className={`text-xs ${sendToAllUsers ? "bg-purple-600 hover:bg-purple-700" : ""}`}
+                            >
+                              📧 כולם ({users.length})
+                            </Button>
                           </div>
 
                           {/* User Selector Panel */}
                           {showUserSelector && !sendToAllUsers && (
-                            <div className="bg-white border-2 border-indigo-200 rounded-lg p-3 mb-3 max-h-60 overflow-y-auto">
-                              <div className="flex justify-between items-center mb-2 pb-2 border-b border-gray-200">
+                            <div className="bg-white border-2 border-indigo-200 rounded-lg p-3 mb-3">
+                              {/* Header with count and actions */}
+                              <div className="flex justify-between items-center mb-3 pb-2 border-b border-gray-200">
                                 <span className="text-sm font-medium text-gray-700">
-                                  בחר משתמשים ({selectedUsersForEmail.size} נבחרו)
+                                  {selectedUsersForEmail.size} נבחרו
                                 </span>
                                 <div className="flex gap-2">
                                   <Button
                                     type="button"
                                     size="sm"
                                     variant="ghost"
-                                    onClick={() => setSelectedUsersForEmail(new Set(users.map(u => u.id)))}
+                                    onClick={() => {
+                                      const filteredUsers = users.filter(u =>
+                                        u.full_name?.toLowerCase().includes(userSearchQuery.toLowerCase()) ||
+                                        u.email?.toLowerCase().includes(userSearchQuery.toLowerCase())
+                                      )
+                                      setSelectedUsersForEmail(new Set(filteredUsers.map(u => u.id)))
+                                    }}
                                     className="text-xs h-7 px-2"
                                   >
                                     בחר הכל
@@ -2826,11 +2834,27 @@ export default function SuperAdminPage() {
                                   </Button>
                                 </div>
                               </div>
-                              <div className="space-y-1">
-                                {users.map(user => (
+
+                              {/* Search Input */}
+                              <Input
+                                type="text"
+                                placeholder="🔍 חפש לפי שם..."
+                                value={userSearchQuery}
+                                onChange={(e) => setUserSearchQuery(e.target.value)}
+                                className="mb-3 h-9"
+                              />
+
+                              {/* User List */}
+                              <div className="space-y-1 max-h-48 overflow-y-auto">
+                                {users
+                                  .filter(user =>
+                                    user.full_name?.toLowerCase().includes(userSearchQuery.toLowerCase()) ||
+                                    user.email?.toLowerCase().includes(userSearchQuery.toLowerCase())
+                                  )
+                                  .map(user => (
                                   <label
                                     key={user.id}
-                                    className={`flex items-center gap-2 p-2 rounded-lg cursor-pointer hover:bg-indigo-50 transition-colors ${
+                                    className={`flex items-center gap-3 p-2 rounded-lg cursor-pointer hover:bg-indigo-50 transition-colors ${
                                       selectedUsersForEmail.has(user.id) ? 'bg-indigo-100' : ''
                                     }`}
                                   >
@@ -2849,8 +2873,8 @@ export default function SuperAdminPage() {
                                       className="w-4 h-4 rounded border-gray-300 text-indigo-600 focus:ring-indigo-500"
                                     />
                                     <div className="flex-1 min-w-0">
-                                      <span className="font-medium text-gray-800">{user.full_name}</span>
-                                      <span className="text-gray-500 text-sm mr-2">({user.email})</span>
+                                      <div className="font-semibold text-gray-800">{user.full_name}</div>
+                                      <div className="text-gray-500 text-xs">{user.email}</div>
                                     </div>
                                   </label>
                                 ))}
