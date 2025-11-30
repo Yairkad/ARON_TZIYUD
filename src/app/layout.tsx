@@ -5,7 +5,7 @@ import "leaflet/dist/leaflet.css";
 
 const rubik = Rubik({
   subsets: ["hebrew", "latin"],
-  variable: "--font-rubik",
+  display: "swap",
 });
 
 export const metadata: Metadata = {
@@ -28,7 +28,7 @@ export default function RootLayout({
 }>) {
   return (
     <html lang="he" dir="rtl">
-      <body className={`${rubik.variable} font-sans antialiased`}>
+      <body className={`${rubik.className} antialiased`}>
         {children}
       </body>
     </html>
