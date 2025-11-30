@@ -35,6 +35,8 @@ export default function MasterAdminPage() {
   const [loading, setLoading] = useState(false)
   const [showAddForm, setShowAddForm] = useState(false)
   const [editingAdmin, setEditingAdmin] = useState<SuperAdmin | null>(null)
+  const [showPasswordChange, setShowPasswordChange] = useState(false)
+  const [passwordForm, setPasswordForm] = useState({ currentPassword: '', newPassword: '', confirmPassword: '' })
 
   // Form state
   const [form, setForm] = useState({
@@ -111,6 +113,53 @@ export default function MasterAdminPage() {
       setMasterPassword('')
     } catch (error) {
       console.error('Logout error:', error)
+    }
+  }
+
+  const handleChangePassword = async (e: React.FormEvent) => {
+    e.preventDefault()
+
+    if (!passwordForm.currentPassword || !passwordForm.newPassword || !passwordForm.confirmPassword) {
+      toast.error('יש למלא את כל השדות')
+      return
+    }
+
+    if (passwordForm.newPassword !== passwordForm.confirmPassword) {
+      toast.error('הסיסמאות החדשות לא תואמות')
+      return
+    }
+
+    if (passwordForm.newPassword.length < 6) {
+      toast.error('הסיסמה החדשה חייבת להכיל לפחות 6 תווים')
+      return
+    }
+
+    setLoading(true)
+    try {
+      const response = await fetch('/api/master-admin/auth', {
+        method: 'PUT',
+        headers: { 'Content-Type': 'application/json' },
+        credentials: 'include',
+        body: JSON.stringify({
+          currentPassword: passwordForm.currentPassword,
+          newPassword: passwordForm.newPassword,
+        }),
+      })
+
+      const data = await response.json()
+
+      if (response.ok) {
+        toast.success('הסיסמה שונתה בהצלחה!')
+        setPasswordForm({ currentPassword: '', newPassword: '', confirmPassword: '' })
+        setShowPasswordChange(false)
+      } else {
+        toast.error(data.error || 'שגיאה בשינוי הסיסמה')
+      }
+    } catch (error) {
+      console.error('Change password error:', error)
+      toast.error('שגיאה בשינוי הסיסמה')
+    } finally {
+      setLoading(false)
     }
   }
 
@@ -359,14 +408,97 @@ export default function MasterAdminPage() {
             </h1>
             <p className="text-gray-400 mt-1">יצירה, עריכה ומחיקה של מנהלים ראשיים</p>
           </div>
-          <Button
-            onClick={handleLogout}
-            variant="outline"
-            className="border-red-500/50 text-red-400 hover:bg-red-500/20"
-          >
-            🚪 התנתק
-          </Button>
+          <div className="flex gap-2">
+            <Button
+              onClick={() => setShowPasswordChange(!showPasswordChange)}
+              variant="outline"
+              className="border-amber-500/50 text-amber-400 hover:bg-amber-500/20"
+            >
+              🔑 שנה סיסמה
+            </Button>
+            <Button
+              onClick={handleLogout}
+              variant="outline"
+              className="border-red-500/50 text-red-400 hover:bg-red-500/20"
+            >
+              🚪 התנתק
+            </Button>
+          </div>
         </div>
+
+        {/* Change Password Form */}
+        {showPasswordChange && (
+          <Card className="border-0 shadow-xl bg-gradient-to-r from-amber-900/30 to-slate-800/80 backdrop-blur border-amber-500/30">
+            <CardHeader className="pb-4">
+              <CardTitle className="text-xl text-white">🔑 שינוי סיסמת Master Admin</CardTitle>
+            </CardHeader>
+            <CardContent>
+              <form onSubmit={handleChangePassword} className="space-y-4">
+                <div>
+                  <label className="block text-sm font-semibold text-gray-300 mb-2">
+                    סיסמה נוכחית
+                  </label>
+                  <Input
+                    type="password"
+                    value={passwordForm.currentPassword}
+                    onChange={(e) => setPasswordForm({ ...passwordForm, currentPassword: e.target.value })}
+                    placeholder="הזן סיסמה נוכחית"
+                    className="h-11 bg-slate-700 border-slate-600 text-white"
+                    required
+                  />
+                </div>
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                  <div>
+                    <label className="block text-sm font-semibold text-gray-300 mb-2">
+                      סיסמה חדשה
+                    </label>
+                    <Input
+                      type="password"
+                      value={passwordForm.newPassword}
+                      onChange={(e) => setPasswordForm({ ...passwordForm, newPassword: e.target.value })}
+                      placeholder="הזן סיסמה חדשה"
+                      className="h-11 bg-slate-700 border-slate-600 text-white"
+                      required
+                    />
+                  </div>
+                  <div>
+                    <label className="block text-sm font-semibold text-gray-300 mb-2">
+                      אימות סיסמה חדשה
+                    </label>
+                    <Input
+                      type="password"
+                      value={passwordForm.confirmPassword}
+                      onChange={(e) => setPasswordForm({ ...passwordForm, confirmPassword: e.target.value })}
+                      placeholder="הזן שוב את הסיסמה החדשה"
+                      className="h-11 bg-slate-700 border-slate-600 text-white"
+                      required
+                    />
+                  </div>
+                </div>
+                <div className="flex gap-3">
+                  <Button
+                    type="submit"
+                    disabled={loading}
+                    className="flex-1 h-11 bg-gradient-to-r from-amber-600 to-orange-600 hover:from-amber-700 hover:to-orange-700 text-white font-bold"
+                  >
+                    {loading ? '⏳ שומר...' : '✅ שנה סיסמה'}
+                  </Button>
+                  <Button
+                    type="button"
+                    onClick={() => {
+                      setShowPasswordChange(false)
+                      setPasswordForm({ currentPassword: '', newPassword: '', confirmPassword: '' })
+                    }}
+                    variant="outline"
+                    className="flex-1 h-11 border-gray-600 text-gray-300 hover:bg-slate-700"
+                  >
+                    ❌ ביטול
+                  </Button>
+                </div>
+              </form>
+            </CardContent>
+          </Card>
+        )}
 
         {/* Add/Edit Form */}
         {(showAddForm || editingAdmin) && (

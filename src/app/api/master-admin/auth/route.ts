@@ -1,11 +1,31 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { cookies } from 'next/headers'
+import { createServiceClient } from '@/lib/supabase-server'
 
-// Master password - should be set as environment variable in production
-const MASTER_PASSWORD = process.env.MASTER_ADMIN_PASSWORD || 'YairMaster2024!'
+// Default password if not set in DB
+const DEFAULT_MASTER_PASSWORD = process.env.MASTER_ADMIN_PASSWORD || 'YairMaster2024!'
 
 const MASTER_SESSION_COOKIE = 'master_admin_session'
 const SESSION_DURATION = 60 * 60 * 1000 // 1 hour
+
+// Get master password from database or fallback to env/default
+async function getMasterPassword(): Promise<string> {
+  try {
+    const supabase = createServiceClient()
+    const { data } = await supabase
+      .from('system_settings')
+      .select('value')
+      .eq('key', 'master_admin_password')
+      .single()
+
+    if (data?.value) {
+      return data.value
+    }
+  } catch (error) {
+    // Table might not exist yet, use default
+  }
+  return DEFAULT_MASTER_PASSWORD
+}
 
 // Simple session token generation
 function generateSessionToken(): string {
@@ -53,7 +73,8 @@ export async function POST(request: NextRequest) {
       return NextResponse.json({ error: 'יש להזין סיסמה' }, { status: 400 })
     }
 
-    if (password !== MASTER_PASSWORD) {
+    const masterPassword = await getMasterPassword()
+    if (password !== masterPassword) {
       return NextResponse.json({ error: 'סיסמה שגויה' }, { status: 401 })
     }
 
@@ -74,6 +95,56 @@ export async function POST(request: NextRequest) {
   } catch (error) {
     console.error('Login error:', error)
     return NextResponse.json({ error: 'שגיאה בהתחברות' }, { status: 500 })
+  }
+}
+
+// PUT - Change master password
+export async function PUT(request: NextRequest) {
+  try {
+    // Check if authenticated
+    const cookieStore = await cookies()
+    const sessionToken = cookieStore.get(MASTER_SESSION_COOKIE)?.value
+
+    if (!isValidSession(sessionToken)) {
+      return NextResponse.json({ error: 'לא מורשה' }, { status: 401 })
+    }
+
+    const { currentPassword, newPassword } = await request.json()
+
+    if (!currentPassword || !newPassword) {
+      return NextResponse.json({ error: 'יש למלא את כל השדות' }, { status: 400 })
+    }
+
+    if (newPassword.length < 6) {
+      return NextResponse.json({ error: 'הסיסמה החדשה חייבת להכיל לפחות 6 תווים' }, { status: 400 })
+    }
+
+    // Verify current password
+    const masterPassword = await getMasterPassword()
+    if (currentPassword !== masterPassword) {
+      return NextResponse.json({ error: 'הסיסמה הנוכחית שגויה' }, { status: 401 })
+    }
+
+    // Save new password to database
+    const supabase = createServiceClient()
+
+    // Try to upsert the password
+    const { error } = await supabase
+      .from('system_settings')
+      .upsert(
+        { key: 'master_admin_password', value: newPassword, updated_at: new Date().toISOString() },
+        { onConflict: 'key' }
+      )
+
+    if (error) {
+      console.error('Error saving password:', error)
+      return NextResponse.json({ error: 'שגיאה בשמירת הסיסמה' }, { status: 500 })
+    }
+
+    return NextResponse.json({ success: true })
+  } catch (error) {
+    console.error('Change password error:', error)
+    return NextResponse.json({ error: 'שגיאה בשינוי הסיסמה' }, { status: 500 })
   }
 }
 
