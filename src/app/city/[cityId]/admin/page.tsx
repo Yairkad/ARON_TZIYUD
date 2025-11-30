@@ -22,6 +22,7 @@ import {
   unsubscribeFromPush,
   isSubscribed
 } from '@/lib/push'
+import toast from 'react-hot-toast'
 
 // Function to extract coordinates from Google Maps URL
 // Handles both full URLs and short URLs (via API expansion)
@@ -501,12 +502,12 @@ export default function CityAdminPage() {
 
     // Check permissions
     if (!canEdit) {
-      alert('אין לך הרשאה לבצע פעולה זו - נדרשת הרשאת עריכה מלאה')
+      toast.error('אין לך הרשאה לבצע פעולה זו - נדרשת הרשאת עריכה מלאה')
       return
     }
 
     if (!newEquipment.name || newEquipment.quantity < 0) {
-      alert('אנא מלא שם וכמות תקינים')
+      toast.error('אנא מלא שם וכמות תקינים')
       return
     }
 
@@ -564,12 +565,12 @@ export default function CityAdminPage() {
         throw new Error(data.error || 'שגיאה בהוספת ציוד')
       }
 
-      alert('הציוד נוסף בהצלחה!')
+      toast.success('הציוד נוסף בהצלחה!')
       setNewEquipment({ name: '', quantity: 1, equipment_status: 'working', is_consumable: false, category_id: '', image_url: '' })
       fetchEquipment()
     } catch (error: any) {
       console.error('Error adding equipment:', error)
-      alert(error.message || 'אירעה שגיאה בהוספת הציוד')
+      toast.error(error.message || 'אירעה שגיאה בהוספת הציוד')
     } finally {
       setLoading(false)
     }
@@ -578,12 +579,12 @@ export default function CityAdminPage() {
   const handleUpdateEquipment = async (id: string, name: string, quantity: number, equipment_status: 'working' | 'faulty', is_consumable: boolean, category_id?: string, image_url?: string) => {
     // Check permissions
     if (!canEdit) {
-      alert('אין לך הרשאה לבצע פעולה זו - נדרשת הרשאת עריכה מלאה')
+      toast.error('אין לך הרשאה לבצע פעולה זו - נדרשת הרשאת עריכה מלאה')
       return
     }
 
     if (!name || quantity < 0) {
-      alert('אנא מלא שם וכמות תקינים')
+      toast.error('אנא מלא שם וכמות תקינים')
       return
     }
 
@@ -635,12 +636,12 @@ export default function CityAdminPage() {
         }
       }
 
-      alert('הציוד עודכן בהצלחה!')
+      toast.success('הציוד עודכן בהצלחה!')
       setEditingEquipment(null)
       fetchEquipment()
     } catch (error: any) {
       console.error('Error updating equipment:', error)
-      alert(error.message || 'אירעה שגיאה בעדכון הציוד')
+      toast.error(error.message || 'אירעה שגיאה בעדכון הציוד')
     } finally {
       setLoading(false)
     }
@@ -649,7 +650,7 @@ export default function CityAdminPage() {
   const handleDeleteEquipment = async (id: string) => {
     // Check permissions
     if (!canEdit) {
-      alert('אין לך הרשאה לבצע פעולה זו - נדרשת הרשאת עריכה מלאה')
+      toast.error('אין לך הרשאה לבצע פעולה זו - נדרשת הרשאת עריכה מלאה')
       return
     }
 
@@ -666,11 +667,11 @@ export default function CityAdminPage() {
         throw new Error(data.error || 'שגיאה במחיקה')
       }
 
-      alert('הציוד נמחק בהצלחה!')
+      toast.success('הציוד נמחק בהצלחה!')
       fetchEquipment()
     } catch (error: any) {
       console.error('Error deleting equipment:', error)
-      alert('אירעה שגיאה במחיקת הציוד: ' + error.message)
+      toast.error('אירעה שגיאה במחיקת הציוד: ' + error.message)
     } finally {
       setLoading(false)
     }
@@ -740,7 +741,7 @@ export default function CityAdminPage() {
       fetchEquipment() // Refresh equipment to show updated quantity
     } catch (error) {
       console.error('Error updating history:', error)
-      alert('אירעה שגיאה בעדכון ההיסטוריה')
+      toast.error('אירעה שגיאה בעדכון ההיסטוריה')
     } finally {
       setLoading(false)
     }
@@ -764,7 +765,7 @@ export default function CityAdminPage() {
       if (fetchError) throw fetchError
 
       if (borrowRecord.status !== 'pending_approval') {
-        alert('רשומה זו אינה ממתינה לאישור')
+        toast.error('רשומה זו אינה ממתינה לאישור')
         return
       }
 
@@ -797,7 +798,7 @@ export default function CityAdminPage() {
           }
         }
 
-        alert('ההחזרה אושרה והציוד חזר למלאי!')
+        toast.success('ההחזרה אושרה והציוד חזר למלאי!')
       } else {
         // Reject return - revert status back to 'borrowed'
         const { error: updateError } = await supabase
@@ -813,14 +814,14 @@ export default function CityAdminPage() {
 
         if (updateError) throw updateError
 
-        alert('ההחזרה נדחתה. הציוד חזר למצב "מושאל".')
+        toast.error('ההחזרה נדחתה. הציוד חזר למצב "מושאל".')
       }
 
       fetchHistory()
       fetchEquipment() // Refresh equipment to show updated quantity
     } catch (error) {
       console.error('Error approving/rejecting return:', error)
-      alert('אירעה שגיאה בטיפול בהחזרה')
+      toast.error('אירעה שגיאה בטיפול בהחזרה')
     } finally {
       setLoading(false)
     }
@@ -883,7 +884,7 @@ export default function CityAdminPage() {
       XLSX.writeFile(wb, fileName)
     } catch (error) {
       console.error('Error exporting to Excel:', error)
-      alert('שגיאה בייצוא לאקסל')
+      toast.error('שגיאה בייצוא לאקסל')
     }
   }
 
@@ -891,7 +892,7 @@ export default function CityAdminPage() {
   const handleDeleteHistory = async (id: string) => {
     // Check permissions
     if (!canEdit) {
-      alert('אין לך הרשאה לבצע פעולה זו - נדרשת הרשאת עריכה מלאה')
+      toast.error('אין לך הרשאה לבצע פעולה זו - נדרשת הרשאת עריכה מלאה')
       return
     }
 
@@ -906,11 +907,11 @@ export default function CityAdminPage() {
 
       if (error) throw error
 
-      alert('הרשומה נמחקה בהצלחה!')
+      toast.success('הרשומה נמחקה בהצלחה!')
       fetchHistory()
     } catch (error) {
       console.error('Error deleting history:', error)
-      alert('אירעה שגיאה במחיקת הרשומה')
+      toast.error('אירעה שגיאה במחיקת הרשומה')
     } finally {
       setLoading(false)
     }
@@ -922,23 +923,23 @@ export default function CityAdminPage() {
 
     // Check permissions
     if (!canEdit) {
-      alert('אין לך הרשאה לבצע פעולה זו - נדרשת הרשאת עריכה מלאה')
+      toast.error('אין לך הרשאה לבצע פעולה זו - נדרשת הרשאת עריכה מלאה')
       return
     }
 
     // Validation
     if (!editCityForm.manager1_name.trim() || !editCityForm.manager1_phone.trim()) {
-      alert('שם וטלפון מנהל ראשון הם שדות חובה')
+      toast.error('שם וטלפון מנהל ראשון הם שדות חובה')
       return
     }
 
     if (editCityForm.manager1_phone.length !== 10 || !/^05\d{8}$/.test(editCityForm.manager1_phone)) {
-      alert('מספר טלפון מנהל ראשון חייב להיות בן 10 ספרות ולהתחיל ב-05')
+      toast.error('מספר טלפון מנהל ראשון חייב להיות בן 10 ספרות ולהתחיל ב-05')
       return
     }
 
     if (editCityForm.manager2_phone && (editCityForm.manager2_phone.length !== 10 || !/^05\d{8}$/.test(editCityForm.manager2_phone))) {
-      alert('מספר טלפון מנהל שני חייב להיות בן 10 ספרות ולהתחיל ב-05')
+      toast.error('מספר טלפון מנהל שני חייב להיות בן 10 ספרות ולהתחיל ב-05')
       return
     }
 
@@ -980,12 +981,12 @@ export default function CityAdminPage() {
       const data = await response.json()
 
       if (!response.ok) {
-        alert(data.error || 'שגיאה בעדכון הפרטים')
+        toast.error(data.error || 'שגיאה בעדכון הפרטים')
         setLoading(false)
         return
       }
 
-      alert('הפרטים עודכנו בהצלחה!')
+      toast.success('הפרטים עודכנו בהצלחה!')
       setIsEditingLocation(false)
       setIsCityDetailsExpanded(false) // Collapse the form after successful save
       setHasCityFormChanges(false) // Reset form changes flag
@@ -993,7 +994,7 @@ export default function CityAdminPage() {
       setLoading(false)
     } catch (error) {
       console.error('Error updating city details:', error)
-      alert('אירעה שגיאה בעדכון הפרטים')
+      toast.error('אירעה שגיאה בעדכון הפרטים')
       setLoading(false)
     }
   }
@@ -1001,12 +1002,12 @@ export default function CityAdminPage() {
   const handleCopyEquipmentFromCity = async () => {
     // Check permissions
     if (!canEdit) {
-      alert('אין לך הרשאה לבצע פעולה זו - נדרשת הרשאת עריכה מלאה')
+      toast.error('אין לך הרשאה לבצע פעולה זו - נדרשת הרשאת עריכה מלאה')
       return
     }
 
     if (!selectedCityToCopy) {
-      alert('אנא בחר עיר להעתקת הציוד ממנה')
+      toast.error('אנא בחר עיר להעתקת הציוד ממנה')
       return
     }
 
@@ -1025,7 +1026,7 @@ export default function CityAdminPage() {
       const sourceEquipment = result.equipment || []
 
       if (sourceEquipment.length === 0) {
-        alert('העיר שנבחרה אין בה ציוד להעתקה')
+        toast.error('העיר שנבחרה אין בה ציוד להעתקה')
         setLoading(false)
         return
       }
@@ -1039,7 +1040,7 @@ export default function CityAdminPage() {
       )
 
       if (newEquipmentItems.length === 0) {
-        alert('כל הציוד מהעיר שנבחרה כבר קיים בעיר שלך')
+        toast.error('כל הציוד מהעיר שנבחרה כבר קיים בעיר שלך')
         setLoading(false)
         return
       }
@@ -1062,13 +1063,13 @@ export default function CityAdminPage() {
         }
       }
 
-      alert(`הצלחה! ${successCount} פריטי ציוד הועתקו בהצלחה`)
+      toast.success(`${successCount} פריטי ציוד הועתקו בהצלחה!`)
       setShowCopyEquipment(false)
       setSelectedCityToCopy('')
       fetchEquipment()
     } catch (error) {
       console.error('Error copying equipment:', error)
-      alert('אירעה שגיאה בהעתקת הציוד')
+      toast.error('אירעה שגיאה בהעתקת הציוד')
     } finally {
       setLoading(false)
     }
@@ -1082,7 +1083,7 @@ export default function CityAdminPage() {
         // Disable push notifications
         await unsubscribeFromPush()
         setPushEnabled(false)
-        alert('✅ התראות כבויות')
+        toast.success('התראות כבויות')
       } else {
         // Enable push notifications
         // Check current permission status
@@ -1095,9 +1096,9 @@ export default function CityAdminPage() {
         if (!granted) {
           // Check if blocked
           if (Notification?.permission === 'denied') {
-            alert('❌ התראות חסומות בדפדפן.\n\nכדי להפעיל התראות:\n1. לחץ על סמל המנעול/מידע ליד כתובת האתר\n2. מצא "הודעות" או "Notifications"\n3. שנה ל-"אפשר" או "Allow"\n4. רענן את הדף ונסה שוב')
+            toast.error('התראות חסומות בדפדפן - יש לאפשר בהגדרות', { duration: 5000 })
           } else {
-            alert('❌ נדרשת הרשאה כדי להפעיל התראות. אנא אפשר התראות בהגדרות הדפדפן.')
+            toast.error('נדרשת הרשאה כדי להפעיל התראות', { duration: 5000 })
           }
           setEnablingPush(false)
           return
@@ -1106,18 +1107,18 @@ export default function CityAdminPage() {
         // Subscribe to push notifications
         const vapidPublicKey = process.env.NEXT_PUBLIC_VAPID_PUBLIC_KEY
         if (!vapidPublicKey) {
-          alert('❌ התראות לא זמינות כרגע.\n\nהמנהל הראשי צריך להגדיר את מפתחות VAPID ב-Vercel.\nלמידע נוסף ראה את הקובץ PUSH_NOTIFICATIONS_SETUP.md')
+          toast.error('התראות לא זמינות - המנהל צריך להגדיר VAPID', { duration: 5000 })
           setEnablingPush(false)
           return
         }
 
         await subscribeToPush(cityId, vapidPublicKey)
         setPushEnabled(true)
-        alert('✅ התראות הופעלו בהצלחה! תקבל עדכונים על בקשות חדשות.')
+        toast.success('התראות הופעלו בהצלחה!')
       }
     } catch (error) {
       console.error('Error toggling push notifications:', error)
-      alert('❌ שגיאה בהפעלת התראות. אנא נסה שוב.')
+      toast.error('שגיאה בהפעלת התראות. אנא נסה שוב.')
     } finally {
       setEnablingPush(false)
     }
@@ -2601,7 +2602,7 @@ export default function CityAdminPage() {
                   <button
                     onClick={async () => {
                       if (!canEdit) {
-                        alert('אין לך הרשאה לבצע פעולה זו - נדרשת הרשאת עריכה מלאה')
+                        toast.error('אין לך הרשאה לבצע פעולה זו - נדרשת הרשאת עריכה מלאה')
                         return
                       }
                       const newMode = city?.request_mode === 'direct' ? 'request' : 'direct'
@@ -2617,7 +2618,7 @@ export default function CityAdminPage() {
                           if (!response.ok) throw new Error('שגיאה בעדכון')
                           await fetchCity()
                         } catch (error: any) {
-                          alert('שגיאה בעדכון: ' + error.message)
+                          toast.error('שגיאה בעדכון: ' + error.message)
                         }
                       }
                     }}
@@ -2647,7 +2648,7 @@ export default function CityAdminPage() {
                           disabled={!canEdit}
                           onChange={(e) => {
                             if (!canEdit) {
-                              alert('אין לך הרשאה לערוך קוד ארון - נדרשת הרשאת עריכה מלאה')
+                              toast.error('אין לך הרשאה לערוך קוד ארון - נדרשת הרשאת עריכה מלאה')
                               return
                             }
                             // Update local state immediately
@@ -2673,12 +2674,12 @@ export default function CityAdminPage() {
                               })
 
                               if (!response.ok) {
-                                alert('שגיאה בעדכון קוד ארון')
+                                toast.error('שגיאה בעדכון קוד ארון')
                                 fetchCity() // Revert to server value
                               }
                             } catch (error) {
                               console.error('Error updating cabinet code:', error)
-                              alert('שגיאה בעדכון קוד ארון')
+                              toast.error('שגיאה בעדכון קוד ארון')
                               fetchCity() // Revert to server value
                             }
                           }}
@@ -2697,7 +2698,7 @@ export default function CityAdminPage() {
                           onClick={async () => {
                             // Check permissions
                             if (!canEdit) {
-                              alert('אין לך הרשאה לבצע פעולה זו - נדרשת הרשאת עריכה מלאה')
+                              toast.error('אין לך הרשאה לבצע פעולה זו - נדרשת הרשאת עריכה מלאה')
                               return
                             }
 
@@ -2718,16 +2719,16 @@ export default function CityAdminPage() {
                               })
 
                               if (response.ok) {
-                                alert(newValue ? '✅ מזהה קריאה חובה' : '❌ מזהה קריאה אופציונלי')
+                                toast.success(newValue ? 'מזהה קריאה חובה' : 'מזהה קריאה אופציונלי')
                                 fetchCity() // Refresh to ensure sync
                               } else {
                                 // Revert on error
-                                alert('שגיאה בעדכון')
+                                toast.error('שגיאה בעדכון')
                                 fetchCity()
                               }
                             } catch (error) {
                               console.error('Error updating require_call_id:', error)
-                              alert('שגיאה בעדכון')
+                              toast.error('שגיאה בעדכון')
                               fetchCity() // Revert to server value
                             }
                           }}
@@ -2876,7 +2877,7 @@ export default function CityAdminPage() {
                       <button
                         onClick={async () => {
                           if (!canEdit) {
-                            alert('אין לך הרשאה לבצע פעולה זו')
+                            toast.error('אין לך הרשאה לבצע פעולה זו')
                             return
                           }
                           const newValue = !city?.hide_navigation
@@ -3262,7 +3263,7 @@ export default function CityAdminPage() {
                                     setLoading(false)
                                   } catch (error: any) {
                                     setLoading(false)
-                                    alert(error.message || 'שגיאה בהעלאת התמונה')
+                                    toast.error(error.message || 'שגיאה בהעלאת התמונה')
                                   }
                                 }}
                                 className={`block w-full text-sm border-2 rounded-xl file:mr-4 file:py-2 file:px-4 file:rounded-lg file:border-0 file:text-sm file:font-semibold ${
@@ -3417,19 +3418,19 @@ export default function CityAdminPage() {
                   // Validate based on active tab
                   if (accountSettingsTab === 'password') {
                     if (!accountForm.current_password) {
-                      alert('יש להזין את הסיסמה הנוכחית')
+                      toast.error('יש להזין את הסיסמה הנוכחית')
                       return
                     }
                     if (!accountForm.new_password) {
-                      alert('יש להזין סיסמה חדשה')
+                      toast.error('יש להזין סיסמה חדשה')
                       return
                     }
                     if (accountForm.new_password !== accountForm.confirm_password) {
-                      alert('הסיסמה החדשה ואישור הסיסמה אינם תואמים')
+                      toast.error('הסיסמה החדשה ואישור הסיסמה אינם תואמים')
                       return
                     }
                     if (accountForm.new_password.length < 6) {
-                      alert('הסיסמה החדשה חייבת להיות באורך 6 תווים לפחות')
+                      toast.error('הסיסמה החדשה חייבת להיות באורך 6 תווים לפחות')
                       return
                     }
                   }
@@ -3451,18 +3452,18 @@ export default function CityAdminPage() {
                     const data = await response.json()
 
                     if (data.success) {
-                      alert(accountSettingsTab === 'details' ? '✅ הפרטים עודכנו בהצלחה!' : '✅ הסיסמה שונתה בהצלחה!')
+                      toast.success(accountSettingsTab === 'details' ? 'הפרטים עודכנו בהצלחה!' : 'הסיסמה שונתה בהצלחה!')
                       setShowAccountSettings(false)
 
                       // Refresh current user data
                       const authResult = await checkAuth()
                       setCurrentUser(authResult.user)
                     } else {
-                      alert(`❌ ${data.error || 'שגיאה בעדכון'}`)
+                      toast.error(data.error || 'שגיאה בעדכון')
                     }
                   } catch (error) {
                     console.error('Error updating account:', error)
-                    alert('❌ שגיאה בעדכון')
+                    toast.error('שגיאה בעדכון')
                   } finally {
                     setLoading(false)
                   }

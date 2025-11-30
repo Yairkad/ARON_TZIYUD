@@ -4,6 +4,7 @@ import { useEffect, useState, Suspense } from 'react'
 import { useRouter, useSearchParams } from 'next/navigation'
 import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
+import toast from 'react-hot-toast'
 
 function VerifyEmailContent() {
   const router = useRouter()
@@ -52,7 +53,7 @@ function VerifyEmailContent() {
     e.preventDefault()
 
     if (!resendEmail || !resendEmail.includes('@')) {
-      alert('נא להזין כתובת מייל תקינה')
+      toast.error('נא להזין כתובת מייל תקינה')
       return
     }
 
@@ -63,14 +64,14 @@ function VerifyEmailContent() {
       const data = await response.json()
 
       if (response.ok && data.success) {
-        alert('✅ מייל אימות נשלח בהצלחה! בדוק את תיבת הדואר שלך.')
+        toast.success('מייל אימות נשלח בהצלחה! בדוק את תיבת הדואר שלך.')
         setResendEmail('')
       } else {
-        alert('❌ ' + (data.error || 'שגיאה בשליחת מייל'))
+        toast.error(data.error || 'שגיאה בשליחת מייל')
       }
     } catch (err) {
       console.error('Resend error:', err)
-      alert('❌ שגיאה בשליחת מייל אימות')
+      toast.error('שגיאה בשליחת מייל אימות')
     } finally {
       setResending(false)
     }

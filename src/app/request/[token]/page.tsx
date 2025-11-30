@@ -5,6 +5,7 @@ import { useRouter } from 'next/navigation'
 import { EquipmentRequestWithItems } from '@/types'
 import { Button } from '@/components/ui/button'
 import { Phone, MessageCircle } from 'lucide-react'
+import toast from 'react-hot-toast'
 
 export default function RequestPage({ params }: { params: Promise<{ token: string }> }) {
   const resolvedParams = use(params)
@@ -114,7 +115,7 @@ export default function RequestPage({ params }: { params: Promise<{ token: strin
       const data = await response.json()
 
       if (!response.ok) {
-        alert(`שגיאה: ${data.error}`)
+        toast.error(data.error || 'שגיאה באישור לקיחת הציוד')
         setConfirmingPickup(false)
         setPickupConfirmed(false)
         return
@@ -125,7 +126,7 @@ export default function RequestPage({ params }: { params: Promise<{ token: strin
       router.push(`/city/${data.city_id}?tab=return`)
     } catch (error) {
       console.error('Confirm pickup error:', error)
-      alert('שגיאה באישור לקיחת הציוד')
+      toast.error('שגיאה באישור לקיחת הציוד')
       setConfirmingPickup(false)
       setPickupConfirmed(false)
     }

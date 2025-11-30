@@ -10,6 +10,7 @@ import { supabase } from '@/lib/supabase'
 import { City, CityForm, AdminNotification } from '@/types'
 import Logo from '@/components/Logo'
 import { checkAuth, logout } from '@/lib/auth'
+import toast from 'react-hot-toast'
 
 export default function SuperAdminPage() {
   const router = useRouter()
@@ -219,14 +220,14 @@ export default function SuperAdminPage() {
       const data = await response.json()
 
       if (!response.ok) {
-        alert(data.error || 'שגיאה בסימון ההתראה')
+        toast.error(data.error || 'שגיאה בסימון ההתראה')
         return
       }
 
       fetchNotifications()
     } catch (error) {
       console.error('Error marking notification as read:', error)
-      alert('שגיאה בסימון ההתראה')
+      toast.error('שגיאה בסימון ההתראה')
     }
   }
 
@@ -242,14 +243,14 @@ export default function SuperAdminPage() {
       const data = await response.json()
 
       if (!response.ok) {
-        alert(data.error || 'שגיאה בסימון ההתראות')
+        toast.error(data.error || 'שגיאה בסימון ההתראות')
         return
       }
 
       fetchNotifications()
     } catch (error) {
       console.error('Error marking all as read:', error)
-      alert('שגיאה בסימון ההתראות')
+      toast.error('שגיאה בסימון ההתראות')
     }
   }
 
@@ -269,14 +270,14 @@ export default function SuperAdminPage() {
       const data = await response.json()
 
       if (!response.ok) {
-        alert(data.error || 'שגיאה במחיקת ההתראות')
+        toast.error(data.error || 'שגיאה במחיקת ההתראות')
         return
       }
 
       fetchNotifications()
     } catch (error) {
       console.error('Error deleting all notifications:', error)
-      alert('שגיאה במחיקת ההתראות')
+      toast.error('שגיאה במחיקת ההתראות')
     }
   }
 
@@ -293,14 +294,14 @@ export default function SuperAdminPage() {
       const data = await response.json()
 
       if (!response.ok) {
-        alert(data.error || 'שגיאה במחיקת ההתראה')
+        toast.error(data.error || 'שגיאה במחיקת ההתראה')
         return
       }
 
       fetchNotifications()
     } catch (error) {
       console.error('Error deleting notification:', error)
-      alert('שגיאה במחיקת ההתראה')
+      toast.error('שגיאה במחיקת ההתראה')
     }
   }
 
@@ -319,17 +320,17 @@ export default function SuperAdminPage() {
   const handleAddCity = async (e: React.FormEvent) => {
     e.preventDefault()
     if (!newCity.name || !newCity.manager1_name || !newCity.manager1_phone) {
-      alert('אנא מלא את כל השדות החובה (שם עיר, מנהל ראשון, טלפון)')
+      toast.error('אנא מלא את כל השדות החובה (שם עיר, מנהל ראשון, טלפון)')
       return
     }
 
     if (newCity.manager1_phone.length !== 10) {
-      alert('טלפון מנהל ראשון חייב להיות בן 10 ספרות')
+      toast.error('טלפון מנהל ראשון חייב להיות בן 10 ספרות')
       return
     }
 
     if (newCity.manager2_phone && newCity.manager2_phone.length !== 10) {
-      alert('טלפון מנהל שני חייב להיות בן 10 ספרות (או השאר ריק)')
+      toast.error('טלפון מנהל שני חייב להיות בן 10 ספרות (או השאר ריק)')
       return
     }
 
@@ -356,7 +357,7 @@ export default function SuperAdminPage() {
       const data = await response.json()
 
       if (!response.ok) {
-        alert(data.error || 'שגיאה בהוספת העיר')
+        toast.error(data.error || 'שגיאה בהוספת העיר')
         return
       }
 
@@ -366,9 +367,9 @@ export default function SuperAdminPage() {
           `${user.role === 'manager1' ? 'מנהל ראשון' : 'מנהל שני'}:\nמייל: ${user.email}\nסטטוס: ${user.emailSent ? '✅ נשלח מייל עם לינק להגדרת סיסמה' : '❌ שגיאה בשליחת מייל'}`
         ).join('\n\n')
 
-        alert(`${data.message}\n\n📋 פרטי משתמשים שנוצרו:\n\n${userDetails}`)
+        toast.success(`${data.message}\n\n📋 פרטי משתמשים שנוצרו:\n\n${userDetails}`)
       } else {
-        alert(data.message || 'העיר נוספה בהצלחה!')
+        toast.success(data.message || 'העיר נוספה בהצלחה!')
       }
 
       setNewCity({ name: '', manager1_name: '', manager1_phone: '', manager1_email: '', manager2_name: '', manager2_phone: '', manager2_email: '', location_url: '', token_location_url: '' })
@@ -378,7 +379,7 @@ export default function SuperAdminPage() {
       fetchUsers()
     } catch (error) {
       console.error('Error adding city:', error)
-      alert('אירעה שגיאה בהוספת העיר')
+      toast.error('אירעה שגיאה בהוספת העיר')
     } finally {
       setLoading(false)
     }
@@ -389,17 +390,17 @@ export default function SuperAdminPage() {
     if (!editingCity) return
 
     if (!editingCity.name || !editingCity.manager1_name || !editingCity.manager1_phone) {
-      alert('אנא מלא את כל השדות החובה (שם עיר, מנהל ראשון, טלפון)')
+      toast.error('אנא מלא את כל השדות החובה (שם עיר, מנהל ראשון, טלפון)')
       return
     }
 
     if (editingCity.manager1_phone.length !== 10) {
-      alert('טלפון מנהל ראשון חייב להיות בן 10 ספרות')
+      toast.error('טלפון מנהל ראשון חייב להיות בן 10 ספרות')
       return
     }
 
     if (editingCity.manager2_phone && editingCity.manager2_phone.length !== 10) {
-      alert('טלפון מנהל שני חייב להיות בן 10 ספרות (או השאר ריק)')
+      toast.error('טלפון מנהל שני חייב להיות בן 10 ספרות (או השאר ריק)')
       return
     }
 
@@ -425,16 +426,16 @@ export default function SuperAdminPage() {
       const data = await response.json()
 
       if (!response.ok) {
-        alert(data.error || 'שגיאה בעדכון העיר')
+        toast.error(data.error || 'שגיאה בעדכון העיר')
         return
       }
 
-      alert('העיר עודכנה בהצלחה!')
+      toast.success('העיר עודכנה בהצלחה!')
       setEditingCity(null)
       fetchCities()
     } catch (error) {
       console.error('Error updating city:', error)
-      alert('אירעה שגיאה בעדכון העיר')
+      toast.error('אירעה שגיאה בעדכון העיר')
     } finally {
       setLoading(false)
     }
@@ -463,17 +464,17 @@ export default function SuperAdminPage() {
       console.log('Toggle response:', data)
 
       if (!response.ok) {
-        alert(data.error || `שגיאה ב${action} העיר`)
+        toast.error(data.error || `שגיאה ב${action} העיר`)
         return
       }
 
-      alert(`העיר ${action}ה בהצלחה!`)
+      toast.success(`העיר ${action}ה בהצלחה!`)
       setCityFilter('all') // Reset filter to "all" to show the toggled city
       await fetchCities()
       console.log('Cities after fetch:', cities.length)
     } catch (error) {
       console.error('Error toggling city status:', error)
-      alert(`אירעה שגיאה ב${action} העיר`)
+      toast.error(`אירעה שגיאה ב${action} העיר`)
     } finally {
       setLoading(false)
     }
@@ -497,15 +498,15 @@ export default function SuperAdminPage() {
       const data = await response.json()
 
       if (!response.ok) {
-        alert(data.error || 'שגיאה במחיקת העיר')
+        toast.error(data.error || 'שגיאה במחיקת העיר')
         return
       }
 
-      alert('העיר נמחקה בהצלחה!')
+      toast.success('העיר נמחקה בהצלחה!')
       fetchCities()
     } catch (error) {
       console.error('Error deleting city:', error)
-      alert('אירעה שגיאה במחיקת העיר')
+      toast.error('אירעה שגיאה במחיקת העיר')
     } finally {
       setLoading(false)
     }
@@ -515,12 +516,12 @@ export default function SuperAdminPage() {
     e.preventDefault()
 
     if (changePasswordForm.newPassword !== changePasswordForm.confirmPassword) {
-      alert('הסיסמאות החדשות אינן תואמות')
+      toast.error('הסיסמאות החדשות אינן תואמות')
       return
     }
 
     if (changePasswordForm.newPassword.length < 4) {
-      alert('הסיסמה החדשה חייבת להכיל לפחות 4 תווים')
+      toast.error('הסיסמה החדשה חייבת להכיל לפחות 4 תווים')
       return
     }
 
@@ -540,16 +541,16 @@ export default function SuperAdminPage() {
       const data = await response.json()
 
       if (!response.ok) {
-        alert(data.error || 'שגיאה בשינוי הסיסמה')
+        toast.error(data.error || 'שגיאה בשינוי הסיסמה')
         return
       }
 
-      alert('הסיסמה שונתה בהצלחה!')
+      toast.success('הסיסמה שונתה בהצלחה!')
       setChangePasswordForm({ currentPassword: '', newPassword: '', confirmPassword: '' })
       setShowChangePassword(false)
     } catch (error) {
       console.error('Error changing password:', error)
-      alert('אירעה שגיאה בשינוי הסיסמה')
+      toast.error('אירעה שגיאה בשינוי הסיסמה')
     } finally {
       setLoading(false)
     }
@@ -621,15 +622,15 @@ export default function SuperAdminPage() {
       const data = await response.json()
 
       if (!response.ok) {
-        alert(data.error || 'שגיאה במחיקת רשומת המייל')
+        toast.error(data.error || 'שגיאה במחיקת רשומת המייל')
         return
       }
 
-      alert('רשומת המייל נמחקה בהצלחה')
+      toast.success('רשומת המייל נמחקה בהצלחה')
       fetchEmailLogs()
     } catch (error) {
       console.error('Error deleting email log:', error)
-      alert('שגיאה במחיקת רשומת המייל')
+      toast.error('שגיאה במחיקת רשומת המייל')
     }
   }
 
@@ -648,12 +649,12 @@ export default function SuperAdminPage() {
 
     const hasSelectedUsers = selectedUsersForEmail.size > 0
     if (!sendToAllUsers && !hasSelectedUsers && !customEmailTo) {
-      alert('אנא בחר נמען או הזן כתובת מייל')
+      toast.error('אנא בחר נמען או הזן כתובת מייל')
       return
     }
 
     if (!customEmailSubject || !customEmailMessage) {
-      alert('אנא מלא את כל השדות (נושא, תוכן)')
+      toast.error('אנא מלא את כל השדות (נושא, תוכן)')
       return
     }
 
@@ -695,7 +696,7 @@ export default function SuperAdminPage() {
         setBulkEmailProgress({ sent, total: users.length, failed })
       }
 
-      alert(`שליחה הושלמה!\n✅ נשלחו בהצלחה: ${sent}\n❌ נכשלו: ${failed}`)
+      toast.success(`שליחה הושלמה! ✅ נשלחו בהצלחה: ${sent} ❌ נכשלו: ${failed}`)
 
       // Reset form
       setCustomEmailTo('')
@@ -750,7 +751,7 @@ export default function SuperAdminPage() {
         setBulkEmailProgress({ sent, total: selectedUsersList.length, failed })
       }
 
-      alert(`שליחה הושלמה!\n✅ נשלחו בהצלחה: ${sent}\n❌ נכשלו: ${failed}`)
+      toast.success(`שליחה הושלמה! ✅ נשלחו בהצלחה: ${sent} ❌ נכשלו: ${failed}`)
 
       // Reset form
       setCustomEmailTo('')
@@ -786,11 +787,11 @@ export default function SuperAdminPage() {
       const data = await response.json()
 
       if (!response.ok) {
-        alert(data.error || 'שגיאה בשליחת המייל')
+        toast.error(data.error || 'שגיאה בשליחת המייל')
         return
       }
 
-      alert('המייל נשלח בהצלחה!')
+      toast.success('המייל נשלח בהצלחה!')
       // Reset form
       setCustomEmailTo('')
       setCustomEmailName('')
@@ -801,7 +802,7 @@ export default function SuperAdminPage() {
       fetchEmailLogs()
     } catch (error) {
       console.error('Error sending custom email:', error)
-      alert('שגיאה בשליחת המייל')
+      toast.error('שגיאה בשליחת המייל')
     } finally {
       setSendingCustomEmail(false)
     }
@@ -843,12 +844,12 @@ export default function SuperAdminPage() {
       })
 
       await Promise.all(deletePromises)
-      alert(`${selectedEmails.size} מיילים נמחקו בהצלחה`)
+      toast.success(`${selectedEmails.size} מיילים נמחקו בהצלחה`)
       setSelectedEmails(new Set())
       fetchEmailLogs()
     } catch (error) {
       console.error('Error deleting selected emails:', error)
-      alert('שגיאה במחיקת המיילים')
+      toast.error('שגיאה במחיקת המיילים')
     } finally {
       setDeletingSelectedEmails(false)
     }
@@ -859,17 +860,17 @@ export default function SuperAdminPage() {
 
     // Validation
     if (!userForm.email || !userForm.password || !userForm.full_name || !userForm.role) {
-      alert('אנא מלא את כל השדות החובה (מייל, סיסמה, שם מלא, תפקיד)')
+      toast.error('אנא מלא את כל השדות החובה (מייל, סיסמה, שם מלא, תפקיד)')
       return
     }
 
     if (userForm.role === 'city_manager' && !userForm.city_id) {
-      alert('מנהל עיר חייב להיות משויך לעיר')
+      toast.error('מנהל עיר חייב להיות משויך לעיר')
       return
     }
 
     if (userForm.password.length < 6) {
-      alert('הסיסמה חייבת להכיל לפחות 6 תווים')
+      toast.error('הסיסמה חייבת להכיל לפחות 6 תווים')
       return
     }
 
@@ -895,11 +896,11 @@ export default function SuperAdminPage() {
       const data = await response.json()
 
       if (!response.ok) {
-        alert(data.error || 'שגיאה ביצירת המשתמש')
+        toast.error(data.error || 'שגיאה ביצירת המשתמש')
         return
       }
 
-      alert('המשתמש נוצר בהצלחה!')
+      toast.success('המשתמש נוצר בהצלחה!')
       setUserForm({
         email: '',
         password: '',
@@ -914,7 +915,7 @@ export default function SuperAdminPage() {
       fetchUsers()
     } catch (error) {
       console.error('Error creating user:', error)
-      alert('אירעה שגיאה ביצירת המשתמש')
+      toast.error('אירעה שגיאה ביצירת המשתמש')
     } finally {
       setLoading(false)
     }
@@ -934,7 +935,7 @@ export default function SuperAdminPage() {
       const needsCityId = isCityManager && hasNoCities
 
       if (needsCityId && !userForm.city_id) {
-        alert('יש לבחור עיר עבור מנהל עיר')
+        toast.error('יש לבחור עיר עבור מנהל עיר')
         setLoading(false)
         return
       }
@@ -957,7 +958,7 @@ export default function SuperAdminPage() {
       // Only include password if it was changed
       if (userForm.password) {
         if (userForm.password.length < 6) {
-          alert('הסיסמה חייבת להכיל לפחות 6 תווים')
+          toast.error('הסיסמה חייבת להכיל לפחות 6 תווים')
           setLoading(false)
           return
         }
@@ -976,11 +977,11 @@ export default function SuperAdminPage() {
       const data = await response.json()
 
       if (!response.ok) {
-        alert(data.error || 'שגיאה בעדכון המשתמש')
+        toast.error(data.error || 'שגיאה בעדכון המשתמש')
         return
       }
 
-      alert('המשתמש עודכן בהצלחה!')
+      toast.success('המשתמש עודכן בהצלחה!')
       setUserForm({
         email: '',
         password: '',
@@ -995,7 +996,7 @@ export default function SuperAdminPage() {
       fetchUsers()
     } catch (error) {
       console.error('Error updating user:', error)
-      alert('אירעה שגיאה בעדכון המשתמש')
+      toast.error('אירעה שגיאה בעדכון המשתמש')
     } finally {
       setLoading(false)
     }
@@ -1020,15 +1021,15 @@ export default function SuperAdminPage() {
       const data = await response.json()
 
       if (!response.ok) {
-        alert(data.error || 'שגיאה במחיקת המשתמש')
+        toast.error(data.error || 'שגיאה במחיקת המשתמש')
         return
       }
 
-      alert('המשתמש נמחק בהצלחה!')
+      toast.success('המשתמש נמחק בהצלחה!')
       fetchUsers()
     } catch (error) {
       console.error('Error deleting user:', error)
-      alert('אירעה שגיאה במחיקת המשתמש')
+      toast.error('אירעה שגיאה במחיקת המשתמש')
     } finally {
       setLoading(false)
     }
@@ -1726,7 +1727,7 @@ export default function SuperAdminPage() {
                                     const newPassword = prompt('הזן סיסמה חדשה לעיר (השאר ריק עבור 123456):') ?? '123456'
 
                                     if (newPassword.length < 4) {
-                                      alert('הסיסמה חייבת להכיל לפחות 4 תווים')
+                                      toast.error('הסיסמה חייבת להכיל לפחות 4 תווים')
                                       return
                                     }
 
@@ -1747,14 +1748,14 @@ export default function SuperAdminPage() {
                                       const data = await response.json()
 
                                       if (!response.ok) {
-                                        alert(data.error || 'שגיאה באיפוס סיסמה')
+                                        toast.error(data.error || 'שגיאה באיפוס סיסמה')
                                         return
                                       }
 
-                                      alert(data.message)
+                                      toast.success(data.message)
                                     } catch (error) {
                                       console.error('Error resetting city password:', error)
-                                      alert('אירעה שגיאה באיפוס הסיסמה')
+                                      toast.error('אירעה שגיאה באיפוס הסיסמה')
                                     } finally {
                                       setLoading(false)
                                     }
@@ -2303,7 +2304,7 @@ export default function SuperAdminPage() {
 
                                             const data = await res.json()
                                             if (data.success) {
-                                              alert('✅ העיר הוסרה בהצלחה')
+                                              toast.success('העיר הוסרה בהצלחה')
                                               await fetchUsers()
                                               // Refresh the editing user to show updated cities
                                               const res2 = await fetch('/api/admin/users/list')
@@ -2315,10 +2316,10 @@ export default function SuperAdminPage() {
                                                 }
                                               }
                                             } else {
-                                              alert('❌ ' + (data.error || 'שגיאה בהסרת עיר'))
+                                              toast.error(data.error || 'שגיאה בהסרת עיר')
                                             }
                                           } catch (err) {
-                                            alert('❌ שגיאה בהסרת עיר')
+                                            toast.error('שגיאה בהסרת עיר')
                                           }
                                           setLoading(false)
                                         }}
@@ -2361,7 +2362,7 @@ export default function SuperAdminPage() {
                                   type="button"
                                   onClick={async () => {
                                     if (!userForm.city_id || !userForm.manager_role) {
-                                      alert('נא לבחור עיר ותפקיד')
+                                      toast.error('נא לבחור עיר ותפקיד')
                                       return
                                     }
 
@@ -2380,7 +2381,7 @@ export default function SuperAdminPage() {
 
                                       const data = await res.json()
                                       if (data.success) {
-                                        alert('✅ העיר נוספה בהצלחה')
+                                        toast.success('העיר נוספה בהצלחה')
                                         setUserForm({ ...userForm, city_id: '', manager_role: '' })
                                         await fetchUsers()
                                         // Refresh the editing user to show updated cities
@@ -2393,10 +2394,10 @@ export default function SuperAdminPage() {
                                           }
                                         }
                                       } else {
-                                        alert('❌ ' + (data.error || 'שגיאה בהוספת עיר'))
+                                        toast.error(data.error || 'שגיאה בהוספת עיר')
                                       }
                                     } catch (err) {
-                                      alert('❌ שגיאה בהוספת עיר')
+                                      toast.error('שגיאה בהוספת עיר')
                                     }
                                     setLoading(false)
                                   }}
@@ -2620,15 +2621,15 @@ export default function SuperAdminPage() {
                                   const data = await response.json()
 
                                   if (!response.ok) {
-                                    alert(data.error || 'שגיאה בעדכון משתמש')
+                                    toast.error(data.error || 'שגיאה בעדכון משתמש')
                                     return
                                   }
 
-                                  alert(`המשתמש ${user.is_active ? 'נחסם' : 'הופעל'} בהצלחה`)
+                                  toast.success(`המשתמש ${user.is_active ? 'נחסם' : 'הופעל'} בהצלחה`)
                                   fetchUsers()
                                 } catch (error) {
                                   console.error('Error updating user:', error)
-                                  alert('אירעה שגיאה בעדכון המשתמש')
+                                  toast.error('אירעה שגיאה בעדכון המשתמש')
                                 } finally {
                                   setLoading(false)
                                 }
@@ -2663,14 +2664,14 @@ export default function SuperAdminPage() {
                                   const data = await response.json()
 
                                   if (!response.ok) {
-                                    alert(data.error || 'שגיאה בשליחת מייל')
+                                    toast.error(data.error || 'שגיאה בשליחת מייל')
                                     return
                                   }
 
-                                  alert(data.message)
+                                  toast.success(data.message)
                                 } catch (error) {
                                   console.error('Error sending reset email:', error)
-                                  alert('אירעה שגיאה בשליחת המייל')
+                                  toast.error('אירעה שגיאה בשליחת המייל')
                                 } finally {
                                   setLoading(false)
                                 }

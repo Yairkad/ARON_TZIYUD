@@ -2,6 +2,7 @@ import type { Metadata, Viewport } from "next";
 import { Rubik } from "next/font/google";
 import "./globals.css";
 import "leaflet/dist/leaflet.css";
+import ToastProvider from "@/components/ToastProvider";
 
 const rubik = Rubik({
   subsets: ["hebrew", "latin"],
@@ -29,6 +30,7 @@ export default function RootLayout({
   return (
     <html lang="he" dir="rtl">
       <body className={`${rubik.className} antialiased`}>
+        <ToastProvider />
         {children}
       </body>
     </html>

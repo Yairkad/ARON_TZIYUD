@@ -9,6 +9,7 @@ import {
   isPushSubscribed,
   registerServiceWorker,
 } from '@/lib/push-notifications'
+import toast from 'react-hot-toast'
 
 export default function NotificationSettings() {
   const [permission, setPermission] = useState<NotificationPermission>('default')
@@ -40,24 +41,24 @@ export default function NotificationSettings() {
       if (perm === 'granted') {
         // Register service worker
         const registration = await registerServiceWorker()
-        
+
         if (registration) {
           // Subscribe to push
           const subscription = await subscribeToPushNotifications(registration)
-          
+
           if (subscription) {
             setIsSubscribed(true)
-            alert('התראות הופעלו בהצלחה! \nתקבל התראות על בקשות חדשות גם כשהאתר סגור.')
+            toast.success('התראות הופעלו בהצלחה! תקבל התראות על בקשות חדשות גם כשהאתר סגור.')
           } else {
-            alert('שגיאה ברישום להתראות')
+            toast.error('שגיאה ברישום להתראות')
           }
         }
       } else {
-        alert('יש לתת הרשאה להתראות כדי להפעיל את התכונה')
+        toast.error('יש לתת הרשאה להתראות כדי להפעיל את התכונה')
       }
     } catch (error) {
       console.error('Error enabling notifications:', error)
-      alert('שגיאה בהפעלת התראות')
+      toast.error('שגיאה בהפעלת התראות')
     } finally {
       setLoading(false)
     }
@@ -69,13 +70,13 @@ export default function NotificationSettings() {
       const success = await unsubscribeFromPushNotifications()
       if (success) {
         setIsSubscribed(false)
-        alert('התראות הוסרו בהצלחה')
+        toast.success('התראות הוסרו בהצלחה')
       } else {
-        alert('שגיאה בהסרת התראות')
+        toast.error('שגיאה בהסרת התראות')
       }
     } catch (error) {
       console.error('Error disabling notifications:', error)
-      alert('שגיאה בהסרת התראות')
+      toast.error('שגיאה בהסרת התראות')
     } finally {
       setLoading(false)
     }

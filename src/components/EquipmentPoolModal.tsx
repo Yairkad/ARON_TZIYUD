@@ -4,6 +4,7 @@ import { useState, useEffect } from 'react'
 import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
 import { GlobalEquipmentPoolWithCategory, EquipmentCategory } from '@/types'
+import toast from 'react-hot-toast'
 
 interface EquipmentPoolModalProps {
   isOpen: boolean
@@ -57,11 +58,11 @@ export default function EquipmentPoolModal({
       if (response.ok) {
         setEquipment(data.equipment || [])
       } else {
-        alert('שגיאה בטעינת מאגר הציוד')
+        toast.error('שגיאה בטעינת מאגר הציוד')
       }
     } catch (error) {
       console.error('Error fetching equipment pool:', error)
-      alert('שגיאה בטעינת מאגר הציוד')
+      toast.error('שגיאה בטעינת מאגר הציוד')
     } finally {
       setLoading(false)
     }
@@ -89,7 +90,7 @@ export default function EquipmentPoolModal({
 
   const handleAddSelected = async () => {
     if (selectedIds.size === 0) {
-      alert('לא נבחרו פריטים')
+      toast.error('לא נבחרו פריטים')
       return
     }
 
@@ -110,12 +111,12 @@ export default function EquipmentPoolModal({
         throw new Error(data.error || 'שגיאה בהוספת ציוד')
       }
 
-      alert(data.message)
+      toast.success(data.message)
       setSelectedIds(new Set())
       onEquipmentAdded()
       onClose()
     } catch (error: any) {
-      alert(error.message)
+      toast.error(error.message)
     } finally {
       setLoading(false)
     }
@@ -124,7 +125,7 @@ export default function EquipmentPoolModal({
   // Add new equipment to global pool
   const handleAddNewEquipment = async () => {
     if (!newEquipmentName.trim()) {
-      alert('יש להזין שם לציוד')
+      toast.error('יש להזין שם לציוד')
       return
     }
 
@@ -134,7 +135,7 @@ export default function EquipmentPoolModal({
     )
 
     if (existingItem) {
-      alert(`פריט בשם "${existingItem.name}" כבר קיים במאגר. אנא בחר אותו מהרשימה.`)
+      toast.error(`פריט בשם "${existingItem.name}" כבר קיים במאגר. אנא בחר אותו מהרשימה.`)
       setSearchQuery(existingItem.name)
       setShowNewForm(false)
       return
@@ -172,15 +173,15 @@ export default function EquipmentPoolModal({
         })
 
         if (addResponse.ok) {
-          alert('הפריט נוסף למאגר ולעיר בהצלחה')
+          toast.success('הפריט נוסף למאגר ולעיר בהצלחה')
           onEquipmentAdded()
           onClose()
         } else {
-          alert('הפריט נוסף למאגר אך לא הצלחנו להוסיף לעיר')
+          toast.error('הפריט נוסף למאגר אך לא הצלחנו להוסיף לעיר')
         }
       } else {
         // City manager - pending approval
-        alert(data.message || 'הפריט נשלח לאישור מנהל ראשי. לאחר האישור תוכל להוסיף אותו לעיר.')
+        toast.success(data.message || 'הפריט נשלח לאישור מנהל ראשי. לאחר האישור תוכל להוסיף אותו לעיר.')
       }
 
       setNewEquipmentName('')
@@ -188,7 +189,7 @@ export default function EquipmentPoolModal({
       setShowNewForm(false)
       fetchEquipment()
     } catch (error: any) {
-      alert(error.message)
+      toast.error(error.message)
     } finally {
       setAddingNew(false)
     }

@@ -10,6 +10,7 @@ import { supabase } from '@/lib/supabase'
 import { GlobalEquipmentPool, EquipmentCategory } from '@/types'
 import Logo from '@/components/Logo'
 import { checkAuth } from '@/lib/auth'
+import toast from 'react-hot-toast'
 
 export default function GlobalEquipmentPage() {
   const router = useRouter()
@@ -125,7 +126,7 @@ export default function GlobalEquipmentPage() {
       setPendingEquipment(pendingData.equipment || [])
     } catch (error) {
       console.error('Error fetching equipment:', error)
-      alert('שגיאה בטעינת הציוד')
+      toast.error('שגיאה בטעינת הציוד')
     } finally {
       setLoading(false)
     }
@@ -148,12 +149,12 @@ export default function GlobalEquipmentPage() {
         throw new Error(data.error || 'שגיאה בהוספת ציוד')
       }
 
-      alert(data.message || 'הפריט נוסף בהצלחה')
+      toast.success(data.message || 'הפריט נוסף בהצלחה')
       setShowAddEquipment(false)
       setEquipmentForm({ name: '', image_url: '', category_id: '' })
       fetchEquipment()
     } catch (error: any) {
-      alert(error.message)
+      toast.error(error.message)
     } finally {
       setLoading(false)
     }
@@ -181,13 +182,13 @@ export default function GlobalEquipmentPage() {
         throw new Error(data.error || 'שגיאה בעדכון ציוד')
       }
 
-      alert('הפריט עודכן בהצלחה')
+      toast.success('הפריט עודכן בהצלחה')
       setEditingEquipment(null)
       setEditingItemId(null)
       setEquipmentForm({ name: '', image_url: '', category_id: '' })
       fetchEquipment()
     } catch (error: any) {
-      alert(error.message)
+      toast.error(error.message)
     } finally {
       setLoading(false)
     }
@@ -211,10 +212,10 @@ export default function GlobalEquipmentPage() {
         throw new Error(data.error || 'שגיאה במחיקת ציוד')
       }
 
-      alert(data.message)
+      toast.success(data.message)
       fetchEquipment()
     } catch (error: any) {
-      alert(error.message)
+      toast.error(error.message)
     } finally {
       setLoading(false)
     }
@@ -236,10 +237,10 @@ export default function GlobalEquipmentPage() {
         throw new Error(data.error || 'שגיאה באישור ציוד')
       }
 
-      alert(data.message)
+      toast.success(data.message)
       fetchEquipment()
     } catch (error: any) {
-      alert(error.message)
+      toast.error(error.message)
     } finally {
       setLoading(false)
     }
@@ -265,10 +266,10 @@ export default function GlobalEquipmentPage() {
         throw new Error(data.error || 'שגיאה בדחיית ציוד')
       }
 
-      alert(data.message)
+      toast.success(data.message)
       fetchEquipment()
     } catch (error: any) {
-      alert(error.message)
+      toast.error(error.message)
     } finally {
       setLoading(false)
     }
@@ -365,7 +366,7 @@ export default function GlobalEquipmentPage() {
   // Merge equipment
   const handleMergeEquipment = async () => {
     if (!mergeSource || !mergeTarget || mergeSource.id === mergeTarget) {
-      alert('יש לבחור פריט יעד שונה מהמקור')
+      toast.error('יש לבחור פריט יעד שונה מהמקור')
       return
     }
 
@@ -390,14 +391,14 @@ export default function GlobalEquipmentPage() {
         throw new Error(data.error || 'שגיאה במיזוג הפריטים')
       }
 
-      alert(data.message || 'הפריטים מוזגו בהצלחה')
+      toast.success(data.message || 'הפריטים מוזגו בהצלחה')
       setShowMergeModal(false)
       setMergeSource(null)
       setMergeTarget('')
       fetchEquipment()
     } catch (error: any) {
       console.error('Error merging equipment:', error)
-      alert('שגיאה במיזוג הפריטים: ' + error.message)
+      toast.error('שגיאה במיזוג הפריטים: ' + error.message)
     } finally {
       setLoading(false)
     }
@@ -427,12 +428,12 @@ export default function GlobalEquipmentPage() {
         throw new Error(data.error || 'שגיאה בהוספת קטגוריה')
       }
 
-      alert(data.message || 'הקטגוריה נוספה בהצלחה')
+      toast.success(data.message || 'הקטגוריה נוספה בהצלחה')
       setShowAddCategory(false)
       setCategoryForm({ name: '', image_url: '', display_order: 0 })
       fetchCategories()
     } catch (error: any) {
-      alert(error.message)
+      toast.error(error.message)
     } finally {
       setLoading(false)
     }
@@ -465,13 +466,13 @@ export default function GlobalEquipmentPage() {
         throw new Error(data.error || 'שגיאה בעדכון קטגוריה')
       }
 
-      alert('הקטגוריה עודכנה בהצלחה')
+      toast.success('הקטגוריה עודכנה בהצלחה')
       setEditingCategory(null)
       setCategoryForm({ name: '', image_url: '', display_order: 0 })
       setShowAddCategory(false)
       fetchCategories()
     } catch (error: any) {
-      alert(error.message)
+      toast.error(error.message)
     } finally {
       setLoading(false)
     }
@@ -495,10 +496,10 @@ export default function GlobalEquipmentPage() {
         throw new Error(data.error || 'שגיאה במחיקת קטגוריה')
       }
 
-      alert(data.message)
+      toast.success(data.message)
       fetchCategories()
     } catch (error: any) {
-      alert(error.message)
+      toast.error(error.message)
     } finally {
       setLoading(false)
     }
@@ -543,7 +544,7 @@ export default function GlobalEquipmentPage() {
 
   const handleBulkAssign = async () => {
     if (selectedItems.length === 0) {
-      alert('יש לבחור לפחות פריט אחד')
+      toast.error('יש לבחור לפחות פריט אחד')
       return
     }
 
@@ -565,13 +566,13 @@ export default function GlobalEquipmentPage() {
         throw new Error(data.error || 'שגיאה בשיוך הפריטים')
       }
 
-      alert(data.message)
+      toast.success(data.message)
       setShowBulkAssign(false)
       setSelectedItems([])
       setBulkCategoryId('')
       fetchEquipment()
     } catch (error: any) {
-      alert(error.message)
+      toast.error(error.message)
     } finally {
       setLoading(false)
     }

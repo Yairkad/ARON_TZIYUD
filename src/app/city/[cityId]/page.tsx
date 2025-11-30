@@ -11,6 +11,7 @@ import { Equipment, EquipmentWithCategory, BorrowHistory, BorrowForm, ReturnForm
 import Logo from '@/components/Logo'
 import CameraCapture from '@/components/CameraCapture'
 import { Phone, MessageCircle } from 'lucide-react'
+import toast from 'react-hot-toast'
 
 export default function CityPage() {
   const params = useParams()
@@ -131,27 +132,27 @@ export default function CityPage() {
   const handleBorrow = async (e: React.FormEvent) => {
     e.preventDefault()
     if (!borrowForm.name || !borrowForm.phone) {
-      alert('אנא מלא את כל השדות')
+      toast.error('אנא מלא את כל השדות')
       return
     }
 
     // Validate name (at least 2 words)
     const nameParts = borrowForm.name.trim().split(/\s+/)
     if (nameParts.length < 2) {
-      alert('יש להזין שם ושם משפחה (לפחות 2 מילים)')
+      toast.error('יש להזין שם ושם משפחה (לפחות 2 מילים)')
       return
     }
 
     // Validate phone (exactly 10 digits, starts with 05)
     const phoneDigits = borrowForm.phone.replace(/\D/g, '')
     if (phoneDigits.length !== 10 || !phoneDigits.startsWith('05')) {
-      alert('מספר טלפון חייב להיות 10 ספרות ולהתחיל ב-05')
+      toast.error('מספר טלפון חייב להיות 10 ספרות ולהתחיל ב-05')
       return
     }
 
     // Validate selected items
     if (selectedItems.size === 0) {
-      alert('יש לבחור לפחות פריט אחד')
+      toast.error('יש לבחור לפחות פריט אחד')
       return
     }
 
@@ -207,7 +208,7 @@ export default function CityPage() {
         }
       }
 
-      alert('הציוד הושאל בהצלחה!')
+      toast.success('הציוד הושאל בהצלחה!')
       setBorrowForm({ name: '', phone: '', equipment_id: '' })
       setEquipmentSearch('')
       setSelectedItems(new Set())
@@ -215,7 +216,7 @@ export default function CityPage() {
       fetchEquipment()
     } catch (error) {
       console.error('Error borrowing equipment:', error)
-      alert('אירעה שגיאה בהשאלת הציוד')
+      toast.error('אירעה שגיאה בהשאלת הציוד')
       fetchEquipment()
     } finally {
       setLoading(false)
@@ -246,13 +247,13 @@ export default function CityPage() {
   const handleReturn = async (borrowId: string, equipmentId: string, equipmentStatus: 'working' | 'faulty' = 'working') => {
     // Validate that if status is faulty, notes must be provided
     if (equipmentStatus === 'faulty' && !faultyNotes.trim()) {
-      alert('יש לפרט מה קרה לציוד התקול')
+      toast.error('יש לפרט מה קרה לציוד התקול')
       return
     }
 
     // Validate that image is required
     if (!returnImage) {
-      alert('יש לצלם תמונה של הציוד בארון לפני ההחזרה')
+      toast.error('יש לצלם תמונה של הציוד בארון לפני ההחזרה')
       return
     }
 
@@ -295,7 +296,7 @@ export default function CityPage() {
       // DON'T update equipment quantity here - wait for manager approval
       // The equipment will remain borrowed until manager approves
 
-      alert('תמונת ההחזרה נשלחה בהצלחה!\n\nהציוד ממתין לאישור מנהל העיר.\nלאחר האישור, הציוד יחזור למלאי הזמין.')
+      toast.success('תמונת ההחזרה נשלחה! הציוד ממתין לאישור מנהל העיר.', { duration: 5000 })
       setReturnStatus(null)
       setSelectedStatus('working')
       setFaultyNotes('')
@@ -304,7 +305,7 @@ export default function CityPage() {
       fetchEquipment()
     } catch (error) {
       console.error('Error returning equipment:', error)
-      alert('אירעה שגיאה בהחזרת הציוד')
+      toast.error('אירעה שגיאה בהחזרת הציוד')
     } finally {
       setLoading(false)
       setUploadingImage(false)
@@ -338,31 +339,31 @@ export default function CityPage() {
     e.preventDefault()
 
     if (!requestForm.requester_name || !requestForm.requester_phone) {
-      alert('אנא מלא את כל השדות הנדרשים')
+      toast.error('אנא מלא את כל השדות הנדרשים')
       return
     }
 
     // Validate name (at least 2 words)
     const nameParts = requestForm.requester_name.trim().split(/\s+/)
     if (nameParts.length < 2) {
-      alert('יש להזין שם ושם משפחה (לפחות 2 מילים)')
+      toast.error('יש להזין שם ושם משפחה (לפחות 2 מילים)')
       return
     }
 
     // Validate phone (exactly 10 digits, starts with 05)
     const phoneDigits = requestForm.requester_phone.replace(/\D/g, '')
     if (phoneDigits.length !== 10 || !phoneDigits.startsWith('05')) {
-      alert('מספר טלפון חייב להיות 10 ספרות ולהתחיל ב-05')
+      toast.error('מספר טלפון חייב להיות 10 ספרות ולהתחיל ב-05')
       return
     }
 
     if (city?.require_call_id === true && !requestForm.call_id?.trim()) {
-      alert('מזהה קריאה הוא שדה חובה')
+      toast.error('מזהה קריאה הוא שדה חובה')
       return
     }
 
     if (selectedItems.size === 0) {
-      alert('אנא בחר לפחות פריט אחד')
+      toast.error('אנא בחר לפחות פריט אחד')
       return
     }
 
@@ -448,11 +449,11 @@ export default function CityPage() {
       console.error('Error creating request:', error)
       // Check if it's a location permission error
       if (error.message && error.message.includes('גישה למיקום נדחתה')) {
-        alert('🔒 גישה למיקום נדחתה\n\nכדי לשלוח בקשה יש לאפשר גישה למיקום:\n\n1. לחץ על סמל המנעול/מידע ליד כתובת האתר\n2. מצא "מיקום" או "Location"\n3. שנה ל-"אפשר" או "Allow"\n4. רענן את הדף ונסה שוב')
+        toast.error('🔒 גישה למיקום נדחתה - יש לאפשר גישה למיקום בהגדרות הדפדפן', { duration: 6000 })
       } else if (error.message && error.message.includes('רחוק מדי')) {
-        alert(error.message)
+        toast.error(error.message, { duration: 5000 })
       } else {
-        alert(error.message || 'אירעה שגיאה ביצירת הבקשה')
+        toast.error(error.message || 'אירעה שגיאה ביצירת הבקשה')
       }
     } finally {
       setLoading(false)
@@ -466,7 +467,7 @@ export default function CityPage() {
 
   const handleCopyLink = () => {
     navigator.clipboard.writeText(getRequestUrl())
-    alert('הקישור הועתק ללוח!')
+    toast.success('הקישור הועתק ללוח!')
   }
 
   const resetRequestForm = () => {

@@ -4,6 +4,7 @@ import { useState, useEffect, useMemo } from 'react'
 import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
 import { EquipmentRequestWithItems } from '@/types'
+import toast from 'react-hot-toast'
 
 interface RequestsTabProps {
   cityId: string
@@ -125,7 +126,7 @@ export default function RequestsTab({ cityId, cityName, managerName, onRequestsU
         // Fallback if no token returned (shouldn't happen with new API)
         setApprovedRequest(requestId)
       } else {
-        alert(getSuccessMessage(action))
+        toast.success(getSuccessMessage(action))
       }
 
       setRejectReason(null)
@@ -133,7 +134,7 @@ export default function RequestsTab({ cityId, cityName, managerName, onRequestsU
       onRequestsUpdate?.()
     } catch (error: any) {
       console.error('Error managing request:', error)
-      alert(error.message || 'אירעה שגיאה בעדכון הבקשה')
+      toast.error(error.message || 'אירעה שגיאה בעדכון הבקשה')
     } finally {
       setLoading(false)
     }
@@ -160,12 +161,12 @@ export default function RequestsTab({ cityId, cityName, managerName, onRequestsU
         throw new Error(data.error || 'שגיאה בהארכת תוקף')
       }
 
-      alert(data.message)
+      toast.success(data.message)
       fetchRequests()
       onRequestsUpdate?.()
     } catch (error: any) {
       console.error('Error extending token:', error)
-      alert(error.message || 'אירעה שגיאה בהארכת התוקף')
+      toast.error(error.message || 'אירעה שגיאה בהארכת התוקף')
     } finally {
       setLoading(false)
     }
@@ -230,7 +231,7 @@ ${locationUrl ? `\n📍 מיקום הארון:\n${locationUrl}` : ''}
     }
 
     navigator.clipboard.writeText(textToCopy)
-    alert(request ? '✅ ההודעה המלאה הועתקה ללוח!' : '✅ הקישור הועתק ללוח!')
+    toast.success(request ? 'ההודעה המלאה הועתקה ללוח!' : 'הקישור הועתק ללוח!')
   }
 
   const toggleExpanded = (requestId: string) => {
@@ -467,7 +468,7 @@ ${locationUrl ? `\n📍 מיקום הארון:\n${locationUrl}` : ''}
                       <Button
                         onClick={() => {
                           if (!canApprove) {
-                            alert('אין לך הרשאה לאשר בקשות - נדרשת הרשאת אישור בקשות')
+                            toast.error('אין לך הרשאה לאשר בקשות - נדרשת הרשאת אישור בקשות')
                             return
                           }
                           handleManageRequest(request.id, 'approve')
@@ -480,7 +481,7 @@ ${locationUrl ? `\n📍 מיקום הארון:\n${locationUrl}` : ''}
                       <Button
                         onClick={() => {
                           if (!canApprove) {
-                            alert('אין לך הרשאה לדחות בקשות - נדרשת הרשאת אישור בקשות')
+                            toast.error('אין לך הרשאה לדחות בקשות - נדרשת הרשאת אישור בקשות')
                             return
                           }
                           setRejectReason({ requestId: request.id, reason: '' })
@@ -498,7 +499,7 @@ ${locationUrl ? `\n📍 מיקום הארון:\n${locationUrl}` : ''}
                       <Button
                         onClick={() => {
                           if (!canApprove) {
-                            alert('אין לך הרשאה להאריך טוקנים - נדרשת הרשאת אישור בקשות')
+                            toast.error('אין לך הרשאה להאריך טוקנים - נדרשת הרשאת אישור בקשות')
                             return
                           }
                           handleExtendToken(request.id, 10)
@@ -511,7 +512,7 @@ ${locationUrl ? `\n📍 מיקום הארון:\n${locationUrl}` : ''}
                       <Button
                         onClick={() => {
                           if (!canApprove) {
-                            alert('אין לך הרשאה להאריך טוקנים - נדרשת הרשאת אישור בקשות')
+                            toast.error('אין לך הרשאה להאריך טוקנים - נדרשת הרשאת אישור בקשות')
                             return
                           }
                           handleExtendToken(request.id, 20)
@@ -524,7 +525,7 @@ ${locationUrl ? `\n📍 מיקום הארון:\n${locationUrl}` : ''}
                       <Button
                         onClick={() => {
                           if (!canApprove) {
-                            alert('אין לך הרשאה להאריך טוקנים - נדרשת הרשאת אישור בקשות')
+                            toast.error('אין לך הרשאה להאריך טוקנים - נדרשת הרשאת אישור בקשות')
                             return
                           }
                           handleExtendToken(request.id, 30)
@@ -537,7 +538,7 @@ ${locationUrl ? `\n📍 מיקום הארון:\n${locationUrl}` : ''}
                       <Button
                         onClick={() => {
                           if (!canApprove) {
-                            alert('אין לך הרשאה להאריך טוקנים - נדרשת הרשאת אישור בקשות')
+                            toast.error('אין לך הרשאה להאריך טוקנים - נדרשת הרשאת אישור בקשות')
                             return
                           }
                           handleExtendToken(request.id, 60)
@@ -554,7 +555,7 @@ ${locationUrl ? `\n📍 מיקום הארון:\n${locationUrl}` : ''}
                     <Button
                       onClick={() => {
                         if (!canApprove) {
-                          alert('אין לך הרשאה ליצור טוקן חדש - נדרשת הרשאת אישור בקשות')
+                          toast.error('אין לך הרשאה ליצור טוקן חדש - נדרשת הרשאת אישור בקשות')
                           return
                         }
                         handleManageRequest(request.id, 'regenerate')
@@ -570,7 +571,7 @@ ${locationUrl ? `\n📍 מיקום הארון:\n${locationUrl}` : ''}
                     <Button
                       onClick={() => {
                         if (!canApprove) {
-                          alert('אין לך הרשאה לבטל בקשות - נדרשת הרשאת אישור בקשות')
+                          toast.error('אין לך הרשאה לבטל בקשות - נדרשת הרשאת אישור בקשות')
                           return
                         }
                         handleManageRequest(request.id, 'cancel')
