@@ -1266,6 +1266,23 @@ export default function CityAdminPage() {
 
         {/* Mobile Navigation Buttons - Below Header */}
         <div className="sm:hidden flex flex-col gap-3 mb-6">
+          <Button
+            onClick={() => {
+              setAccountForm({
+                full_name: currentUser?.full_name || '',
+                phone: currentUser?.phone || '',
+                email: currentUser?.email || '',
+                current_password: '',
+                new_password: '',
+                confirm_password: ''
+              })
+              setShowAccountSettings(true)
+            }}
+            variant="outline"
+            className="w-full h-14 rounded-xl border-2 border-indigo-200 hover:border-indigo-300 hover:bg-indigo-50 text-indigo-600 font-semibold text-lg transition-all"
+          >
+            ⚙️ הגדרות חשבון
+          </Button>
           <Link href="/manager-guide" className="w-full">
             <Button
               variant="outline"
