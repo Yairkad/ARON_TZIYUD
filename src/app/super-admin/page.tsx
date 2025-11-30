@@ -73,6 +73,8 @@ export default function SuperAdminPage() {
   const [sendingCustomEmail, setSendingCustomEmail] = useState(false)
   const [sendToAllUsers, setSendToAllUsers] = useState(false)
   const [bulkEmailProgress, setBulkEmailProgress] = useState({ sent: 0, total: 0, failed: 0 })
+  const [selectedUsersForEmail, setSelectedUsersForEmail] = useState<Set<string>>(new Set())
+  const [showUserSelector, setShowUserSelector] = useState(false)
 
   // Email Selection State
   const [selectedEmails, setSelectedEmails] = useState<Set<string>>(new Set())
@@ -644,7 +646,8 @@ export default function SuperAdminPage() {
   const handleSendCustomEmail = async (e: React.FormEvent) => {
     e.preventDefault()
 
-    if (!sendToAllUsers && !customEmailTo) {
+    const hasSelectedUsers = selectedUsersForEmail.size > 0
+    if (!sendToAllUsers && !hasSelectedUsers && !customEmailTo) {
       alert('אנא בחר נמען או הזן כתובת מייל')
       return
     }
@@ -700,6 +703,62 @@ export default function SuperAdminPage() {
       setCustomEmailSubject('')
       setCustomEmailMessage('')
       setSendToAllUsers(false)
+      setSelectedUsersForEmail(new Set())
+      setBulkEmailProgress({ sent: 0, total: 0, failed: 0 })
+      setShowCustomEmailForm(false)
+      fetchEmailLogs()
+      setSendingCustomEmail(false)
+      return
+    }
+
+    // Bulk send to selected users
+    if (hasSelectedUsers) {
+      const selectedUsersList = users.filter(u => selectedUsersForEmail.has(u.id))
+      if (!confirm(`האם אתה בטוח שברצונך לשלוח מייל ל-${selectedUsersList.length} משתמשים נבחרים?`)) {
+        return
+      }
+
+      setSendingCustomEmail(true)
+      setBulkEmailProgress({ sent: 0, total: selectedUsersList.length, failed: 0 })
+
+      let sent = 0
+      let failed = 0
+
+      for (const user of selectedUsersList) {
+        try {
+          const response = await fetch('/api/admin/send-custom-email', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            credentials: 'include',
+            body: JSON.stringify({
+              to: user.email,
+              subject: customEmailSubject,
+              message: customEmailMessage,
+              recipientName: user.full_name || undefined
+            }),
+          })
+
+          if (response.ok) {
+            sent++
+          } else {
+            failed++
+          }
+        } catch {
+          failed++
+        }
+
+        setBulkEmailProgress({ sent, total: selectedUsersList.length, failed })
+      }
+
+      alert(`שליחה הושלמה!\n✅ נשלחו בהצלחה: ${sent}\n❌ נכשלו: ${failed}`)
+
+      // Reset form
+      setCustomEmailTo('')
+      setCustomEmailName('')
+      setCustomEmailSubject('')
+      setCustomEmailMessage('')
+      setSendToAllUsers(false)
+      setSelectedUsersForEmail(new Set())
       setBulkEmailProgress({ sent: 0, total: 0, failed: 0 })
       setShowCustomEmailForm(false)
       fetchEmailLogs()
@@ -2703,37 +2762,135 @@ export default function SuperAdminPage() {
                       <form onSubmit={handleSendCustomEmail} className="space-y-4">
                         {/* Recipient Selection */}
                         <div>
-                          <label className="block text-sm font-medium text-gray-700 mb-1">
-                            בחר נמען מרשימת המשתמשים או הזן ידנית
+                          <label className="block text-sm font-medium text-gray-700 mb-2">
+                            בחר נמענים
                           </label>
-                          <select
-                            value={sendToAllUsers ? '__ALL__' : ''}
-                            onChange={(e) => {
-                              if (e.target.value === '__ALL__') {
-                                setSendToAllUsers(true)
-                                setCustomEmailTo('')
-                                setCustomEmailName('')
-                              } else {
-                                setSendToAllUsers(false)
-                                const selectedUser = users.find(u => u.email === e.target.value)
-                                if (selectedUser) {
-                                  setCustomEmailTo(selectedUser.email)
-                                  setCustomEmailName(selectedUser.full_name || '')
+
+                          {/* Quick Selection Buttons */}
+                          <div className="flex flex-wrap gap-2 mb-3">
+                            <Button
+                              type="button"
+                              size="sm"
+                              variant={sendToAllUsers ? "default" : "outline"}
+                              onClick={() => {
+                                setSendToAllUsers(!sendToAllUsers)
+                                if (!sendToAllUsers) {
+                                  setSelectedUsersForEmail(new Set())
+                                  setCustomEmailTo('')
+                                  setCustomEmailName('')
                                 }
-                              }
-                            }}
-                            className="w-full h-10 border-2 border-gray-200 rounded-lg px-3 bg-white mb-2"
-                          >
-                            <option value="">-- בחר משתמש קיים --</option>
-                            <option value="__ALL__" className="font-bold bg-purple-100">📧 כל המשתמשים ({users.length})</option>
-                            {users.map(user => (
-                              <option key={user.id} value={user.email}>
-                                {user.full_name} ({user.email})
-                              </option>
-                            ))}
-                          </select>
+                              }}
+                              className={sendToAllUsers ? "bg-purple-600 hover:bg-purple-700" : ""}
+                            >
+                              📧 כל המשתמשים ({users.length})
+                            </Button>
+                            <Button
+                              type="button"
+                              size="sm"
+                              variant={selectedUsersForEmail.size > 0 && !sendToAllUsers ? "default" : "outline"}
+                              onClick={() => {
+                                setShowUserSelector(!showUserSelector)
+                                setSendToAllUsers(false)
+                              }}
+                              className={selectedUsersForEmail.size > 0 && !sendToAllUsers ? "bg-indigo-600 hover:bg-indigo-700" : ""}
+                            >
+                              👥 בחר משתמשים {selectedUsersForEmail.size > 0 && `(${selectedUsersForEmail.size})`}
+                            </Button>
+                          </div>
+
+                          {/* User Selector Panel */}
+                          {showUserSelector && !sendToAllUsers && (
+                            <div className="bg-white border-2 border-indigo-200 rounded-lg p-3 mb-3 max-h-60 overflow-y-auto">
+                              <div className="flex justify-between items-center mb-2 pb-2 border-b border-gray-200">
+                                <span className="text-sm font-medium text-gray-700">
+                                  בחר משתמשים ({selectedUsersForEmail.size} נבחרו)
+                                </span>
+                                <div className="flex gap-2">
+                                  <Button
+                                    type="button"
+                                    size="sm"
+                                    variant="ghost"
+                                    onClick={() => setSelectedUsersForEmail(new Set(users.map(u => u.id)))}
+                                    className="text-xs h-7 px-2"
+                                  >
+                                    בחר הכל
+                                  </Button>
+                                  <Button
+                                    type="button"
+                                    size="sm"
+                                    variant="ghost"
+                                    onClick={() => setSelectedUsersForEmail(new Set())}
+                                    className="text-xs h-7 px-2"
+                                  >
+                                    נקה
+                                  </Button>
+                                </div>
+                              </div>
+                              <div className="space-y-1">
+                                {users.map(user => (
+                                  <label
+                                    key={user.id}
+                                    className={`flex items-center gap-2 p-2 rounded-lg cursor-pointer hover:bg-indigo-50 transition-colors ${
+                                      selectedUsersForEmail.has(user.id) ? 'bg-indigo-100' : ''
+                                    }`}
+                                  >
+                                    <input
+                                      type="checkbox"
+                                      checked={selectedUsersForEmail.has(user.id)}
+                                      onChange={() => {
+                                        const newSelected = new Set(selectedUsersForEmail)
+                                        if (newSelected.has(user.id)) {
+                                          newSelected.delete(user.id)
+                                        } else {
+                                          newSelected.add(user.id)
+                                        }
+                                        setSelectedUsersForEmail(newSelected)
+                                      }}
+                                      className="w-4 h-4 rounded border-gray-300 text-indigo-600 focus:ring-indigo-500"
+                                    />
+                                    <div className="flex-1 min-w-0">
+                                      <span className="font-medium text-gray-800">{user.full_name}</span>
+                                      <span className="text-gray-500 text-sm mr-2">({user.email})</span>
+                                    </div>
+                                  </label>
+                                ))}
+                              </div>
+                            </div>
+                          )}
+
+                          {/* Selected Users Display */}
+                          {selectedUsersForEmail.size > 0 && !sendToAllUsers && !showUserSelector && (
+                            <div className="bg-indigo-50 border border-indigo-200 rounded-lg p-3 mb-3">
+                              <p className="text-sm text-indigo-700 font-medium mb-2">
+                                📬 נבחרו {selectedUsersForEmail.size} משתמשים:
+                              </p>
+                              <div className="flex flex-wrap gap-1">
+                                {users.filter(u => selectedUsersForEmail.has(u.id)).map(user => (
+                                  <span
+                                    key={user.id}
+                                    className="inline-flex items-center gap-1 bg-indigo-100 text-indigo-800 px-2 py-1 rounded-full text-xs"
+                                  >
+                                    {user.full_name}
+                                    <button
+                                      type="button"
+                                      onClick={() => {
+                                        const newSelected = new Set(selectedUsersForEmail)
+                                        newSelected.delete(user.id)
+                                        setSelectedUsersForEmail(newSelected)
+                                      }}
+                                      className="hover:bg-indigo-200 rounded-full p-0.5"
+                                    >
+                                      ✕
+                                    </button>
+                                  </span>
+                                ))}
+                              </div>
+                            </div>
+                          )}
+
+                          {/* All Users Selected Display */}
                           {sendToAllUsers && (
-                            <div className="bg-purple-50 border border-purple-200 rounded-lg p-3 mt-2">
+                            <div className="bg-purple-50 border border-purple-200 rounded-lg p-3">
                               <p className="text-sm text-purple-700 font-medium">
                                 📢 שליחה לכל {users.length} המשתמשים במערכת
                               </p>
@@ -2756,35 +2913,55 @@ export default function SuperAdminPage() {
                               )}
                             </div>
                           )}
+
+                          {/* Manual Email Input - only when no users selected */}
+                          {!sendToAllUsers && selectedUsersForEmail.size === 0 && (
+                            <div className="border-t border-gray-200 pt-3 mt-3">
+                              <p className="text-sm text-gray-500 mb-2">או הזן כתובת מייל ידנית:</p>
+                              <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                                <div>
+                                  <label className="block text-sm font-medium text-gray-700 mb-1">
+                                    כתובת מייל
+                                  </label>
+                                  <Input
+                                    type="email"
+                                    value={customEmailTo}
+                                    onChange={(e) => setCustomEmailTo(e.target.value)}
+                                    placeholder="example@email.com"
+                                    dir="ltr"
+                                  />
+                                </div>
+                                <div>
+                                  <label className="block text-sm font-medium text-gray-700 mb-1">
+                                    שם הנמען (אופציונלי)
+                                  </label>
+                                  <Input
+                                    type="text"
+                                    value={customEmailName}
+                                    onChange={(e) => setCustomEmailName(e.target.value)}
+                                    placeholder="ישראל ישראלי"
+                                  />
+                                </div>
+                              </div>
+                            </div>
+                          )}
+
+                          {/* Progress bar for selected users */}
+                          {selectedUsersForEmail.size > 0 && !sendToAllUsers && bulkEmailProgress.total > 0 && (
+                            <div className="mt-3">
+                              <div className="flex justify-between text-xs text-indigo-600 mb-1">
+                                <span>התקדמות: {bulkEmailProgress.sent + bulkEmailProgress.failed} / {bulkEmailProgress.total}</span>
+                                <span>✅ {bulkEmailProgress.sent} | ❌ {bulkEmailProgress.failed}</span>
+                              </div>
+                              <div className="w-full bg-indigo-200 rounded-full h-2">
+                                <div
+                                  className="bg-indigo-600 h-2 rounded-full transition-all duration-300"
+                                  style={{ width: `${((bulkEmailProgress.sent + bulkEmailProgress.failed) / bulkEmailProgress.total) * 100}%` }}
+                                />
+                              </div>
+                            </div>
+                          )}
                         </div>
-                        {!sendToAllUsers && (
-                          <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                            <div>
-                              <label className="block text-sm font-medium text-gray-700 mb-1">
-                                כתובת מייל *
-                              </label>
-                              <Input
-                                type="email"
-                                value={customEmailTo}
-                                onChange={(e) => setCustomEmailTo(e.target.value)}
-                                placeholder="example@email.com"
-                                required={!sendToAllUsers}
-                                dir="ltr"
-                              />
-                            </div>
-                            <div>
-                              <label className="block text-sm font-medium text-gray-700 mb-1">
-                                שם הנמען (אופציונלי)
-                              </label>
-                              <Input
-                                type="text"
-                                value={customEmailName}
-                                onChange={(e) => setCustomEmailName(e.target.value)}
-                                placeholder="ישראל ישראלי"
-                              />
-                            </div>
-                          </div>
-                        )}
 
                         {/* Template Selection */}
                         <div>
@@ -2873,8 +3050,14 @@ export default function SuperAdminPage() {
                             className="bg-gradient-to-r from-purple-500 to-pink-500 hover:from-purple-600 hover:to-pink-600"
                           >
                             {sendingCustomEmail
-                              ? (sendToAllUsers ? `⏳ שולח... (${bulkEmailProgress.sent + bulkEmailProgress.failed}/${bulkEmailProgress.total})` : '⏳ שולח...')
-                              : (sendToAllUsers ? `📤 שלח לכל ${users.length} המשתמשים` : '📤 שלח מייל')}
+                              ? (sendToAllUsers || selectedUsersForEmail.size > 0
+                                  ? `⏳ שולח... (${bulkEmailProgress.sent + bulkEmailProgress.failed}/${bulkEmailProgress.total})`
+                                  : '⏳ שולח...')
+                              : (sendToAllUsers
+                                  ? `📤 שלח לכל ${users.length} המשתמשים`
+                                  : selectedUsersForEmail.size > 0
+                                    ? `📤 שלח ל-${selectedUsersForEmail.size} משתמשים`
+                                    : '📤 שלח מייל')}
                           </Button>
                         </div>
                       </form>

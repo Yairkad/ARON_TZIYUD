@@ -236,22 +236,24 @@ export default function ReportsTab({ cityId, cityName }: ReportsTabProps) {
               </CardTitle>
               <p className="text-indigo-100 mt-2">📅 {activeFilter}</p>
             </div>
-            <div className="flex gap-2 print:hidden">
+            <div className="flex gap-1.5 sm:gap-2 print:hidden">
               <Button
                 variant="secondary"
                 size="sm"
                 onClick={() => exportToExcel(stats, cityName)}
-                className="bg-white/20 hover:bg-white/30 text-white border-0"
+                className="bg-white/20 hover:bg-white/30 text-white border-0 px-2 sm:px-3 text-xs sm:text-sm"
               >
-                📥 Excel
+                <span className="hidden sm:inline">📥 Excel</span>
+                <span className="sm:hidden">📥</span>
               </Button>
               <Button
                 variant="secondary"
                 size="sm"
                 onClick={() => window.print()}
-                className="bg-white/20 hover:bg-white/30 text-white border-0"
+                className="bg-white/20 hover:bg-white/30 text-white border-0 px-2 sm:px-3 text-xs sm:text-sm"
               >
-                🖨️ הדפסה
+                <span className="hidden sm:inline">🖨️ הדפסה</span>
+                <span className="sm:hidden">🖨️</span>
               </Button>
             </div>
           </div>
@@ -319,37 +321,37 @@ export default function ReportsTab({ cityId, cityName }: ReportsTabProps) {
         </CardContent>
       </Card>
 
-      {/* Main Stats Cards */}
-      <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
+      {/* Main Stats Cards - Compact for mobile */}
+      <div className="grid grid-cols-2 md:grid-cols-4 gap-2 sm:gap-4">
         {/* Borrows */}
-        <Card className="border-0 shadow-lg rounded-2xl overflow-hidden bg-gradient-to-br from-green-50 to-emerald-50">
-          <CardContent className="p-6 text-center">
-            <div className="text-4xl font-bold text-green-600 mb-2">{stats.borrows.total}</div>
-            <div className="text-sm text-green-700 font-medium">השאלות</div>
+        <Card className="border-0 shadow-md sm:shadow-lg rounded-xl sm:rounded-2xl overflow-hidden bg-gradient-to-br from-green-50 to-emerald-50">
+          <CardContent className="p-3 sm:p-6 text-center">
+            <div className="text-2xl sm:text-4xl font-bold text-green-600 mb-1">{stats.borrows.total}</div>
+            <div className="text-xs sm:text-sm text-green-700 font-medium">השאלות</div>
           </CardContent>
         </Card>
 
         {/* Returns */}
-        <Card className="border-0 shadow-lg rounded-2xl overflow-hidden bg-gradient-to-br from-blue-50 to-indigo-50">
-          <CardContent className="p-6 text-center">
-            <div className="text-4xl font-bold text-blue-600 mb-2">{stats.borrows.returned}</div>
-            <div className="text-sm text-blue-700 font-medium">החזרות</div>
+        <Card className="border-0 shadow-md sm:shadow-lg rounded-xl sm:rounded-2xl overflow-hidden bg-gradient-to-br from-blue-50 to-indigo-50">
+          <CardContent className="p-3 sm:p-6 text-center">
+            <div className="text-2xl sm:text-4xl font-bold text-blue-600 mb-1">{stats.borrows.returned}</div>
+            <div className="text-xs sm:text-sm text-blue-700 font-medium">החזרות</div>
           </CardContent>
         </Card>
 
         {/* Pending Returns */}
-        <Card className="border-0 shadow-lg rounded-2xl overflow-hidden bg-gradient-to-br from-amber-50 to-orange-50">
-          <CardContent className="p-6 text-center">
-            <div className="text-4xl font-bold text-amber-600 mb-2">{stats.borrows.pending}</div>
-            <div className="text-sm text-amber-700 font-medium">ממתינים להחזרה</div>
+        <Card className="border-0 shadow-md sm:shadow-lg rounded-xl sm:rounded-2xl overflow-hidden bg-gradient-to-br from-amber-50 to-orange-50">
+          <CardContent className="p-3 sm:p-6 text-center">
+            <div className="text-2xl sm:text-4xl font-bold text-amber-600 mb-1">{stats.borrows.pending}</div>
+            <div className="text-xs sm:text-sm text-amber-700 font-medium">ממתינים</div>
           </CardContent>
         </Card>
 
         {/* Return Rate */}
-        <Card className="border-0 shadow-lg rounded-2xl overflow-hidden bg-gradient-to-br from-purple-50 to-pink-50">
-          <CardContent className="p-6 text-center">
-            <div className="text-4xl font-bold text-purple-600 mb-2">{stats.borrows.returnRate}%</div>
-            <div className="text-sm text-purple-700 font-medium">אחוז החזרה</div>
+        <Card className="border-0 shadow-md sm:shadow-lg rounded-xl sm:rounded-2xl overflow-hidden bg-gradient-to-br from-purple-50 to-pink-50">
+          <CardContent className="p-3 sm:p-6 text-center">
+            <div className="text-2xl sm:text-4xl font-bold text-purple-600 mb-1">{stats.borrows.returnRate}%</div>
+            <div className="text-xs sm:text-sm text-purple-700 font-medium">אחוז החזרה</div>
           </CardContent>
         </Card>
       </div>

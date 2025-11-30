@@ -137,6 +137,7 @@ export default function CityAdminPage() {
   const [distanceSaveTimer, setDistanceSaveTimer] = useState<NodeJS.Timeout | null>(null)
   const [distanceSaveStatus, setDistanceSaveStatus] = useState<'idle' | 'saving' | 'saved' | 'error'>('idle')
   const [showAccountSettings, setShowAccountSettings] = useState(false)
+  const [showProfileDropdown, setShowProfileDropdown] = useState(false)
   const [accountForm, setAccountForm] = useState({
     full_name: '',
     phone: '',
@@ -1264,83 +1265,129 @@ export default function CityAdminPage() {
           </div>
         </header>
 
-        {/* Mobile Navigation Buttons - Below Header */}
-        <div className="sm:hidden flex flex-col gap-3 mb-6">
-          <Button
-            onClick={() => {
-              setAccountForm({
-                full_name: currentUser?.full_name || '',
-                phone: currentUser?.phone || '',
-                email: currentUser?.email || '',
-                current_password: '',
-                new_password: '',
-                confirm_password: ''
-              })
-              setShowAccountSettings(true)
-            }}
-            variant="outline"
-            className="w-full h-14 rounded-xl border-2 border-indigo-200 hover:border-indigo-300 hover:bg-indigo-50 text-indigo-600 font-semibold text-lg transition-all"
-          >
-            ⚙️ הגדרות חשבון
-          </Button>
-          <Link href="/manager-guide" className="w-full">
-            <Button
-              variant="outline"
-              className="w-full h-14 rounded-xl border-2 border-purple-200 hover:border-purple-300 hover:bg-purple-50 text-purple-600 font-semibold text-lg transition-all"
+        {/* Mobile Top Action Bar */}
+        <div className="sm:hidden flex justify-between items-center bg-white/90 backdrop-blur-sm rounded-xl p-3 mb-4 shadow-sm border border-gray-100">
+          {/* Right side - Profile */}
+          <div className="relative">
+            <button
+              onClick={() => setShowProfileDropdown(!showProfileDropdown)}
+              className="w-11 h-11 rounded-xl bg-gradient-to-br from-indigo-500 to-purple-600 text-white flex items-center justify-center text-xl shadow-md hover:shadow-lg transition-all hover:scale-105"
             >
-              📚 מדריך מנהל עיר
-            </Button>
-          </Link>
-          {/* Push Notifications - Only in request mode and if enabled by city */}
-          {pushSupported && city?.request_mode === 'request' && city?.enable_push_notifications && (
-            <Button
-              onClick={handleTogglePushNotifications}
-              disabled={enablingPush}
-              variant="outline"
-              className={`w-full h-14 rounded-xl border-2 font-semibold text-lg transition-all ${
-                pushEnabled
-                  ? 'border-green-500 text-green-600 hover:bg-green-50'
-                  : 'border-gray-400 text-gray-600 hover:bg-gray-50'
-              }`}
-            >
-              {enablingPush ? (
-                '⏳ מפעיל...'
-              ) : pushEnabled ? (
-                <>
-                  <Bell className="ml-2 h-5 w-5" />
-                  התראות פעילות ✅
-                </>
-              ) : (
-                <>
-                  <BellOff className="ml-2 h-5 w-5" />
-                  הפעל התראות
-                </>
-              )}
-            </Button>
-          )}
-          <div className="flex gap-3">
-            <Link href={`/city/${cityId}`} className="flex-1">
-              <Button
-                variant="outline"
-                className="w-full h-14 rounded-xl border-2 border-blue-200 hover:border-blue-300 hover:bg-blue-50 text-blue-600 font-semibold text-lg transition-all"
-              >
-                ↩️ חזרה
-              </Button>
+              👤
+            </button>
+
+            {/* Profile Dropdown */}
+            {showProfileDropdown && (
+              <>
+                {/* Backdrop */}
+                <div
+                  className="fixed inset-0 z-40"
+                  onClick={() => setShowProfileDropdown(false)}
+                />
+                {/* Dropdown Menu */}
+                <div className="absolute top-14 right-0 w-72 bg-white rounded-2xl shadow-2xl z-50 overflow-hidden border border-gray-100">
+                  {/* Profile Header */}
+                  <div className="bg-gradient-to-br from-indigo-500 to-purple-600 text-white p-5 text-center">
+                    <div className="w-16 h-16 mx-auto mb-3 rounded-full bg-white/20 flex items-center justify-center text-3xl">
+                      👤
+                    </div>
+                    <div className="font-bold text-lg">{currentUser?.full_name || 'משתמש'}</div>
+                    <div className="text-sm opacity-85 mt-1">{currentUser?.email}</div>
+                    <div className="mt-2 inline-block bg-white/20 px-3 py-1 rounded-full text-xs">
+                      🏙️ {city?.name} • {currentUser?.role === 'manager1' ? 'מנהל ראשי' : 'מנהל משני'}
+                    </div>
+                  </div>
+                  {/* Profile Actions */}
+                  <div className="p-2">
+                    <button
+                      onClick={() => {
+                        setShowProfileDropdown(false)
+                        setAccountForm({
+                          full_name: currentUser?.full_name || '',
+                          phone: currentUser?.phone || '',
+                          email: currentUser?.email || '',
+                          current_password: '',
+                          new_password: '',
+                          confirm_password: ''
+                        })
+                        setShowAccountSettings(true)
+                      }}
+                      className="w-full flex items-center gap-3 p-3 rounded-xl hover:bg-gray-50 transition-colors text-right"
+                    >
+                      <span className="text-xl">✏️</span>
+                      <span className="text-gray-700">עריכת פרטים</span>
+                    </button>
+                    <button
+                      onClick={() => {
+                        setShowProfileDropdown(false)
+                        setAccountForm({
+                          full_name: currentUser?.full_name || '',
+                          phone: currentUser?.phone || '',
+                          email: currentUser?.email || '',
+                          current_password: '',
+                          new_password: '',
+                          confirm_password: ''
+                        })
+                        setShowAccountSettings(true)
+                      }}
+                      className="w-full flex items-center gap-3 p-3 rounded-xl hover:bg-gray-50 transition-colors text-right"
+                    >
+                      <span className="text-xl">🔑</span>
+                      <span className="text-gray-700">שינוי סיסמה</span>
+                    </button>
+                    <div className="border-t border-gray-100 my-2" />
+                    <button
+                      onClick={async () => {
+                        setShowProfileDropdown(false)
+                        await logout()
+                        router.push(`/city/${cityId}`)
+                      }}
+                      className="w-full flex items-center gap-3 p-3 rounded-xl hover:bg-red-50 transition-colors text-right text-red-600"
+                    >
+                      <span className="text-xl">🚪</span>
+                      <span>התנתקות</span>
+                    </button>
+                  </div>
+                </div>
+              </>
+            )}
+          </div>
+
+          {/* Left side - Action buttons */}
+          <div className="flex items-center gap-2">
+            <Link href="/manager-guide">
+              <button className="w-11 h-11 rounded-xl bg-gray-100 hover:bg-gray-200 text-gray-600 flex items-center justify-center text-xl transition-all">
+                📖
+              </button>
             </Link>
-            <Button
-              onClick={async () => {
-                await logout()
-                router.push(`/city/${cityId}`)
-              }}
-              className="flex-1 h-14 rounded-xl bg-gradient-to-r from-red-500 to-rose-500 hover:from-red-600 hover:to-rose-600 text-white font-semibold text-lg transition-all"
-            >
-              🚪 יציאה
-            </Button>
+            {pushSupported && city?.request_mode === 'request' && city?.enable_push_notifications && (
+              <button
+                onClick={handleTogglePushNotifications}
+                disabled={enablingPush}
+                className={`w-11 h-11 rounded-xl flex items-center justify-center text-xl transition-all relative ${
+                  pushEnabled
+                    ? 'bg-green-100 hover:bg-green-200 text-green-600'
+                    : 'bg-gray-100 hover:bg-gray-200 text-gray-400'
+                }`}
+                title={pushEnabled ? 'התראות פעילות' : 'הפעל התראות'}
+              >
+                {enablingPush ? '⏳' : pushEnabled ? '🔔' : '🔕'}
+                {pushEnabled && (
+                  <span className="absolute -top-1 -right-1 w-3 h-3 bg-green-500 rounded-full border-2 border-white" />
+                )}
+              </button>
+            )}
+            <Link href={`/city/${cityId}`}>
+              <button className="w-11 h-11 rounded-xl bg-blue-100 hover:bg-blue-200 text-blue-600 flex items-center justify-center text-xl transition-all">
+                ↩️
+              </button>
+            </Link>
           </div>
         </div>
 
 
-        <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-5 gap-3 mb-8">
+        {/* Desktop Tabs - Grid Layout */}
+        <div className="hidden sm:grid grid-cols-2 md:grid-cols-3 lg:grid-cols-5 gap-3 mb-8">
           <Button
             onClick={() => setActiveTab('equipment')}
             className={`py-6 rounded-xl font-semibold text-lg transition-all duration-300 ${
@@ -1359,7 +1406,7 @@ export default function CityAdminPage() {
                 : 'bg-white text-gray-600 border-2 border-gray-200 hover:border-blue-300 hover:bg-blue-50'
             }`}
           >
-            <span className="text-2xl ml-2">📊</span> היסטוריית השאלות
+            <span className="text-2xl ml-2">📋</span> היסטוריית השאלות
             {borrowHistory.filter(item => item.status === 'pending_approval').length > 0 && (
               <span className="absolute -top-2 -right-2 bg-blue-500 text-white text-xs font-bold rounded-full h-6 w-6 flex items-center justify-center animate-pulse shadow-lg">
                 {borrowHistory.filter(item => item.status === 'pending_approval').length}
@@ -1391,7 +1438,7 @@ export default function CityAdminPage() {
                 : 'bg-white text-gray-600 border-2 border-gray-200 hover:border-teal-300 hover:bg-teal-50'
             }`}
           >
-            <span className="text-2xl ml-2">📊</span> דוחות
+            <span className="text-2xl ml-2">📈</span> דוחות
           </Button>
           <Button
             onClick={() => setActiveTab('settings')}
@@ -1403,6 +1450,76 @@ export default function CityAdminPage() {
           >
             <span className="text-2xl ml-2">⚙️</span> הגדרות
           </Button>
+        </div>
+
+        {/* Mobile Tabs - Pills with horizontal scroll */}
+        <div className="sm:hidden flex gap-2 overflow-x-auto pb-2 mb-6 scrollbar-hide" style={{ scrollbarWidth: 'none', msOverflowStyle: 'none' }}>
+          <button
+            onClick={() => setActiveTab('equipment')}
+            className={`flex-shrink-0 px-4 py-2.5 rounded-full font-semibold text-sm transition-all flex items-center gap-1.5 ${
+              activeTab === 'equipment'
+                ? 'bg-gradient-to-r from-blue-600 to-indigo-600 text-white shadow-lg'
+                : 'bg-white text-gray-600 border border-gray-200'
+            }`}
+          >
+            <span>📦</span> ציוד
+          </button>
+          <button
+            onClick={() => setActiveTab('history')}
+            className={`flex-shrink-0 px-4 py-2.5 rounded-full font-semibold text-sm transition-all flex items-center gap-1.5 relative ${
+              activeTab === 'history'
+                ? 'bg-gradient-to-r from-blue-600 to-indigo-600 text-white shadow-lg'
+                : 'bg-white text-gray-600 border border-gray-200'
+            }`}
+          >
+            <span>📋</span> היסטוריה
+            {borrowHistory.filter(item => item.status === 'pending_approval').length > 0 && (
+              <span className={`mr-1 text-xs font-bold px-1.5 py-0.5 rounded-full ${
+                activeTab === 'history' ? 'bg-white text-indigo-600' : 'bg-blue-500 text-white'
+              }`}>
+                {borrowHistory.filter(item => item.status === 'pending_approval').length}
+              </span>
+            )}
+          </button>
+          {city?.request_mode === 'request' && (
+            <button
+              onClick={() => setActiveTab('requests')}
+              className={`flex-shrink-0 px-4 py-2.5 rounded-full font-semibold text-sm transition-all flex items-center gap-1.5 relative ${
+                activeTab === 'requests'
+                  ? 'bg-gradient-to-r from-purple-600 to-pink-600 text-white shadow-lg'
+                  : 'bg-white text-gray-600 border border-gray-200'
+              }`}
+            >
+              <span>📝</span> בקשות
+              {pendingRequestsCount > 0 && (
+                <span className={`mr-1 text-xs font-bold px-1.5 py-0.5 rounded-full ${
+                  activeTab === 'requests' ? 'bg-white text-purple-600' : 'bg-red-500 text-white'
+                }`}>
+                  {pendingRequestsCount}
+                </span>
+              )}
+            </button>
+          )}
+          <button
+            onClick={() => setActiveTab('reports')}
+            className={`flex-shrink-0 px-4 py-2.5 rounded-full font-semibold text-sm transition-all flex items-center gap-1.5 ${
+              activeTab === 'reports'
+                ? 'bg-gradient-to-r from-teal-600 to-cyan-600 text-white shadow-lg'
+                : 'bg-white text-gray-600 border border-gray-200'
+            }`}
+          >
+            <span>📈</span> דוחות
+          </button>
+          <button
+            onClick={() => setActiveTab('settings')}
+            className={`flex-shrink-0 px-4 py-2.5 rounded-full font-semibold text-sm transition-all flex items-center gap-1.5 ${
+              activeTab === 'settings'
+                ? 'bg-gradient-to-r from-blue-600 to-indigo-600 text-white shadow-lg'
+                : 'bg-white text-gray-600 border border-gray-200'
+            }`}
+          >
+            <span>⚙️</span> הגדרות
+          </button>
         </div>
 
         {activeTab === 'equipment' && (
@@ -3357,7 +3474,7 @@ export default function CityAdminPage() {
                       title="לא ניתן לשנות את כתובת המייל"
                     />
                     <p className="text-xs text-gray-500 mt-1">
-                      לא ניתן לשנות את כתובת המייל. ליצירת קשר עם מנהל המערכת.
+                      לא ניתן לשנות את כתובת המייל. יש ליצור קשר עם מנהל המערכת.
                     </p>
                   </div>
                 </div>
