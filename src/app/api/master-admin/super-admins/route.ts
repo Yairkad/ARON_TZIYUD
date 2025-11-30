@@ -37,7 +37,7 @@ export async function GET(request: NextRequest) {
     }
 
     const { data, error } = await supabase
-      .from('managers')
+      .from('users')
       .select('id, email, full_name, phone, is_active, created_at')
       .eq('role', 'super_admin')
       .order('created_at', { ascending: false })
@@ -70,7 +70,7 @@ export async function POST(request: NextRequest) {
 
     // Check if email already exists
     const { data: existing } = await supabase
-      .from('managers')
+      .from('users')
       .select('id')
       .eq('email', email.toLowerCase())
       .single()
@@ -84,7 +84,7 @@ export async function POST(request: NextRequest) {
 
     // Create super admin
     const { data, error } = await supabase
-      .from('managers')
+      .from('users')
       .insert({
         email: email.toLowerCase(),
         password: hashedPassword,
@@ -128,7 +128,7 @@ export async function PUT(request: NextRequest) {
     if (email) {
       // Check if email already exists for different user
       const { data: existing } = await supabase
-        .from('managers')
+        .from('users')
         .select('id')
         .eq('email', email.toLowerCase())
         .neq('id', id)
@@ -162,7 +162,7 @@ export async function PUT(request: NextRequest) {
     }
 
     const { data, error } = await supabase
-      .from('managers')
+      .from('users')
       .update(updateData)
       .eq('id', id)
       .eq('role', 'super_admin')
@@ -201,7 +201,7 @@ export async function DELETE(request: NextRequest) {
 
     // Count remaining super admins
     const { count } = await supabase
-      .from('managers')
+      .from('users')
       .select('id', { count: 'exact', head: true })
       .eq('role', 'super_admin')
 
@@ -210,7 +210,7 @@ export async function DELETE(request: NextRequest) {
     }
 
     const { error } = await supabase
-      .from('managers')
+      .from('users')
       .delete()
       .eq('id', id)
       .eq('role', 'super_admin')
