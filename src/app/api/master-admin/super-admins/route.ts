@@ -51,7 +51,7 @@ export async function GET(request: NextRequest) {
         email: user.email,
         full_name: user.user_metadata?.full_name || '',
         phone: user.phone || user.user_metadata?.phone || null,
-        is_active: !user.banned_until,
+        is_active: !(user as any).banned_until,
         created_at: user.created_at,
       }))
 
@@ -199,7 +199,7 @@ export async function PUT(request: NextRequest) {
         email: data.user.email,
         full_name: data.user.user_metadata?.full_name || '',
         phone: data.user.user_metadata?.phone || null,
-        is_active: !data.user.banned_until,
+        is_active: !(data.user as any).banned_until,
         created_at: data.user.created_at,
       }
     })
