@@ -127,6 +127,7 @@ export default function CityAdminPage() {
   const [pendingRequestsCount, setPendingRequestsCount] = useState(0)
   const [expandedGroups, setExpandedGroups] = useState<Set<string>>(new Set())
   const [isEditingLocation, setIsEditingLocation] = useState(false)
+  const [hasCityFormChanges, setHasCityFormChanges] = useState(false)
   const [showRequestsNotification, setShowRequestsNotification] = useState(false)
   const [pushEnabled, setPushEnabled] = useState(false)
   const [pushSupported, setPushSupported] = useState(false)
@@ -281,6 +282,7 @@ export default function CityAdminPage() {
           token_lat: data.token_lat || null,
           token_lng: data.token_lng || null
         })
+        setHasCityFormChanges(false)
       }
     } catch (error) {
       console.error('Error fetching city:', error)
@@ -984,6 +986,7 @@ export default function CityAdminPage() {
       alert('הפרטים עודכנו בהצלחה!')
       setIsEditingLocation(false)
       setIsCityDetailsExpanded(false) // Collapse the form after successful save
+      setHasCityFormChanges(false) // Reset form changes flag
       fetchCity()
       setLoading(false)
     } catch (error) {
@@ -1184,36 +1187,13 @@ export default function CityAdminPage() {
               </h1>
               <p className="text-gray-600 text-lg">ניהול ציוד והיסטוריית השאלות</p>
             </div>
-            <div className="hidden sm:flex gap-3">
-              <Button
-                onClick={() => {
-                  console.log('📝 Opening account settings with currentUser:', {
-                    full_name: currentUser?.full_name,
-                    phone: currentUser?.phone,
-                    email: currentUser?.email
-                  })
-
-                  setAccountForm({
-                    full_name: currentUser?.full_name || '',
-                    phone: currentUser?.phone || '',
-                    email: currentUser?.email || '',
-                    current_password: '',
-                    new_password: '',
-                    confirm_password: ''
-                  })
-                  setShowAccountSettings(true)
-                }}
-                variant="outline"
-                className="border-2 border-indigo-500 text-indigo-600 hover:bg-indigo-50 font-semibold px-6 py-2 rounded-xl transition-all duration-200 hover:scale-105"
-              >
-                ⚙️ הגדרות חשבון
-              </Button>
+            <div className="hidden sm:flex gap-3 items-center">
               <Link href="/manager-guide">
                 <Button
                   variant="outline"
                   className="border-2 border-purple-500 text-purple-600 hover:bg-purple-50 font-semibold px-6 py-2 rounded-xl transition-all duration-200 hover:scale-105"
                 >
-                  📚 מדריך מנהל
+                  📖 מדריך
                 </Button>
               </Link>
               {pushSupported && city?.request_mode === 'request' && city?.enable_push_notifications && (
@@ -1221,137 +1201,124 @@ export default function CityAdminPage() {
                   onClick={handleTogglePushNotifications}
                   disabled={enablingPush}
                   variant="outline"
-                  className={`border-2 font-semibold px-6 py-2 rounded-xl transition-all duration-200 hover:scale-105 ${
+                  className={`border-2 font-semibold px-4 py-2 rounded-xl transition-all duration-200 hover:scale-105 ${
                     pushEnabled
                       ? 'border-green-500 text-green-600 hover:bg-green-50'
                       : 'border-gray-400 text-gray-600 hover:bg-gray-50'
                   }`}
                   title={pushEnabled ? 'כבה התראות' : 'הפעל התראות'}
                 >
-                  {enablingPush ? (
-                    '⏳'
-                  ) : pushEnabled ? (
-                    <>
-                      <Bell className="ml-2 h-4 w-4" />
-                      התראות פעילות
-                    </>
-                  ) : (
-                    <>
-                      <BellOff className="ml-2 h-4 w-4" />
-                      הפעל התראות
-                    </>
-                  )}
+                  {enablingPush ? '⏳' : pushEnabled ? <Bell className="h-5 w-5" /> : <BellOff className="h-5 w-5" />}
                 </Button>
               )}
               <Link href={`/city/${cityId}`}>
                 <Button
                   variant="outline"
-                  className="border-2 border-blue-600 text-blue-600 hover:bg-blue-50 font-semibold px-6 py-2 rounded-xl transition-all duration-200 hover:scale-105"
+                  className="border-2 border-blue-600 text-blue-600 hover:bg-blue-50 font-semibold px-4 py-2 rounded-xl transition-all duration-200 hover:scale-105"
                 >
-                  <ArrowRight className="ml-2 h-4 w-4" />
-                  חזרה לממשק משתמש
+                  <ArrowRight className="h-5 w-5" />
                 </Button>
               </Link>
-              <Button
-                onClick={async () => {
-                  await logout()
-                  router.push('/')
-                }}
-                className="bg-gradient-to-r from-red-500 to-rose-500 hover:from-red-600 hover:to-rose-600 text-white font-semibold px-6 py-2 rounded-xl transition-all duration-200 hover:scale-105"
-              >
-                🚪 יציאה
-              </Button>
+
+              {/* Desktop Profile Button with Dropdown */}
+              <div className="relative">
+                <button
+                  onClick={() => setShowProfileDropdown(!showProfileDropdown)}
+                  className="w-12 h-12 rounded-xl bg-gradient-to-br from-indigo-500 to-purple-600 text-white flex items-center justify-center text-2xl shadow-md hover:shadow-lg transition-all hover:scale-105"
+                >
+                  👤
+                </button>
+              </div>
             </div>
           </div>
         </header>
 
-        {/* Mobile Top Action Bar */}
-        <div className="sm:hidden flex justify-between items-center bg-white/90 backdrop-blur-sm rounded-xl p-3 mb-4 shadow-sm border border-gray-100">
-          {/* Right side - Profile */}
-          <div className="relative">
-            <button
-              onClick={() => setShowProfileDropdown(!showProfileDropdown)}
-              className="w-11 h-11 rounded-xl bg-gradient-to-br from-indigo-500 to-purple-600 text-white flex items-center justify-center text-xl shadow-md hover:shadow-lg transition-all hover:scale-105"
-            >
-              👤
-            </button>
-
-            {/* Profile Dropdown */}
-            {showProfileDropdown && (
-              <>
-                {/* Backdrop */}
-                <div
-                  className="fixed inset-0 z-[100]"
-                  onClick={() => setShowProfileDropdown(false)}
-                />
-                {/* Dropdown Menu */}
-                <div className="fixed top-20 right-4 left-4 w-auto bg-white rounded-2xl shadow-2xl z-[101] overflow-hidden border border-gray-100">
-                  {/* Profile Header */}
-                  <div className="bg-gradient-to-br from-indigo-500 to-purple-600 text-white p-5 text-center">
-                    <div className="w-16 h-16 mx-auto mb-3 rounded-full bg-white/20 flex items-center justify-center text-3xl">
-                      👤
-                    </div>
-                    <div className="font-bold text-lg">{currentUser?.full_name || 'משתמש'}</div>
-                    <div className="text-sm opacity-85 mt-1">{currentUser?.email}</div>
-                    <div className="mt-2 inline-block bg-white/20 px-3 py-1 rounded-full text-xs">
-                      🏙️ {city?.name} • {currentUser?.role === 'manager1' ? 'מנהל ראשי' : 'מנהל משני'}
-                    </div>
-                  </div>
-                  {/* Profile Actions */}
-                  <div className="p-2">
-                    <button
-                      onClick={() => {
-                        setShowProfileDropdown(false)
-                        setAccountForm({
-                          full_name: currentUser?.full_name || '',
-                          phone: currentUser?.phone || '',
-                          email: currentUser?.email || '',
-                          current_password: '',
-                          new_password: '',
-                          confirm_password: ''
-                        })
-                        setShowAccountSettings(true)
-                      }}
-                      className="w-full flex items-center gap-3 p-3 rounded-xl hover:bg-gray-50 transition-colors text-right"
-                    >
-                      <span className="text-xl">✏️</span>
-                      <span className="text-gray-700">עריכת פרטים</span>
-                    </button>
-                    <button
-                      onClick={() => {
-                        setShowProfileDropdown(false)
-                        setAccountForm({
-                          full_name: currentUser?.full_name || '',
-                          phone: currentUser?.phone || '',
-                          email: currentUser?.email || '',
-                          current_password: '',
-                          new_password: '',
-                          confirm_password: ''
-                        })
-                        setShowAccountSettings(true)
-                      }}
-                      className="w-full flex items-center gap-3 p-3 rounded-xl hover:bg-gray-50 transition-colors text-right"
-                    >
-                      <span className="text-xl">🔑</span>
-                      <span className="text-gray-700">שינוי סיסמה</span>
-                    </button>
-                    <div className="border-t border-gray-100 my-2" />
-                    <button
-                      onClick={async () => {
-                        setShowProfileDropdown(false)
-                        await logout()
-                        router.push(`/city/${cityId}`)
-                      }}
-                      className="w-full flex items-center gap-3 p-3 rounded-xl hover:bg-red-50 transition-colors text-right text-red-600"
-                    >
-                      <span className="text-xl">🚪</span>
-                      <span>התנתקות</span>
-                    </button>
-                  </div>
+        {/* Profile Dropdown - Shared for Mobile and Desktop */}
+        {showProfileDropdown && (
+          <>
+            {/* Backdrop */}
+            <div
+              className="fixed inset-0 z-[9998] bg-black/20"
+              onClick={() => setShowProfileDropdown(false)}
+            />
+            {/* Dropdown Menu - Responsive positioning */}
+            <div className="fixed z-[9999] bg-white rounded-2xl shadow-2xl overflow-hidden border border-gray-100
+              top-16 right-4 left-4 sm:left-auto sm:top-24 sm:right-8 sm:w-80">
+              {/* Profile Header */}
+              <div className="bg-gradient-to-br from-indigo-500 to-purple-600 text-white p-5 text-center">
+                <div className="w-16 h-16 mx-auto mb-3 rounded-full bg-white/20 flex items-center justify-center text-3xl">
+                  👤
                 </div>
-              </>
-            )}
-          </div>
+                <div className="font-bold text-lg">{currentUser?.full_name || 'משתמש'}</div>
+                <div className="text-sm opacity-85 mt-1">{currentUser?.email}</div>
+                <div className="mt-2 inline-block bg-white/20 px-3 py-1 rounded-full text-xs">
+                  🏙️ {city?.name} • {currentUser?.role === 'manager1' ? 'מנהל ראשי' : 'מנהל משני'}
+                </div>
+              </div>
+              {/* Profile Actions */}
+              <div className="p-2">
+                <button
+                  onClick={() => {
+                    setShowProfileDropdown(false)
+                    setAccountForm({
+                      full_name: currentUser?.full_name || '',
+                      phone: currentUser?.phone || '',
+                      email: currentUser?.email || '',
+                      current_password: '',
+                      new_password: '',
+                      confirm_password: ''
+                    })
+                    setShowAccountSettings(true)
+                  }}
+                  className="w-full flex items-center gap-3 p-3 rounded-xl hover:bg-gray-50 transition-colors text-right"
+                >
+                  <span className="text-xl">✏️</span>
+                  <span className="text-gray-700">עריכת פרטים</span>
+                </button>
+                <button
+                  onClick={() => {
+                    setShowProfileDropdown(false)
+                    setAccountForm({
+                      full_name: currentUser?.full_name || '',
+                      phone: currentUser?.phone || '',
+                      email: currentUser?.email || '',
+                      current_password: '',
+                      new_password: '',
+                      confirm_password: ''
+                    })
+                    setShowAccountSettings(true)
+                  }}
+                  className="w-full flex items-center gap-3 p-3 rounded-xl hover:bg-gray-50 transition-colors text-right"
+                >
+                  <span className="text-xl">🔑</span>
+                  <span className="text-gray-700">שינוי סיסמה</span>
+                </button>
+                <div className="border-t border-gray-100 my-2" />
+                <button
+                  onClick={async () => {
+                    setShowProfileDropdown(false)
+                    await logout()
+                    router.push(`/city/${cityId}`)
+                  }}
+                  className="w-full flex items-center gap-3 p-3 rounded-xl hover:bg-red-50 transition-colors text-right text-red-600"
+                >
+                  <span className="text-xl">🚪</span>
+                  <span>התנתקות</span>
+                </button>
+              </div>
+            </div>
+          </>
+        )}
+
+        {/* Mobile Top Action Bar */}
+        <div className="sm:hidden flex justify-between items-center bg-white/90 backdrop-blur-sm rounded-xl p-3 mb-4 shadow-sm border border-gray-100 relative z-[50]">
+          {/* Right side - Profile */}
+          <button
+            onClick={() => setShowProfileDropdown(!showProfileDropdown)}
+            className="w-11 h-11 rounded-xl bg-gradient-to-br from-indigo-500 to-purple-600 text-white flex items-center justify-center text-xl shadow-md hover:shadow-lg transition-all hover:scale-105"
+          >
+            👤
+          </button>
 
           {/* Left side - Action buttons */}
           <div className="flex items-center gap-2">
@@ -2342,61 +2309,63 @@ export default function CityAdminPage() {
                                     ? 'bg-yellow-50 border-yellow-200'
                                     : 'bg-green-50 border-green-200'
                                 }`}>
-                                  {/* Equipment name */}
-                                  <p className="font-semibold text-gray-800 mb-2">{item.equipment_name}</p>
-                                  {/* Action buttons - responsive grid */}
-                                  <div className="flex flex-wrap gap-2">
-                                    {item.status !== 'pending_approval' && (
+                                  {/* Equipment name and action buttons on same row */}
+                                  <div className="flex items-center justify-between gap-2">
+                                    <p className="font-semibold text-gray-800 flex-1">{item.equipment_name}</p>
+                                    <div className="flex gap-1.5 items-center">
+                                      {item.status !== 'pending_approval' && (
+                                        <Button
+                                          size="sm"
+                                          onClick={(e) => {
+                                            e.stopPropagation()
+                                            handleUpdateHistoryStatus(
+                                              item.id,
+                                              item.status === 'borrowed' ? 'returned' : 'borrowed'
+                                            )
+                                          }}
+                                          disabled={loading}
+                                          className={`h-8 px-2 text-xs font-semibold rounded-lg transition-all ${
+                                            item.status === 'borrowed'
+                                              ? 'bg-orange-500 hover:bg-orange-600 text-white'
+                                              : 'bg-green-500 hover:bg-green-600 text-white'
+                                          }`}
+                                          title={item.status === 'borrowed' ? 'סמן כהוחזר' : 'סמן כהושאל'}
+                                        >
+                                          {item.status === 'borrowed' ? '⏳' : '✅'}
+                                        </Button>
+                                      )}
+                                      {item.status === 'pending_approval' && (
+                                        <span className="inline-flex items-center px-2 py-1 bg-yellow-500 text-white text-xs font-semibold rounded-lg">
+                                          ⏳
+                                        </span>
+                                      )}
+                                      {(item.status === 'returned' || item.status === 'pending_approval') && item.return_image_url && (
+                                        <Button
+                                          size="sm"
+                                          onClick={(e) => {
+                                            e.stopPropagation()
+                                            window.open(item.return_image_url!, '_blank')
+                                          }}
+                                          className="h-8 w-8 p-0 text-xs font-semibold rounded-lg bg-blue-500 hover:bg-blue-600 text-white transition-all"
+                                          title="צפה בתמונת החזרה"
+                                        >
+                                          📷
+                                        </Button>
+                                      )}
                                       <Button
                                         size="sm"
+                                        variant="destructive"
                                         onClick={(e) => {
                                           e.stopPropagation()
-                                          handleUpdateHistoryStatus(
-                                            item.id,
-                                            item.status === 'borrowed' ? 'returned' : 'borrowed'
-                                          )
+                                          handleDeleteHistory(item.id)
                                         }}
-                                        disabled={loading}
-                                        className={`h-9 px-3 text-xs font-semibold rounded-lg transition-all flex-shrink-0 ${
-                                          item.status === 'borrowed'
-                                            ? 'bg-orange-500 hover:bg-orange-600 text-white'
-                                            : 'bg-green-500 hover:bg-green-600 text-white'
-                                        }`}
-                                        title={item.status === 'borrowed' ? 'סמן כהוחזר' : 'סמן כהושאל'}
+                                        disabled={loading || !canEdit}
+                                        className="h-8 w-8 p-0 bg-red-500 hover:bg-red-600 disabled:opacity-50 disabled:cursor-not-allowed"
+                                        title="מחק"
                                       >
-                                        {item.status === 'borrowed' ? '⏳ מושאל' : '✅ הוחזר'}
+                                        🗑️
                                       </Button>
-                                    )}
-                                    {item.status === 'pending_approval' && (
-                                      <span className="inline-flex items-center px-3 py-2 bg-yellow-500 text-white text-xs font-semibold rounded-lg">
-                                        ⏳ ממתין לאישור
-                                      </span>
-                                    )}
-                                    {(item.status === 'returned' || item.status === 'pending_approval') && item.return_image_url && (
-                                      <Button
-                                        size="sm"
-                                        onClick={(e) => {
-                                          e.stopPropagation()
-                                          window.open(item.return_image_url!, '_blank')
-                                        }}
-                                        className="h-9 px-3 text-xs font-semibold rounded-lg bg-blue-500 hover:bg-blue-600 text-white transition-all flex-shrink-0"
-                                        title="צפה בתמונת החזרה"
-                                      >
-                                        📷 תמונה
-                                      </Button>
-                                    )}
-                                    <Button
-                                      size="sm"
-                                      variant="destructive"
-                                      onClick={(e) => {
-                                        e.stopPropagation()
-                                        handleDeleteHistory(item.id)
-                                      }}
-                                      disabled={loading || !canEdit}
-                                      className="h-9 px-3 bg-red-500 hover:bg-red-600 disabled:opacity-50 disabled:cursor-not-allowed flex-shrink-0"
-                                    >
-                                      🗑️ מחק
-                                    </Button>
+                                    </div>
                                   </div>
                                 </div>
                               ))}
@@ -3005,7 +2974,7 @@ export default function CityAdminPage() {
                             <Input
                               type="text"
                               value={editCityForm.manager1_name}
-                              onChange={(e) => setEditCityForm({ ...editCityForm, manager1_name: e.target.value })}
+                              onChange={(e) => { setEditCityForm({ ...editCityForm, manager1_name: e.target.value }); setHasCityFormChanges(true) }}
                               placeholder="שם מלא"
                               className="h-12 border-2 border-gray-200 rounded-xl focus:border-indigo-500 transition-colors"
                               required
@@ -3016,7 +2985,7 @@ export default function CityAdminPage() {
                             <Input
                               type="tel"
                               value={editCityForm.manager1_phone}
-                              onChange={(e) => setEditCityForm({ ...editCityForm, manager1_phone: e.target.value })}
+                              onChange={(e) => { setEditCityForm({ ...editCityForm, manager1_phone: e.target.value }); setHasCityFormChanges(true) }}
                               placeholder="0501234567"
                               className="h-12 border-2 border-gray-200 rounded-xl focus:border-indigo-500 transition-colors"
                               required
@@ -3029,7 +2998,7 @@ export default function CityAdminPage() {
                             <Input
                               type="text"
                               value={editCityForm.manager2_name}
-                              onChange={(e) => setEditCityForm({ ...editCityForm, manager2_name: e.target.value })}
+                              onChange={(e) => { setEditCityForm({ ...editCityForm, manager2_name: e.target.value }); setHasCityFormChanges(true) }}
                               placeholder="שם מלא"
                               className="h-12 border-2 border-gray-200 rounded-xl focus:border-indigo-500 transition-colors"
                             />
@@ -3039,7 +3008,7 @@ export default function CityAdminPage() {
                             <Input
                               type="tel"
                               value={editCityForm.manager2_phone}
-                              onChange={(e) => setEditCityForm({ ...editCityForm, manager2_phone: e.target.value })}
+                              onChange={(e) => { setEditCityForm({ ...editCityForm, manager2_phone: e.target.value }); setHasCityFormChanges(true) }}
                               placeholder="0501234567"
                               className="h-12 border-2 border-gray-200 rounded-xl focus:border-indigo-500 transition-colors"
                             />
@@ -3098,6 +3067,7 @@ export default function CityAdminPage() {
                                       lat: null,
                                       lng: null
                                     })
+                                    setHasCityFormChanges(true)
                                     // Extract coordinates asynchronously (handles short URLs automatically)
                                     const coords = await extractCoordinatesFromUrl(newUrl)
                                     if (coords) {
@@ -3155,6 +3125,7 @@ export default function CityAdminPage() {
                                       token_lat: null,
                                       token_lng: null
                                     })
+                                    setHasCityFormChanges(true)
                                     // Extract coordinates asynchronously (handles short URLs automatically)
                                     const coords = await extractCoordinatesFromUrl(newUrl)
                                     if (coords) {
@@ -3191,7 +3162,7 @@ export default function CityAdminPage() {
                                   {isEditingLocation && (
                                     <button
                                       type="button"
-                                      onClick={() => setEditCityForm({ ...editCityForm, location_image: null })}
+                                      onClick={() => { setEditCityForm({ ...editCityForm, location_image: null }); setHasCityFormChanges(true) }}
                                       className="absolute top-2 right-2 bg-red-500 hover:bg-red-600 text-white rounded-full p-2 shadow-lg"
                                     >
                                       🗑️ הסר תמונה
@@ -3254,7 +3225,7 @@ export default function CityAdminPage() {
                                       reader.readAsDataURL(file)
                                     })
 
-                                    setEditCityForm({ ...editCityForm, location_image: compressedBase64 })
+                                    setEditCityForm({ ...editCityForm, location_image: compressedBase64 }); setHasCityFormChanges(true)
                                     setLoading(false)
                                   } catch (error: any) {
                                     setLoading(false)
@@ -3278,7 +3249,7 @@ export default function CityAdminPage() {
                               value={editCityForm.location_description || ''}
                               onChange={(e) => {
                                 if (isEditingLocation) {
-                                  setEditCityForm({ ...editCityForm, location_description: e.target.value })
+                                  setEditCityForm({ ...editCityForm, location_description: e.target.value }); setHasCityFormChanges(true)
                                 }
                               }}
                               placeholder="לדוגמה: הארון נמצא בכניסה הראשית, ליד דלפק הקבלה..."
@@ -3297,8 +3268,12 @@ export default function CityAdminPage() {
 
                       <Button
                         type="submit"
-                        disabled={loading}
-                        className="w-full h-12 bg-gradient-to-r from-indigo-600 to-blue-600 hover:from-indigo-700 hover:to-blue-700 text-white font-bold rounded-xl shadow-md hover:shadow-lg transition-all"
+                        disabled={loading || !hasCityFormChanges}
+                        className={`w-full h-12 font-bold rounded-xl shadow-md transition-all ${
+                          hasCityFormChanges
+                            ? 'bg-gradient-to-r from-indigo-600 to-blue-600 hover:from-indigo-700 hover:to-blue-700 text-white hover:shadow-lg'
+                            : 'bg-gray-200 text-gray-400 cursor-not-allowed'
+                        }`}
                       >
                         {loading ? '⏳ שומר...' : '💾 שמור שינויים'}
                       </Button>
