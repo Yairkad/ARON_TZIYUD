@@ -1281,11 +1281,11 @@ export default function CityAdminPage() {
               <>
                 {/* Backdrop */}
                 <div
-                  className="fixed inset-0 z-40"
+                  className="fixed inset-0 z-[100]"
                   onClick={() => setShowProfileDropdown(false)}
                 />
                 {/* Dropdown Menu */}
-                <div className="absolute top-14 right-0 w-72 bg-white rounded-2xl shadow-2xl z-50 overflow-hidden border border-gray-100">
+                <div className="fixed top-20 right-4 left-4 w-auto bg-white rounded-2xl shadow-2xl z-[101] overflow-hidden border border-gray-100">
                   {/* Profile Header */}
                   <div className="bg-gradient-to-br from-indigo-500 to-purple-600 text-white p-5 text-center">
                     <div className="w-16 h-16 mx-auto mb-3 rounded-full bg-white/20 flex items-center justify-center text-3xl">
@@ -2335,17 +2335,17 @@ export default function CityAdminPage() {
                             <p className="text-xs text-gray-600 font-semibold mb-2">🎯 ציוד שנלקח</p>
                             <div className="space-y-2">
                               {group.items.map(item => (
-                                <div key={item.id} className={`flex justify-between items-center p-3 rounded-lg border-2 ${
+                                <div key={item.id} className={`p-3 rounded-lg border-2 ${
                                   item.status === 'borrowed'
                                     ? 'bg-orange-50 border-orange-200'
                                     : item.status === 'pending_approval'
                                     ? 'bg-yellow-50 border-yellow-200'
                                     : 'bg-green-50 border-green-200'
                                 }`}>
-                                  <div className="flex-1">
-                                    <p className="font-semibold text-gray-800">{item.equipment_name}</p>
-                                  </div>
-                                  <div className="flex gap-2 items-center">
+                                  {/* Equipment name */}
+                                  <p className="font-semibold text-gray-800 mb-2">{item.equipment_name}</p>
+                                  {/* Action buttons - responsive grid */}
+                                  <div className="flex flex-wrap gap-2">
                                     {item.status !== 'pending_approval' && (
                                       <Button
                                         size="sm"
@@ -2357,7 +2357,7 @@ export default function CityAdminPage() {
                                           )
                                         }}
                                         disabled={loading}
-                                        className={`h-8 px-3 text-xs font-semibold rounded-lg transition-all ${
+                                        className={`h-9 px-3 text-xs font-semibold rounded-lg transition-all flex-shrink-0 ${
                                           item.status === 'borrowed'
                                             ? 'bg-orange-500 hover:bg-orange-600 text-white'
                                             : 'bg-green-500 hover:bg-green-600 text-white'
@@ -2368,7 +2368,7 @@ export default function CityAdminPage() {
                                       </Button>
                                     )}
                                     {item.status === 'pending_approval' && (
-                                      <span className="inline-block px-3 py-1 bg-yellow-500 text-white text-xs font-semibold rounded-lg">
+                                      <span className="inline-flex items-center px-3 py-2 bg-yellow-500 text-white text-xs font-semibold rounded-lg">
                                         ⏳ ממתין לאישור
                                       </span>
                                     )}
@@ -2379,7 +2379,7 @@ export default function CityAdminPage() {
                                           e.stopPropagation()
                                           window.open(item.return_image_url!, '_blank')
                                         }}
-                                        className="h-8 px-3 text-xs font-semibold rounded-lg bg-blue-500 hover:bg-blue-600 text-white transition-all"
+                                        className="h-9 px-3 text-xs font-semibold rounded-lg bg-blue-500 hover:bg-blue-600 text-white transition-all flex-shrink-0"
                                         title="צפה בתמונת החזרה"
                                       >
                                         📷 תמונה
@@ -2393,9 +2393,9 @@ export default function CityAdminPage() {
                                         handleDeleteHistory(item.id)
                                       }}
                                       disabled={loading || !canEdit}
-                                      className="h-8 px-2 bg-red-500 hover:bg-red-600 disabled:opacity-50 disabled:cursor-not-allowed"
+                                      className="h-9 px-3 bg-red-500 hover:bg-red-600 disabled:opacity-50 disabled:cursor-not-allowed flex-shrink-0"
                                     >
-                                      🗑️
+                                      🗑️ מחק
                                     </Button>
                                   </div>
                                 </div>
