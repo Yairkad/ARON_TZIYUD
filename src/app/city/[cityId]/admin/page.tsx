@@ -8,7 +8,7 @@ import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
 import { supabase } from '@/lib/supabase'
 import { Equipment, BorrowHistory, City } from '@/types'
-import { ArrowRight, FileDown, Bell, BellOff } from 'lucide-react'
+import { FileDown, Bell, BellOff } from 'lucide-react'
 import Logo from '@/components/Logo'
 import { checkAuth, logout } from '@/lib/auth'
 import RequestsTab from '@/components/RequestsTab'
@@ -140,6 +140,7 @@ export default function CityAdminPage() {
   const [showAccountSettings, setShowAccountSettings] = useState(false)
   const [accountSettingsTab, setAccountSettingsTab] = useState<'details' | 'password'>('details')
   const [showProfileDropdown, setShowProfileDropdown] = useState(false)
+  const [volunteerViewMode, setVolunteerViewMode] = useState(false)
   const [accountForm, setAccountForm] = useState({
     full_name: '',
     phone: '',
@@ -1174,6 +1175,36 @@ export default function CityAdminPage() {
     )
   }
 
+  // Volunteer View Mode - Full screen overlay with iframe
+  if (volunteerViewMode) {
+    return (
+      <div className="fixed inset-0 z-[9999] bg-gray-100">
+        {/* Floating Back to Admin Button */}
+        <div className="fixed top-4 right-4 z-[10000]">
+          <button
+            onClick={() => setVolunteerViewMode(false)}
+            className="flex items-center gap-2 bg-gradient-to-r from-indigo-600 to-purple-600 text-white px-4 py-3 rounded-xl shadow-lg hover:shadow-xl transition-all hover:scale-105 font-semibold"
+          >
+            <span>🛡️</span>
+            <span>חזרה לניהול</span>
+          </button>
+        </div>
+        {/* View Mode Badge */}
+        <div className="fixed top-4 left-4 z-[10000]">
+          <div className="bg-blue-100 text-blue-700 px-4 py-2 rounded-xl font-medium text-sm shadow-md">
+            👁️ מצב תצוגת מתנדב
+          </div>
+        </div>
+        {/* Iframe with volunteer page */}
+        <iframe
+          src={`/city/${cityId}`}
+          className="w-full h-full border-0"
+          title="תצוגת מתנדב"
+        />
+      </div>
+    )
+  }
+
   return (
     <div className="min-h-screen content-wrapper">
       <div className="max-w-6xl mx-auto px-3 sm:px-4 py-4 sm:py-6">
@@ -1212,14 +1243,13 @@ export default function CityAdminPage() {
                   {enablingPush ? '⏳' : pushEnabled ? <Bell className="h-5 w-5" /> : <BellOff className="h-5 w-5" />}
                 </Button>
               )}
-              <Link href={`/city/${cityId}`}>
-                <Button
-                  variant="outline"
-                  className="border-2 border-blue-600 text-blue-600 hover:bg-blue-50 font-semibold px-4 py-2 rounded-xl transition-all duration-200 hover:scale-105"
-                >
-                  <ArrowRight className="h-5 w-5" />
-                </Button>
-              </Link>
+              <Button
+                onClick={() => setVolunteerViewMode(true)}
+                variant="outline"
+                className="border-2 border-blue-600 text-blue-600 hover:bg-blue-50 font-semibold px-4 py-2 rounded-xl transition-all duration-200 hover:scale-105"
+              >
+                👁️ תצוגת מתנדב
+              </Button>
 
               {/* Desktop Profile Button with Dropdown */}
               <div className="relative">
@@ -1239,22 +1269,23 @@ export default function CityAdminPage() {
           <>
             {/* Backdrop */}
             <div
-              className="fixed inset-0 z-[9998] bg-black/20"
+              className="fixed inset-0 z-[9998] bg-black/30"
               onClick={() => setShowProfileDropdown(false)}
             />
-            {/* Dropdown Menu - Responsive positioning */}
-            <div className="fixed z-[9999] bg-white rounded-2xl shadow-2xl overflow-hidden border border-gray-100
-              top-16 right-4 left-4 sm:left-auto sm:top-24 sm:right-8 sm:w-80">
-              {/* Profile Header - Compact without avatar circle */}
-              <div className="bg-gradient-to-br from-indigo-500 to-purple-600 text-white p-4 text-center">
-                <div className="font-bold text-lg">{currentUser?.full_name || 'משתמש'}</div>
-                <div className="text-sm opacity-85 mt-1">{currentUser?.email}</div>
-                <div className="mt-2 inline-block bg-white/20 px-3 py-1 rounded-full text-xs">
+            {/* Dropdown Menu - Mobile: full width near top, Desktop: centered modal */}
+            <div className="fixed z-[9999] bg-white rounded-2xl shadow-2xl overflow-hidden border border-gray-200
+              top-16 right-4 left-4
+              sm:top-1/2 sm:left-1/2 sm:-translate-x-1/2 sm:-translate-y-1/2 sm:w-[420px] sm:max-w-[90vw]">
+              {/* Profile Header - Larger for desktop */}
+              <div className="bg-gradient-to-br from-indigo-500 to-purple-600 text-white p-5 sm:p-8 text-center">
+                <div className="font-bold text-xl sm:text-2xl">{currentUser?.full_name || 'משתמש'}</div>
+                <div className="text-sm sm:text-base opacity-90 mt-2">{currentUser?.email}</div>
+                <div className="mt-3 inline-block bg-white/20 px-4 py-1.5 rounded-full text-sm">
                   🏙️ {city?.name} • {currentUser?.role === 'manager1' ? 'מנהל ראשי' : 'מנהל משני'}
                 </div>
               </div>
-              {/* Profile Actions */}
-              <div className="p-2">
+              {/* Profile Actions - Larger buttons for desktop */}
+              <div className="p-3 sm:p-4">
                 <button
                   onClick={() => {
                     setShowProfileDropdown(false)
@@ -1269,10 +1300,10 @@ export default function CityAdminPage() {
                     setAccountSettingsTab('details')
                     setShowAccountSettings(true)
                   }}
-                  className="w-full flex items-center gap-3 p-3 rounded-xl hover:bg-gray-50 transition-colors text-right"
+                  className="w-full flex items-center gap-4 p-4 rounded-xl hover:bg-gray-50 transition-colors text-right"
                 >
-                  <span className="text-xl">✏️</span>
-                  <span className="text-gray-700">עריכת פרטים</span>
+                  <span className="text-2xl">✏️</span>
+                  <span className="text-gray-700 text-base sm:text-lg font-medium">עריכת פרטים</span>
                 </button>
                 <button
                   onClick={() => {
@@ -1288,22 +1319,22 @@ export default function CityAdminPage() {
                     setAccountSettingsTab('password')
                     setShowAccountSettings(true)
                   }}
-                  className="w-full flex items-center gap-3 p-3 rounded-xl hover:bg-gray-50 transition-colors text-right"
+                  className="w-full flex items-center gap-4 p-4 rounded-xl hover:bg-gray-50 transition-colors text-right"
                 >
-                  <span className="text-xl">🔑</span>
-                  <span className="text-gray-700">שינוי סיסמה</span>
+                  <span className="text-2xl">🔑</span>
+                  <span className="text-gray-700 text-base sm:text-lg font-medium">שינוי סיסמה</span>
                 </button>
-                <div className="border-t border-gray-100 my-2" />
+                <div className="border-t border-gray-200 my-3" />
                 <button
                   onClick={async () => {
                     setShowProfileDropdown(false)
                     await logout()
                     router.push(`/city/${cityId}`)
                   }}
-                  className="w-full flex items-center gap-3 p-3 rounded-xl hover:bg-red-50 transition-colors text-right text-red-600"
+                  className="w-full flex items-center gap-4 p-4 rounded-xl hover:bg-red-50 transition-colors text-right text-red-600"
                 >
-                  <span className="text-xl">🚪</span>
-                  <span>התנתקות</span>
+                  <span className="text-2xl">🚪</span>
+                  <span className="text-base sm:text-lg font-medium">התנתקות</span>
                 </button>
               </div>
             </div>
@@ -1344,11 +1375,13 @@ export default function CityAdminPage() {
                 )}
               </button>
             )}
-            <Link href={`/city/${cityId}`}>
-              <button className="w-11 h-11 rounded-xl bg-blue-100 hover:bg-blue-200 text-blue-600 flex items-center justify-center text-xl transition-all">
-                ↩️
-              </button>
-            </Link>
+            <button
+              onClick={() => setVolunteerViewMode(true)}
+              className="w-11 h-11 rounded-xl bg-blue-100 hover:bg-blue-200 text-blue-600 flex items-center justify-center text-xl transition-all"
+              title="תצוגת מתנדב"
+            >
+              👁️
+            </button>
           </div>
         </div>
 
