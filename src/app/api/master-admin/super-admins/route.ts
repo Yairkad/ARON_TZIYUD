@@ -36,6 +36,13 @@ export async function GET(request: NextRequest) {
       return NextResponse.json({ error: 'לא מורשה' }, { status: 401 })
     }
 
+    // First, let's see all users and their roles for debugging
+    const { data: allUsers, error: allError } = await supabase
+      .from('users')
+      .select('id, email, role')
+
+    console.log('All users:', allUsers?.map(u => ({ email: u.email, role: u.role })))
+
     const { data, error } = await supabase
       .from('users')
       .select('id, email, full_name, phone, is_active, created_at')
@@ -47,7 +54,7 @@ export async function GET(request: NextRequest) {
       return NextResponse.json({ error: 'שגיאה בטעינת הנתונים' }, { status: 500 })
     }
 
-    console.log('Super admins found:', data?.length || 0)
+    console.log('Super admins found:', data?.length || 0, data)
     return NextResponse.json({ success: true, admins: data || [] })
   } catch (error) {
     console.error('GET error:', error)
