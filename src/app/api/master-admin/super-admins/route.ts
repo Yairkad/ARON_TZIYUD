@@ -29,7 +29,10 @@ async function checkMasterAuth(): Promise<boolean> {
 // GET - List all super admins
 export async function GET(request: NextRequest) {
   try {
-    if (!await checkMasterAuth()) {
+    const isAuth = await checkMasterAuth()
+    console.log('Master auth check:', isAuth)
+
+    if (!isAuth) {
       return NextResponse.json({ error: 'לא מורשה' }, { status: 401 })
     }
 
@@ -44,6 +47,7 @@ export async function GET(request: NextRequest) {
       return NextResponse.json({ error: 'שגיאה בטעינת הנתונים' }, { status: 500 })
     }
 
+    console.log('Super admins found:', data?.length || 0)
     return NextResponse.json({ success: true, admins: data || [] })
   } catch (error) {
     console.error('GET error:', error)
