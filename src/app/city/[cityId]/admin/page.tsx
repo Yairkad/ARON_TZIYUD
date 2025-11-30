@@ -138,6 +138,7 @@ export default function CityAdminPage() {
   const [distanceSaveTimer, setDistanceSaveTimer] = useState<NodeJS.Timeout | null>(null)
   const [distanceSaveStatus, setDistanceSaveStatus] = useState<'idle' | 'saving' | 'saved' | 'error'>('idle')
   const [showAccountSettings, setShowAccountSettings] = useState(false)
+  const [accountSettingsTab, setAccountSettingsTab] = useState<'details' | 'password'>('details')
   const [showProfileDropdown, setShowProfileDropdown] = useState(false)
   const [accountForm, setAccountForm] = useState({
     full_name: '',
@@ -1244,11 +1245,8 @@ export default function CityAdminPage() {
             {/* Dropdown Menu - Responsive positioning */}
             <div className="fixed z-[9999] bg-white rounded-2xl shadow-2xl overflow-hidden border border-gray-100
               top-16 right-4 left-4 sm:left-auto sm:top-24 sm:right-8 sm:w-80">
-              {/* Profile Header */}
-              <div className="bg-gradient-to-br from-indigo-500 to-purple-600 text-white p-5 text-center">
-                <div className="w-16 h-16 mx-auto mb-3 rounded-full bg-white/20 flex items-center justify-center text-3xl">
-                  👤
-                </div>
+              {/* Profile Header - Compact without avatar circle */}
+              <div className="bg-gradient-to-br from-indigo-500 to-purple-600 text-white p-4 text-center">
                 <div className="font-bold text-lg">{currentUser?.full_name || 'משתמש'}</div>
                 <div className="text-sm opacity-85 mt-1">{currentUser?.email}</div>
                 <div className="mt-2 inline-block bg-white/20 px-3 py-1 rounded-full text-xs">
@@ -1268,6 +1266,7 @@ export default function CityAdminPage() {
                       new_password: '',
                       confirm_password: ''
                     })
+                    setAccountSettingsTab('details')
                     setShowAccountSettings(true)
                   }}
                   className="w-full flex items-center gap-3 p-3 rounded-xl hover:bg-gray-50 transition-colors text-right"
@@ -1286,6 +1285,7 @@ export default function CityAdminPage() {
                       new_password: '',
                       confirm_password: ''
                     })
+                    setAccountSettingsTab('password')
                     setShowAccountSettings(true)
                   }}
                   className="w-full flex items-center gap-3 p-3 rounded-xl hover:bg-gray-50 transition-colors text-right"
@@ -3338,28 +3338,65 @@ export default function CityAdminPage() {
         {/* Account Settings Modal */}
         {showAccountSettings && (
           <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50 p-4">
-            <div className="bg-white rounded-2xl shadow-2xl max-w-2xl w-full max-h-[90vh] overflow-y-auto">
-              <div className="bg-gradient-to-r from-indigo-50 to-purple-50 p-6 border-b">
-                <h2 className="text-2xl font-bold text-gray-800">⚙️ הגדרות חשבון</h2>
-                <p className="text-gray-600 mt-1">עדכון פרטים אישיים ושינוי סיסמה</p>
+            <div className="bg-white rounded-2xl shadow-2xl max-w-md w-full max-h-[90vh] overflow-y-auto">
+              {/* Header with Tabs */}
+              <div className="bg-gradient-to-r from-indigo-50 to-purple-50 p-4 border-b">
+                <div className="flex items-center justify-between mb-3">
+                  <h2 className="text-xl font-bold text-gray-800">⚙️ הגדרות חשבון</h2>
+                  <button
+                    onClick={() => setShowAccountSettings(false)}
+                    className="text-gray-400 hover:text-gray-600 text-2xl"
+                  >
+                    ✕
+                  </button>
+                </div>
+                {/* Tab Buttons */}
+                <div className="flex gap-2">
+                  <button
+                    type="button"
+                    onClick={() => setAccountSettingsTab('details')}
+                    className={`flex-1 py-2 px-4 rounded-lg font-semibold transition-all ${
+                      accountSettingsTab === 'details'
+                        ? 'bg-indigo-600 text-white'
+                        : 'bg-white text-gray-600 hover:bg-gray-100'
+                    }`}
+                  >
+                    ✏️ פרטים
+                  </button>
+                  <button
+                    type="button"
+                    onClick={() => setAccountSettingsTab('password')}
+                    className={`flex-1 py-2 px-4 rounded-lg font-semibold transition-all ${
+                      accountSettingsTab === 'password'
+                        ? 'bg-indigo-600 text-white'
+                        : 'bg-white text-gray-600 hover:bg-gray-100'
+                    }`}
+                  >
+                    🔑 סיסמה
+                  </button>
+                </div>
               </div>
 
               <form
                 onSubmit={async (e) => {
                   e.preventDefault()
 
-                  // Validate passwords if user wants to change password
-                  if (accountForm.new_password || accountForm.confirm_password) {
+                  // Validate based on active tab
+                  if (accountSettingsTab === 'password') {
+                    if (!accountForm.current_password) {
+                      alert('יש להזין את הסיסמה הנוכחית')
+                      return
+                    }
+                    if (!accountForm.new_password) {
+                      alert('יש להזין סיסמה חדשה')
+                      return
+                    }
                     if (accountForm.new_password !== accountForm.confirm_password) {
                       alert('הסיסמה החדשה ואישור הסיסמה אינם תואמים')
                       return
                     }
                     if (accountForm.new_password.length < 6) {
                       alert('הסיסמה החדשה חייבת להיות באורך 6 תווים לפחות')
-                      return
-                    }
-                    if (!accountForm.current_password) {
-                      alert('יש להזין את הסיסמה הנוכחית כדי לשנות סיסמה')
                       return
                     }
                   }
@@ -3371,154 +3408,135 @@ export default function CityAdminPage() {
                       headers: { 'Content-Type': 'application/json' },
                       credentials: 'include',
                       body: JSON.stringify({
-                        full_name: accountForm.full_name,
-                        phone: accountForm.phone,
-                        current_password: accountForm.current_password || undefined,
-                        new_password: accountForm.new_password || undefined
+                        full_name: accountSettingsTab === 'details' ? accountForm.full_name : undefined,
+                        phone: accountSettingsTab === 'details' ? accountForm.phone : undefined,
+                        current_password: accountSettingsTab === 'password' ? accountForm.current_password : undefined,
+                        new_password: accountSettingsTab === 'password' ? accountForm.new_password : undefined
                       })
                     })
 
                     const data = await response.json()
 
                     if (data.success) {
-                      alert('✅ הפרטים עודכנו בהצלחה!')
+                      alert(accountSettingsTab === 'details' ? '✅ הפרטים עודכנו בהצלחה!' : '✅ הסיסמה שונתה בהצלחה!')
                       setShowAccountSettings(false)
 
                       // Refresh current user data
                       const authResult = await checkAuth()
-                      console.log('🔄 Refreshed user data:', authResult.user)
                       setCurrentUser(authResult.user)
-
-                      // Verify the update
-                      console.log('✅ Updated currentUser:', {
-                        full_name: authResult.user?.full_name,
-                        phone: authResult.user?.phone,
-                        email: authResult.user?.email
-                      })
                     } else {
-                      alert(`❌ ${data.error || 'שגיאה בעדכון הפרטים'}`)
+                      alert(`❌ ${data.error || 'שגיאה בעדכון'}`)
                     }
                   } catch (error) {
                     console.error('Error updating account:', error)
-                    alert('❌ שגיאה בעדכון הפרטים')
+                    alert('❌ שגיאה בעדכון')
                   } finally {
                     setLoading(false)
                   }
                 }}
-                className="p-6 space-y-6"
+                className="p-5 space-y-4"
               >
-                {/* Personal Info Section */}
-                <div className="space-y-4">
-                  <h3 className="text-lg font-bold text-gray-800 border-b pb-2">👤 פרטים אישיים</h3>
+                {/* Details Tab */}
+                {accountSettingsTab === 'details' && (
+                  <div className="space-y-4">
+                    <div>
+                      <label className="block text-sm font-semibold text-gray-700 mb-2">
+                        שם מלא <span className="text-red-500">*</span>
+                      </label>
+                      <Input
+                        type="text"
+                        value={accountForm.full_name}
+                        onChange={(e) => setAccountForm({ ...accountForm, full_name: e.target.value })}
+                        required
+                        className="h-12 text-base border-2"
+                      />
+                    </div>
 
-                  <div>
-                    <label className="block text-sm font-semibold text-gray-700 mb-2">
-                      שם מלא <span className="text-red-500">*</span>
-                    </label>
-                    <Input
-                      type="text"
-                      value={accountForm.full_name}
-                      onChange={(e) => setAccountForm({ ...accountForm, full_name: e.target.value })}
-                      required
-                      className="h-12 text-base border-2"
-                    />
+                    <div>
+                      <label className="block text-sm font-semibold text-gray-700 mb-2">
+                        טלפון <span className="text-red-500">*</span>
+                      </label>
+                      <Input
+                        type="tel"
+                        value={accountForm.phone}
+                        onChange={(e) => setAccountForm({ ...accountForm, phone: e.target.value })}
+                        required
+                        className="h-12 text-base border-2"
+                      />
+                    </div>
+
+                    <div>
+                      <label className="block text-sm font-semibold text-gray-700 mb-2">
+                        אימייל
+                      </label>
+                      <Input
+                        type="email"
+                        value={accountForm.email}
+                        disabled
+                        className="h-12 text-base border-2 bg-gray-100 cursor-not-allowed"
+                      />
+                      <p className="text-xs text-gray-500 mt-1">
+                        לא ניתן לשנות את כתובת המייל
+                      </p>
+                    </div>
                   </div>
+                )}
 
-                  <div>
-                    <label className="block text-sm font-semibold text-gray-700 mb-2">
-                      טלפון <span className="text-red-500">*</span>
-                    </label>
-                    <Input
-                      type="tel"
-                      value={accountForm.phone}
-                      onChange={(e) => setAccountForm({ ...accountForm, phone: e.target.value })}
-                      required
-                      className="h-12 text-base border-2"
-                    />
+                {/* Password Tab */}
+                {accountSettingsTab === 'password' && (
+                  <div className="space-y-4">
+                    <div>
+                      <label className="block text-sm font-semibold text-gray-700 mb-2">
+                        סיסמה נוכחית <span className="text-red-500">*</span>
+                      </label>
+                      <Input
+                        type="password"
+                        value={accountForm.current_password}
+                        onChange={(e) => setAccountForm({ ...accountForm, current_password: e.target.value })}
+                        className="h-12 text-base border-2"
+                        autoComplete="current-password"
+                        required
+                      />
+                    </div>
+
+                    <div>
+                      <label className="block text-sm font-semibold text-gray-700 mb-2">
+                        סיסמה חדשה <span className="text-red-500">*</span>
+                      </label>
+                      <Input
+                        type="password"
+                        value={accountForm.new_password}
+                        onChange={(e) => setAccountForm({ ...accountForm, new_password: e.target.value })}
+                        className="h-12 text-base border-2"
+                        autoComplete="new-password"
+                        required
+                      />
+                    </div>
+
+                    <div>
+                      <label className="block text-sm font-semibold text-gray-700 mb-2">
+                        אישור סיסמה חדשה <span className="text-red-500">*</span>
+                      </label>
+                      <Input
+                        type="password"
+                        value={accountForm.confirm_password}
+                        onChange={(e) => setAccountForm({ ...accountForm, confirm_password: e.target.value })}
+                        className="h-12 text-base border-2"
+                        autoComplete="new-password"
+                        required
+                      />
+                    </div>
                   </div>
+                )}
 
-                  <div>
-                    <label className="block text-sm font-semibold text-gray-700 mb-2">
-                      אימייל
-                    </label>
-                    <Input
-                      type="email"
-                      value={accountForm.email}
-                      disabled
-                      className="h-12 text-base border-2 bg-gray-100 cursor-not-allowed"
-                      title="לא ניתן לשנות את כתובת המייל"
-                    />
-                    <p className="text-xs text-gray-500 mt-1">
-                      לא ניתן לשנות את כתובת המייל. יש ליצור קשר עם מנהל המערכת.
-                    </p>
-                  </div>
-                </div>
-
-                {/* Password Section */}
-                <div className="space-y-4 pt-4 border-t">
-                  <h3 className="text-lg font-bold text-gray-800 border-b pb-2">🔐 שינוי סיסמה (אופציונלי)</h3>
-                  <p className="text-sm text-gray-600">
-                    השאר ריק אם אינך רוצה לשנות את הסיסמה
-                  </p>
-
-                  <div>
-                    <label className="block text-sm font-semibold text-gray-700 mb-2">
-                      סיסמה נוכחית
-                    </label>
-                    <Input
-                      type="password"
-                      value={accountForm.current_password}
-                      onChange={(e) => setAccountForm({ ...accountForm, current_password: e.target.value })}
-                      className="h-12 text-base border-2"
-                      autoComplete="current-password"
-                    />
-                  </div>
-
-                  <div>
-                    <label className="block text-sm font-semibold text-gray-700 mb-2">
-                      סיסמה חדשה
-                    </label>
-                    <Input
-                      type="password"
-                      value={accountForm.new_password}
-                      onChange={(e) => setAccountForm({ ...accountForm, new_password: e.target.value })}
-                      className="h-12 text-base border-2"
-                      autoComplete="new-password"
-                    />
-                  </div>
-
-                  <div>
-                    <label className="block text-sm font-semibold text-gray-700 mb-2">
-                      אישור סיסמה חדשה
-                    </label>
-                    <Input
-                      type="password"
-                      value={accountForm.confirm_password}
-                      onChange={(e) => setAccountForm({ ...accountForm, confirm_password: e.target.value })}
-                      className="h-12 text-base border-2"
-                      autoComplete="new-password"
-                    />
-                  </div>
-                </div>
-
-                {/* Buttons */}
-                <div className="flex gap-3 pt-4">
-                  <Button
-                    type="submit"
-                    disabled={loading}
-                    className="flex-1 h-12 bg-gradient-to-r from-indigo-600 to-purple-600 hover:from-indigo-700 hover:to-purple-700 text-white font-bold rounded-xl"
-                  >
-                    {loading ? '⏳ שומר...' : '💾 שמור שינויים'}
-                  </Button>
-                  <Button
-                    type="button"
-                    onClick={() => setShowAccountSettings(false)}
-                    variant="outline"
-                    className="flex-1 h-12 border-2 border-gray-300"
-                  >
-                    ביטול
-                  </Button>
-                </div>
+                {/* Submit Button */}
+                <Button
+                  type="submit"
+                  disabled={loading}
+                  className="w-full h-12 bg-gradient-to-r from-indigo-600 to-purple-600 hover:from-indigo-700 hover:to-purple-700 text-white font-bold rounded-xl"
+                >
+                  {loading ? '⏳ שומר...' : (accountSettingsTab === 'details' ? '💾 שמור פרטים' : '🔑 שנה סיסמה')}
+                </Button>
               </form>
             </div>
           </div>
