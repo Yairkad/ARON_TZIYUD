@@ -12,9 +12,16 @@ interface SuperAdmin {
   email: string
   full_name: string
   phone?: string
+  permissions: 'view_only' | 'approve_requests' | 'full_access'
   is_active: boolean
   created_at: string
 }
+
+const PERMISSIONS_OPTIONS = [
+  { value: 'full_access', label: '🔓 גישה מלאה', description: 'יכול לעשות הכל' },
+  { value: 'approve_requests', label: '✅ אישור בקשות', description: 'יכול לאשר בקשות ולצפות' },
+  { value: 'view_only', label: '👁️ צפייה בלבד', description: 'יכול רק לצפות' },
+]
 
 export default function MasterAdminPage() {
   const router = useRouter()
@@ -35,6 +42,7 @@ export default function MasterAdminPage() {
     password: '',
     full_name: '',
     phone: '',
+    permissions: 'full_access' as 'view_only' | 'approve_requests' | 'full_access',
   })
 
   // Check if already authenticated via session
@@ -153,7 +161,7 @@ export default function MasterAdminPage() {
 
       if (response.ok) {
         toast.success('סופר-אדמין נוצר בהצלחה!')
-        setForm({ email: '', password: '', full_name: '', phone: '' })
+        setForm({ email: '', password: '', full_name: '', phone: '', permissions: 'full_access' })
         setShowAddForm(false)
         fetchSuperAdmins()
       } else {
@@ -197,7 +205,7 @@ export default function MasterAdminPage() {
 
       if (response.ok) {
         toast.success('סופר-אדמין עודכן בהצלחה!')
-        setForm({ email: '', password: '', full_name: '', phone: '' })
+        setForm({ email: '', password: '', full_name: '', phone: '', permissions: 'full_access' })
         setEditingAdmin(null)
         fetchSuperAdmins()
       } else {
@@ -276,6 +284,7 @@ export default function MasterAdminPage() {
       password: '',
       full_name: admin.full_name,
       phone: admin.phone || '',
+      permissions: admin.permissions || 'full_access',
     })
     setShowAddForm(false)
   }
@@ -283,7 +292,7 @@ export default function MasterAdminPage() {
   const cancelEdit = () => {
     setEditingAdmin(null)
     setShowAddForm(false)
-    setForm({ email: '', password: '', full_name: '', phone: '' })
+    setForm({ email: '', password: '', full_name: '', phone: '', permissions: 'full_access' })
   }
 
   // Loading state
@@ -428,6 +437,30 @@ export default function MasterAdminPage() {
                   </div>
                 </div>
 
+                {/* Permissions */}
+                <div>
+                  <label className="block text-sm font-semibold text-gray-300 mb-2">
+                    🛡️ רמת הרשאה
+                  </label>
+                  <div className="grid grid-cols-1 md:grid-cols-3 gap-3">
+                    {PERMISSIONS_OPTIONS.map((option) => (
+                      <button
+                        key={option.value}
+                        type="button"
+                        onClick={() => setForm({ ...form, permissions: option.value as any })}
+                        className={`p-3 rounded-lg border-2 text-right transition-all ${
+                          form.permissions === option.value
+                            ? 'border-purple-500 bg-purple-500/20 text-white'
+                            : 'border-slate-600 bg-slate-700/50 text-gray-400 hover:border-slate-500'
+                        }`}
+                      >
+                        <div className="font-semibold">{option.label}</div>
+                        <div className="text-xs mt-1 opacity-75">{option.description}</div>
+                      </button>
+                    ))}
+                  </div>
+                </div>
+
                 <div className="flex gap-3 pt-2">
                   <Button
                     type="submit"
@@ -497,6 +530,15 @@ export default function MasterAdminPage() {
                           {admin.phone && (
                             <p className="text-xs text-gray-500">📱 {admin.phone}</p>
                           )}
+                          <span className={`inline-block mt-1 text-xs px-2 py-0.5 rounded ${
+                            admin.permissions === 'full_access' ? 'bg-green-600 text-white' :
+                            admin.permissions === 'approve_requests' ? 'bg-blue-600 text-white' :
+                            'bg-gray-600 text-gray-200'
+                          }`}>
+                            {admin.permissions === 'full_access' ? '🔓 גישה מלאה' :
+                             admin.permissions === 'approve_requests' ? '✅ אישור בקשות' :
+                             '👁️ צפייה בלבד'}
+                          </span>
                         </div>
                         {!admin.is_active && (
                           <span className="bg-red-500 text-white text-xs px-2 py-1 rounded">מושבת</span>

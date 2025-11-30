@@ -51,6 +51,7 @@ export async function GET(request: NextRequest) {
         email: user.email,
         full_name: user.user_metadata?.full_name || '',
         phone: user.phone || user.user_metadata?.phone || null,
+        permissions: user.user_metadata?.permissions || 'full_access',
         is_active: !(user as any).banned_until,
         created_at: user.created_at,
       }))
@@ -70,7 +71,7 @@ export async function POST(request: NextRequest) {
       return NextResponse.json({ error: 'לא מורשה' }, { status: 401 })
     }
 
-    const { email, password, full_name, phone } = await request.json()
+    const { email, password, full_name, phone, permissions } = await request.json()
 
     if (!email || !password || !full_name) {
       return NextResponse.json({ error: 'חסרים שדות חובה' }, { status: 400 })
@@ -79,6 +80,10 @@ export async function POST(request: NextRequest) {
     if (password.length < 6) {
       return NextResponse.json({ error: 'הסיסמה חייבת להכיל לפחות 6 תווים' }, { status: 400 })
     }
+
+    // Validate permissions value
+    const validPermissions = ['view_only', 'approve_requests', 'full_access']
+    const userPermissions = validPermissions.includes(permissions) ? permissions : 'full_access'
 
     const supabase = createServiceClient()
 
@@ -91,7 +96,7 @@ export async function POST(request: NextRequest) {
         full_name,
         phone: phone || null,
         role: 'super_admin',
-        permissions: 'full_access',
+        permissions: userPermissions,
         email_verified: true,
       },
     })
@@ -111,6 +116,7 @@ export async function POST(request: NextRequest) {
         email: data.user.email,
         full_name,
         phone: phone || null,
+        permissions: userPermissions,
         is_active: true,
         created_at: data.user.created_at,
       }
@@ -128,11 +134,14 @@ export async function PUT(request: NextRequest) {
       return NextResponse.json({ error: 'לא מורשה' }, { status: 401 })
     }
 
-    const { id, email, password, full_name, phone, is_active } = await request.json()
+    const { id, email, password, full_name, phone, permissions, is_active } = await request.json()
 
     if (!id) {
       return NextResponse.json({ error: 'מזהה משתמש חסר' }, { status: 400 })
     }
+
+    // Validate permissions value if provided
+    const validPermissions = ['view_only', 'approve_requests', 'full_access']
 
     const supabase = createServiceClient()
 
@@ -171,6 +180,10 @@ export async function PUT(request: NextRequest) {
       updateData.user_metadata.phone = phone || null
     }
 
+    if (permissions && validPermissions.includes(permissions)) {
+      updateData.user_metadata.permissions = permissions
+    }
+
     // Handle blocking/unblocking
     if (is_active !== undefined) {
       if (!is_active) {
@@ -199,6 +212,7 @@ export async function PUT(request: NextRequest) {
         email: data.user.email,
         full_name: data.user.user_metadata?.full_name || '',
         phone: data.user.user_metadata?.phone || null,
+        permissions: data.user.user_metadata?.permissions || 'full_access',
         is_active: !(data.user as any).banned_until,
         created_at: data.user.created_at,
       }
