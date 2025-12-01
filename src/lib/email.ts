@@ -1,14 +1,10 @@
 /**
- * Email Service using Gmail SMTP (nodemailer)
+ * Email Service using SMTP (nodemailer)
  *
  * Required environment variables:
- * - GMAIL_USER: Gmail address to send from
- * - GMAIL_APP_PASSWORD: Gmail app password (not regular password)
- *
- * To get an app password:
- * 1. Enable 2FA on your Google account
- * 2. Go to https://myaccount.google.com/apppasswords
- * 3. Create a new app password for "Mail"
+ * - SMTP_HOST: SMTP server host (e.g., smtp.gmail.com)
+ * - SMTP_USER: Email address to send from
+ * - SMTP_PASSWORD: App password or SMTP password
  */
 
 import nodemailer from 'nodemailer'
@@ -22,11 +18,15 @@ const supabase = createClient(
 
 // Create reusable transporter
 const createTransporter = () => {
+  const host = process.env.SMTP_HOST || 'smtp.gmail.com'
+
   return nodemailer.createTransport({
-    service: 'gmail',
+    host,
+    port: 587,
+    secure: false, // true for 465, false for other ports
     auth: {
-      user: process.env.GMAIL_USER,
-      pass: process.env.GMAIL_APP_PASSWORD,
+      user: process.env.SMTP_USER,
+      pass: process.env.SMTP_PASSWORD,
     },
   })
 }
@@ -70,16 +70,16 @@ async function sendEmail(
   html: string
 ): Promise<EmailResult> {
   try {
-    // Check if Gmail credentials are configured
-    if (!process.env.GMAIL_USER || !process.env.GMAIL_APP_PASSWORD) {
-      console.error('Gmail credentials not configured')
-      return { success: false, error: 'Gmail credentials not configured' }
+    // Check if SMTP credentials are configured
+    if (!process.env.SMTP_USER || !process.env.SMTP_PASSWORD) {
+      console.error('SMTP credentials not configured')
+      return { success: false, error: 'SMTP credentials not configured' }
     }
 
     const transporter = createTransporter()
 
     await transporter.sendMail({
-      from: `"ארון ציוד ידידים" <${process.env.GMAIL_USER}>`,
+      from: `"ארון ציוד ידידים" <${process.env.SMTP_USER}>`,
       to,
       subject,
       html: `
