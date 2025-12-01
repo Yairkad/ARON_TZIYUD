@@ -72,19 +72,37 @@ export default function HomePage() {
 
   return (
     <div className="min-h-screen content-wrapper flex flex-col items-center justify-center p-4 pt-16 sm:pt-4 relative">
-      {/* Admin Login Button - Responsive positioning */}
-      <div className="absolute top-2 left-2 sm:top-4 sm:left-4 z-10">
-        <Button
-          onClick={() => router.push(adminUrl || '/login')}
-          variant="ghost"
-          size="sm"
-          className="h-8 sm:h-9 px-2 sm:px-3 rounded-full hover:bg-blue-50 text-blue-600 text-xs sm:text-sm font-medium transition-all duration-200 hover:scale-105 border border-blue-200 shadow-sm"
-          title={adminUrl ? "עבור לעמוד הניהול" : "כניסת מנהל"}
-        >
-          <span className="hidden sm:inline">{adminUrl ? '⚙️ עמוד ניהול' : '🔐 כניסת מנהל'}</span>
-          <span className="sm:hidden">{adminUrl ? '⚙️' : '🔐'}</span>
-        </Button>
-      </div>
+      {/* Admin Login Button - Only show when not logged in as admin */}
+      {!adminUrl && (
+        <div className="absolute top-2 left-2 sm:top-4 sm:left-4 z-10">
+          <Button
+            onClick={() => router.push('/login')}
+            variant="ghost"
+            size="sm"
+            className="h-8 sm:h-9 px-2 sm:px-3 rounded-full hover:bg-blue-50 text-blue-600 text-xs sm:text-sm font-medium transition-all duration-200 hover:scale-105 border border-blue-200 shadow-sm"
+            title="כניסת מנהל"
+          >
+            <span className="hidden sm:inline">🔐 כניסת מנהל</span>
+            <span className="sm:hidden">🔐</span>
+          </Button>
+        </div>
+      )}
+
+      {/* Floating Admin Bar - Show when logged in as admin */}
+      {adminUrl && (
+        <div className="fixed bottom-0 left-0 right-0 z-50 bg-gradient-to-r from-purple-600 to-pink-600 text-white p-3 shadow-lg flex items-center justify-between">
+          <div className="flex items-center gap-2">
+            <span className="text-lg">👁️</span>
+            <span className="text-sm font-medium">צפייה בממשק מתנדב</span>
+          </div>
+          <Button
+            onClick={() => router.push(adminUrl)}
+            className="bg-white text-purple-600 hover:bg-purple-50 font-bold px-4 py-2 rounded-xl transition-all hover:scale-105"
+          >
+            ⚙️ חזרה לניהול
+          </Button>
+        </div>
+      )}
 
       {/* Main Content */}
       <div className="max-w-2xl w-full text-center space-y-8">

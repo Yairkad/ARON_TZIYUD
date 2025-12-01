@@ -57,13 +57,44 @@ export default function CityPage() {
   // Distance error modal
   const [distanceError, setDistanceError] = useState<{ distance: number; maxDistance: number } | null>(null)
 
+  // Admin status for showing "return to admin" bar
+  const [adminUrl, setAdminUrl] = useState<string | null>(null)
+
   useEffect(() => {
     if (cityId) {
       fetchCity()
       fetchEquipment()
+      checkAdminStatus()
     }
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [cityId])
+
+  const checkAdminStatus = async () => {
+    try {
+      const { data: { user } } = await supabase.auth.getUser()
+      if (!user) {
+        setAdminUrl(null)
+        return
+      }
+
+      const { data: userProfile } = await supabase
+        .from('users')
+        .select('role, city_id')
+        .eq('id', user.id)
+        .single()
+
+      if (userProfile) {
+        if (userProfile.role === 'super_admin') {
+          setAdminUrl('/super-admin')
+        } else if (userProfile.role === 'city_manager' && userProfile.city_id) {
+          setAdminUrl(`/city/${userProfile.city_id}/admin`)
+        }
+      }
+    } catch (error) {
+      console.error('Error checking admin status:', error)
+      setAdminUrl(null)
+    }
+  }
 
   const fetchCity = async () => {
     const { data, error } = await supabase
@@ -1779,6 +1810,21 @@ export default function CityPage() {
               </button>
             </div>
           </div>
+        </div>
+      )}
+
+      {/* Floating Admin Bar - Show when logged in as admin */}
+      {adminUrl && (
+        <div className="fixed bottom-0 left-0 right-0 z-50 bg-gradient-to-r from-purple-600 to-pink-600 text-white p-3 shadow-lg flex items-center justify-between">
+          <div className="flex items-center gap-2">
+            <span className="text-lg">👁️</span>
+            <span className="text-sm font-medium">צפייה בממשק מתנדב</span>
+          </div>
+          <Link href={adminUrl}>
+            <Button className="bg-white text-purple-600 hover:bg-purple-50 font-bold px-4 py-2 rounded-xl transition-all hover:scale-105">
+              ⚙️ חזרה לניהול
+            </Button>
+          </Link>
         </div>
       )}
     </div>
