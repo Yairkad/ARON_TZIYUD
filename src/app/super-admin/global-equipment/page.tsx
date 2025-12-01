@@ -75,6 +75,33 @@ export default function GlobalEquipmentPage() {
   // Category search
   const [categorySearchQuery, setCategorySearchQuery] = useState('')
 
+  // Confirmation Modal State
+  const [confirmModal, setConfirmModal] = useState<{
+    show: boolean
+    title: string
+    message: string
+    icon: string
+    confirmText: string
+    confirmColor: 'red' | 'green' | 'blue' | 'orange'
+    onConfirm: () => void
+    loading?: boolean
+  } | null>(null)
+
+  const showConfirmModal = (config: {
+    title: string
+    message: string
+    icon: string
+    confirmText: string
+    confirmColor: 'red' | 'green' | 'blue' | 'orange'
+    onConfirm: () => void
+  }) => {
+    setConfirmModal({ show: true, ...config, loading: false })
+  }
+
+  const closeConfirmModal = () => {
+    setConfirmModal(null)
+  }
+
   // Check authentication
   useEffect(() => {
     const verifyAuth = async () => {
@@ -195,30 +222,34 @@ export default function GlobalEquipmentPage() {
   }
 
   const handleDeleteEquipment = async (id: string, name: string) => {
-    if (!confirm(`האם אתה בטוח שברצונך למחוק את "${name}"? הפריט יוסר מכל הערים!`)) {
-      return
-    }
+    showConfirmModal({
+      title: 'מחיקת ציוד',
+      message: `האם אתה בטוח שברצונך למחוק את "${name}"? הפריט יוסר מכל הערים!`,
+      icon: '🗑️',
+      confirmText: 'מחק',
+      confirmColor: 'red',
+      onConfirm: async () => {
+        setConfirmModal(prev => prev ? { ...prev, loading: true } : null)
+        try {
+          const response = await fetch(`/api/global-equipment?id=${id}`, {
+            method: 'DELETE'
+          })
 
-    setLoading(true)
+          const data = await response.json()
 
-    try {
-      const response = await fetch(`/api/global-equipment?id=${id}`, {
-        method: 'DELETE'
-      })
+          if (!response.ok) {
+            throw new Error(data.error || 'שגיאה במחיקת ציוד')
+          }
 
-      const data = await response.json()
-
-      if (!response.ok) {
-        throw new Error(data.error || 'שגיאה במחיקת ציוד')
+          toast.success(data.message)
+          fetchEquipment()
+        } catch (error: any) {
+          toast.error(error.message)
+        } finally {
+          closeConfirmModal()
+        }
       }
-
-      toast.success(data.message)
-      fetchEquipment()
-    } catch (error: any) {
-      toast.error(error.message)
-    } finally {
-      setLoading(false)
-    }
+    })
   }
 
   const handleApproveEquipment = async (id: string, name: string) => {
@@ -247,32 +278,36 @@ export default function GlobalEquipmentPage() {
   }
 
   const handleRejectEquipment = async (id: string, name: string) => {
-    if (!confirm(`האם אתה בטוח שברצונך לדחות את "${name}"?`)) {
-      return
-    }
+    showConfirmModal({
+      title: 'דחיית ציוד',
+      message: `האם אתה בטוח שברצונך לדחות את "${name}"?`,
+      icon: '❌',
+      confirmText: 'דחה',
+      confirmColor: 'orange',
+      onConfirm: async () => {
+        setConfirmModal(prev => prev ? { ...prev, loading: true } : null)
+        try {
+          const response = await fetch('/api/global-equipment/approve', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ equipmentId: id, action: 'reject' })
+          })
 
-    setLoading(true)
+          const data = await response.json()
 
-    try {
-      const response = await fetch('/api/global-equipment/approve', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ equipmentId: id, action: 'reject' })
-      })
+          if (!response.ok) {
+            throw new Error(data.error || 'שגיאה בדחיית ציוד')
+          }
 
-      const data = await response.json()
-
-      if (!response.ok) {
-        throw new Error(data.error || 'שגיאה בדחיית ציוד')
+          toast.success(data.message)
+          fetchEquipment()
+        } catch (error: any) {
+          toast.error(error.message)
+        } finally {
+          closeConfirmModal()
+        }
       }
-
-      toast.success(data.message)
-      fetchEquipment()
-    } catch (error: any) {
-      toast.error(error.message)
-    } finally {
-      setLoading(false)
-    }
+    })
   }
 
   const startEdit = (item: GlobalEquipmentPool) => {
@@ -370,38 +405,46 @@ export default function GlobalEquipmentPage() {
       return
     }
 
-    if (!confirm(`האם אתה בטוח שברצונך למזג את "${mergeSource.name}" לתוך הפריט הנבחר? כל הערים שמשתמשות בפריט זה יעודכנו לפריט החדש והפריט הישן יימחק.`)) {
-      return
-    }
+    const sourceName = mergeSource.name
+    const sourceId = mergeSource.id
 
-    setLoading(true)
-    try {
-      const response = await fetch('/api/global-equipment/merge', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({
-          sourceId: mergeSource.id,
-          targetId: mergeTarget
-        })
-      })
+    showConfirmModal({
+      title: 'מיזוג פריטים',
+      message: `האם אתה בטוח שברצונך למזג את "${sourceName}" לתוך הפריט הנבחר? כל הערים שמשתמשות בפריט זה יעודכנו לפריט החדש והפריט הישן יימחק.`,
+      icon: '🔀',
+      confirmText: 'מזג',
+      confirmColor: 'blue',
+      onConfirm: async () => {
+        setConfirmModal(prev => prev ? { ...prev, loading: true } : null)
+        try {
+          const response = await fetch('/api/global-equipment/merge', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({
+              sourceId: sourceId,
+              targetId: mergeTarget
+            })
+          })
 
-      const data = await response.json()
+          const data = await response.json()
 
-      if (!response.ok) {
-        throw new Error(data.error || 'שגיאה במיזוג הפריטים')
+          if (!response.ok) {
+            throw new Error(data.error || 'שגיאה במיזוג הפריטים')
+          }
+
+          toast.success(data.message || 'הפריטים מוזגו בהצלחה')
+          setShowMergeModal(false)
+          setMergeSource(null)
+          setMergeTarget('')
+          fetchEquipment()
+        } catch (error: any) {
+          console.error('Error merging equipment:', error)
+          toast.error('שגיאה במיזוג הפריטים: ' + error.message)
+        } finally {
+          closeConfirmModal()
+        }
       }
-
-      toast.success(data.message || 'הפריטים מוזגו בהצלחה')
-      setShowMergeModal(false)
-      setMergeSource(null)
-      setMergeTarget('')
-      fetchEquipment()
-    } catch (error: any) {
-      console.error('Error merging equipment:', error)
-      toast.error('שגיאה במיזוג הפריטים: ' + error.message)
-    } finally {
-      setLoading(false)
-    }
+    })
   }
 
   const startMerge = (item: GlobalEquipmentPool) => {
@@ -479,30 +522,34 @@ export default function GlobalEquipmentPage() {
   }
 
   const handleDeleteCategory = async (id: string, name: string) => {
-    if (!confirm(`האם אתה בטוח שברצונך למחוק את הקטגוריה "${name}"?`)) {
-      return
-    }
+    showConfirmModal({
+      title: 'מחיקת קטגוריה',
+      message: `האם אתה בטוח שברצונך למחוק את הקטגוריה "${name}"?`,
+      icon: '📁',
+      confirmText: 'מחק',
+      confirmColor: 'red',
+      onConfirm: async () => {
+        setConfirmModal(prev => prev ? { ...prev, loading: true } : null)
+        try {
+          const response = await fetch(`/api/categories?id=${id}`, {
+            method: 'DELETE'
+          })
 
-    setLoading(true)
+          const data = await response.json()
 
-    try {
-      const response = await fetch(`/api/categories?id=${id}`, {
-        method: 'DELETE'
-      })
+          if (!response.ok) {
+            throw new Error(data.error || 'שגיאה במחיקת קטגוריה')
+          }
 
-      const data = await response.json()
-
-      if (!response.ok) {
-        throw new Error(data.error || 'שגיאה במחיקת קטגוריה')
+          toast.success(data.message)
+          fetchCategories()
+        } catch (error: any) {
+          toast.error(error.message)
+        } finally {
+          closeConfirmModal()
+        }
       }
-
-      toast.success(data.message)
-      fetchCategories()
-    } catch (error: any) {
-      toast.error(error.message)
-    } finally {
-      setLoading(false)
-    }
+    })
   }
 
   const startEditCategory = (cat: EquipmentCategory) => {
@@ -1440,6 +1487,52 @@ export default function GlobalEquipmentPage() {
             <div className="p-4 border-t border-gray-200">
               <Button onClick={() => setShowCategoryEquipment(false)} className="w-full">
                 סגור
+              </Button>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* Confirmation Modal */}
+      {confirmModal && confirmModal.show && (
+        <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50 p-4" onClick={closeConfirmModal}>
+          <div
+            className="bg-white rounded-2xl shadow-2xl max-w-md w-full animate-in fade-in zoom-in duration-200"
+            onClick={(e) => e.stopPropagation()}
+          >
+            <div className={`p-6 rounded-t-2xl ${
+              confirmModal.confirmColor === 'red' ? 'bg-gradient-to-r from-red-500 to-rose-500' :
+              confirmModal.confirmColor === 'orange' ? 'bg-gradient-to-r from-amber-500 to-orange-500' :
+              confirmModal.confirmColor === 'green' ? 'bg-gradient-to-r from-green-500 to-emerald-500' :
+              'bg-gradient-to-r from-blue-500 to-cyan-500'
+            }`}>
+              <div className="flex items-center gap-3">
+                <span className="text-4xl">{confirmModal.icon}</span>
+                <h3 className="text-xl font-bold text-white">{confirmModal.title}</h3>
+              </div>
+            </div>
+            <div className="p-6">
+              <p className="text-gray-700 text-lg leading-relaxed">{confirmModal.message}</p>
+            </div>
+            <div className="flex gap-3 p-6 pt-0">
+              <Button
+                onClick={closeConfirmModal}
+                disabled={confirmModal.loading}
+                className="flex-1 bg-gray-100 hover:bg-gray-200 text-gray-700 font-semibold py-3 rounded-xl"
+              >
+                ביטול
+              </Button>
+              <Button
+                onClick={confirmModal.onConfirm}
+                disabled={confirmModal.loading}
+                className={`flex-1 text-white font-semibold py-3 rounded-xl ${
+                  confirmModal.confirmColor === 'red' ? 'bg-gradient-to-r from-red-500 to-rose-500 hover:from-red-600 hover:to-rose-600' :
+                  confirmModal.confirmColor === 'orange' ? 'bg-gradient-to-r from-amber-500 to-orange-500 hover:from-amber-600 hover:to-orange-600' :
+                  confirmModal.confirmColor === 'green' ? 'bg-gradient-to-r from-green-500 to-emerald-500 hover:from-green-600 hover:to-emerald-600' :
+                  'bg-gradient-to-r from-blue-500 to-cyan-500 hover:from-blue-600 hover:to-cyan-600'
+                }`}
+              >
+                {confirmModal.loading ? <span className="animate-spin">⏳</span> : confirmModal.confirmText}
               </Button>
             </div>
           </div>

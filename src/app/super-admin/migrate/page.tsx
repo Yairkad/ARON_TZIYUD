@@ -15,6 +15,33 @@ export default function MigrateManagersPage() {
   const [loading, setLoading] = useState(false)
   const [error, setError] = useState('')
 
+  // Confirmation Modal State
+  const [confirmModal, setConfirmModal] = useState<{
+    show: boolean
+    title: string
+    message: string
+    icon: string
+    confirmText: string
+    confirmColor: 'red' | 'green' | 'blue' | 'orange'
+    onConfirm: () => void
+    loading?: boolean
+  } | null>(null)
+
+  const showConfirmModal = (config: {
+    title: string
+    message: string
+    icon: string
+    confirmText: string
+    confirmColor: 'red' | 'green' | 'blue' | 'orange'
+    onConfirm: () => void
+  }) => {
+    setConfirmModal({ show: true, ...config, loading: false })
+  }
+
+  const closeConfirmModal = () => {
+    setConfirmModal(null)
+  }
+
   useEffect(() => {
     const verifyAuth = async () => {
       const { authenticated, userType } = await checkAuth()
@@ -48,28 +75,33 @@ export default function MigrateManagersPage() {
   }
 
   const runMigration = async () => {
-    if (!confirm('האם אתה בטוח שברצונך ליצור משתמשים עבור כל המנהלים?')) {
-      return
-    }
+    showConfirmModal({
+      title: 'מיגרציית מנהלים',
+      message: 'האם אתה בטוח שברצונך ליצור משתמשים עבור כל המנהלים?',
+      icon: '🔄',
+      confirmText: 'הפעל מיגרציה',
+      confirmColor: 'blue',
+      onConfirm: async () => {
+        setConfirmModal(prev => prev ? { ...prev, loading: true } : null)
+        try {
+          setError('')
+          const response = await fetch('/api/debug/migrate-managers', {
+            method: 'POST'
+          })
+          const data = await response.json()
 
-    try {
-      setLoading(true)
-      setError('')
-      const response = await fetch('/api/debug/migrate-managers', {
-        method: 'POST'
-      })
-      const data = await response.json()
-
-      if (data.success) {
-        setResults(data)
-      } else {
-        setError(data.error)
+          if (data.success) {
+            setResults(data)
+          } else {
+            setError(data.error)
+          }
+        } catch (err: any) {
+          setError(err.message)
+        } finally {
+          closeConfirmModal()
+        }
       }
-    } catch (err: any) {
-      setError(err.message)
-    } finally {
-      setLoading(false)
-    }
+    })
   }
 
   if (isCheckingAuth) {
@@ -221,6 +253,45 @@ export default function MigrateManagersPage() {
           </Card>
         )}
       </div>
+
+      {/* Confirmation Modal */}
+      {confirmModal && confirmModal.show && (
+        <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50 p-4" onClick={closeConfirmModal}>
+          <div className="bg-white rounded-2xl shadow-2xl max-w-md w-full" onClick={(e) => e.stopPropagation()}>
+            <div className={`p-6 rounded-t-2xl ${
+              confirmModal.confirmColor === 'red' ? 'bg-gradient-to-r from-red-500 to-rose-500' :
+              confirmModal.confirmColor === 'orange' ? 'bg-gradient-to-r from-amber-500 to-orange-500' :
+              confirmModal.confirmColor === 'green' ? 'bg-gradient-to-r from-green-500 to-emerald-500' :
+              'bg-gradient-to-r from-blue-500 to-cyan-500'
+            }`}>
+              <div className="flex items-center gap-3">
+                <span className="text-4xl">{confirmModal.icon}</span>
+                <h3 className="text-xl font-bold text-white">{confirmModal.title}</h3>
+              </div>
+            </div>
+            <div className="p-6">
+              <p className="text-gray-700 text-lg">{confirmModal.message}</p>
+            </div>
+            <div className="flex gap-3 p-6 pt-0">
+              <Button onClick={closeConfirmModal} disabled={confirmModal.loading} className="flex-1 bg-gray-100 hover:bg-gray-200 text-gray-700">
+                ביטול
+              </Button>
+              <Button
+                onClick={confirmModal.onConfirm}
+                disabled={confirmModal.loading}
+                className={`flex-1 text-white ${
+                  confirmModal.confirmColor === 'red' ? 'bg-gradient-to-r from-red-500 to-rose-500' :
+                  confirmModal.confirmColor === 'orange' ? 'bg-gradient-to-r from-amber-500 to-orange-500' :
+                  confirmModal.confirmColor === 'green' ? 'bg-gradient-to-r from-green-500 to-emerald-500' :
+                  'bg-gradient-to-r from-blue-500 to-cyan-500'
+                }`}
+              >
+                {confirmModal.loading ? '⏳' : confirmModal.confirmText}
+              </Button>
+            </div>
+          </div>
+        </div>
+      )}
     </div>
   )
 }

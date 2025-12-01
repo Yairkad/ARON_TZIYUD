@@ -29,6 +29,33 @@ export default function RequestsTab({ cityId, cityName, managerName, onRequestsU
   const [noChangeCount, setNoChangeCount] = useState(0)
   const [lastRequestCount, setLastRequestCount] = useState(0)
 
+  // Confirmation Modal State
+  const [confirmModal, setConfirmModal] = useState<{
+    show: boolean
+    title: string
+    message: string
+    icon: string
+    confirmText: string
+    confirmColor: 'red' | 'green' | 'blue' | 'orange'
+    onConfirm: () => void
+    loading?: boolean
+  } | null>(null)
+
+  const showConfirmModal = (config: {
+    title: string
+    message: string
+    icon: string
+    confirmText: string
+    confirmColor: 'red' | 'green' | 'blue' | 'orange'
+    onConfirm: () => void
+  }) => {
+    setConfirmModal({ show: true, ...config, loading: false })
+  }
+
+  const closeConfirmModal = () => {
+    setConfirmModal(null)
+  }
+
   useEffect(() => {
     fetchRequests()
     // Reset polling when city changes
@@ -141,35 +168,42 @@ export default function RequestsTab({ cityId, cityName, managerName, onRequestsU
   }
 
   const handleExtendToken = async (requestId: string, minutesToAdd: number) => {
-    if (!confirm(`האם להאריך את תוקף הטוקן ב-${minutesToAdd} דקות?`)) return
+    showConfirmModal({
+      title: 'הארכת תוקף טוקן',
+      message: `האם להאריך את תוקף הטוקן ב-${minutesToAdd} דקות?`,
+      icon: '⏰',
+      confirmText: 'הארך',
+      confirmColor: 'blue',
+      onConfirm: async () => {
+        setConfirmModal(prev => prev ? { ...prev, loading: true } : null)
+        try {
+          const response = await fetch('/api/requests/extend-token', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({
+              requestId,
+              minutesToAdd,
+              managerName
+            })
+          })
 
-    setLoading(true)
-    try {
-      const response = await fetch('/api/requests/extend-token', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({
-          requestId,
-          minutesToAdd,
-          managerName
-        })
-      })
+          const data = await response.json()
 
-      const data = await response.json()
+          if (!response.ok) {
+            throw new Error(data.error || 'שגיאה בהארכת תוקף')
+          }
 
-      if (!response.ok) {
-        throw new Error(data.error || 'שגיאה בהארכת תוקף')
+          toast.success(data.message)
+          fetchRequests()
+          onRequestsUpdate?.()
+        } catch (error: any) {
+          console.error('Error extending token:', error)
+          toast.error(error.message || 'אירעה שגיאה בהארכת התוקף')
+        } finally {
+          closeConfirmModal()
+        }
       }
-
-      toast.success(data.message)
-      fetchRequests()
-      onRequestsUpdate?.()
-    } catch (error: any) {
-      console.error('Error extending token:', error)
-      toast.error(error.message || 'אירעה שגיאה בהארכת התוקף')
-    } finally {
-      setLoading(false)
-    }
+    })
   }
 
   const getSuccessMessage = (action: string) => {
@@ -700,6 +734,52 @@ ${locationUrl ? `\n📍 מיקום הארון:\n${locationUrl}` : ''}
             </div>
             )
           })}
+        </div>
+      )}
+
+      {/* Confirmation Modal */}
+      {confirmModal && confirmModal.show && (
+        <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50 p-4" onClick={closeConfirmModal}>
+          <div
+            className="bg-white rounded-2xl shadow-2xl max-w-md w-full animate-in fade-in zoom-in duration-200"
+            onClick={(e) => e.stopPropagation()}
+          >
+            <div className={`p-6 rounded-t-2xl ${
+              confirmModal.confirmColor === 'red' ? 'bg-gradient-to-r from-red-500 to-rose-500' :
+              confirmModal.confirmColor === 'orange' ? 'bg-gradient-to-r from-amber-500 to-orange-500' :
+              confirmModal.confirmColor === 'green' ? 'bg-gradient-to-r from-green-500 to-emerald-500' :
+              'bg-gradient-to-r from-blue-500 to-cyan-500'
+            }`}>
+              <div className="flex items-center gap-3">
+                <span className="text-4xl">{confirmModal.icon}</span>
+                <h3 className="text-xl font-bold text-white">{confirmModal.title}</h3>
+              </div>
+            </div>
+            <div className="p-6">
+              <p className="text-gray-700 text-lg leading-relaxed">{confirmModal.message}</p>
+            </div>
+            <div className="flex gap-3 p-6 pt-0">
+              <Button
+                onClick={closeConfirmModal}
+                disabled={confirmModal.loading}
+                className="flex-1 bg-gray-100 hover:bg-gray-200 text-gray-700 font-semibold py-3 rounded-xl"
+              >
+                ביטול
+              </Button>
+              <Button
+                onClick={confirmModal.onConfirm}
+                disabled={confirmModal.loading}
+                className={`flex-1 text-white font-semibold py-3 rounded-xl ${
+                  confirmModal.confirmColor === 'red' ? 'bg-gradient-to-r from-red-500 to-rose-500 hover:from-red-600 hover:to-rose-600' :
+                  confirmModal.confirmColor === 'orange' ? 'bg-gradient-to-r from-amber-500 to-orange-500 hover:from-amber-600 hover:to-orange-600' :
+                  confirmModal.confirmColor === 'green' ? 'bg-gradient-to-r from-green-500 to-emerald-500 hover:from-green-600 hover:to-emerald-600' :
+                  'bg-gradient-to-r from-blue-500 to-cyan-500 hover:from-blue-600 hover:to-cyan-600'
+                }`}
+              >
+                {confirmModal.loading ? <span className="animate-spin">⏳</span> : confirmModal.confirmText}
+              </Button>
+            </div>
+          </div>
         </div>
       )}
     </div>

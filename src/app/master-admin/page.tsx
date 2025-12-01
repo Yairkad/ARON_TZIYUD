@@ -47,6 +47,33 @@ export default function MasterAdminPage() {
     permissions: 'full_access' as 'view_only' | 'approve_requests' | 'full_access',
   })
 
+  // Confirmation Modal State
+  const [confirmModal, setConfirmModal] = useState<{
+    show: boolean
+    title: string
+    message: string
+    icon: string
+    confirmText: string
+    confirmColor: 'red' | 'green' | 'blue' | 'orange'
+    onConfirm: () => void
+    loading?: boolean
+  } | null>(null)
+
+  const showConfirmModal = (config: {
+    title: string
+    message: string
+    icon: string
+    confirmText: string
+    confirmColor: 'red' | 'green' | 'blue' | 'orange'
+    onConfirm: () => void
+  }) => {
+    setConfirmModal({ show: true, ...config, loading: false })
+  }
+
+  const closeConfirmModal = () => {
+    setConfirmModal(null)
+  }
+
   // Check if already authenticated via session
   useEffect(() => {
     checkMasterAuth()
@@ -269,61 +296,79 @@ export default function MasterAdminPage() {
   }
 
   const handleDeleteAdmin = async (admin: SuperAdmin) => {
-    if (!confirm(`האם אתה בטוח שברצונך למחוק את ${admin.full_name}?`)) return
+    showConfirmModal({
+      title: 'מחיקת סופר-אדמין',
+      message: `האם אתה בטוח שברצונך למחוק את ${admin.full_name}?`,
+      icon: '🗑️',
+      confirmText: 'מחק',
+      confirmColor: 'red',
+      onConfirm: async () => {
+        setConfirmModal(prev => prev ? { ...prev, loading: true } : null)
+        try {
+          const response = await fetch(`/api/master-admin/super-admins?id=${admin.id}`, {
+            method: 'DELETE',
+            credentials: 'include',
+          })
 
-    setLoading(true)
-    try {
-      const response = await fetch(`/api/master-admin/super-admins?id=${admin.id}`, {
-        method: 'DELETE',
-        credentials: 'include',
-      })
+          const data = await response.json()
 
-      const data = await response.json()
-
-      if (response.ok) {
-        toast.success('סופר-אדמין נמחק בהצלחה')
-        fetchSuperAdmins()
-      } else {
-        toast.error(data.error || 'שגיאה במחיקת המשתמש')
+          if (response.ok) {
+            toast.success('סופר-אדמין נמחק בהצלחה')
+            fetchSuperAdmins()
+          } else {
+            toast.error(data.error || 'שגיאה במחיקת המשתמש')
+          }
+        } catch (error) {
+          console.error('Delete error:', error)
+          toast.error('שגיאה במחיקת המשתמש')
+        } finally {
+          closeConfirmModal()
+        }
       }
-    } catch (error) {
-      console.error('Delete error:', error)
-      toast.error('שגיאה במחיקת המשתמש')
-    } finally {
-      setLoading(false)
-    }
+    })
   }
 
   const handleToggleActive = async (admin: SuperAdmin) => {
-    const action = admin.is_active ? 'לחסום' : 'להפעיל'
-    if (!confirm(`האם ${action} את ${admin.full_name}?`)) return
+    const isActive = admin.is_active
+    const action = isActive ? 'לחסום' : 'להפעיל'
+    const adminId = admin.id
+    const adminName = admin.full_name
 
-    setLoading(true)
-    try {
-      const response = await fetch('/api/master-admin/super-admins', {
-        method: 'PUT',
-        headers: { 'Content-Type': 'application/json' },
-        credentials: 'include',
-        body: JSON.stringify({
-          id: admin.id,
-          is_active: !admin.is_active,
-        }),
-      })
+    showConfirmModal({
+      title: isActive ? 'חסימת משתמש' : 'הפעלת משתמש',
+      message: `האם ${action} את ${adminName}?`,
+      icon: isActive ? '🚫' : '✅',
+      confirmText: isActive ? 'חסום' : 'הפעל',
+      confirmColor: isActive ? 'orange' : 'green',
+      onConfirm: async () => {
+        setConfirmModal(prev => prev ? { ...prev, loading: true } : null)
+        try {
+          const response = await fetch('/api/master-admin/super-admins', {
+            method: 'PUT',
+            headers: { 'Content-Type': 'application/json' },
+            credentials: 'include',
+            body: JSON.stringify({
+              id: adminId,
+              is_active: !isActive,
+            }),
+          })
 
-      const data = await response.json()
+          const data = await response.json()
 
-      if (response.ok) {
-        toast.success(`המשתמש ${admin.is_active ? 'נחסם' : 'הופעל'} בהצלחה`)
-        fetchSuperAdmins()
-      } else {
-        toast.error(data.error || 'שגיאה בעדכון המשתמש')
+          if (response.ok) {
+            toast.success(`המשתמש ${isActive ? 'נחסם' : 'הופעל'} בהצלחה`)
+            fetchSuperAdmins()
+          } else {
+            toast.error(data.error || 'שגיאה בעדכון המשתמש')
+          }
+        } catch (error) {
+          console.error('Toggle error:', error)
+          toast.error('שגיאה בעדכון המשתמש')
+        } finally {
+          closeConfirmModal()
+        }
       }
-    } catch (error) {
-      console.error('Toggle error:', error)
-      toast.error('שגיאה בעדכון המשתמש')
-    } finally {
-      setLoading(false)
-    }
+    })
   }
 
   const startEdit = (admin: SuperAdmin) => {
@@ -716,6 +761,52 @@ export default function MasterAdminPage() {
           <p>🔒 גישה מאובטחת - Master Admin Panel</p>
         </div>
       </div>
+
+      {/* Confirmation Modal */}
+      {confirmModal && confirmModal.show && (
+        <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50 p-4" onClick={closeConfirmModal}>
+          <div
+            className="bg-white rounded-2xl shadow-2xl max-w-md w-full animate-in fade-in zoom-in duration-200"
+            onClick={(e) => e.stopPropagation()}
+          >
+            <div className={`p-6 rounded-t-2xl ${
+              confirmModal.confirmColor === 'red' ? 'bg-gradient-to-r from-red-500 to-rose-500' :
+              confirmModal.confirmColor === 'orange' ? 'bg-gradient-to-r from-amber-500 to-orange-500' :
+              confirmModal.confirmColor === 'green' ? 'bg-gradient-to-r from-green-500 to-emerald-500' :
+              'bg-gradient-to-r from-blue-500 to-cyan-500'
+            }`}>
+              <div className="flex items-center gap-3">
+                <span className="text-4xl">{confirmModal.icon}</span>
+                <h3 className="text-xl font-bold text-white">{confirmModal.title}</h3>
+              </div>
+            </div>
+            <div className="p-6">
+              <p className="text-gray-700 text-lg leading-relaxed">{confirmModal.message}</p>
+            </div>
+            <div className="flex gap-3 p-6 pt-0">
+              <Button
+                onClick={closeConfirmModal}
+                disabled={confirmModal.loading}
+                className="flex-1 bg-gray-100 hover:bg-gray-200 text-gray-700 font-semibold py-3 rounded-xl"
+              >
+                ביטול
+              </Button>
+              <Button
+                onClick={confirmModal.onConfirm}
+                disabled={confirmModal.loading}
+                className={`flex-1 text-white font-semibold py-3 rounded-xl ${
+                  confirmModal.confirmColor === 'red' ? 'bg-gradient-to-r from-red-500 to-rose-500 hover:from-red-600 hover:to-rose-600' :
+                  confirmModal.confirmColor === 'orange' ? 'bg-gradient-to-r from-amber-500 to-orange-500 hover:from-amber-600 hover:to-orange-600' :
+                  confirmModal.confirmColor === 'green' ? 'bg-gradient-to-r from-green-500 to-emerald-500 hover:from-green-600 hover:to-emerald-600' :
+                  'bg-gradient-to-r from-blue-500 to-cyan-500 hover:from-blue-600 hover:to-cyan-600'
+                }`}
+              >
+                {confirmModal.loading ? <span className="animate-spin">⏳</span> : confirmModal.confirmText}
+              </Button>
+            </div>
+          </div>
+        </div>
+      )}
     </div>
   )
 }

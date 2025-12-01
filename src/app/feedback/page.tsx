@@ -1,6 +1,6 @@
 'use client'
 
-import { useState, useRef, useEffect } from 'react'
+import { useState, useRef, useEffect, Suspense } from 'react'
 import { useRouter, useSearchParams } from 'next/navigation'
 import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
@@ -15,7 +15,8 @@ interface AttachedFile {
   base64: string
 }
 
-export default function FeedbackPage() {
+// Wrapper component to handle Suspense for useSearchParams
+function FeedbackPageContent() {
   const router = useRouter()
   const searchParams = useSearchParams()
   const fileInputRef = useRef<HTMLInputElement>(null)
@@ -434,5 +435,26 @@ export default function FeedbackPage() {
         </div>
       </div>
     </div>
+  )
+}
+
+// Loading fallback for Suspense
+function FeedbackLoading() {
+  return (
+    <div className="min-h-screen bg-gradient-to-b from-blue-50 to-white flex items-center justify-center p-4">
+      <div className="bg-white rounded-2xl shadow-xl p-8 max-w-md w-full text-center">
+        <div className="animate-spin text-4xl mb-4">⏳</div>
+        <p className="text-gray-600">טוען...</p>
+      </div>
+    </div>
+  )
+}
+
+// Main export wrapped in Suspense for useSearchParams
+export default function FeedbackPage() {
+  return (
+    <Suspense fallback={<FeedbackLoading />}>
+      <FeedbackPageContent />
+    </Suspense>
   )
 }

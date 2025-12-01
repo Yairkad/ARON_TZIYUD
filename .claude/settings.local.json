@@ -1,17 +1,18 @@
 {
   "permissions": {
     "allow": [
-      "Bash(git -C \"C:\\Users\\יאיר קדוש\\ARON_TZIYUD\" add src/components/ReportsTab.tsx)",
-      "Bash(git -C \"C:\\Users\\יאיר קדוש\\ARON_TZIYUD\" commit -m \"UI: Remove total quantity from inventory summary\")",
-      "Bash(git -C \"C:\\Users\\יאיר קדוש\\ARON_TZIYUD\" commit -m \"$(cat <<''EOF''\nFix: Date filtering in reports + active filter indicator\n\n1. Fixed date range filtering:\n   - Start date now set to 00:00:00\n   - End date now set to 23:59:59 (end of day)\n   - This ensures all events within the range are included\n\n2. Added active filter indicator:\n   - Shows current filter in blue badge: \"מציג נתונים: X\"\n   - Quick filter buttons highlight when active\n   - Filter card hidden when printing\n\n🤖 Generated with [Claude Code](https://claude.com/claude-code)\n\nCo-Authored-By: Claude <noreply@anthropic.com>\nEOF\n)\")",
-      "Bash(git -C \"C:\\Users\\יאיר קדוש\\ARON_TZIYUD\" diff src/components/ReportsTab.tsx)",
-      "Bash(git -C \"C:\\Users\\יאיר קדוש\\ARON_TZIYUD\" commit -m \"$(cat <<''EOF''\nUI: Better filter button highlighting + show filter name in header\n\n- Active filter button now clearly highlighted with indigo background\n- Filter name shown in header (\"7 ימים אחרונים\", \"החודש הנוכחי\", etc.)\n- Removed duplicate filter indicator\n- Better visual distinction between active and inactive buttons\n\n🤖 Generated with [Claude Code](https://claude.com/claude-code)\n\nCo-Authored-By: Claude <noreply@anthropic.com>\nEOF\n)\")",
-      "Bash(git -C \"C:\\Users\\יאיר קדוש\\ARON_TZIYUD\" log --oneline --all)",
-      "Bash(git -C \"C:\\Users\\יאיר קדוש\\ARON_TZIYUD\" log --oneline -20)",
-      "Bash(git -C \"C:\\Users\\יאיר קדוש\\ARON_TZIYUD\" log origin/main..HEAD --oneline)",
-      "Bash(git -C \"C:\\Users\\יאיר קדוש\\ARON_TZIYUD\" commit -m \"$(cat <<''EOF''\nFeature: Add pending return approval alert in reports\n\n- New alert card showing items waiting for return approval\n- Shows equipment name, borrower name, and days since borrow\n- Blue color scheme to distinguish from other alerts\n- Added to Excel export as well\n\n🤖 Generated with [Claude Code](https://claude.com/claude-code)\n\nCo-Authored-By: Claude <noreply@anthropic.com>\nEOF\n)\")",
-      "Bash(git -C \"C:\\Users\\יאיר קדוש\\ARON_TZIYUD\" add \"src/app/city/[cityId]/admin/page.tsx\")",
-      "Bash(git -C \"C:\\Users\\יאיר קדוש\\ARON_TZIYUD\" commit:*)"
+      "Bash(git -C \"C:\\Users\\יאיר קדוש\\ARON_TZIYUD\" add src/app/city/[cityId]/admin/page.tsx src/app/city/[cityId]/page.tsx)",
+      "Bash(git -C \"C:\\Users\\יאיר קדוש\\ARON_TZIYUD\" commit -m \"$(cat <<''EOF''\nUI: Fix duplicate admin bar in volunteer view mode\n\n- Removed duplicate top buttons in iframe volunteer view\n- Added bottom floating bar in admin page that controls the iframe\n- Hide inner admin bar when viewing inside iframe (hideAdminBar param)\n- Consistent styling between admin and volunteer page bars\n\n🤖 Generated with [Claude Code](https://claude.com/claude-code)\n\nCo-Authored-By: Claude <noreply@anthropic.com>\nEOF\n)\")",
+      "Bash(npx web-push generate-vapid-keys)",
+      "Bash(taskkill:*)",
+      "Bash(timeout /t 2 /nobreak)",
+      "Bash(start \"\" \"c:\\Users\\יאיר קדוש\\ARON_TZIYUD\\feedback-email-preview.html\")",
+      "Bash(start \"\" \"c:\\Users\\יאיר קדוש\\ARON_TZIYUD\\feedback-link-options.html\")",
+      "Bash(npm uninstall:*)",
+      "Bash(git add:*)",
+      "Bash(git commit -m \"$(cat <<''EOF''\nFeature: Add feedback form for bug reports and suggestions\n\n- Add /feedback page with styled form (bug/suggestion/other types)\n- Add /api/feedback endpoint to send emails with attachments\n- Support file uploads (images/videos up to 25MB)\n- Add user source detection (volunteer/city_admin/super_admin)\n- Show source badge in email (colored by user type)\n- Add footer feedback links to homepage, city admin, and super-admin pages\n- Email includes sender details, description, and attached files\n\n🤖 Generated with [Claude Code](https://claude.com/claude-code)\n\nCo-Authored-By: Claude <noreply@anthropic.com>\nEOF\n)\")",
+      "Bash(git push)",
+      "Bash(git commit:*)"
     ],
     "deny": [],
     "ask": []
