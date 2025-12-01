@@ -542,8 +542,11 @@ export default function CityPage() {
 
   const isRequestMode = city.request_mode === 'request'
 
+  // Show admin bar if admin is viewing (not in iframe)
+  const showAdminBar = adminUrl && !hideAdminBar
+
   return (
-    <div className="min-h-screen content-wrapper">
+    <div className={`min-h-screen content-wrapper ${showAdminBar ? 'pb-16' : ''}`}>
       <div className="max-w-5xl mx-auto px-3 sm:px-4 py-4 sm:py-6">
         <Logo />
 
@@ -1821,7 +1824,7 @@ export default function CityPage() {
       )}
 
       {/* Floating Admin Bar - Show when logged in as admin (hidden when inside iframe) */}
-      {adminUrl && !hideAdminBar && (
+      {showAdminBar && (
         <div className="fixed bottom-0 left-0 right-0 z-50 bg-gradient-to-r from-purple-600 to-pink-600 text-white p-3 shadow-lg flex items-center justify-between">
           <div className="flex items-center gap-2">
             <span className="text-lg">👁️</span>
