@@ -133,6 +133,9 @@ function ResetPasswordContent() {
             }, 2000)
             return
           }
+
+          // Wait for session to be stored in cookies
+          await new Promise(resolve => setTimeout(resolve, 500))
         }
 
         setSuccess(true)
