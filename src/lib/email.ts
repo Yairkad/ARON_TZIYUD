@@ -40,29 +40,44 @@ interface EmailResult {
 // App URL for links
 const getAppUrl = () => process.env.NEXT_PUBLIC_APP_URL || 'http://localhost:3000'
 
-// Common email styles (RTL for Hebrew)
-const emailStyles = `
-  <style>
-    body { font-family: Arial, sans-serif; direction: rtl; text-align: right; }
-    .container { max-width: 600px; margin: 0 auto; padding: 20px; }
-    .header { background: #2563eb; color: white; padding: 20px; text-align: center; border-radius: 8px 8px 0 0; }
-    .content { background: #f9fafb; padding: 20px; border: 1px solid #e5e7eb; }
-    .footer { background: #f3f4f6; padding: 15px; text-align: center; font-size: 12px; color: #6b7280; border-radius: 0 0 8px 8px; }
-    .button { display: inline-block; background: #2563eb; color: white; padding: 12px 24px; text-decoration: none; border-radius: 6px; margin: 10px 0; }
-    .button:hover { background: #1d4ed8; }
-    .alert { background: #fef3c7; border: 1px solid #f59e0b; padding: 15px; border-radius: 6px; margin: 10px 0; }
-    .alert-danger { background: #fee2e2; border-color: #ef4444; }
-    .list { list-style: none; padding: 0; }
-    .list li { padding: 8px 0; border-bottom: 1px solid #e5e7eb; }
-    .list li:last-child { border-bottom: none; }
-    table { width: 100%; border-collapse: collapse; margin: 10px 0; }
-    th, td { padding: 10px; border: 1px solid #e5e7eb; text-align: right; }
-    th { background: #f3f4f6; }
-  </style>
-`
+// Inline styles for email compatibility (Gmail strips <style> tags)
+const inlineStyles = {
+  body: 'font-family: Arial, sans-serif; direction: rtl; text-align: right; background-color: #f3f4f6; margin: 0; padding: 20px;',
+  container: 'max-width: 600px; margin: 0 auto; background: white; border-radius: 12px; overflow: hidden; box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);',
+  header: 'background: linear-gradient(135deg, #2563eb 0%, #4f46e5 100%); color: white; padding: 30px 20px; text-align: center;',
+  headerTitle: 'margin: 0; font-size: 24px; font-weight: bold;',
+  content: 'padding: 30px 20px;',
+  contentText: 'color: #374151; font-size: 16px; line-height: 1.6; margin: 0 0 15px 0;',
+  button: 'display: inline-block; background: linear-gradient(135deg, #2563eb 0%, #4f46e5 100%); color: white; padding: 14px 28px; text-decoration: none; border-radius: 8px; font-weight: bold; font-size: 16px;',
+  alert: 'background: #fef3c7; border: 2px solid #f59e0b; padding: 15px; border-radius: 8px; margin: 20px 0; color: #92400e;',
+  alertDanger: 'background: #fee2e2; border: 2px solid #ef4444; padding: 15px; border-radius: 8px; margin: 20px 0; color: #991b1b;',
+  footer: 'background: #f9fafb; padding: 20px; text-align: center; font-size: 13px; color: #6b7280; border-top: 1px solid #e5e7eb;',
+  table: 'width: 100%; border-collapse: collapse; margin: 15px 0;',
+  th: 'padding: 12px; border: 1px solid #e5e7eb; text-align: right; background: #f3f4f6; font-weight: bold; color: #374151;',
+  td: 'padding: 12px; border: 1px solid #e5e7eb; text-align: right; color: #4b5563;',
+  list: 'list-style: none; padding: 0; margin: 15px 0;',
+  listItem: 'padding: 10px 0; border-bottom: 1px solid #e5e7eb; color: #4b5563;',
+}
+
+// Helper to create styled elements
+const styled = {
+  container: (content: string) => `<div style="${inlineStyles.container}">${content}</div>`,
+  header: (title: string, emoji?: string) => `<div style="${inlineStyles.header}"><h1 style="${inlineStyles.headerTitle}">${emoji ? emoji + ' ' : ''}${title}</h1></div>`,
+  content: (html: string) => `<div style="${inlineStyles.content}">${html}</div>`,
+  text: (text: string) => `<p style="${inlineStyles.contentText}">${text}</p>`,
+  button: (text: string, href: string) => `<p style="text-align: center; margin: 25px 0;"><a href="${href}" style="${inlineStyles.button}">${text}</a></p>`,
+  alert: (html: string, danger = false) => `<div style="${danger ? inlineStyles.alertDanger : inlineStyles.alert}">${html}</div>`,
+  footer: (text: string) => `<div style="${inlineStyles.footer}">${text}</div>`,
+  table: (headers: string[], rows: string[][]) => {
+    const headerRow = headers.map(h => `<th style="${inlineStyles.th}">${h}</th>`).join('')
+    const bodyRows = rows.map(row => `<tr>${row.map(cell => `<td style="${inlineStyles.td}">${cell}</td>`).join('')}</tr>`).join('')
+    return `<table style="${inlineStyles.table}"><thead><tr>${headerRow}</tr></thead><tbody>${bodyRows}</tbody></table>`
+  },
+  list: (items: string[]) => `<ul style="${inlineStyles.list}">${items.map(item => `<li style="${inlineStyles.listItem}">${item}</li>`).join('')}</ul>`,
+}
 
 /**
- * Send email using Gmail SMTP
+ * Send email using Gmail SMTP with inline styles
  */
 async function sendEmail(
   to: string,
@@ -88,9 +103,8 @@ async function sendEmail(
         <head>
           <meta charset="UTF-8">
           <meta name="viewport" content="width=device-width, initial-scale=1.0">
-          ${emailStyles}
         </head>
-        <body>
+        <body style="${inlineStyles.body}">
           ${html}
         </body>
         </html>
@@ -150,37 +164,25 @@ export async function sendNewRequestEmail(
   cityName: string,
   items: { name: string; quantity: number }[]
 ): Promise<EmailResult> {
-  const itemsList = items
-    .map(item => `<li>${item.name} (כמות: ${item.quantity})</li>`)
-    .join('')
+  const itemsListHtml = items
+    .map(item => `${item.name} (כמות: ${item.quantity})`)
 
-  const html = `
-    <div class="container">
-      <div class="header">
-        <h1>🔔 בקשה חדשה לציוד</h1>
-      </div>
-      <div class="content">
-        <p>שלום ${managerName},</p>
-        <p>התקבלה בקשה חדשה לציוד בארון ${cityName}:</p>
-
-        <div class="alert">
-          <strong>פרטי המבקש:</strong><br>
-          שם: ${requesterName}<br>
-          טלפון: <a href="tel:${requesterPhone}">${requesterPhone}</a>
-        </div>
-
-        <p><strong>פריטים מבוקשים:</strong></p>
-        <ul class="list">${itemsList}</ul>
-
-        <p>
-          <a href="${getAppUrl()}" class="button">כניסה למערכת</a>
-        </p>
-      </div>
-      <div class="footer">
-        <p>מערכת ארון ציוד ידידים</p>
-      </div>
-    </div>
-  `
+  const html = styled.container(
+    styled.header('בקשה חדשה לציוד', '🔔') +
+    styled.content(
+      styled.text(`שלום ${managerName},`) +
+      styled.text(`התקבלה בקשה חדשה לציוד בארון ${cityName}:`) +
+      styled.alert(
+        `<strong>פרטי המבקש:</strong><br>` +
+        `שם: ${requesterName}<br>` +
+        `טלפון: <a href="tel:${requesterPhone}" style="color: #92400e;">${requesterPhone}</a>`
+      ) +
+      `<p style="${inlineStyles.contentText}"><strong>פריטים מבוקשים:</strong></p>` +
+      styled.list(itemsListHtml) +
+      styled.button('כניסה למערכת', getAppUrl())
+    ) +
+    styled.footer('מערכת ארון ציוד ידידים')
+  )
 
   return sendEmail(
     managerEmail,
@@ -199,31 +201,18 @@ export async function sendPasswordResetEmail(
 ): Promise<EmailResult> {
   const resetLink = `${getAppUrl()}/reset-password?token=${resetToken}`
 
-  const html = `
-    <div class="container">
-      <div class="header">
-        <h1>🔑 איפוס סיסמה</h1>
-      </div>
-      <div class="content">
-        <p>שלום ${recipientName},</p>
-        <p>קיבלנו בקשה לאיפוס הסיסמה שלך במערכת ארון ציוד ידידים.</p>
-        <p>לחץ על הכפתור הבא כדי לאפס את הסיסמה:</p>
-
-        <p style="text-align: center;">
-          <a href="${resetLink}" class="button">איפוס סיסמה</a>
-        </p>
-
-        <div class="alert">
-          <strong>שים לב:</strong> הקישור תקף לשעה אחת בלבד.
-        </div>
-
-        <p>אם לא ביקשת לאפס את הסיסמה, התעלם מהודעה זו.</p>
-      </div>
-      <div class="footer">
-        <p>מערכת ארון ציוד ידידים</p>
-      </div>
-    </div>
-  `
+  const html = styled.container(
+    styled.header('איפוס סיסמה', '🔑') +
+    styled.content(
+      styled.text(`שלום ${recipientName},`) +
+      styled.text('קיבלנו בקשה לאיפוס הסיסמה שלך במערכת ארון ציוד ידידים.') +
+      styled.text('לחץ על הכפתור הבא כדי לאפס את הסיסמה:') +
+      styled.button('איפוס סיסמה', resetLink) +
+      styled.alert('<strong>שים לב:</strong> הקישור תקף לשעה אחת בלבד.') +
+      styled.text('אם לא ביקשת לאפס את הסיסמה, התעלם מהודעה זו.')
+    ) +
+    styled.footer('מערכת ארון ציוד ידידים')
+  )
 
   return sendEmail(
     email,
@@ -243,31 +232,18 @@ export async function sendWelcomeEmail(
 ): Promise<EmailResult> {
   const resetLink = `${getAppUrl()}/reset-password?token=${resetToken}`
 
-  const html = `
-    <div class="container">
-      <div class="header">
-        <h1>🎉 ברוך הבא!</h1>
-      </div>
-      <div class="content">
-        <p>שלום ${recipientName},</p>
-        <p>ברוך הבא למערכת ארון ציוד ידידים - ${cityName}!</p>
-        <p>חשבונך נוצר בהצלחה. לחץ על הכפתור הבא כדי להגדיר את הסיסמה שלך:</p>
-
-        <p style="text-align: center;">
-          <a href="${resetLink}" class="button">הגדרת סיסמה</a>
-        </p>
-
-        <div class="alert">
-          <strong>שים לב:</strong> הקישור תקף לשעה אחת בלבד.
-        </div>
-
-        <p>לאחר הגדרת הסיסמה, תוכל להתחבר למערכת ולנהל את ארון הציוד.</p>
-      </div>
-      <div class="footer">
-        <p>מערכת ארון ציוד ידידים</p>
-      </div>
-    </div>
-  `
+  const html = styled.container(
+    styled.header('ברוך הבא!', '🎉') +
+    styled.content(
+      styled.text(`שלום ${recipientName},`) +
+      styled.text(`ברוך הבא למערכת ארון ציוד ידידים - ${cityName}!`) +
+      styled.text('חשבונך נוצר בהצלחה. לחץ על הכפתור הבא כדי להגדיר את הסיסמה שלך:') +
+      styled.button('הגדרת סיסמה', resetLink) +
+      styled.alert('<strong>שים לב:</strong> הקישור תקף לשעה אחת בלבד.') +
+      styled.text('לאחר הגדרת הסיסמה, תוכל להתחבר למערכת ולנהל את ארון הציוד.')
+    ) +
+    styled.footer('מערכת ארון ציוד ידידים')
+  )
 
   return sendEmail(
     email,
@@ -286,31 +262,18 @@ export async function sendVerificationEmail(
 ): Promise<EmailResult> {
   const verifyLink = `${getAppUrl()}/verify-email?token=${verificationToken}`
 
-  const html = `
-    <div class="container">
-      <div class="header">
-        <h1>✉️ אימות כתובת מייל</h1>
-      </div>
-      <div class="content">
-        <p>שלום ${recipientName},</p>
-        <p>כתובת המייל שלך במערכת ארון ציוד ידידים עודכנה.</p>
-        <p>לחץ על הכפתור הבא כדי לאמת את כתובת המייל החדשה:</p>
-
-        <p style="text-align: center;">
-          <a href="${verifyLink}" class="button">אימות כתובת מייל</a>
-        </p>
-
-        <div class="alert">
-          <strong>שים לב:</strong> הקישור תקף ל-24 שעות בלבד.
-        </div>
-
-        <p>אם לא ביקשת לשנות את כתובת המייל, פנה למנהל המערכת.</p>
-      </div>
-      <div class="footer">
-        <p>מערכת ארון ציוד ידידים</p>
-      </div>
-    </div>
-  `
+  const html = styled.container(
+    styled.header('אימות כתובת מייל', '✉️') +
+    styled.content(
+      styled.text(`שלום ${recipientName},`) +
+      styled.text('כתובת המייל שלך במערכת ארון ציוד ידידים עודכנה.') +
+      styled.text('לחץ על הכפתור הבא כדי לאמת את כתובת המייל החדשה:') +
+      styled.button('אימות כתובת מייל', verifyLink) +
+      styled.alert('<strong>שים לב:</strong> הקישור תקף ל-24 שעות בלבד.') +
+      styled.text('אם לא ביקשת לשנות את כתובת המייל, פנה למנהל המערכת.')
+    ) +
+    styled.footer('מערכת ארון ציוד ידידים')
+  )
 
   return sendEmail(
     email,
@@ -328,20 +291,14 @@ export async function sendCustomEmail(
   message: string,
   recipientName?: string
 ): Promise<EmailResult> {
-  const html = `
-    <div class="container">
-      <div class="header">
-        <h1>📧 הודעה מארון ציוד ידידים</h1>
-      </div>
-      <div class="content">
-        ${recipientName ? `<p>שלום ${recipientName},</p>` : ''}
-        <div style="white-space: pre-wrap;">${message}</div>
-      </div>
-      <div class="footer">
-        <p>מערכת ארון ציוד ידידים</p>
-      </div>
-    </div>
-  `
+  const html = styled.container(
+    styled.header('הודעה מארון ציוד ידידים', '📧') +
+    styled.content(
+      (recipientName ? styled.text(`שלום ${recipientName},`) : '') +
+      `<div style="${inlineStyles.contentText} white-space: pre-wrap;">${message}</div>`
+    ) +
+    styled.footer('מערכת ארון ציוד ידידים')
+  )
 
   return sendEmail(to, subject, html)
 }
@@ -355,51 +312,21 @@ export async function sendLowStockEmail(
   cityName: string,
   items: { name: string; quantity: number; minQuantity: number }[]
 ): Promise<EmailResult> {
-  const itemsList = items
-    .map(item => `
-      <tr>
-        <td>${item.name}</td>
-        <td>${item.quantity}</td>
-        <td>${item.minQuantity}</td>
-      </tr>
-    `)
-    .join('')
+  const tableRows = items.map(item => [item.name, String(item.quantity), String(item.minQuantity)])
 
-  const html = `
-    <div class="container">
-      <div class="header" style="background: #f59e0b;">
-        <h1>📦 התראת מלאי נמוך</h1>
-      </div>
-      <div class="content">
-        <p>שלום ${managerName},</p>
-        <p>הפריטים הבאים בארון ${cityName} הגיעו למלאי נמוך:</p>
-
-        <table>
-          <thead>
-            <tr>
-              <th>פריט</th>
-              <th>כמות נוכחית</th>
-              <th>כמות מינימלית</th>
-            </tr>
-          </thead>
-          <tbody>
-            ${itemsList}
-          </tbody>
-        </table>
-
-        <div class="alert">
-          מומלץ להשלים את המלאי בהקדם האפשרי.
-        </div>
-
-        <p>
-          <a href="${getAppUrl()}" class="button">כניסה למערכת</a>
-        </p>
-      </div>
-      <div class="footer">
-        <p>מערכת ארון ציוד ידידים</p>
-      </div>
-    </div>
-  `
+  const html = styled.container(
+    `<div style="${inlineStyles.header} background: linear-gradient(135deg, #f59e0b 0%, #d97706 100%);">` +
+      `<h1 style="${inlineStyles.headerTitle}">📦 התראת מלאי נמוך</h1>` +
+    '</div>' +
+    styled.content(
+      styled.text(`שלום ${managerName},`) +
+      styled.text(`הפריטים הבאים בארון ${cityName} הגיעו למלאי נמוך:`) +
+      styled.table(['פריט', 'כמות נוכחית', 'כמות מינימלית'], tableRows) +
+      styled.alert('מומלץ להשלים את המלאי בהקדם האפשרי.') +
+      styled.button('כניסה למערכת', getAppUrl())
+    ) +
+    styled.footer('מערכת ארון ציוד ידידים')
+  )
 
   return sendEmail(
     managerEmail,
@@ -418,59 +345,25 @@ export async function sendStockRefillReminder(
   items: { name: string; quantity: number; minQuantity: number }[],
   isFollowUp: boolean
 ): Promise<EmailResult> {
-  const itemsList = items
-    .map(item => `
-      <tr>
-        <td>${item.name}</td>
-        <td>${item.quantity}</td>
-        <td>${item.minQuantity}</td>
-      </tr>
-    `)
-    .join('')
-
+  const tableRows = items.map(item => [item.name, String(item.quantity), String(item.minQuantity)])
   const title = isFollowUp ? '⏰ תזכורת שנייה: מילוי מלאי נדרש' : '📦 תזכורת: מילוי מלאי נדרש'
+  const headerColor = isFollowUp ? '#ef4444 0%, #dc2626 100%' : '#f59e0b 0%, #d97706 100%'
 
-  const html = `
-    <div class="container">
-      <div class="header" style="background: ${isFollowUp ? '#ef4444' : '#f59e0b'};">
-        <h1>${title}</h1>
-      </div>
-      <div class="content">
-        <p>שלום ${managerName},</p>
-        ${isFollowUp
-          ? `<p><strong>זוהי תזכורת נוספת!</strong> הפריטים הבאים עדיין במלאי נמוך:</p>`
-          : `<p>הפריטים הבאים בארון ${cityName} נמצאים במלאי נמוך:</p>`
-        }
-
-        <table>
-          <thead>
-            <tr>
-              <th>פריט</th>
-              <th>כמות נוכחית</th>
-              <th>כמות מינימלית</th>
-            </tr>
-          </thead>
-          <tbody>
-            ${itemsList}
-          </tbody>
-        </table>
-
-        <div class="alert ${isFollowUp ? 'alert-danger' : ''}">
-          ${isFollowUp
-            ? 'יש למלא את המלאי בהקדם האפשרי!'
-            : 'מומלץ להשלים את המלאי בהקדם.'
-          }
-        </div>
-
-        <p>
-          <a href="${getAppUrl()}" class="button">כניסה למערכת</a>
-        </p>
-      </div>
-      <div class="footer">
-        <p>מערכת ארון ציוד ידידים</p>
-      </div>
-    </div>
-  `
+  const html = styled.container(
+    `<div style="${inlineStyles.header} background: linear-gradient(135deg, ${headerColor});">` +
+      `<h1 style="${inlineStyles.headerTitle}">${title}</h1>` +
+    '</div>' +
+    styled.content(
+      styled.text(`שלום ${managerName},`) +
+      (isFollowUp
+        ? styled.text(`<strong>זוהי תזכורת נוספת!</strong> הפריטים הבאים עדיין במלאי נמוך:`)
+        : styled.text(`הפריטים הבאים בארון ${cityName} נמצאים במלאי נמוך:`)) +
+      styled.table(['פריט', 'כמות נוכחית', 'כמות מינימלית'], tableRows) +
+      styled.alert(isFollowUp ? 'יש למלא את המלאי בהקדם האפשרי!' : 'מומלץ להשלים את המלאי בהקדם.', isFollowUp) +
+      styled.button('כניסה למערכת', getAppUrl())
+    ) +
+    styled.footer('מערכת ארון ציוד ידידים')
+  )
 
   return sendEmail(
     managerEmail,
@@ -489,59 +382,25 @@ export async function sendFaultyEquipmentReminder(
   items: { name: string; faultyDays: number; notes?: string }[],
   isFollowUp: boolean
 ): Promise<EmailResult> {
-  const itemsList = items
-    .map(item => `
-      <tr>
-        <td>${item.name}</td>
-        <td>${item.faultyDays} ימים</td>
-        <td>${item.notes || '-'}</td>
-      </tr>
-    `)
-    .join('')
-
+  const tableRows = items.map(item => [item.name, `${item.faultyDays} ימים`, item.notes || '-'])
   const title = isFollowUp ? '⏰ תזכורת שנייה: ציוד תקול דורש תיקון' : '🔧 תזכורת: ציוד תקול דורש תיקון'
+  const headerColor = isFollowUp ? '#ef4444 0%, #dc2626 100%' : '#f59e0b 0%, #d97706 100%'
 
-  const html = `
-    <div class="container">
-      <div class="header" style="background: ${isFollowUp ? '#ef4444' : '#f59e0b'};">
-        <h1>${title}</h1>
-      </div>
-      <div class="content">
-        <p>שלום ${managerName},</p>
-        ${isFollowUp
-          ? `<p><strong>זוהי תזכורת נוספת!</strong> הציוד הבא עדיין מסומן כתקול:</p>`
-          : `<p>הציוד הבא בארון ${cityName} מסומן כתקול כבר מעל 3 שבועות:</p>`
-        }
-
-        <table>
-          <thead>
-            <tr>
-              <th>פריט</th>
-              <th>זמן בתקלה</th>
-              <th>הערות</th>
-            </tr>
-          </thead>
-          <tbody>
-            ${itemsList}
-          </tbody>
-        </table>
-
-        <div class="alert ${isFollowUp ? 'alert-danger' : ''}">
-          ${isFollowUp
-            ? 'יש לטפל בציוד התקול בהקדם האפשרי!'
-            : 'מומלץ לטפל בציוד התקול או להחליפו.'
-          }
-        </div>
-
-        <p>
-          <a href="${getAppUrl()}" class="button">כניסה למערכת</a>
-        </p>
-      </div>
-      <div class="footer">
-        <p>מערכת ארון ציוד ידידים</p>
-      </div>
-    </div>
-  `
+  const html = styled.container(
+    `<div style="${inlineStyles.header} background: linear-gradient(135deg, ${headerColor});">` +
+      `<h1 style="${inlineStyles.headerTitle}">${title}</h1>` +
+    '</div>' +
+    styled.content(
+      styled.text(`שלום ${managerName},`) +
+      (isFollowUp
+        ? styled.text(`<strong>זוהי תזכורת נוספת!</strong> הציוד הבא עדיין מסומן כתקול:`)
+        : styled.text(`הציוד הבא בארון ${cityName} מסומן כתקול כבר מעל 3 שבועות:`)) +
+      styled.table(['פריט', 'זמן בתקלה', 'הערות'], tableRows) +
+      styled.alert(isFollowUp ? 'יש לטפל בציוד התקול בהקדם האפשרי!' : 'מומלץ לטפל בציוד התקול או להחליפו.', isFollowUp) +
+      styled.button('כניסה למערכת', getAppUrl())
+    ) +
+    styled.footer('מערכת ארון ציוד ידידים')
+  )
 
   return sendEmail(
     managerEmail,
@@ -576,79 +435,55 @@ export async function sendMonthlyReportEmail(
   managerName: string,
   data: MonthlyReportData
 ): Promise<EmailResult> {
-  const topBorrowedList = data.topBorrowedItems.length > 0
-    ? data.topBorrowedItems.map(item => `<li>${item.name}: ${item.count} השאלות</li>`).join('')
-    : '<li>אין נתונים</li>'
+  const topBorrowedItems = data.topBorrowedItems.length > 0
+    ? data.topBorrowedItems.map(item => `${item.name}: ${item.count} השאלות`)
+    : ['אין נתונים']
 
-  const lowStockList = data.lowStockItems.length > 0
-    ? data.lowStockItems.map(item => `<li>${item.name}: ${item.quantity} יחידות</li>`).join('')
-    : '<li>אין פריטים במלאי נמוך 👍</li>'
+  const lowStockItems = data.lowStockItems.length > 0
+    ? data.lowStockItems.map(item => `${item.name}: ${item.quantity} יחידות`)
+    : ['אין פריטים במלאי נמוך 👍']
 
-  const faultyList = data.faultyItems.length > 0
-    ? data.faultyItems.map(item => `<li>${item.name}: ${item.days} ימים</li>`).join('')
-    : '<li>אין ציוד תקול 👍</li>'
+  const faultyItems = data.faultyItems.length > 0
+    ? data.faultyItems.map(item => `${item.name}: ${item.days} ימים`)
+    : ['אין ציוד תקול 👍']
 
-  const html = `
-    <div class="container">
-      <div class="header" style="background: #059669;">
-        <h1>📊 דוח חודשי - ${data.cityName}</h1>
-        <p style="margin: 5px 0 0 0; font-size: 14px;">${data.periodStart} - ${data.periodEnd}</p>
-      </div>
-      <div class="content">
-        <p>שלום ${managerName},</p>
-        <p>להלן סיכום הפעילות החודשית בארון ${data.cityName}:</p>
+  const sectionTitle = (emoji: string, title: string) =>
+    `<h3 style="color: #374151; margin: 25px 0 10px 0; font-size: 18px;">${emoji} ${title}</h3>`
 
-        <h3>📈 סטטיסטיקות השאלות</h3>
-        <table>
-          <tr>
-            <td><strong>סה"כ השאלות</strong></td>
-            <td>${data.totalBorrows}</td>
-          </tr>
-          <tr>
-            <td><strong>החזרות</strong></td>
-            <td>${data.totalReturns}</td>
-          </tr>
-          <tr>
-            <td><strong>ממתינות להחזרה</strong></td>
-            <td>${data.pendingReturns}</td>
-          </tr>
-        </table>
+  const html = styled.container(
+    `<div style="${inlineStyles.header} background: linear-gradient(135deg, #059669 0%, #047857 100%);">` +
+      `<h1 style="${inlineStyles.headerTitle}">📊 דוח חודשי - ${data.cityName}</h1>` +
+      `<p style="margin: 5px 0 0 0; font-size: 14px; color: rgba(255,255,255,0.9);">${data.periodStart} - ${data.periodEnd}</p>` +
+    '</div>' +
+    styled.content(
+      styled.text(`שלום ${managerName},`) +
+      styled.text(`להלן סיכום הפעילות החודשית בארון ${data.cityName}:`) +
 
-        <h3>📋 סטטיסטיקות בקשות</h3>
-        <table>
-          <tr>
-            <td><strong>בקשות פעילות</strong></td>
-            <td>${data.activeRequestsCount}</td>
-          </tr>
-          <tr>
-            <td><strong>בקשות שאושרו</strong></td>
-            <td>${data.approvedRequestsCount}</td>
-          </tr>
-          <tr>
-            <td><strong>בקשות שנדחו</strong></td>
-            <td>${data.rejectedRequestsCount}</td>
-          </tr>
-        </table>
+      sectionTitle('📈', 'סטטיסטיקות השאלות') +
+      styled.table(
+        ['סה"כ השאלות', 'החזרות', 'ממתינות להחזרה'],
+        [[String(data.totalBorrows), String(data.totalReturns), String(data.pendingReturns)]]
+      ) +
 
-        <h3>🏆 הפריטים המושאלים ביותר</h3>
-        <ul class="list">${topBorrowedList}</ul>
+      sectionTitle('📋', 'סטטיסטיקות בקשות') +
+      styled.table(
+        ['בקשות פעילות', 'בקשות שאושרו', 'בקשות שנדחו'],
+        [[String(data.activeRequestsCount), String(data.approvedRequestsCount), String(data.rejectedRequestsCount)]]
+      ) +
 
-        <h3>📦 פריטים במלאי נמוך</h3>
-        <ul class="list">${lowStockList}</ul>
+      sectionTitle('🏆', 'הפריטים המושאלים ביותר') +
+      styled.list(topBorrowedItems) +
 
-        <h3>🔧 ציוד תקול</h3>
-        <ul class="list">${faultyList}</ul>
+      sectionTitle('📦', 'פריטים במלאי נמוך') +
+      styled.list(lowStockItems) +
 
-        <p>
-          <a href="${getAppUrl()}" class="button">כניסה למערכת</a>
-        </p>
-      </div>
-      <div class="footer">
-        <p>מערכת ארון ציוד ידידים</p>
-        <p>דוח זה נשלח אוטומטית בתחילת כל חודש</p>
-      </div>
-    </div>
-  `
+      sectionTitle('🔧', 'ציוד תקול') +
+      styled.list(faultyItems) +
+
+      styled.button('כניסה למערכת', getAppUrl())
+    ) +
+    styled.footer('מערכת ארון ציוד ידידים<br>דוח זה נשלח אוטומטית בתחילת כל חודש')
+  )
 
   return sendEmail(
     managerEmail,
