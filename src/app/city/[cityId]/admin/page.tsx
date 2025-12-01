@@ -142,6 +142,7 @@ export default function CityAdminPage() {
   const [accountSettingsTab, setAccountSettingsTab] = useState<'details' | 'password'>('details')
   const [showProfileDropdown, setShowProfileDropdown] = useState(false)
   const [volunteerViewMode, setVolunteerViewMode] = useState(false)
+  const [showClosureConfirm, setShowClosureConfirm] = useState(false)
   const [accountForm, setAccountForm] = useState({
     full_name: '',
     phone: '',
@@ -2608,32 +2609,12 @@ export default function CityAdminPage() {
                     </div>
                   </div>
                   <button
-                    onClick={async () => {
+                    onClick={() => {
                       if (!canEdit) {
                         toast.error('אין לך הרשאה לבצע פעולה זו')
                         return
                       }
-                      const newValue = !city?.is_temporarily_closed
-                      const actionText = newValue ? 'לסגור את הארון זמנית' : 'לפתוח את הארון'
-                      if (confirm(`האם ${actionText}?`)) {
-                        try {
-                          const response = await fetch('/api/city/update-details', {
-                            method: 'POST',
-                            headers: { 'Content-Type': 'application/json' },
-                            credentials: 'include',
-                            body: JSON.stringify({
-                              cityId,
-                              is_temporarily_closed: newValue,
-                              closure_message: newValue ? (city?.closure_message || 'הארון סגור זמנית לתחזוקה') : null
-                            })
-                          })
-                          if (!response.ok) throw new Error('שגיאה בעדכון')
-                          toast.success(newValue ? 'הארון נסגר זמנית' : 'הארון נפתח')
-                          await fetchCity()
-                        } catch (error: any) {
-                          toast.error('שגיאה בעדכון: ' + error.message)
-                        }
-                      }
+                      setShowClosureConfirm(true)
                     }}
                     disabled={!canEdit}
                     className={`relative w-14 h-7 rounded-full transition-colors duration-200 ${
@@ -2662,9 +2643,14 @@ export default function CityAdminPage() {
                       onBlur={async (e) => {
                         if (!canEdit) return
                         try {
+                          const { data: { session } } = await supabase.auth.getSession()
+                          const accessToken = session?.access_token
                           await fetch('/api/city/update-details', {
                             method: 'POST',
-                            headers: { 'Content-Type': 'application/json' },
+                            headers: {
+                              'Content-Type': 'application/json',
+                              ...(accessToken && { 'Authorization': `Bearer ${accessToken}` }),
+                            },
                             credentials: 'include',
                             body: JSON.stringify({ cityId, closure_message: e.target.value || null })
                           })
@@ -2699,9 +2685,14 @@ export default function CityAdminPage() {
                       const modeText = newMode === 'direct' ? 'השאלה ישירה' : 'מצב בקשות'
                       if (confirm(`האם להחליף ל${modeText}?`)) {
                         try {
+                          const { data: { session } } = await supabase.auth.getSession()
+                          const accessToken = session?.access_token
                           const response = await fetch('/api/city/update-details', {
                             method: 'POST',
-                            headers: { 'Content-Type': 'application/json' },
+                            headers: {
+                              'Content-Type': 'application/json',
+                              ...(accessToken && { 'Authorization': `Bearer ${accessToken}` }),
+                            },
                             credentials: 'include',
                             body: JSON.stringify({ cityId, request_mode: newMode })
                           })
@@ -2748,9 +2739,14 @@ export default function CityAdminPage() {
                             if (!canEdit) return
                             // Save to server when user finishes editing
                             try {
+                              const { data: { session } } = await supabase.auth.getSession()
+                              const accessToken = session?.access_token
                               const response = await fetch('/api/city/update-details', {
                                 method: 'POST',
-                                headers: { 'Content-Type': 'application/json' },
+                                headers: {
+                                  'Content-Type': 'application/json',
+                                  ...(accessToken && { 'Authorization': `Bearer ${accessToken}` }),
+                                },
                                 credentials: 'include',
                                 body: JSON.stringify({
                                   cityId,
@@ -2798,9 +2794,14 @@ export default function CityAdminPage() {
                             setCity({ ...city, require_call_id: newValue })
 
                             try {
+                              const { data: { session } } = await supabase.auth.getSession()
+                              const accessToken = session?.access_token
                               const response = await fetch('/api/city/update-details', {
                                 method: 'POST',
-                                headers: { 'Content-Type': 'application/json' },
+                                headers: {
+                                  'Content-Type': 'application/json',
+                                  ...(accessToken && { 'Authorization': `Bearer ${accessToken}` }),
+                                },
                                 credentials: 'include',
                                 body: JSON.stringify({
                                   cityId,
@@ -2856,9 +2857,14 @@ export default function CityAdminPage() {
                                 const timer = setTimeout(async () => {
                                   setDistanceSaveStatus('saving')
                                   try {
+                                    const { data: { session } } = await supabase.auth.getSession()
+                                    const accessToken = session?.access_token
                                     const response = await fetch('/api/city/update-details', {
                                       method: 'POST',
-                                      headers: { 'Content-Type': 'application/json' },
+                                      headers: {
+                                        'Content-Type': 'application/json',
+                                        ...(accessToken && { 'Authorization': `Bearer ${accessToken}` }),
+                                      },
                                       credentials: 'include',
                                       body: JSON.stringify({ cityId, max_request_distance_km: newValue })
                                     })
@@ -2900,9 +2906,14 @@ export default function CityAdminPage() {
                                 const timer = setTimeout(async () => {
                                   setDistanceSaveStatus('saving')
                                   try {
+                                    const { data: { session } } = await supabase.auth.getSession()
+                                    const accessToken = session?.access_token
                                     const response = await fetch('/api/city/update-details', {
                                       method: 'POST',
-                                      headers: { 'Content-Type': 'application/json' },
+                                      headers: {
+                                        'Content-Type': 'application/json',
+                                        ...(accessToken && { 'Authorization': `Bearer ${accessToken}` }),
+                                      },
                                       credentials: 'include',
                                       body: JSON.stringify({ cityId, max_request_distance_km: newValue })
                                     })
@@ -2973,9 +2984,14 @@ export default function CityAdminPage() {
                           const newValue = !city?.hide_navigation
                           setCity({ ...city!, hide_navigation: newValue })
                           try {
+                            const { data: { session } } = await supabase.auth.getSession()
+                            const accessToken = session?.access_token
                             const response = await fetch('/api/city/update-details', {
                               method: 'POST',
-                              headers: { 'Content-Type': 'application/json' },
+                              headers: {
+                                'Content-Type': 'application/json',
+                                ...(accessToken && { 'Authorization': `Bearer ${accessToken}` }),
+                              },
                               credentials: 'include',
                               body: JSON.stringify({ cityId, hide_navigation: newValue })
                             })
@@ -3005,9 +3021,14 @@ export default function CityAdminPage() {
                           const newValue = !city?.enable_push_notifications
                           setCity({ ...city!, enable_push_notifications: newValue })
                           try {
+                            const { data: { session } } = await supabase.auth.getSession()
+                            const accessToken = session?.access_token
                             const response = await fetch('/api/city/update-details', {
                               method: 'POST',
-                              headers: { 'Content-Type': 'application/json' },
+                              headers: {
+                                'Content-Type': 'application/json',
+                                ...(accessToken && { 'Authorization': `Bearer ${accessToken}` }),
+                              },
                               credentials: 'include',
                               body: JSON.stringify({ cityId, enable_push_notifications: newValue })
                             })
@@ -3452,6 +3473,86 @@ export default function CityAdminPage() {
                     className="w-full h-12 border-2 border-gray-300 text-gray-700 hover:bg-gray-50 font-semibold text-base rounded-xl transition-all duration-200"
                   >
                     סגור
+                  </Button>
+                </div>
+              </div>
+            </div>
+          </div>
+        )}
+
+        {/* Closure Confirmation Modal */}
+        {showClosureConfirm && (
+          <div className="fixed inset-0 bg-black/50 backdrop-blur-sm flex items-center justify-center z-50 p-4">
+            <div className="bg-white rounded-2xl shadow-2xl max-w-md w-full overflow-hidden animate-in fade-in zoom-in duration-200">
+              {/* Header */}
+              <div className={`p-6 text-center ${
+                city?.is_temporarily_closed
+                  ? 'bg-gradient-to-r from-green-500 to-emerald-500'
+                  : 'bg-gradient-to-r from-orange-500 to-red-500'
+              }`}>
+                <div className="text-5xl mb-3">
+                  {city?.is_temporarily_closed ? '✅' : '🚧'}
+                </div>
+                <h2 className="text-2xl font-bold text-white">
+                  {city?.is_temporarily_closed ? 'פתיחת הארון' : 'סגירת הארון זמנית'}
+                </h2>
+              </div>
+
+              {/* Content */}
+              <div className="p-6 text-center">
+                <p className="text-gray-700 text-lg mb-6">
+                  {city?.is_temporarily_closed
+                    ? 'האם לפתוח את הארון ולאפשר למתנדבים להשאיל ציוד?'
+                    : 'האם לסגור את הארון זמנית? מתנדבים לא יוכלו להשאיל ציוד עד שתפתח אותו מחדש.'}
+                </p>
+
+                <div className="flex gap-3 justify-center">
+                  <Button
+                    onClick={() => setShowClosureConfirm(false)}
+                    variant="outline"
+                    className="px-6 py-2 border-2 border-gray-300 hover:bg-gray-50"
+                  >
+                    ביטול
+                  </Button>
+                  <Button
+                    onClick={async () => {
+                      const newValue = !city?.is_temporarily_closed
+                      try {
+                        // Get access token for authorization
+                        const { data: { session } } = await supabase.auth.getSession()
+                        const accessToken = session?.access_token
+
+                        const response = await fetch('/api/city/update-details', {
+                          method: 'POST',
+                          headers: {
+                            'Content-Type': 'application/json',
+                            ...(accessToken && { 'Authorization': `Bearer ${accessToken}` }),
+                          },
+                          credentials: 'include',
+                          body: JSON.stringify({
+                            cityId,
+                            is_temporarily_closed: newValue,
+                            closure_message: newValue ? (city?.closure_message || 'הארון סגור זמנית לתחזוקה') : null
+                          })
+                        })
+                        if (!response.ok) {
+                          const data = await response.json()
+                          throw new Error(data.error || 'שגיאה בעדכון')
+                        }
+                        toast.success(newValue ? 'הארון נסגר זמנית' : 'הארון נפתח')
+                        setShowClosureConfirm(false)
+                        await fetchCity()
+                      } catch (error: any) {
+                        toast.error('שגיאה בעדכון: ' + error.message)
+                      }
+                    }}
+                    className={`px-6 py-2 text-white font-semibold ${
+                      city?.is_temporarily_closed
+                        ? 'bg-gradient-to-r from-green-500 to-emerald-500 hover:from-green-600 hover:to-emerald-600'
+                        : 'bg-gradient-to-r from-orange-500 to-red-500 hover:from-orange-600 hover:to-red-600'
+                    }`}
+                  >
+                    {city?.is_temporarily_closed ? '✅ פתח את הארון' : '🚧 סגור זמנית'}
                   </Button>
                 </div>
               </div>
