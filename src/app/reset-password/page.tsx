@@ -118,7 +118,7 @@ function ResetPasswordContent() {
 
         // Auto-login with the new password if we have user email
         if (data.user?.email) {
-          const { error: signInError } = await supabase.auth.signInWithPassword({
+          const { data: signInData, error: signInError } = await supabase.auth.signInWithPassword({
             email: data.user.email,
             password: newPassword
           })
@@ -134,8 +134,16 @@ function ResetPasswordContent() {
             return
           }
 
-          // Wait for session to be stored in cookies
-          await new Promise(resolve => setTimeout(resolve, 500))
+          // Store the access token in a cookie for server-side auth
+          if (signInData.session?.access_token) {
+            document.cookie = `sb-access-token=${signInData.session.access_token}; path=/; max-age=${60 * 60 * 24 * 7}; SameSite=Lax`
+            if (signInData.session.refresh_token) {
+              document.cookie = `sb-refresh-token=${signInData.session.refresh_token}; path=/; max-age=${60 * 60 * 24 * 7}; SameSite=Lax`
+            }
+          }
+
+          // Wait for session to be stored
+          await new Promise(resolve => setTimeout(resolve, 300))
         }
 
         setSuccess(true)
