@@ -455,6 +455,7 @@ export default function CityPage() {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
+          city_id: cityId, // Send city_id from URL to ensure correct city
           requester_name: requestForm.requester_name,
           requester_phone: requestForm.requester_phone,
           call_id: requestForm.call_id || undefined,

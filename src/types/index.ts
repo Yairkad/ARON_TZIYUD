@@ -184,6 +184,7 @@ export interface EquipmentRequestWithItems extends EquipmentRequest {
 }
 
 export interface CreateRequestForm {
+  city_id?: string  // City ID from URL (preferred)
   requester_name: string
   requester_phone: string
   call_id?: string

@@ -36,30 +36,38 @@ export async function POST(request: NextRequest) {
       )
     }
 
-    // Extract city_id from the first item's equipment
-    // The equipment_id is the global_equipment_pool ID, find via city_equipment
-    console.log('Request items:', body.items)
-    console.log('Looking for equipment_id:', body.items[0].equipment_id)
+    // Get city_id - prefer from body (sent by client), fallback to equipment lookup
+    let cityId: string
 
-    const { data: cityEquipment, error: eqError } = await supabaseServer
-      .from('city_equipment')
-      .select('city_id')
-      .eq('global_equipment_id', body.items[0].equipment_id)
-      .limit(1)
-      .maybeSingle()
+    if (body.city_id) {
+      // Use city_id from client (preferred - ensures correct city from URL)
+      cityId = body.city_id
+      console.log('Using city_id from client:', cityId)
+    } else {
+      // Fallback: Extract city_id from the first item's equipment (legacy support)
+      console.log('Request items:', body.items)
+      console.log('Looking for equipment_id:', body.items[0].equipment_id)
 
-    console.log('City equipment result:', cityEquipment, 'Error:', eqError)
+      const { data: cityEquipment, error: eqError } = await supabaseServer
+        .from('city_equipment')
+        .select('city_id')
+        .eq('global_equipment_id', body.items[0].equipment_id)
+        .limit(1)
+        .maybeSingle()
 
-    if (eqError || !cityEquipment) {
-      console.error('Equipment not found:', body.items[0].equipment_id, eqError)
-      return NextResponse.json(
-        { error: 'ציוד לא נמצא' },
-        { status: 404 }
-      )
+      console.log('City equipment result:', cityEquipment, 'Error:', eqError)
+
+      if (eqError || !cityEquipment) {
+        console.error('Equipment not found:', body.items[0].equipment_id, eqError)
+        return NextResponse.json(
+          { error: 'ציוד לא נמצא' },
+          { status: 404 }
+        )
+      }
+
+      cityId = cityEquipment.city_id
+      console.log('Found cityId from equipment:', cityId)
     }
-
-    const cityId = cityEquipment.city_id
-    console.log('Found cityId:', cityId)
 
     // Get city settings and manager info
     const { data: city, error: cityError } = await supabaseServer
