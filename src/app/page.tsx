@@ -25,24 +25,28 @@ export default function HomePage() {
 
   const checkAdminStatus = async () => {
     try {
-      const { data: { user } } = await supabase.auth.getUser()
-      if (!user) {
+      // Use API endpoint for more reliable auth check (uses cookies)
+      const response = await fetch('/api/auth/me', {
+        credentials: 'include'
+      })
+
+      if (!response.ok) {
         setAdminUrl(null)
         return
       }
 
-      const { data: userProfile } = await supabase
-        .from('users')
-        .select('role, city_id')
-        .eq('id', user.id)
-        .single()
+      const data = await response.json()
 
-      if (userProfile) {
-        if (userProfile.role === 'super_admin') {
+      if (data.success && data.user) {
+        if (data.user.role === 'super_admin') {
           setAdminUrl('/super-admin')
-        } else if (userProfile.role === 'city_manager' && userProfile.city_id) {
-          setAdminUrl(`/city/${userProfile.city_id}/admin`)
+        } else if (data.user.role === 'city_manager' && data.user.city_id) {
+          setAdminUrl(`/city/${data.user.city_id}/admin`)
+        } else {
+          setAdminUrl(null)
         }
+      } else {
+        setAdminUrl(null)
       }
     } catch (error) {
       console.error('Error checking admin status:', error)
