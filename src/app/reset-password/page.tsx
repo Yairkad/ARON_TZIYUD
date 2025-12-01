@@ -134,11 +134,13 @@ function ResetPasswordContent() {
             return
           }
 
-          // Store the access token in a cookie for server-side auth
+          // Store the access token in a cookie for server-side auth (with explicit expiry for PWA)
           if (signInData.session?.access_token) {
-            document.cookie = `sb-access-token=${signInData.session.access_token}; path=/; max-age=${60 * 60 * 24 * 7}; SameSite=Lax`
+            const maxAge = 60 * 60 * 24 * 7 // 7 days
+            const expiryDate = new Date(Date.now() + maxAge * 1000).toUTCString()
+            document.cookie = `sb-access-token=${signInData.session.access_token}; path=/; max-age=${maxAge}; expires=${expiryDate}; SameSite=Lax`
             if (signInData.session.refresh_token) {
-              document.cookie = `sb-refresh-token=${signInData.session.refresh_token}; path=/; max-age=${60 * 60 * 24 * 7}; SameSite=Lax`
+              document.cookie = `sb-refresh-token=${signInData.session.refresh_token}; path=/; max-age=${maxAge}; expires=${expiryDate}; SameSite=Lax`
             }
           }
 

@@ -192,14 +192,18 @@ export async function POST(request: NextRequest) {
     // Set cookie duration based on "Remember Me"
     const cookieMaxAge = rememberMe
       ? 60 * 60 * 24 * 30 // 30 days
-      : 60 * 60 * 8 // 8 hours
+      : 60 * 60 * 24 * 7 // 7 days (increased from 8 hours for better PWA experience)
+
+    // Calculate explicit expiry date for better PWA compatibility
+    const expiryDate = new Date(Date.now() + cookieMaxAge * 1000)
 
     sessionCookies.forEach(({ name, value }) => {
       response.cookies.set(name, value, {
-        httpOnly: true,
+        httpOnly: false, // Allow JS access for PWA token refresh
         secure: process.env.NODE_ENV === 'production',
         sameSite: 'lax',
         maxAge: cookieMaxAge,
+        expires: expiryDate, // Explicit expiry for PWA
         path: '/',
       })
     })
