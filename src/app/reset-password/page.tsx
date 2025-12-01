@@ -113,6 +113,9 @@ function ResetPasswordContent() {
           return
         }
 
+        console.log('Password reset response:', data)
+        console.log('User data:', data.user)
+
         setSuccess(true)
 
         // Determine redirect based on user role

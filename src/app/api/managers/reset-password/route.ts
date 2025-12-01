@@ -136,6 +136,8 @@ export async function POST(request: NextRequest) {
         console.error('Error clearing reset token:', updateError)
       }
 
+      console.log('Password reset successful for user:', { id: user.id, role: user.role, city_id: user.city_id })
+
       return NextResponse.json({
         success: true,
         message: 'הסיסמה אופסה בהצלחה!',
