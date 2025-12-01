@@ -31,10 +31,21 @@ export async function checkAuth(): Promise<{ authenticated: boolean; userId?: st
 // התנתקות
 export async function logout(): Promise<void> {
   try {
+    // נקה cookies בשרת
     await fetch('/api/auth/logout', {
       method: 'POST',
       credentials: 'include'
     })
+
+    // נקה localStorage וסשן של Supabase בצד הלקוח
+    if (typeof window !== 'undefined') {
+      const { supabase } = await import('@/lib/supabase')
+      await supabase.auth.signOut()
+
+      // מחק cookies גם מצד הלקוח (לבטיחות)
+      document.cookie = 'sb-access-token=; path=/; expires=Thu, 01 Jan 1970 00:00:00 GMT'
+      document.cookie = 'sb-refresh-token=; path=/; expires=Thu, 01 Jan 1970 00:00:00 GMT'
+    }
   } catch (error) {
     console.error('Logout error:', error)
   }
