@@ -116,6 +116,25 @@ function ResetPasswordContent() {
         console.log('Password reset response:', data)
         console.log('User data:', data.user)
 
+        // Auto-login with the new password if we have user email
+        if (data.user?.email) {
+          const { error: signInError } = await supabase.auth.signInWithPassword({
+            email: data.user.email,
+            password: newPassword
+          })
+
+          if (signInError) {
+            console.error('Auto-login error:', signInError)
+            // Fall back to login page if auto-login fails
+            setSuccess(true)
+            setRedirectTarget('/login')
+            setTimeout(() => {
+              window.location.href = '/login'
+            }, 2000)
+            return
+          }
+        }
+
         setSuccess(true)
 
         // Determine redirect based on user role
