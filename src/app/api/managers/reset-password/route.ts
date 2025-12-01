@@ -1,7 +1,6 @@
 import { NextRequest, NextResponse } from 'next/server'
-import { supabase } from '@/lib/supabase'
+import { createServiceClient } from '@/lib/supabase-server'
 import crypto from 'crypto'
-import bcrypt from 'bcryptjs'
 
 /**
  * POST /api/managers/reset-password
@@ -10,19 +9,21 @@ import bcrypt from 'bcryptjs'
 export async function POST(request: NextRequest) {
   try {
     const body = await request.json()
+    const supabase = createServiceClient()
 
     // Case 1: Request password reset (send email)
     if (body.email && !body.token) {
       const { email } = body
+      const emailLower = email.toLowerCase().trim()
 
-      // Find manager by email
-      const { data: manager, error: fetchError } = await supabase
-        .from('city_managers')
+      // Find user by email in users table
+      const { data: user, error: fetchError } = await supabase
+        .from('users')
         .select('*')
-        .eq('email', email)
+        .eq('email', emailLower)
         .single()
 
-      if (fetchError || !manager) {
+      if (fetchError || !user) {
         // Don't reveal if email exists or not (security)
         return NextResponse.json({
           success: true,
@@ -30,12 +31,12 @@ export async function POST(request: NextRequest) {
         })
       }
 
-      // Check if email is verified
-      if (!manager.email_verified) {
-        return NextResponse.json(
-          { success: false, error: 'יש לאמת את המייל לפני איפוס סיסמה' },
-          { status: 400 }
-        )
+      // Check if user is active
+      if (!user.is_active) {
+        return NextResponse.json({
+          success: true,
+          message: 'אם המייל קיים במערכת, נשלח אליו קישור לאיפוס סיסמה'
+        })
       }
 
       // Generate reset token
@@ -43,15 +44,15 @@ export async function POST(request: NextRequest) {
       const expiresAt = new Date()
       expiresAt.setHours(expiresAt.getHours() + 1) // 1 hour
 
-      // Update manager with reset token
+      // Update user with reset token
       const { error: updateError } = await supabase
-        .from('city_managers')
+        .from('users')
         .update({
           reset_token: resetToken,
           reset_token_expires_at: expiresAt.toISOString(),
           updated_at: new Date().toISOString()
         })
-        .eq('id', manager.id)
+        .eq('id', user.id)
 
       if (updateError) {
         console.error('Error creating reset token:', updateError)
@@ -63,7 +64,7 @@ export async function POST(request: NextRequest) {
 
       // Send password reset email
       const { sendPasswordResetEmail } = await import('@/lib/email')
-      await sendPasswordResetEmail(manager.email, resetToken, manager.name)
+      await sendPasswordResetEmail(user.email, resetToken, user.full_name || 'משתמש')
 
       return NextResponse.json({
         success: true,
@@ -82,14 +83,14 @@ export async function POST(request: NextRequest) {
         )
       }
 
-      // Find manager with this reset token
-      const { data: manager, error: fetchError } = await supabase
-        .from('city_managers')
+      // Find user with this reset token
+      const { data: user, error: fetchError } = await supabase
+        .from('users')
         .select('*')
         .eq('reset_token', token)
         .single()
 
-      if (fetchError || !manager) {
+      if (fetchError || !user) {
         return NextResponse.json(
           { success: false, error: 'טוקן איפוס לא תקין' },
           { status: 400 }
@@ -97,8 +98,8 @@ export async function POST(request: NextRequest) {
       }
 
       // Check if token expired
-      if (manager.reset_token_expires_at) {
-        const expiresAt = new Date(manager.reset_token_expires_at)
+      if (user.reset_token_expires_at) {
+        const expiresAt = new Date(user.reset_token_expires_at)
         if (expiresAt < new Date()) {
           return NextResponse.json(
             { success: false, error: 'טוקן האיפוס פג תוקף. אנא בקש טוקן חדש.' },
@@ -107,26 +108,32 @@ export async function POST(request: NextRequest) {
         }
       }
 
-      // Hash new password
-      const passwordHash = await bcrypt.hash(newPassword, 10)
+      // Update password in Supabase Auth
+      const { error: authError } = await supabase.auth.admin.updateUserById(
+        user.id,
+        { password: newPassword }
+      )
 
-      // Update password and clear reset token
-      const { error: updateError } = await supabase
-        .from('city_managers')
-        .update({
-          password_hash: passwordHash,
-          reset_token: null,
-          reset_token_expires_at: null,
-          updated_at: new Date().toISOString()
-        })
-        .eq('id', manager.id)
-
-      if (updateError) {
-        console.error('Error resetting password:', updateError)
+      if (authError) {
+        console.error('Error updating auth password:', authError)
         return NextResponse.json(
           { success: false, error: 'שגיאה באיפוס הסיסמה' },
           { status: 500 }
         )
+      }
+
+      // Clear reset token from users table
+      const { error: updateError } = await supabase
+        .from('users')
+        .update({
+          reset_token: null,
+          reset_token_expires_at: null,
+          updated_at: new Date().toISOString()
+        })
+        .eq('id', user.id)
+
+      if (updateError) {
+        console.error('Error clearing reset token:', updateError)
       }
 
       return NextResponse.json({
