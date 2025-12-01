@@ -20,6 +20,8 @@ export default function CityPage() {
 
   // Check if we should open return tab from URL
   const initialTab = searchParams.get('tab') === 'return' ? 'return' : 'borrow'
+  // Hide admin bar when viewing inside iframe from admin page
+  const hideAdminBar = searchParams.get('hideAdminBar') === 'true'
 
   const [city, setCity] = useState<City | null>(null)
   const [equipment, setEquipment] = useState<Equipment[]>([])
@@ -1817,8 +1819,8 @@ export default function CityPage() {
         </div>
       )}
 
-      {/* Floating Admin Bar - Show when logged in as admin */}
-      {adminUrl && (
+      {/* Floating Admin Bar - Show when logged in as admin (hidden when inside iframe) */}
+      {adminUrl && !hideAdminBar && (
         <div className="fixed bottom-0 left-0 right-0 z-50 bg-gradient-to-r from-purple-600 to-pink-600 text-white p-3 shadow-lg flex items-center justify-between">
           <div className="flex items-center gap-2">
             <span className="text-lg">👁️</span>

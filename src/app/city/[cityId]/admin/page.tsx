@@ -1181,26 +1181,23 @@ export default function CityAdminPage() {
   if (volunteerViewMode) {
     return (
       <div className="fixed inset-0 z-[9999] bg-gray-100">
-        {/* Floating Back to Admin Button */}
-        <div className="fixed top-4 right-4 z-[10000]">
+        {/* Floating Bottom Bar - matches the style from volunteer page */}
+        <div className="fixed bottom-0 left-0 right-0 z-[10000] bg-gradient-to-r from-purple-600 to-pink-600 text-white p-3 shadow-lg flex items-center justify-between">
+          <div className="flex items-center gap-2">
+            <span className="text-lg">👁️</span>
+            <span className="text-sm font-medium">צפייה בממשק מתנדב</span>
+          </div>
           <button
             onClick={() => setVolunteerViewMode(false)}
-            className="flex items-center gap-2 bg-gradient-to-r from-indigo-600 to-purple-600 text-white px-4 py-3 rounded-xl shadow-lg hover:shadow-xl transition-all hover:scale-105 font-semibold"
+            className="bg-white text-purple-600 hover:bg-purple-50 font-bold px-4 py-2 rounded-xl transition-all hover:scale-105"
           >
-            <span>🛡️</span>
-            <span>חזרה לניהול</span>
+            ⚙️ חזרה לניהול
           </button>
-        </div>
-        {/* View Mode Badge */}
-        <div className="fixed top-4 left-4 z-[10000]">
-          <div className="bg-blue-100 text-blue-700 px-4 py-2 rounded-xl font-medium text-sm shadow-md">
-            👁️ מצב תצוגת מתנדב
-          </div>
         </div>
         {/* Iframe with volunteer page */}
         <iframe
-          src={`/city/${cityId}`}
-          className="w-full h-full border-0"
+          src={`/city/${cityId}?hideAdminBar=true`}
+          className="w-full h-full border-0 pb-14"
           title="תצוגת מתנדב"
         />
       </div>
