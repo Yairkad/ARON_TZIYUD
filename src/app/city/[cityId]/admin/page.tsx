@@ -2588,6 +2588,96 @@ export default function CityAdminPage() {
             </CardHeader>
             <CardContent className="p-6">
               <div className="space-y-6">
+                {/* Temporary Closure Toggle */}
+                <div className={`flex items-center justify-between p-4 rounded-xl border-2 ${
+                  city?.is_temporarily_closed
+                    ? 'bg-gradient-to-r from-red-50 to-orange-50 border-red-300'
+                    : 'bg-gradient-to-r from-green-50 to-emerald-50 border-green-200'
+                }`}>
+                  <div className="flex items-center gap-3">
+                    <span className="text-2xl">{city?.is_temporarily_closed ? '🚫' : '✅'}</span>
+                    <div>
+                      <div className="font-semibold text-gray-800">
+                        {city?.is_temporarily_closed ? 'הארון סגור זמנית' : 'הארון פעיל'}
+                      </div>
+                      <div className="text-xs text-gray-500">
+                        {city?.is_temporarily_closed
+                          ? 'מתנדבים לא יכולים להשאיל ציוד כרגע'
+                          : 'הארון פתוח להשאלות'}
+                      </div>
+                    </div>
+                  </div>
+                  <button
+                    onClick={async () => {
+                      if (!canEdit) {
+                        toast.error('אין לך הרשאה לבצע פעולה זו')
+                        return
+                      }
+                      const newValue = !city?.is_temporarily_closed
+                      const actionText = newValue ? 'לסגור את הארון זמנית' : 'לפתוח את הארון'
+                      if (confirm(`האם ${actionText}?`)) {
+                        try {
+                          const response = await fetch('/api/city/update-details', {
+                            method: 'POST',
+                            headers: { 'Content-Type': 'application/json' },
+                            credentials: 'include',
+                            body: JSON.stringify({
+                              cityId,
+                              is_temporarily_closed: newValue,
+                              closure_message: newValue ? (city?.closure_message || 'הארון סגור זמנית לתחזוקה') : null
+                            })
+                          })
+                          if (!response.ok) throw new Error('שגיאה בעדכון')
+                          toast.success(newValue ? 'הארון נסגר זמנית' : 'הארון נפתח')
+                          await fetchCity()
+                        } catch (error: any) {
+                          toast.error('שגיאה בעדכון: ' + error.message)
+                        }
+                      }
+                    }}
+                    disabled={!canEdit}
+                    className={`relative w-14 h-7 rounded-full transition-colors duration-200 ${
+                      city?.is_temporarily_closed ? 'bg-red-500' : 'bg-green-500'
+                    } disabled:opacity-50`}
+                  >
+                    <span className={`absolute top-0.5 w-6 h-6 bg-white rounded-full shadow transition-transform duration-200 ${
+                      city?.is_temporarily_closed ? 'right-0.5' : 'left-0.5'
+                    }`} />
+                  </button>
+                </div>
+
+                {/* Closure Message (shown when closed) */}
+                {city?.is_temporarily_closed && (
+                  <div className="bg-red-50 rounded-xl p-4 border border-red-200">
+                    <label className="block text-sm font-semibold text-gray-700 mb-2">
+                      הודעה למתנדבים (אופציונלי)
+                    </label>
+                    <Input
+                      type="text"
+                      value={city?.closure_message || ''}
+                      disabled={!canEdit}
+                      onChange={(e) => {
+                        if (city) setCity({ ...city, closure_message: e.target.value })
+                      }}
+                      onBlur={async (e) => {
+                        if (!canEdit) return
+                        try {
+                          await fetch('/api/city/update-details', {
+                            method: 'POST',
+                            headers: { 'Content-Type': 'application/json' },
+                            credentials: 'include',
+                            body: JSON.stringify({ cityId, closure_message: e.target.value || null })
+                          })
+                        } catch (error) {
+                          console.error('Error updating closure message:', error)
+                        }
+                      }}
+                      placeholder="לדוגמה: הארון בשיפוץ, יחזור לפעילות בקרוב"
+                      className="h-11 border-2 border-red-200 rounded-xl"
+                    />
+                  </div>
+                )}
+
                 {/* Request Mode Settings - Compact Toggle */}
                 <div className="flex items-center justify-between p-4 bg-gradient-to-r from-blue-50 to-indigo-50 rounded-xl border border-blue-200">
                   <div className="flex items-center gap-3">

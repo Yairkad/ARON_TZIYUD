@@ -87,6 +87,9 @@ export default function SuperAdminPage() {
   const [showChangePasswordConfirm, setShowChangePasswordConfirm] = useState(false)
   const [showUserFormPassword, setShowUserFormPassword] = useState(false)
 
+  // Profile dropdown state
+  const [showProfileDropdown, setShowProfileDropdown] = useState(false)
+
   // Check authentication on mount
   useEffect(() => {
     const verifyAuth = async () => {
@@ -1183,33 +1186,104 @@ export default function SuperAdminPage() {
       <div className="max-w-6xl mx-auto px-3 sm:px-4 py-4 sm:py-6">
         {/* Logo */}
         <Logo />
-        <header className="bg-white/80 backdrop-blur-lg border border-gray-200/50 rounded-2xl shadow-xl p-8 mb-8">
+        <header className="bg-white/80 backdrop-blur-lg border border-gray-200/50 rounded-2xl shadow-xl p-8 mb-8 relative">
+          {/* Desktop Action Buttons - Absolute positioned */}
+          <div className="hidden sm:flex absolute left-6 top-6 gap-2 items-center">
+            <Link href="/">
+              <Button
+                variant="outline"
+                className="border-2 border-purple-600 text-purple-600 hover:bg-purple-50 font-semibold px-4 py-2 rounded-xl transition-all duration-200 hover:scale-105"
+              >
+                👁️ צפייה בממשק מתנדב
+              </Button>
+            </Link>
+
+            {/* Desktop Profile Button with Dropdown */}
+            <div className="relative">
+              <button
+                onClick={() => setShowProfileDropdown(!showProfileDropdown)}
+                className="w-12 h-12 rounded-xl bg-gradient-to-br from-purple-500 to-pink-600 text-white flex items-center justify-center text-2xl shadow-md hover:shadow-lg transition-all hover:scale-105"
+              >
+                👤
+              </button>
+            </div>
+          </div>
+
           <div className="text-center">
             <h1 className="text-4xl font-bold bg-gradient-to-r from-purple-600 to-pink-600 bg-clip-text text-transparent mb-2">
               👑 ממשק ניהול מרכזי
             </h1>
-            <p className="text-gray-600 text-lg mb-4">ניהול מרכזי של כל הערים במערכת</p>
-            <div className="flex gap-2 justify-center">
-              <Link href="/">
-                <Button
-                  variant="outline"
-                  className="border-2 border-purple-600 text-purple-600 hover:bg-purple-50 font-semibold px-4 py-1.5 text-sm rounded-lg transition-all duration-200 hover:scale-105"
-                >
-                  ↩️ חזרה לדף הבית
-                </Button>
-              </Link>
-              <Button
-                onClick={async () => {
-                  await logout()
-                  setIsAuthenticated(false)
-                }}
-                className="bg-gradient-to-r from-red-500 to-rose-500 hover:from-red-600 hover:to-rose-600 text-white font-semibold px-4 py-1.5 text-sm rounded-lg transition-all duration-200 hover:scale-105"
-              >
-                🚪 יציאה
-              </Button>
-            </div>
+            <p className="text-gray-600 text-lg">ניהול מרכזי של כל הערים במערכת</p>
           </div>
         </header>
+
+        {/* Profile Dropdown - Shared for Mobile and Desktop */}
+        {showProfileDropdown && (
+          <>
+            {/* Backdrop */}
+            <div
+              className="fixed inset-0 z-[9998] bg-black/30"
+              onClick={() => setShowProfileDropdown(false)}
+            />
+            {/* Dropdown Menu - Mobile: full width near top, Desktop: centered modal */}
+            <div className="fixed z-[9999] bg-white rounded-2xl shadow-2xl overflow-hidden border border-gray-200
+              top-16 right-4 left-4
+              sm:top-1/2 sm:left-1/2 sm:-translate-x-1/2 sm:-translate-y-1/2 sm:w-[420px] sm:max-w-[90vw]">
+              {/* Profile Header - Larger for desktop */}
+              <div className="bg-gradient-to-br from-purple-500 to-pink-600 text-white p-5 sm:p-8 text-center">
+                <div className="font-bold text-xl sm:text-2xl">{currentUser?.full_name || 'מנהל ראשי'}</div>
+                <div className="text-sm sm:text-base opacity-90 mt-2">{currentUser?.email}</div>
+                <div className="mt-3 inline-block bg-white/20 px-4 py-1.5 rounded-full text-sm">
+                  👑 מנהל ראשי
+                </div>
+              </div>
+              {/* Profile Actions - Larger buttons for desktop */}
+              <div className="p-3 sm:p-4">
+                <button
+                  onClick={() => {
+                    setShowProfileDropdown(false)
+                    setShowChangePassword(true)
+                    setActiveTab('settings')
+                  }}
+                  className="w-full flex items-center gap-4 p-4 rounded-xl hover:bg-gray-50 transition-colors text-right"
+                >
+                  <span className="text-2xl">🔑</span>
+                  <span className="text-gray-700 text-base sm:text-lg font-medium">שינוי סיסמה</span>
+                </button>
+                <div className="border-t border-gray-200 my-3" />
+                <button
+                  onClick={async () => {
+                    setShowProfileDropdown(false)
+                    await logout()
+                    setIsAuthenticated(false)
+                  }}
+                  className="w-full flex items-center gap-4 p-4 rounded-xl hover:bg-red-50 transition-colors text-right text-red-600"
+                >
+                  <span className="text-2xl">🚪</span>
+                  <span className="text-base sm:text-lg font-medium">התנתקות</span>
+                </button>
+              </div>
+            </div>
+          </>
+        )}
+
+        {/* Mobile Top Action Bar */}
+        <div className="sm:hidden flex justify-between items-center bg-white/90 backdrop-blur-sm rounded-xl p-3 mb-4 shadow-sm border border-gray-100 relative z-[50]">
+          {/* Right side - Profile */}
+          <button
+            onClick={() => setShowProfileDropdown(!showProfileDropdown)}
+            className="w-11 h-11 rounded-xl bg-gradient-to-br from-purple-500 to-pink-600 text-white flex items-center justify-center text-xl shadow-md hover:shadow-lg transition-all hover:scale-105"
+          >
+            👤
+          </button>
+
+          {/* Left side - View as volunteer */}
+          <Link href="/">
+            <button className="h-11 px-4 rounded-xl bg-purple-100 hover:bg-purple-200 text-purple-600 flex items-center justify-center text-sm font-semibold transition-all">
+              👁️ צפייה כמתנדב
+            </button>
+          </Link>
+        </div>
 
         {/* Tab Navigation - Sticky on scroll with safe area for mobile status bar */}
         <div className="sticky top-0 z-50 bg-gradient-to-br from-purple-50 via-pink-50 to-blue-50 pt-safe md:px-8 mb-8 shadow-sm">
@@ -1257,16 +1331,6 @@ export default function SuperAdminPage() {
               )}
             </Button>
             <Button
-              onClick={() => setActiveTab('settings')}
-              className={`flex-shrink-0 w-12 h-12 p-2 rounded-lg font-semibold transition-all duration-300 flex items-center justify-center ${
-                activeTab === 'settings'
-                  ? 'bg-gradient-to-br from-purple-600 to-pink-600 text-white shadow-md'
-                  : 'bg-white text-gray-600 border border-gray-300'
-              }`}
-            >
-              <span className="text-xl leading-none">⚙️</span>
-            </Button>
-            <Button
               onClick={() => setActiveTab('emails')}
               className={`flex-shrink-0 w-12 h-12 p-2 rounded-lg font-semibold transition-all duration-300 flex items-center justify-center ${
                 activeTab === 'emails'
@@ -1279,7 +1343,7 @@ export default function SuperAdminPage() {
           </div>
 
           {/* Desktop: Grid with text */}
-          <div className="hidden md:grid md:grid-cols-3 lg:grid-cols-6 gap-3">
+          <div className="hidden md:grid md:grid-cols-3 lg:grid-cols-5 gap-3">
             <Button
               onClick={() => setActiveTab('cities')}
               className={`py-6 rounded-xl font-semibold text-lg transition-all duration-300 ${
@@ -1320,16 +1384,6 @@ export default function SuperAdminPage() {
                   {unreadCount}
                 </span>
               )}
-            </Button>
-            <Button
-              onClick={() => setActiveTab('settings')}
-              className={`py-6 rounded-xl font-semibold text-lg transition-all duration-300 ${
-                activeTab === 'settings'
-                  ? 'bg-gradient-to-r from-purple-600 to-pink-600 text-white shadow-lg shadow-purple-500/50 scale-105'
-                  : 'bg-white text-gray-600 border-2 border-gray-200 hover:border-purple-300 hover:bg-purple-50'
-              }`}
-            >
-              <span className="text-2xl ml-2">⚙️</span> הגדרות
             </Button>
             <Button
               onClick={() => setActiveTab('emails')}
@@ -2106,6 +2160,17 @@ export default function SuperAdminPage() {
                   onChange={(e) => setUserSearchQuery(e.target.value)}
                   className="h-10 border-2 border-gray-200 rounded-lg"
                 />
+
+                {/* Role filter */}
+                <select
+                  value={userFilter}
+                  onChange={(e) => setUserFilter(e.target.value as any)}
+                  className="h-10 border-2 border-gray-200 rounded-lg px-3 bg-white"
+                >
+                  <option value="all">👥 כל התפקידים</option>
+                  <option value="city_manager">👤 מנהלי עיר</option>
+                  <option value="super_admin">👑 סופר-אדמינים</option>
+                </select>
 
                 {/* City filter */}
                 <select

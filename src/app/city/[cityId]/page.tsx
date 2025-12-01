@@ -1644,6 +1644,91 @@ export default function CityPage() {
         />
       )}
 
+      {/* Temporary Closure Modal */}
+      {city?.is_temporarily_closed && (
+        <div className="fixed inset-0 bg-black/50 backdrop-blur-sm z-50 flex items-center justify-center p-4">
+          <div className="bg-white rounded-2xl shadow-2xl max-w-md w-full overflow-hidden animate-in fade-in zoom-in duration-200">
+            {/* Header */}
+            <div className="bg-gradient-to-r from-orange-500 to-red-500 p-6 text-center">
+              <div className="text-6xl mb-3">🚧</div>
+              <h2 className="text-2xl font-bold text-white">הארון סגור זמנית</h2>
+            </div>
+
+            {/* Content */}
+            <div className="p-6 text-center">
+              <div className="bg-orange-50 border-2 border-orange-200 rounded-xl p-4 mb-6">
+                <p className="text-gray-800 text-lg font-semibold mb-2">
+                  הארון בעיר {city.name} אינו זמין כרגע
+                </p>
+                {city.closure_message && (
+                  <p className="text-gray-600 mt-2">
+                    {city.closure_message}
+                  </p>
+                )}
+              </div>
+
+              <p className="text-gray-600 text-sm mb-6">
+                לבירורים ניתן לפנות למנהל הארון:
+              </p>
+
+              {/* Manager Contacts */}
+              <div className="space-y-3">
+                {city.manager1_name && city.manager1_phone && (
+                  <div className="bg-blue-50 rounded-xl p-4 border-2 border-blue-200">
+                    <p className="font-bold text-gray-800 mb-3">{city.manager1_name}</p>
+                    <div className="flex gap-3 justify-center">
+                      <a
+                        href={`tel:${city.manager1_phone}`}
+                        className="flex items-center gap-2 bg-blue-500 hover:bg-blue-600 text-white font-semibold py-2 px-4 rounded-xl transition-colors"
+                      >
+                        <Phone className="w-4 h-4" />
+                        <span>התקשר</span>
+                      </a>
+                      <button
+                        onClick={() => handleWhatsApp(city.manager1_phone!)}
+                        className="flex items-center gap-2 bg-green-500 hover:bg-green-600 text-white font-semibold py-2 px-4 rounded-xl transition-colors"
+                      >
+                        <MessageCircle className="w-4 h-4" />
+                        <span>וואטסאפ</span>
+                      </button>
+                    </div>
+                  </div>
+                )}
+
+                {city.manager2_name && city.manager2_phone && (
+                  <div className="bg-blue-50 rounded-xl p-4 border-2 border-blue-200">
+                    <p className="font-bold text-gray-800 mb-3">{city.manager2_name}</p>
+                    <div className="flex gap-3 justify-center">
+                      <a
+                        href={`tel:${city.manager2_phone}`}
+                        className="flex items-center gap-2 bg-blue-500 hover:bg-blue-600 text-white font-semibold py-2 px-4 rounded-xl transition-colors"
+                      >
+                        <Phone className="w-4 h-4" />
+                        <span>התקשר</span>
+                      </a>
+                      <button
+                        onClick={() => handleWhatsApp(city.manager2_phone!)}
+                        className="flex items-center gap-2 bg-green-500 hover:bg-green-600 text-white font-semibold py-2 px-4 rounded-xl transition-colors"
+                      >
+                        <MessageCircle className="w-4 h-4" />
+                        <span>וואטסאפ</span>
+                      </button>
+                    </div>
+                  </div>
+                )}
+              </div>
+
+              {/* Back to Home Button */}
+              <Link href="/" className="block mt-6">
+                <Button className="w-full bg-gray-600 hover:bg-gray-700 text-white font-semibold py-3 rounded-xl">
+                  ↩️ חזור לבחירת עיר
+                </Button>
+              </Link>
+            </div>
+          </div>
+        </div>
+      )}
+
       {/* Distance Error Modal */}
       {distanceError && (
         <div className="fixed inset-0 bg-black/50 backdrop-blur-sm z-50 flex items-center justify-center p-4">

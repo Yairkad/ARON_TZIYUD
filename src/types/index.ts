@@ -18,6 +18,8 @@ export interface City {
   password: string
   is_active: boolean
   request_mode?: 'direct' | 'request'
+  is_temporarily_closed?: boolean  // Temporary closure (e.g., cabinet under renovation)
+  closure_message?: string | null  // Custom message to display when closed
   cabinet_code?: string | null
   require_call_id?: boolean
   hide_navigation?: boolean
