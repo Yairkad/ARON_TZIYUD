@@ -91,7 +91,15 @@ export async function POST(request: NextRequest) {
 
     // Validate call_id if required
     // Use strict equality to handle null/undefined/false correctly
+    console.log('🔍 require_call_id check:', {
+      require_call_id: city.require_call_id,
+      type: typeof city.require_call_id,
+      strictEquals: city.require_call_id === true,
+      body_call_id: body.call_id
+    })
+
     if (city.require_call_id === true && !body.call_id) {
+      console.log('❌ Blocking request: require_call_id is TRUE and no call_id provided')
       return NextResponse.json(
         { error: 'נדרש מזהה קריאה' },
         { status: 400 }
