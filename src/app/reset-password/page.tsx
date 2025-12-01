@@ -14,7 +14,7 @@ function ResetPasswordContent() {
   const [confirmPassword, setConfirmPassword] = useState('')
   const [loading, setLoading] = useState(false)
   const [success, setSuccess] = useState(false)
-  const [redirectToLogin, setRedirectToLogin] = useState(false)
+  const [redirectTarget, setRedirectTarget] = useState<string | null>(null)
   const [error, setError] = useState('')
   const [hasToken, setHasToken] = useState(false)
   const [isReady, setIsReady] = useState(false)
@@ -114,11 +114,25 @@ function ResetPasswordContent() {
         }
 
         setSuccess(true)
-        setRedirectToLogin(true)
 
-        // Redirect to login after 2 seconds
+        // Determine redirect based on user role
+        if (data.user?.role === 'super_admin') {
+          setRedirectTarget('/super-admin')
+        } else if (data.user?.role === 'city_manager' && data.user?.city_id) {
+          setRedirectTarget(`/city/${data.user.city_id}/admin`)
+        } else {
+          setRedirectTarget('/login')
+        }
+
+        // Redirect after 2 seconds
         setTimeout(() => {
-          window.location.href = '/login'
+          if (data.user?.role === 'super_admin') {
+            window.location.href = '/super-admin'
+          } else if (data.user?.role === 'city_manager' && data.user?.city_id) {
+            window.location.href = `/city/${data.user.city_id}/admin`
+          } else {
+            window.location.href = '/login'
+          }
         }, 2000)
         return
       }
@@ -174,14 +188,20 @@ function ResetPasswordContent() {
 
         setSuccess(true)
 
+        // Determine redirect based on user role
+        if (userData?.role === 'super_admin') {
+          setRedirectTarget('/super-admin')
+        } else if (userData?.role === 'city_manager' && userData?.city_id) {
+          setRedirectTarget(`/city/${userData.city_id}/admin`)
+        } else {
+          setRedirectTarget('/login')
+        }
+
         // Redirect based on role after 2 seconds
-        // Use window.location.href instead of router.push to force full page reload
-        // This prevents React state conflicts and ensures clean session state
         setTimeout(() => {
           if (userData?.role === 'super_admin') {
             window.location.href = '/super-admin'
           } else if (userData?.role === 'city_manager' && userData?.city_id) {
-            // Redirect directly to city admin page
             window.location.href = `/city/${userData.city_id}/admin`
           } else {
             window.location.href = '/login'
@@ -189,6 +209,7 @@ function ResetPasswordContent() {
         }, 2000)
       } else {
         setSuccess(true)
+        setRedirectTarget('/login')
       }
     } catch (err) {
       console.error('Reset password error:', err)
@@ -253,14 +274,18 @@ function ResetPasswordContent() {
             <div className="text-6xl mb-4">✅</div>
             <h1 className="text-2xl font-bold text-green-600 mb-2">הסיסמה שונתה בהצלחה!</h1>
             <p className="text-gray-600">
-              {redirectToLogin ? 'כעת תוכל להתחבר עם הסיסמה החדשה' : 'אתה כבר מחובר למערכת'}
+              {redirectTarget === '/login' ? 'כעת תוכל להתחבר עם הסיסמה החדשה' : 'מעביר אותך לעמוד הניהול...'}
             </p>
           </div>
 
           <div className="bg-green-50 border-2 border-green-200 rounded-xl p-4 mb-6">
             <p className="text-sm text-green-800 text-center">
               <strong>
-                {redirectToLogin ? 'מעביר אותך לעמוד ההתחברות...' : 'מעביר אותך לעמוד הניהול של העיר שלך...'}
+                {redirectTarget === '/login'
+                  ? 'מעביר אותך לעמוד ההתחברות...'
+                  : redirectTarget?.includes('/super-admin')
+                    ? 'מעביר אותך לעמוד ניהול המערכת...'
+                    : 'מעביר אותך לעמוד הניהול של העיר שלך...'}
               </strong>
             </p>
             <div className="flex justify-center mt-3">

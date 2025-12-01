@@ -138,7 +138,11 @@ export async function POST(request: NextRequest) {
 
       return NextResponse.json({
         success: true,
-        message: 'הסיסמה אופסה בהצלחה! כעת תוכל להתחבר עם הסיסמה החדשה.'
+        message: 'הסיסמה אופסה בהצלחה!',
+        user: {
+          role: user.role,
+          city_id: user.city_id
+        }
       })
     }
 
