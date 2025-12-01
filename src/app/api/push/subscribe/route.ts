@@ -29,6 +29,16 @@ export async function POST(request: NextRequest) {
       )
     }
 
+    // Get user's city_id from user_cities table
+    const { data: userCity } = await supabase
+      .from('user_cities')
+      .select('city_id')
+      .eq('user_id', user.id)
+      .limit(1)
+      .single()
+
+    const cityId = userCity?.city_id || null
+
     const body = await request.json()
     const { subscription, userAgent } = body
 
@@ -51,6 +61,7 @@ export async function POST(request: NextRequest) {
       const { error: updateError } = await supabase
         .from('push_subscriptions')
         .update({
+          city_id: cityId,
           p256dh: subscription.keys.p256dh,
           auth: subscription.keys.auth,
           user_agent: userAgent,
@@ -78,6 +89,7 @@ export async function POST(request: NextRequest) {
       .from('push_subscriptions')
       .insert({
         user_id: user.id,
+        city_id: cityId,
         endpoint: subscription.endpoint,
         p256dh: subscription.keys.p256dh,
         auth: subscription.keys.auth,

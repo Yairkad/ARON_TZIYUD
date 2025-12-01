@@ -90,7 +90,8 @@ export async function POST(request: NextRequest) {
     }
 
     // Validate call_id if required
-    if (city.require_call_id && !body.call_id) {
+    // Use strict equality to handle null/undefined/false correctly
+    if (city.require_call_id === true && !body.call_id) {
       return NextResponse.json(
         { error: 'נדרש מזהה קריאה' },
         { status: 400 }

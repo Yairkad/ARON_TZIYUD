@@ -14,11 +14,15 @@ const vapidPrivateKey = process.env.VAPID_PRIVATE_KEY
 
 // VAPID subject must be mailto: or https:// URL
 const getVapidSubject = () => {
+  // First check for VAPID_MAILTO env var
+  if (process.env.VAPID_MAILTO) {
+    return process.env.VAPID_MAILTO
+  }
   const appUrl = process.env.NEXT_PUBLIC_APP_URL
   if (appUrl && appUrl.startsWith('https://')) {
     return appUrl
   }
-  return 'mailto:support@aron-tziyud.com'
+  return 'mailto:aronyedidim@gmail.com'
 }
 
 // Only configure VAPID if both keys are properly set
@@ -56,10 +60,12 @@ export async function POST(request: NextRequest) {
     }
 
     // Get all push subscriptions for this city
-    const { data: subscriptions, error: fetchError } = await supabase
+    // First try direct city_id lookup
+    let { data: subscriptions, error: fetchError } = await supabase
       .from('push_subscriptions')
       .select('*')
       .eq('city_id', cityId)
+      .eq('is_active', true)
 
     if (fetchError) {
       console.error('Error fetching subscriptions:', fetchError)
@@ -67,6 +73,26 @@ export async function POST(request: NextRequest) {
         { error: 'שגיאה בשליפת מנויים' },
         { status: 500 }
       )
+    }
+
+    // Fallback: if no subscriptions found by city_id, find via user_cities
+    if (!subscriptions || subscriptions.length === 0) {
+      // Get all users associated with this city
+      const { data: cityUsers } = await supabase
+        .from('user_cities')
+        .select('user_id')
+        .eq('city_id', cityId)
+
+      if (cityUsers && cityUsers.length > 0) {
+        const userIds = cityUsers.map(u => u.user_id)
+        const { data: userSubscriptions } = await supabase
+          .from('push_subscriptions')
+          .select('*')
+          .in('user_id', userIds)
+          .eq('is_active', true)
+
+        subscriptions = userSubscriptions || []
+      }
     }
 
     if (!subscriptions || subscriptions.length === 0) {
