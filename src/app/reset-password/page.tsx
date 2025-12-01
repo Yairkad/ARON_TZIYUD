@@ -14,6 +14,7 @@ function ResetPasswordContent() {
   const [confirmPassword, setConfirmPassword] = useState('')
   const [loading, setLoading] = useState(false)
   const [success, setSuccess] = useState(false)
+  const [redirectToLogin, setRedirectToLogin] = useState(false)
   const [error, setError] = useState('')
   const [hasToken, setHasToken] = useState(false)
   const [isReady, setIsReady] = useState(false)
@@ -113,6 +114,7 @@ function ResetPasswordContent() {
         }
 
         setSuccess(true)
+        setRedirectToLogin(true)
 
         // Redirect to login after 2 seconds
         setTimeout(() => {
@@ -250,12 +252,16 @@ function ResetPasswordContent() {
           <div className="text-center mb-6">
             <div className="text-6xl mb-4">✅</div>
             <h1 className="text-2xl font-bold text-green-600 mb-2">הסיסמה שונתה בהצלחה!</h1>
-            <p className="text-gray-600">אתה כבר מחובר למערכת</p>
+            <p className="text-gray-600">
+              {redirectToLogin ? 'כעת תוכל להתחבר עם הסיסמה החדשה' : 'אתה כבר מחובר למערכת'}
+            </p>
           </div>
 
           <div className="bg-green-50 border-2 border-green-200 rounded-xl p-4 mb-6">
             <p className="text-sm text-green-800 text-center">
-              <strong>מעביר אותך לעמוד הניהול של העיר שלך...</strong>
+              <strong>
+                {redirectToLogin ? 'מעביר אותך לעמוד ההתחברות...' : 'מעביר אותך לעמוד הניהול של העיר שלך...'}
+              </strong>
             </p>
             <div className="flex justify-center mt-3">
               <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-green-600"></div>
