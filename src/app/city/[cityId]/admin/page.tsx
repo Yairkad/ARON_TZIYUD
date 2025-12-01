@@ -143,6 +143,35 @@ export default function CityAdminPage() {
   const [showProfileDropdown, setShowProfileDropdown] = useState(false)
   const [volunteerViewMode, setVolunteerViewMode] = useState(false)
   const [showClosureConfirm, setShowClosureConfirm] = useState(false)
+
+  // Confirmation Modal State - Generic modal for all confirmations
+  const [confirmModal, setConfirmModal] = useState<{
+    show: boolean
+    title: string
+    message: string
+    icon: string
+    confirmText: string
+    confirmColor: 'red' | 'green' | 'blue' | 'orange'
+    onConfirm: () => void
+    loading?: boolean
+  } | null>(null)
+
+  // Helper function to show confirmation modal
+  const showConfirmModal = (config: {
+    title: string
+    message: string
+    icon: string
+    confirmText: string
+    confirmColor: 'red' | 'green' | 'blue' | 'orange'
+    onConfirm: () => void
+  }) => {
+    setConfirmModal({ show: true, ...config, loading: false })
+  }
+
+  const closeConfirmModal = () => {
+    setConfirmModal(null)
+  }
+
   const [accountForm, setAccountForm] = useState({
     full_name: '',
     phone: '',
@@ -655,27 +684,34 @@ export default function CityAdminPage() {
       return
     }
 
-    if (!confirm('האם אתה בטוח שברצונך למחוק פריט זה?')) return
+    showConfirmModal({
+      title: 'מחיקת פריט',
+      message: 'האם אתה בטוח שברצונך למחוק פריט זה?',
+      icon: '🗑️',
+      confirmText: 'מחק',
+      confirmColor: 'red',
+      onConfirm: async () => {
+        setConfirmModal(prev => prev ? { ...prev, loading: true } : null)
+        try {
+          const response = await fetch(`/api/city-equipment?id=${id}`, {
+            method: 'DELETE'
+          })
 
-    setLoading(true)
-    try {
-      const response = await fetch(`/api/city-equipment?id=${id}`, {
-        method: 'DELETE'
-      })
+          if (!response.ok) {
+            const data = await response.json()
+            throw new Error(data.error || 'שגיאה במחיקה')
+          }
 
-      if (!response.ok) {
-        const data = await response.json()
-        throw new Error(data.error || 'שגיאה במחיקה')
+          toast.success('הציוד נמחק בהצלחה!')
+          fetchEquipment()
+        } catch (error: any) {
+          console.error('Error deleting equipment:', error)
+          toast.error('אירעה שגיאה במחיקת הציוד: ' + error.message)
+        } finally {
+          closeConfirmModal()
+        }
       }
-
-      toast.success('הציוד נמחק בהצלחה!')
-      fetchEquipment()
-    } catch (error: any) {
-      console.error('Error deleting equipment:', error)
-      toast.error('אירעה שגיאה במחיקת הציוד: ' + error.message)
-    } finally {
-      setLoading(false)
-    }
+    })
   }
 
   const handleUpdateHistoryStatus = async (id: string, status: 'borrowed' | 'returned') => {
@@ -748,12 +784,8 @@ export default function CityAdminPage() {
     }
   }
 
-  // Approve or reject return
-  const handleApproveReturn = async (id: string, approve: boolean) => {
-    if (!approve && !confirm('האם אתה בטוח שברצונך לדחות את ההחזרה? הציוד יישאר במצב "מושאל".')) {
-      return
-    }
-
+  // Approve or reject return - internal execution function
+  const executeApproveReturn = async (id: string, approve: boolean) => {
     setLoading(true)
     try {
       // Get the borrow record to find the equipment_id and status
@@ -828,6 +860,29 @@ export default function CityAdminPage() {
     }
   }
 
+  // Approve or reject return - with confirmation for reject
+  const handleApproveReturn = async (id: string, approve: boolean) => {
+    if (!approve) {
+      // Show confirmation modal for rejection
+      showConfirmModal({
+        title: 'דחיית החזרה',
+        message: 'האם אתה בטוח שברצונך לדחות את ההחזרה? הציוד יישאר במצב "מושאל".',
+        icon: '⚠️',
+        confirmText: 'דחה',
+        confirmColor: 'orange',
+        onConfirm: async () => {
+          setConfirmModal(prev => prev ? { ...prev, loading: true } : null)
+          await executeApproveReturn(id, false)
+          closeConfirmModal()
+        }
+      })
+      return
+    }
+
+    // Approve - no confirmation needed
+    await executeApproveReturn(id, true)
+  }
+
   // Toggle group expansion
   const toggleGroupExpansion = (groupId: string) => {
     setExpandedGroups(prev => {
@@ -897,25 +952,32 @@ export default function CityAdminPage() {
       return
     }
 
-    if (!confirm('האם אתה בטוח שברצונך למחוק רשומה זו?')) return
+    showConfirmModal({
+      title: 'מחיקת רשומה',
+      message: 'האם אתה בטוח שברצונך למחוק רשומה זו?',
+      icon: '🗑️',
+      confirmText: 'מחק',
+      confirmColor: 'red',
+      onConfirm: async () => {
+        setConfirmModal(prev => prev ? { ...prev, loading: true } : null)
+        try {
+          const { error } = await supabase
+            .from('borrow_history')
+            .delete()
+            .eq('id', id)
 
-    setLoading(true)
-    try {
-      const { error } = await supabase
-        .from('borrow_history')
-        .delete()
-        .eq('id', id)
+          if (error) throw error
 
-      if (error) throw error
-
-      toast.success('הרשומה נמחקה בהצלחה!')
-      fetchHistory()
-    } catch (error) {
-      console.error('Error deleting history:', error)
-      toast.error('אירעה שגיאה במחיקת הרשומה')
-    } finally {
-      setLoading(false)
-    }
+          toast.success('הרשומה נמחקה בהצלחה!')
+          fetchHistory()
+        } catch (error) {
+          console.error('Error deleting history:', error)
+          toast.error('אירעה שגיאה במחיקת הרשומה')
+        } finally {
+          closeConfirmModal()
+        }
+      }
+    })
   }
 
   const handleUpdateCityDetails = async (e: React.FormEvent) => {
@@ -1012,68 +1074,73 @@ export default function CityAdminPage() {
       return
     }
 
-    if (!confirm('האם אתה בטוח שברצונך להעתיק את הציוד? הציוד הקיים ישאר כמו שהוא ויתווספו פריטים חדשים.')) {
-      return
-    }
+    showConfirmModal({
+      title: 'העתקת ציוד',
+      message: 'האם אתה בטוח שברצונך להעתיק את הציוד? הציוד הקיים ישאר כמו שהוא ויתווספו פריטים חדשים.',
+      icon: '📋',
+      confirmText: 'העתק',
+      confirmColor: 'blue',
+      onConfirm: async () => {
+        setConfirmModal(prev => prev ? { ...prev, loading: true } : null)
+        try {
+          // Fetch equipment from selected city using new structure
+          const response = await fetch(`/api/city-equipment?cityId=${selectedCityToCopy}`)
+          const result = await response.json()
 
-    setLoading(true)
-    try {
-      // Fetch equipment from selected city using new structure
-      const response = await fetch(`/api/city-equipment?cityId=${selectedCityToCopy}`)
-      const result = await response.json()
+          if (!response.ok) throw new Error(result.error)
 
-      if (!response.ok) throw new Error(result.error)
+          const sourceEquipment = result.equipment || []
 
-      const sourceEquipment = result.equipment || []
+          if (sourceEquipment.length === 0) {
+            toast.error('העיר שנבחרה אין בה ציוד להעתקה')
+            closeConfirmModal()
+            return
+          }
 
-      if (sourceEquipment.length === 0) {
-        toast.error('העיר שנבחרה אין בה ציוד להעתקה')
-        setLoading(false)
-        return
-      }
+          // Get existing global_equipment_ids in current city to avoid duplicates
+          const existingGlobalIds = equipment.map(e => e.global_equipment_id)
 
-      // Get existing global_equipment_ids in current city to avoid duplicates
-      const existingGlobalIds = equipment.map(e => e.global_equipment_id)
+          // Filter out equipment that already exists
+          const newEquipmentItems = sourceEquipment.filter(
+            (item: any) => !existingGlobalIds.includes(item.global_equipment_id)
+          )
 
-      // Filter out equipment that already exists
-      const newEquipmentItems = sourceEquipment.filter(
-        (item: any) => !existingGlobalIds.includes(item.global_equipment_id)
-      )
+          if (newEquipmentItems.length === 0) {
+            toast.error('כל הציוד מהעיר שנבחרה כבר קיים בעיר שלך')
+            closeConfirmModal()
+            return
+          }
 
-      if (newEquipmentItems.length === 0) {
-        toast.error('כל הציוד מהעיר שנבחרה כבר קיים בעיר שלך')
-        setLoading(false)
-        return
-      }
+          // Add each equipment item to this city
+          let successCount = 0
+          for (const item of newEquipmentItems) {
+            const addResponse = await fetch('/api/city-equipment', {
+              method: 'POST',
+              headers: { 'Content-Type': 'application/json' },
+              body: JSON.stringify({
+                city_id: cityId,
+                global_equipment_id: item.global_equipment_id,
+                quantity: item.quantity
+              })
+            })
 
-      // Add each equipment item to this city
-      let successCount = 0
-      for (const item of newEquipmentItems) {
-        const addResponse = await fetch('/api/city-equipment', {
-          method: 'POST',
-          headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify({
-            city_id: cityId,
-            global_equipment_id: item.global_equipment_id,
-            quantity: item.quantity
-          })
-        })
+            if (addResponse.ok) {
+              successCount++
+            }
+          }
 
-        if (addResponse.ok) {
-          successCount++
+          toast.success(`${successCount} פריטי ציוד הועתקו בהצלחה!`)
+          setShowCopyEquipment(false)
+          setSelectedCityToCopy('')
+          fetchEquipment()
+        } catch (error) {
+          console.error('Error copying equipment:', error)
+          toast.error('אירעה שגיאה בהעתקת הציוד')
+        } finally {
+          closeConfirmModal()
         }
       }
-
-      toast.success(`${successCount} פריטי ציוד הועתקו בהצלחה!`)
-      setShowCopyEquipment(false)
-      setSelectedCityToCopy('')
-      fetchEquipment()
-    } catch (error) {
-      console.error('Error copying equipment:', error)
-      toast.error('אירעה שגיאה בהעתקת הציוד')
-    } finally {
-      setLoading(false)
-    }
+    })
   }
 
   const handleTogglePushNotifications = async () => {
@@ -2673,32 +2740,44 @@ export default function CityAdminPage() {
                     </div>
                   </div>
                   <button
-                    onClick={async () => {
+                    onClick={() => {
                       if (!canEdit) {
                         toast.error('אין לך הרשאה לבצע פעולה זו - נדרשת הרשאת עריכה מלאה')
                         return
                       }
                       const newMode = city?.request_mode === 'direct' ? 'request' : 'direct'
                       const modeText = newMode === 'direct' ? 'השאלה ישירה' : 'מצב בקשות'
-                      if (confirm(`האם להחליף ל${modeText}?`)) {
-                        try {
-                          const { data: { session } } = await supabase.auth.getSession()
-                          const accessToken = session?.access_token
-                          const response = await fetch('/api/city/update-details', {
-                            method: 'POST',
-                            headers: {
-                              'Content-Type': 'application/json',
-                              ...(accessToken && { 'Authorization': `Bearer ${accessToken}` }),
-                            },
-                            credentials: 'include',
-                            body: JSON.stringify({ cityId, request_mode: newMode })
-                          })
-                          if (!response.ok) throw new Error('שגיאה בעדכון')
-                          await fetchCity()
-                        } catch (error: any) {
-                          toast.error('שגיאה בעדכון: ' + error.message)
+                      const isEnablingRequests = newMode === 'request'
+
+                      showConfirmModal({
+                        title: 'שינוי מצב השאלה',
+                        message: `האם להחליף ל${modeText}?`,
+                        icon: isEnablingRequests ? '📝' : '✅',
+                        confirmText: 'החלף',
+                        confirmColor: isEnablingRequests ? 'blue' : 'green',
+                        onConfirm: async () => {
+                          setConfirmModal(prev => prev ? { ...prev, loading: true } : null)
+                          try {
+                            const { data: { session } } = await supabase.auth.getSession()
+                            const accessToken = session?.access_token
+                            const response = await fetch('/api/city/update-details', {
+                              method: 'POST',
+                              headers: {
+                                'Content-Type': 'application/json',
+                                ...(accessToken && { 'Authorization': `Bearer ${accessToken}` }),
+                              },
+                              credentials: 'include',
+                              body: JSON.stringify({ cityId, request_mode: newMode })
+                            })
+                            if (!response.ok) throw new Error('שגיאה בעדכון')
+                            await fetchCity()
+                          } catch (error: any) {
+                            toast.error('שגיאה בעדכון: ' + error.message)
+                          } finally {
+                            closeConfirmModal()
+                          }
                         }
-                      }
+                      })
                     }}
                     disabled={!canEdit}
                     className={`relative w-14 h-7 rounded-full transition-colors duration-200 ${
@@ -3763,6 +3842,78 @@ export default function CityAdminPage() {
             </div>
           </div>
         )}
+      </div>
+
+      {/* Confirmation Modal */}
+      {confirmModal && confirmModal.show && (
+        <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50 p-4" onClick={closeConfirmModal}>
+          <div
+            className="bg-white rounded-2xl shadow-2xl max-w-md w-full animate-in fade-in zoom-in duration-200"
+            onClick={(e) => e.stopPropagation()}
+          >
+            {/* Header */}
+            <div className={`p-6 rounded-t-2xl ${
+              confirmModal.confirmColor === 'red' ? 'bg-gradient-to-r from-red-500 to-rose-500' :
+              confirmModal.confirmColor === 'orange' ? 'bg-gradient-to-r from-amber-500 to-orange-500' :
+              confirmModal.confirmColor === 'green' ? 'bg-gradient-to-r from-green-500 to-emerald-500' :
+              'bg-gradient-to-r from-blue-500 to-cyan-500'
+            }`}>
+              <div className="flex items-center gap-3">
+                <span className="text-4xl">{confirmModal.icon}</span>
+                <h3 className="text-xl font-bold text-white">{confirmModal.title}</h3>
+              </div>
+            </div>
+
+            {/* Body */}
+            <div className="p-6">
+              <p className="text-gray-700 text-lg leading-relaxed">{confirmModal.message}</p>
+            </div>
+
+            {/* Footer */}
+            <div className="flex gap-3 p-6 pt-0">
+              <Button
+                onClick={closeConfirmModal}
+                disabled={confirmModal.loading}
+                className="flex-1 bg-gray-100 hover:bg-gray-200 text-gray-700 font-semibold py-3 rounded-xl transition-all"
+              >
+                ביטול
+              </Button>
+              <Button
+                onClick={confirmModal.onConfirm}
+                disabled={confirmModal.loading}
+                className={`flex-1 text-white font-semibold py-3 rounded-xl transition-all ${
+                  confirmModal.confirmColor === 'red' ? 'bg-gradient-to-r from-red-500 to-rose-500 hover:from-red-600 hover:to-rose-600' :
+                  confirmModal.confirmColor === 'orange' ? 'bg-gradient-to-r from-amber-500 to-orange-500 hover:from-amber-600 hover:to-orange-600' :
+                  confirmModal.confirmColor === 'green' ? 'bg-gradient-to-r from-green-500 to-emerald-500 hover:from-green-600 hover:to-emerald-600' :
+                  'bg-gradient-to-r from-blue-500 to-cyan-500 hover:from-blue-600 hover:to-cyan-600'
+                }`}
+              >
+                {confirmModal.loading ? (
+                  <span className="flex items-center justify-center gap-2">
+                    <span className="animate-spin">⏳</span>
+                    מעבד...
+                  </span>
+                ) : confirmModal.confirmText}
+              </Button>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* Footer with Feedback Link */}
+      <div className="mt-12 mb-8">
+        <div className="text-center py-4 border-t border-gray-200">
+          <p className="text-gray-400 text-xs">
+            מערכת ארון ציוד ידידים •{' '}
+            <Link href={`/feedback?source=city_admin&city=${encodeURIComponent(city?.name || '')}`} className="text-indigo-500 hover:text-indigo-600 hover:underline">
+              דווח על בעיה
+            </Link>
+            {' '}•{' '}
+            <Link href={`/feedback?source=city_admin&city=${encodeURIComponent(city?.name || '')}`} className="text-indigo-500 hover:text-indigo-600 hover:underline">
+              הצע שיפור
+            </Link>
+          </p>
+        </div>
       </div>
     </div>
   )

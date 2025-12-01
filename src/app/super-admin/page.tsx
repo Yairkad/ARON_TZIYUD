@@ -90,6 +90,34 @@ export default function SuperAdminPage() {
   // Profile dropdown state
   const [showProfileDropdown, setShowProfileDropdown] = useState(false)
 
+  // Confirmation Modal State - Generic modal for all confirmations
+  const [confirmModal, setConfirmModal] = useState<{
+    show: boolean
+    title: string
+    message: string
+    icon: string
+    confirmText: string
+    confirmColor: 'red' | 'green' | 'blue' | 'orange'
+    onConfirm: () => void
+    loading?: boolean
+  } | null>(null)
+
+  // Helper function to show confirmation modal
+  const showConfirmModal = (config: {
+    title: string
+    message: string
+    icon: string
+    confirmText: string
+    confirmColor: 'red' | 'green' | 'blue' | 'orange'
+    onConfirm: () => void
+  }) => {
+    setConfirmModal({ show: true, ...config, loading: false })
+  }
+
+  const closeConfirmModal = () => {
+    setConfirmModal(null)
+  }
+
   // Check authentication on mount
   useEffect(() => {
     const verifyAuth = async () => {
@@ -258,30 +286,39 @@ export default function SuperAdminPage() {
   }
 
   const deleteAllNotifications = async () => {
-    if (!confirm('האם אתה בטוח שברצונך למחוק את כל ההתראות?')) {
-      return
-    }
+    showConfirmModal({
+      title: 'מחיקת כל ההתראות',
+      message: 'האם אתה בטוח שברצונך למחוק את כל ההתראות? פעולה זו לא ניתנת לביטול.',
+      icon: '🗑️',
+      confirmText: 'מחק הכל',
+      confirmColor: 'red',
+      onConfirm: async () => {
+        setConfirmModal(prev => prev ? { ...prev, loading: true } : null)
+        try {
+          const response = await fetch('/api/super-admin/delete-all-notifications', {
+            method: 'POST',
+            headers: {
+              'Content-Type': 'application/json',
+            },
+          })
 
-    try {
-      const response = await fetch('/api/super-admin/delete-all-notifications', {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-        },
-      })
+          const data = await response.json()
 
-      const data = await response.json()
+          if (!response.ok) {
+            toast.error(data.error || 'שגיאה במחיקת ההתראות')
+            return
+          }
 
-      if (!response.ok) {
-        toast.error(data.error || 'שגיאה במחיקת ההתראות')
-        return
+          toast.success('כל ההתראות נמחקו')
+          fetchNotifications()
+        } catch (error) {
+          console.error('Error deleting all notifications:', error)
+          toast.error('שגיאה במחיקת ההתראות')
+        } finally {
+          closeConfirmModal()
+        }
       }
-
-      fetchNotifications()
-    } catch (error) {
-      console.error('Error deleting all notifications:', error)
-      toast.error('שגיאה במחיקת ההתראות')
-    }
+    })
   }
 
   const deleteNotification = async (notificationId: string) => {
@@ -446,73 +483,89 @@ export default function SuperAdminPage() {
 
   const handleToggleActive = async (city: City) => {
     const action = city.is_active ? 'השבתת' : 'הפעלת'
-    if (!confirm(`האם אתה בטוח שברצונך ב${action} העיר ${city.name}?`)) return
+    const isActivating = !city.is_active
 
-    setLoading(true)
-    try {
-      console.log('Toggling city:', city.id, 'to:', !city.is_active)
+    showConfirmModal({
+      title: isActivating ? 'הפעלת עיר' : 'השבתת עיר',
+      message: `האם אתה בטוח שברצונך ב${action} העיר ${city.name}?`,
+      icon: isActivating ? '✅' : '⏸️',
+      confirmText: isActivating ? 'הפעל' : 'השבת',
+      confirmColor: isActivating ? 'green' : 'orange',
+      onConfirm: async () => {
+        setConfirmModal(prev => prev ? { ...prev, loading: true } : null)
+        try {
+          console.log('Toggling city:', city.id, 'to:', !city.is_active)
 
-      const response = await fetch('/api/super-admin/toggle-city', {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-        },
-        body: JSON.stringify({
-          cityId: city.id,
-          is_active: !city.is_active
-        }),
-      })
+          const response = await fetch('/api/super-admin/toggle-city', {
+            method: 'POST',
+            headers: {
+              'Content-Type': 'application/json',
+            },
+            body: JSON.stringify({
+              cityId: city.id,
+              is_active: !city.is_active
+            }),
+          })
 
-      const data = await response.json()
-      console.log('Toggle response:', data)
+          const data = await response.json()
+          console.log('Toggle response:', data)
 
-      if (!response.ok) {
-        toast.error(data.error || `שגיאה ב${action} העיר`)
-        return
+          if (!response.ok) {
+            toast.error(data.error || `שגיאה ב${action} העיר`)
+            return
+          }
+
+          toast.success(`העיר ${action}ה בהצלחה!`)
+          setCityFilter('all') // Reset filter to "all" to show the toggled city
+          await fetchCities()
+          console.log('Cities after fetch:', cities.length)
+        } catch (error) {
+          console.error('Error toggling city status:', error)
+          toast.error(`אירעה שגיאה ב${action} העיר`)
+        } finally {
+          closeConfirmModal()
+        }
       }
-
-      toast.success(`העיר ${action}ה בהצלחה!`)
-      setCityFilter('all') // Reset filter to "all" to show the toggled city
-      await fetchCities()
-      console.log('Cities after fetch:', cities.length)
-    } catch (error) {
-      console.error('Error toggling city status:', error)
-      toast.error(`אירעה שגיאה ב${action} העיר`)
-    } finally {
-      setLoading(false)
-    }
+    })
   }
 
   const handleDeleteCity = async (city: City) => {
-    if (!confirm(`האם אתה בטוח שברצונך למחוק את העיר ${city.name}?\n\nאזהרה: פעולה זו תמחק גם את כל הציוד וההיסטוריה הקשורים לעיר!`)) return
+    showConfirmModal({
+      title: 'מחיקת עיר',
+      message: `האם אתה בטוח שברצונך למחוק את העיר ${city.name}?\n\nאזהרה: פעולה זו תמחק גם את כל הציוד וההיסטוריה הקשורים לעיר!`,
+      icon: '🗑️',
+      confirmText: 'מחק עיר',
+      confirmColor: 'red',
+      onConfirm: async () => {
+        setConfirmModal(prev => prev ? { ...prev, loading: true } : null)
+        try {
+          const response = await fetch('/api/super-admin/delete-city', {
+            method: 'POST',
+            headers: {
+              'Content-Type': 'application/json',
+            },
+            body: JSON.stringify({
+              cityId: city.id
+            }),
+          })
 
-    setLoading(true)
-    try {
-      const response = await fetch('/api/super-admin/delete-city', {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-        },
-        body: JSON.stringify({
-          cityId: city.id
-        }),
-      })
+          const data = await response.json()
 
-      const data = await response.json()
+          if (!response.ok) {
+            toast.error(data.error || 'שגיאה במחיקת העיר')
+            return
+          }
 
-      if (!response.ok) {
-        toast.error(data.error || 'שגיאה במחיקת העיר')
-        return
+          toast.success('העיר נמחקה בהצלחה!')
+          fetchCities()
+        } catch (error) {
+          console.error('Error deleting city:', error)
+          toast.error('אירעה שגיאה במחיקת העיר')
+        } finally {
+          closeConfirmModal()
+        }
       }
-
-      toast.success('העיר נמחקה בהצלחה!')
-      fetchCities()
-    } catch (error) {
-      console.error('Error deleting city:', error)
-      toast.error('אירעה שגיאה במחיקת העיר')
-    } finally {
-      setLoading(false)
-    }
+    })
   }
 
   const handleChangePassword = async (e: React.FormEvent) => {
@@ -610,31 +663,41 @@ export default function SuperAdminPage() {
   }
 
   const handleDeleteEmailLog = async (logId: string) => {
-    if (!confirm('האם אתה בטוח שברצונך למחוק את רשומת המייל הזו?')) return
+    showConfirmModal({
+      title: 'מחיקת רשומת מייל',
+      message: 'האם אתה בטוח שברצונך למחוק את רשומת המייל הזו?',
+      icon: '📧',
+      confirmText: 'מחק',
+      confirmColor: 'red',
+      onConfirm: async () => {
+        setConfirmModal(prev => prev ? { ...prev, loading: true } : null)
+        try {
+          const response = await fetch('/api/admin/email-logs/delete', {
+            method: 'POST',
+            headers: {
+              'Content-Type': 'application/json',
+            },
+            credentials: 'include',
+            body: JSON.stringify({ log_id: logId }),
+          })
 
-    try {
-      const response = await fetch('/api/admin/email-logs/delete', {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-        },
-        credentials: 'include',
-        body: JSON.stringify({ log_id: logId }),
-      })
+          const data = await response.json()
 
-      const data = await response.json()
+          if (!response.ok) {
+            toast.error(data.error || 'שגיאה במחיקת רשומת המייל')
+            return
+          }
 
-      if (!response.ok) {
-        toast.error(data.error || 'שגיאה במחיקת רשומת המייל')
-        return
+          toast.success('רשומת המייל נמחקה בהצלחה')
+          fetchEmailLogs()
+        } catch (error) {
+          console.error('Error deleting email log:', error)
+          toast.error('שגיאה במחיקת רשומת המייל')
+        } finally {
+          closeConfirmModal()
+        }
       }
-
-      toast.success('רשומת המייל נמחקה בהצלחה')
-      fetchEmailLogs()
-    } catch (error) {
-      console.error('Error deleting email log:', error)
-      toast.error('שגיאה במחיקת רשומת המייל')
-    }
+    })
   }
 
   const toggleEmailExpand = (emailId: string) => {
@@ -645,6 +708,56 @@ export default function SuperAdminPage() {
       newExpanded.add(emailId)
     }
     setExpandedEmails(newExpanded)
+  }
+
+  // Helper function to actually send bulk emails
+  const executeBulkEmailSend = async (targetUsers: any[]) => {
+    closeConfirmModal()
+    setSendingCustomEmail(true)
+    setBulkEmailProgress({ sent: 0, total: targetUsers.length, failed: 0 })
+
+    let sent = 0
+    let failed = 0
+
+    for (const user of targetUsers) {
+      try {
+        const response = await fetch('/api/admin/send-custom-email', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          credentials: 'include',
+          body: JSON.stringify({
+            to: user.email,
+            subject: customEmailSubject,
+            message: customEmailMessage,
+            recipientName: user.full_name || undefined
+          }),
+        })
+
+        if (response.ok) {
+          sent++
+        } else {
+          failed++
+        }
+      } catch {
+        failed++
+      }
+
+      setBulkEmailProgress({ sent, total: targetUsers.length, failed })
+    }
+
+    toast.success(`שליחה הושלמה! ✅ נשלחו בהצלחה: ${sent} ❌ נכשלו: ${failed}`)
+
+    // Reset form
+    setCustomEmailTo('')
+    setCustomEmailName('')
+    setCustomEmailSubject('')
+    setCustomEmailMessage('')
+    setSendToAllUsers(false)
+    setSelectedUsersForEmail(new Set())
+    setBulkEmailProgress({ sent: 0, total: 0, failed: 0 })
+    setShowCustomEmailForm(false)
+    fetchEmailLogs()
+    setSendingCustomEmail(false)
   }
 
   const handleSendCustomEmail = async (e: React.FormEvent) => {
@@ -663,110 +776,28 @@ export default function SuperAdminPage() {
 
     // Bulk send to all users
     if (sendToAllUsers) {
-      if (!confirm(`האם אתה בטוח שברצונך לשלוח מייל לכל ${users.length} המשתמשים?`)) {
-        return
-      }
-
-      setSendingCustomEmail(true)
-      setBulkEmailProgress({ sent: 0, total: users.length, failed: 0 })
-
-      let sent = 0
-      let failed = 0
-
-      for (const user of users) {
-        try {
-          const response = await fetch('/api/admin/send-custom-email', {
-            method: 'POST',
-            headers: { 'Content-Type': 'application/json' },
-            credentials: 'include',
-            body: JSON.stringify({
-              to: user.email,
-              subject: customEmailSubject,
-              message: customEmailMessage,
-              recipientName: user.full_name || undefined
-            }),
-          })
-
-          if (response.ok) {
-            sent++
-          } else {
-            failed++
-          }
-        } catch {
-          failed++
-        }
-
-        setBulkEmailProgress({ sent, total: users.length, failed })
-      }
-
-      toast.success(`שליחה הושלמה! ✅ נשלחו בהצלחה: ${sent} ❌ נכשלו: ${failed}`)
-
-      // Reset form
-      setCustomEmailTo('')
-      setCustomEmailName('')
-      setCustomEmailSubject('')
-      setCustomEmailMessage('')
-      setSendToAllUsers(false)
-      setSelectedUsersForEmail(new Set())
-      setBulkEmailProgress({ sent: 0, total: 0, failed: 0 })
-      setShowCustomEmailForm(false)
-      fetchEmailLogs()
-      setSendingCustomEmail(false)
+      showConfirmModal({
+        title: 'שליחת מייל לכל המשתמשים',
+        message: `האם אתה בטוח שברצונך לשלוח מייל לכל ${users.length} המשתמשים?`,
+        icon: '📧',
+        confirmText: 'שלח לכולם',
+        confirmColor: 'blue',
+        onConfirm: () => executeBulkEmailSend(users)
+      })
       return
     }
 
     // Bulk send to selected users
     if (hasSelectedUsers) {
       const selectedUsersList = users.filter(u => selectedUsersForEmail.has(u.id))
-      if (!confirm(`האם אתה בטוח שברצונך לשלוח מייל ל-${selectedUsersList.length} משתמשים נבחרים?`)) {
-        return
-      }
-
-      setSendingCustomEmail(true)
-      setBulkEmailProgress({ sent: 0, total: selectedUsersList.length, failed: 0 })
-
-      let sent = 0
-      let failed = 0
-
-      for (const user of selectedUsersList) {
-        try {
-          const response = await fetch('/api/admin/send-custom-email', {
-            method: 'POST',
-            headers: { 'Content-Type': 'application/json' },
-            credentials: 'include',
-            body: JSON.stringify({
-              to: user.email,
-              subject: customEmailSubject,
-              message: customEmailMessage,
-              recipientName: user.full_name || undefined
-            }),
-          })
-
-          if (response.ok) {
-            sent++
-          } else {
-            failed++
-          }
-        } catch {
-          failed++
-        }
-
-        setBulkEmailProgress({ sent, total: selectedUsersList.length, failed })
-      }
-
-      toast.success(`שליחה הושלמה! ✅ נשלחו בהצלחה: ${sent} ❌ נכשלו: ${failed}`)
-
-      // Reset form
-      setCustomEmailTo('')
-      setCustomEmailName('')
-      setCustomEmailSubject('')
-      setCustomEmailMessage('')
-      setSendToAllUsers(false)
-      setSelectedUsersForEmail(new Set())
-      setBulkEmailProgress({ sent: 0, total: 0, failed: 0 })
-      setShowCustomEmailForm(false)
-      fetchEmailLogs()
-      setSendingCustomEmail(false)
+      showConfirmModal({
+        title: 'שליחת מייל למשתמשים נבחרים',
+        message: `האם אתה בטוח שברצונך לשלוח מייל ל-${selectedUsersList.length} משתמשים נבחרים?`,
+        icon: '📧',
+        confirmText: 'שלח',
+        confirmColor: 'blue',
+        onConfirm: () => executeBulkEmailSend(selectedUsersList)
+      })
       return
     }
 
@@ -831,31 +862,41 @@ export default function SuperAdminPage() {
 
   const handleDeleteSelectedEmails = async () => {
     if (selectedEmails.size === 0) return
-    if (!confirm(`האם אתה בטוח שברצונך למחוק ${selectedEmails.size} מיילים?`)) return
 
-    setDeletingSelectedEmails(true)
-    try {
-      // Delete each selected email
-      const deletePromises = Array.from(selectedEmails).map(async (logId) => {
-        const response = await fetch('/api/admin/email-logs/delete', {
-          method: 'POST',
-          headers: { 'Content-Type': 'application/json' },
-          credentials: 'include',
-          body: JSON.stringify({ log_id: logId }),
-        })
-        return response.ok
-      })
+    showConfirmModal({
+      title: 'מחיקת מיילים נבחרים',
+      message: `האם אתה בטוח שברצונך למחוק ${selectedEmails.size} מיילים?`,
+      icon: '📧',
+      confirmText: 'מחק הכל',
+      confirmColor: 'red',
+      onConfirm: async () => {
+        setConfirmModal(prev => prev ? { ...prev, loading: true } : null)
+        setDeletingSelectedEmails(true)
+        try {
+          // Delete each selected email
+          const deletePromises = Array.from(selectedEmails).map(async (logId) => {
+            const response = await fetch('/api/admin/email-logs/delete', {
+              method: 'POST',
+              headers: { 'Content-Type': 'application/json' },
+              credentials: 'include',
+              body: JSON.stringify({ log_id: logId }),
+            })
+            return response.ok
+          })
 
-      await Promise.all(deletePromises)
-      toast.success(`${selectedEmails.size} מיילים נמחקו בהצלחה`)
-      setSelectedEmails(new Set())
-      fetchEmailLogs()
-    } catch (error) {
-      console.error('Error deleting selected emails:', error)
-      toast.error('שגיאה במחיקת המיילים')
-    } finally {
-      setDeletingSelectedEmails(false)
-    }
+          await Promise.all(deletePromises)
+          toast.success(`${selectedEmails.size} מיילים נמחקו בהצלחה`)
+          setSelectedEmails(new Set())
+          fetchEmailLogs()
+        } catch (error) {
+          console.error('Error deleting selected emails:', error)
+          toast.error('שגיאה במחיקת המיילים')
+        } finally {
+          setDeletingSelectedEmails(false)
+          closeConfirmModal()
+        }
+      }
+    })
   }
 
   const handleCreateUser = async (e: React.FormEvent) => {
@@ -1006,36 +1047,43 @@ export default function SuperAdminPage() {
   }
 
   const handleDeleteUser = async (user: any) => {
-    if (!confirm(`האם אתה בטוח שברצונך למחוק את המשתמש ${user.full_name || user.email}?`)) return
+    showConfirmModal({
+      title: 'מחיקת משתמש',
+      message: `האם אתה בטוח שברצונך למחוק את המשתמש ${user.full_name || user.email}?`,
+      icon: '👤',
+      confirmText: 'מחק משתמש',
+      confirmColor: 'red',
+      onConfirm: async () => {
+        setConfirmModal(prev => prev ? { ...prev, loading: true } : null)
+        try {
+          const response = await fetch('/api/admin/users/delete', {
+            method: 'POST',
+            headers: {
+              'Content-Type': 'application/json',
+            },
+            credentials: 'include',
+            body: JSON.stringify({
+              user_id: user.id
+            }),
+          })
 
-    setLoading(true)
-    try {
-      const response = await fetch('/api/admin/users/delete', {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-        },
-        credentials: 'include', // Important: send cookies for authentication
-        body: JSON.stringify({
-          user_id: user.id
-        }),
-      })
+          const data = await response.json()
 
-      const data = await response.json()
+          if (!response.ok) {
+            toast.error(data.error || 'שגיאה במחיקת המשתמש')
+            return
+          }
 
-      if (!response.ok) {
-        toast.error(data.error || 'שגיאה במחיקת המשתמש')
-        return
+          toast.success('המשתמש נמחק בהצלחה!')
+          fetchUsers()
+        } catch (error) {
+          console.error('Error deleting user:', error)
+          toast.error('אירעה שגיאה במחיקת המשתמש')
+        } finally {
+          closeConfirmModal()
+        }
       }
-
-      toast.success('המשתמש נמחק בהצלחה!')
-      fetchUsers()
-    } catch (error) {
-      console.error('Error deleting user:', error)
-      toast.error('אירעה שגיאה במחיקת המשתמש')
-    } finally {
-      setLoading(false)
-    }
+    })
   }
 
   const handleEditUser = (user: any) => {
@@ -1785,34 +1833,41 @@ export default function SuperAdminPage() {
                                       return
                                     }
 
-                                    if (!confirm(`האם לאפס את הסיסמה של העיר ${city.name}?\nסיסמה חדשה: ${newPassword}`)) return
+                                    showConfirmModal({
+                                      title: 'איפוס סיסמת עיר',
+                                      message: `האם לאפס את הסיסמה של העיר ${city.name}?\n\nסיסמה חדשה: ${newPassword}`,
+                                      icon: '🔑',
+                                      confirmText: 'אפס סיסמה',
+                                      confirmColor: 'orange',
+                                      onConfirm: async () => {
+                                        setConfirmModal(prev => prev ? { ...prev, loading: true } : null)
+                                        try {
+                                          const response = await fetch('/api/admin/cities/reset-password', {
+                                            method: 'POST',
+                                            headers: { 'Content-Type': 'application/json' },
+                                            credentials: 'include',
+                                            body: JSON.stringify({
+                                              city_id: city.id,
+                                              new_password: newPassword
+                                            }),
+                                          })
 
-                                    setLoading(true)
-                                    try {
-                                      const response = await fetch('/api/admin/cities/reset-password', {
-                                        method: 'POST',
-                                        headers: { 'Content-Type': 'application/json' },
-                                        credentials: 'include',
-                                        body: JSON.stringify({
-                                          city_id: city.id,
-                                          new_password: newPassword
-                                        }),
-                                      })
+                                          const data = await response.json()
 
-                                      const data = await response.json()
+                                          if (!response.ok) {
+                                            toast.error(data.error || 'שגיאה באיפוס סיסמה')
+                                            return
+                                          }
 
-                                      if (!response.ok) {
-                                        toast.error(data.error || 'שגיאה באיפוס סיסמה')
-                                        return
+                                          toast.success(data.message)
+                                        } catch (error) {
+                                          console.error('Error resetting city password:', error)
+                                          toast.error('אירעה שגיאה באיפוס הסיסמה')
+                                        } finally {
+                                          closeConfirmModal()
+                                        }
                                       }
-
-                                      toast.success(data.message)
-                                    } catch (error) {
-                                      console.error('Error resetting city password:', error)
-                                      toast.error('אירעה שגיאה באיפוס הסיסמה')
-                                    } finally {
-                                      setLoading(false)
-                                    }
+                                    })
                                   }}
                                   disabled={loading}
                                   className="bg-gradient-to-r from-amber-500 to-orange-500 hover:from-amber-600 hover:to-orange-600 text-xs sm:text-sm px-2 sm:px-4 h-9 sm:h-10 flex-shrink-0"
@@ -1927,9 +1982,18 @@ export default function SuperAdminPage() {
                         )}
                         <Button
                           onClick={() => {
-                            if (confirm('האם למחוק התראה זו?')) {
-                              deleteNotification(notification.id)
-                            }
+                            showConfirmModal({
+                              title: 'מחיקת התראה',
+                              message: 'האם אתה בטוח שברצונך למחוק התראה זו?',
+                              icon: '🗑️',
+                              confirmText: 'מחק',
+                              confirmColor: 'red',
+                              onConfirm: async () => {
+                                setConfirmModal(prev => prev ? { ...prev, loading: true } : null)
+                                await deleteNotification(notification.id)
+                                closeConfirmModal()
+                              }
+                            })
                           }}
                           size="icon"
                           className="h-10 w-10 bg-red-500 hover:bg-red-600 rounded-full"
@@ -2352,41 +2416,54 @@ export default function SuperAdminPage() {
                                       </div>
                                       <button
                                         type="button"
-                                        onClick={async () => {
-                                          if (!confirm(`האם אתה בטוח שברצונך להסיר את ${editingUser.full_name} מהעיר ${city.name}?`)) return
+                                        onClick={() => {
+                                          const cityName = city.name
+                                          const userName = editingUser.full_name
+                                          const cityId = city.id
+                                          const userId = editingUser.id
 
-                                          setLoading(true)
-                                          try {
-                                            const res = await fetch('/api/admin/users/manage-cities', {
-                                              method: 'POST',
-                                              headers: { 'Content-Type': 'application/json' },
-                                              body: JSON.stringify({
-                                                user_id: editingUser.id,
-                                                city_id: city.id,
-                                                action: 'remove'
-                                              })
-                                            })
+                                          showConfirmModal({
+                                            title: 'הסרת עיר ממשתמש',
+                                            message: `האם אתה בטוח שברצונך להסיר את ${userName} מהעיר ${cityName}?`,
+                                            icon: '🏙️',
+                                            confirmText: 'הסר',
+                                            confirmColor: 'red',
+                                            onConfirm: async () => {
+                                              setConfirmModal(prev => prev ? { ...prev, loading: true } : null)
+                                              try {
+                                                const res = await fetch('/api/admin/users/manage-cities', {
+                                                  method: 'POST',
+                                                  headers: { 'Content-Type': 'application/json' },
+                                                  body: JSON.stringify({
+                                                    user_id: userId,
+                                                    city_id: cityId,
+                                                    action: 'remove'
+                                                  })
+                                                })
 
-                                            const data = await res.json()
-                                            if (data.success) {
-                                              toast.success('העיר הוסרה בהצלחה')
-                                              await fetchUsers()
-                                              // Refresh the editing user to show updated cities
-                                              const res2 = await fetch('/api/admin/users/list')
-                                              const data2 = await res2.json()
-                                              if (data2.success) {
-                                                const updatedUser = data2.users.find((u: any) => u.id === editingUser.id)
-                                                if (updatedUser) {
-                                                  setEditingUser(updatedUser)
+                                                const data = await res.json()
+                                                if (data.success) {
+                                                  toast.success('העיר הוסרה בהצלחה')
+                                                  await fetchUsers()
+                                                  // Refresh the editing user to show updated cities
+                                                  const res2 = await fetch('/api/admin/users/list')
+                                                  const data2 = await res2.json()
+                                                  if (data2.success) {
+                                                    const updatedUser = data2.users.find((u: any) => u.id === userId)
+                                                    if (updatedUser) {
+                                                      setEditingUser(updatedUser)
+                                                    }
+                                                  }
+                                                } else {
+                                                  toast.error(data.error || 'שגיאה בהסרת עיר')
                                                 }
+                                              } catch (err) {
+                                                toast.error('שגיאה בהסרת עיר')
+                                              } finally {
+                                                closeConfirmModal()
                                               }
-                                            } else {
-                                              toast.error(data.error || 'שגיאה בהסרת עיר')
                                             }
-                                          } catch (err) {
-                                            toast.error('שגיאה בהסרת עיר')
-                                          }
-                                          setLoading(false)
+                                          })
                                         }}
                                         className="px-3 py-1 bg-red-500 hover:bg-red-600 text-white rounded-lg text-sm font-medium transition-colors"
                                       >
@@ -2664,40 +2741,51 @@ export default function SuperAdminPage() {
                             </Button>
                             <Button
                               type="button"
-                              onClick={async (e) => {
+                              onClick={(e) => {
                                 e.preventDefault()
                                 e.stopPropagation()
 
-                                const action = user.is_active ? 'לחסום' : 'להפעיל'
-                                if (!confirm(`האם ${action} את המשתמש ${user.full_name}?`)) return
+                                const isActive = user.is_active
+                                const action = isActive ? 'לחסום' : 'להפעיל'
+                                const userId = user.id
+                                const userName = user.full_name
 
-                                setLoading(true)
-                                try {
-                                  const response = await fetch('/api/admin/users/update', {
-                                    method: 'PUT',
-                                    headers: { 'Content-Type': 'application/json' },
-                                    credentials: 'include',
-                                    body: JSON.stringify({
-                                      user_id: user.id,
-                                      is_active: !user.is_active
-                                    }),
-                                  })
+                                showConfirmModal({
+                                  title: isActive ? 'חסימת משתמש' : 'הפעלת משתמש',
+                                  message: `האם ${action} את המשתמש ${userName}?`,
+                                  icon: isActive ? '🚫' : '✅',
+                                  confirmText: isActive ? 'חסום' : 'הפעל',
+                                  confirmColor: isActive ? 'orange' : 'green',
+                                  onConfirm: async () => {
+                                    setConfirmModal(prev => prev ? { ...prev, loading: true } : null)
+                                    try {
+                                      const response = await fetch('/api/admin/users/update', {
+                                        method: 'PUT',
+                                        headers: { 'Content-Type': 'application/json' },
+                                        credentials: 'include',
+                                        body: JSON.stringify({
+                                          user_id: userId,
+                                          is_active: !isActive
+                                        }),
+                                      })
 
-                                  const data = await response.json()
+                                      const data = await response.json()
 
-                                  if (!response.ok) {
-                                    toast.error(data.error || 'שגיאה בעדכון משתמש')
-                                    return
+                                      if (!response.ok) {
+                                        toast.error(data.error || 'שגיאה בעדכון משתמש')
+                                        return
+                                      }
+
+                                      toast.success(`המשתמש ${isActive ? 'נחסם' : 'הופעל'} בהצלחה`)
+                                      fetchUsers()
+                                    } catch (error) {
+                                      console.error('Error updating user:', error)
+                                      toast.error('אירעה שגיאה בעדכון המשתמש')
+                                    } finally {
+                                      closeConfirmModal()
+                                    }
                                   }
-
-                                  toast.success(`המשתמש ${user.is_active ? 'נחסם' : 'הופעל'} בהצלחה`)
-                                  fetchUsers()
-                                } catch (error) {
-                                  console.error('Error updating user:', error)
-                                  toast.error('אירעה שגיאה בעדכון המשתמש')
-                                } finally {
-                                  setLoading(false)
-                                }
+                                })
                               }}
                               className={`${user.is_active
                                 ? 'bg-gradient-to-r from-amber-500 to-orange-500 hover:from-amber-600 hover:to-orange-600'
@@ -2709,37 +2797,46 @@ export default function SuperAdminPage() {
                             </Button>
                             <Button
                               type="button"
-                              onClick={async (e) => {
+                              onClick={(e) => {
                                 e.preventDefault()
                                 e.stopPropagation()
 
-                                if (!confirm(`האם לשלוח לינק לאיפוס סיסמה למייל ${user.email}?`)) return
+                                const userEmail = user.email
 
-                                setLoading(true)
-                                try {
-                                  const response = await fetch('/api/admin/users/send-reset-email', {
-                                    method: 'POST',
-                                    headers: { 'Content-Type': 'application/json' },
-                                    credentials: 'include',
-                                    body: JSON.stringify({
-                                      email: user.email
-                                    }),
-                                  })
+                                showConfirmModal({
+                                  title: 'שליחת לינק איפוס סיסמה',
+                                  message: `האם לשלוח לינק לאיפוס סיסמה למייל ${userEmail}?`,
+                                  icon: '📧',
+                                  confirmText: 'שלח',
+                                  confirmColor: 'green',
+                                  onConfirm: async () => {
+                                    setConfirmModal(prev => prev ? { ...prev, loading: true } : null)
+                                    try {
+                                      const response = await fetch('/api/admin/users/send-reset-email', {
+                                        method: 'POST',
+                                        headers: { 'Content-Type': 'application/json' },
+                                        credentials: 'include',
+                                        body: JSON.stringify({
+                                          email: userEmail
+                                        }),
+                                      })
 
-                                  const data = await response.json()
+                                      const data = await response.json()
 
-                                  if (!response.ok) {
-                                    toast.error(data.error || 'שגיאה בשליחת מייל')
-                                    return
+                                      if (!response.ok) {
+                                        toast.error(data.error || 'שגיאה בשליחת מייל')
+                                        return
+                                      }
+
+                                      toast.success(data.message)
+                                    } catch (error) {
+                                      console.error('Error sending reset email:', error)
+                                      toast.error('אירעה שגיאה בשליחת המייל')
+                                    } finally {
+                                      closeConfirmModal()
+                                    }
                                   }
-
-                                  toast.success(data.message)
-                                } catch (error) {
-                                  console.error('Error sending reset email:', error)
-                                  toast.error('אירעה שגיאה בשליחת המייל')
-                                } finally {
-                                  setLoading(false)
-                                }
+                                })
                               }}
                               className="bg-gradient-to-r from-emerald-500 to-teal-500 hover:from-emerald-600 hover:to-teal-600 text-white font-semibold text-xs md:text-sm px-2 md:px-4 py-1.5 md:py-2 rounded-lg transition-all duration-200 hover:scale-105 flex-1 md:flex-none"
                             >
@@ -3300,6 +3397,78 @@ export default function SuperAdminPage() {
             </Card>
           </>
         )}
+      </div>
+
+      {/* Confirmation Modal */}
+      {confirmModal && confirmModal.show && (
+        <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50 p-4" onClick={closeConfirmModal}>
+          <div
+            className="bg-white rounded-2xl shadow-2xl max-w-md w-full animate-in fade-in zoom-in duration-200"
+            onClick={(e) => e.stopPropagation()}
+          >
+            {/* Header */}
+            <div className={`p-6 rounded-t-2xl ${
+              confirmModal.confirmColor === 'red' ? 'bg-gradient-to-r from-red-500 to-rose-500' :
+              confirmModal.confirmColor === 'orange' ? 'bg-gradient-to-r from-amber-500 to-orange-500' :
+              confirmModal.confirmColor === 'green' ? 'bg-gradient-to-r from-green-500 to-emerald-500' :
+              'bg-gradient-to-r from-blue-500 to-cyan-500'
+            }`}>
+              <div className="flex items-center gap-3">
+                <span className="text-4xl">{confirmModal.icon}</span>
+                <h3 className="text-xl font-bold text-white">{confirmModal.title}</h3>
+              </div>
+            </div>
+
+            {/* Body */}
+            <div className="p-6">
+              <p className="text-gray-700 text-lg leading-relaxed">{confirmModal.message}</p>
+            </div>
+
+            {/* Footer */}
+            <div className="flex gap-3 p-6 pt-0">
+              <Button
+                onClick={closeConfirmModal}
+                disabled={confirmModal.loading}
+                className="flex-1 bg-gray-100 hover:bg-gray-200 text-gray-700 font-semibold py-3 rounded-xl transition-all"
+              >
+                ביטול
+              </Button>
+              <Button
+                onClick={confirmModal.onConfirm}
+                disabled={confirmModal.loading}
+                className={`flex-1 text-white font-semibold py-3 rounded-xl transition-all ${
+                  confirmModal.confirmColor === 'red' ? 'bg-gradient-to-r from-red-500 to-rose-500 hover:from-red-600 hover:to-rose-600' :
+                  confirmModal.confirmColor === 'orange' ? 'bg-gradient-to-r from-amber-500 to-orange-500 hover:from-amber-600 hover:to-orange-600' :
+                  confirmModal.confirmColor === 'green' ? 'bg-gradient-to-r from-green-500 to-emerald-500 hover:from-green-600 hover:to-emerald-600' :
+                  'bg-gradient-to-r from-blue-500 to-cyan-500 hover:from-blue-600 hover:to-cyan-600'
+                }`}
+              >
+                {confirmModal.loading ? (
+                  <span className="flex items-center justify-center gap-2">
+                    <span className="animate-spin">⏳</span>
+                    מעבד...
+                  </span>
+                ) : confirmModal.confirmText}
+              </Button>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* Footer with Feedback Link */}
+      <div className="mt-12 mb-8">
+        <div className="text-center py-4 border-t border-gray-200">
+          <p className="text-gray-400 text-xs">
+            מערכת ארון ציוד ידידים •{' '}
+            <Link href="/feedback?source=super_admin" className="text-indigo-500 hover:text-indigo-600 hover:underline">
+              דווח על בעיה
+            </Link>
+            {' '}•{' '}
+            <Link href="/feedback?source=super_admin" className="text-indigo-500 hover:text-indigo-600 hover:underline">
+              הצע שיפור
+            </Link>
+          </p>
+        </div>
       </div>
     </div>
   )

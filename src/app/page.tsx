@@ -262,6 +262,22 @@ export default function HomePage() {
             </div>
           </CardContent>
         </Card>
+
+        {/* Footer with Feedback Link */}
+        <div className="mt-12 pb-20">
+          <div className="text-center py-4 border-t border-gray-200">
+            <p className="text-gray-400 text-xs">
+              מערכת ארון ציוד ידידים •{' '}
+              <Link href="/feedback?source=volunteer" className="text-indigo-500 hover:text-indigo-600 hover:underline">
+                דווח על בעיה
+              </Link>
+              {' '}•{' '}
+              <Link href="/feedback?source=volunteer" className="text-indigo-500 hover:text-indigo-600 hover:underline">
+                הצע שיפור
+              </Link>
+            </p>
+          </div>
+        </div>
       </div>
     </div>
   )
