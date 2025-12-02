@@ -24,7 +24,7 @@ export default function SuperAdminPage() {
   const [password, setPassword] = useState('')
   const [rememberMe, setRememberMe] = useState(false)
   const [loading, setLoading] = useState(false)
-  const [activeTab, setActiveTab] = useState<'cities' | 'notifications' | 'settings' | 'users' | 'equipment' | 'emails'>('cities')
+  const [activeTab, setActiveTab] = useState<'cities' | 'notifications' | 'settings' | 'users' | 'equipment' | 'emails' | 'reports'>('cities')
   const [showAddCity, setShowAddCity] = useState(false)
   const [newCity, setNewCity] = useState<CityForm & { manager1_email?: string, manager2_email?: string }>({ name: '', manager1_name: '', manager1_phone: '', manager1_email: '', manager2_name: '', manager2_phone: '', manager2_email: '', location_url: '', token_location_url: '' })
   const [editingCity, setEditingCity] = useState<City | null>(null)
@@ -90,6 +90,14 @@ export default function SuperAdminPage() {
 
   // Profile dropdown state
   const [showProfileDropdown, setShowProfileDropdown] = useState(false)
+
+  // Reports State
+  const [reportsData, setReportsData] = useState<any>(null)
+  const [reportsLoading, setReportsLoading] = useState(false)
+  const [reportsDateRange, setReportsDateRange] = useState({
+    start: new Date(new Date().getFullYear(), new Date().getMonth(), 1).toISOString().split('T')[0],
+    end: new Date().toISOString().split('T')[0]
+  })
 
   // Confirmation Modal State - Generic modal for all confirmations
   const [confirmModal, setConfirmModal] = useState<{
@@ -165,6 +173,8 @@ export default function SuperAdminPage() {
         fetchUsers() // Need users for recipient dropdown
       } else if (activeTab === 'users') {
         fetchUsers()
+      } else if (activeTab === 'reports') {
+        fetchReports()
       }
     }
     // eslint-disable-next-line react-hooks/exhaustive-deps
@@ -193,6 +203,29 @@ export default function SuperAdminPage() {
       console.log('Cities state updated:', result.cities?.length)
     } catch (error) {
       console.error('Error fetching cities:', error)
+    }
+  }
+
+  // Fetch reports data
+  const fetchReports = async (startDate?: string, endDate?: string) => {
+    setReportsLoading(true)
+    try {
+      let url = '/api/super-admin/statistics'
+      if (startDate && endDate) {
+        url += `?start_date=${startDate}&end_date=${endDate}`
+      }
+
+      const response = await fetch(url, { credentials: 'include' })
+      if (response.ok) {
+        const data = await response.json()
+        setReportsData(data)
+      } else {
+        console.error('Error fetching reports')
+      }
+    } catch (error) {
+      console.error('Error fetching reports:', error)
+    } finally {
+      setReportsLoading(false)
     }
   }
 
@@ -1414,10 +1447,20 @@ export default function SuperAdminPage() {
             >
               <span className="text-xl leading-none">📧</span>
             </Button>
+            <Button
+              onClick={() => setActiveTab('reports')}
+              className={`flex-shrink-0 w-12 h-12 p-2 rounded-lg font-semibold transition-all duration-300 flex items-center justify-center ${
+                activeTab === 'reports'
+                  ? 'bg-gradient-to-br from-purple-600 to-pink-600 text-white shadow-md'
+                  : 'bg-white text-gray-600 border border-gray-300'
+              }`}
+            >
+              <span className="text-xl leading-none">📊</span>
+            </Button>
           </div>
 
           {/* Desktop: Grid with text */}
-          <div className="hidden md:grid md:grid-cols-3 lg:grid-cols-5 gap-3">
+          <div className="hidden md:grid md:grid-cols-3 lg:grid-cols-6 gap-3">
             <Button
               onClick={() => setActiveTab('cities')}
               className={`py-6 rounded-xl font-semibold text-lg transition-all duration-300 ${
@@ -1468,6 +1511,16 @@ export default function SuperAdminPage() {
               }`}
             >
               <span className="text-2xl ml-2">📧</span> מיילים
+            </Button>
+            <Button
+              onClick={() => setActiveTab('reports')}
+              className={`py-6 rounded-xl font-semibold text-lg transition-all duration-300 ${
+                activeTab === 'reports'
+                  ? 'bg-gradient-to-r from-purple-600 to-pink-600 text-white shadow-lg shadow-purple-500/50 scale-105'
+                  : 'bg-white text-gray-600 border-2 border-gray-200 hover:border-purple-300 hover:bg-purple-50'
+              }`}
+            >
+              <span className="text-2xl ml-2">📊</span> דוחות
             </Button>
           </div>
         </div>
@@ -3421,6 +3474,382 @@ export default function SuperAdminPage() {
                 )}
               </CardContent>
             </Card>
+          </>
+        )}
+
+        {/* Reports Tab */}
+        {activeTab === 'reports' && (
+          <>
+            {/* Date Range Filter */}
+            <Card className="mb-6">
+              <CardHeader className="pb-4">
+                <CardTitle className="text-xl flex items-center gap-2">
+                  <span className="text-2xl">📊</span>
+                  דוחות מרכזיים - כל הערים
+                </CardTitle>
+              </CardHeader>
+              <CardContent>
+                <div className="flex flex-wrap items-end gap-4">
+                  <div>
+                    <label className="block text-sm font-medium text-gray-700 mb-1">מתאריך</label>
+                    <input
+                      type="date"
+                      value={reportsDateRange.start}
+                      onChange={(e) => setReportsDateRange(prev => ({ ...prev, start: e.target.value }))}
+                      className="px-3 py-2 border rounded-lg"
+                    />
+                  </div>
+                  <div>
+                    <label className="block text-sm font-medium text-gray-700 mb-1">עד תאריך</label>
+                    <input
+                      type="date"
+                      value={reportsDateRange.end}
+                      onChange={(e) => setReportsDateRange(prev => ({ ...prev, end: e.target.value }))}
+                      className="px-3 py-2 border rounded-lg"
+                    />
+                  </div>
+                  <Button
+                    onClick={() => fetchReports()}
+                    disabled={reportsLoading}
+                    className="bg-indigo-600 hover:bg-indigo-700 text-white"
+                  >
+                    {reportsLoading ? 'טוען...' : 'הצג דוחות'}
+                  </Button>
+                  <div className="flex gap-2">
+                    <Button
+                      variant="outline"
+                      onClick={() => {
+                        const now = new Date()
+                        const start = new Date(now.getFullYear(), now.getMonth(), 1)
+                        setReportsDateRange({
+                          start: start.toISOString().split('T')[0],
+                          end: now.toISOString().split('T')[0]
+                        })
+                      }}
+                      className="text-sm"
+                    >
+                      החודש
+                    </Button>
+                    <Button
+                      variant="outline"
+                      onClick={() => {
+                        const now = new Date()
+                        const start = new Date(now.getTime() - 7 * 24 * 60 * 60 * 1000)
+                        setReportsDateRange({
+                          start: start.toISOString().split('T')[0],
+                          end: now.toISOString().split('T')[0]
+                        })
+                      }}
+                      className="text-sm"
+                    >
+                      7 ימים
+                    </Button>
+                    <Button
+                      variant="outline"
+                      onClick={() => {
+                        const now = new Date()
+                        const start = new Date(now.getFullYear(), 0, 1)
+                        setReportsDateRange({
+                          start: start.toISOString().split('T')[0],
+                          end: now.toISOString().split('T')[0]
+                        })
+                      }}
+                      className="text-sm"
+                    >
+                      השנה
+                    </Button>
+                  </div>
+                </div>
+              </CardContent>
+            </Card>
+
+            {reportsLoading ? (
+              <div className="flex justify-center items-center py-20">
+                <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-indigo-600"></div>
+              </div>
+            ) : reportsData ? (
+              <>
+                {/* Summary Cards */}
+                <div className="grid grid-cols-2 md:grid-cols-4 gap-4 mb-6">
+                  <Card className="bg-gradient-to-br from-blue-500 to-blue-600 text-white">
+                    <CardContent className="p-4 text-center">
+                      <div className="text-3xl font-bold">{reportsData.summary?.totalCities || 0}</div>
+                      <div className="text-sm opacity-90">סה"כ ערים</div>
+                      <div className="text-xs mt-1 opacity-75">
+                        {reportsData.summary?.activeCities || 0} פעילות | {reportsData.summary?.blockedCities || 0} חסומות
+                      </div>
+                    </CardContent>
+                  </Card>
+                  <Card className="bg-gradient-to-br from-green-500 to-green-600 text-white">
+                    <CardContent className="p-4 text-center">
+                      <div className="text-3xl font-bold">{reportsData.borrows?.total || 0}</div>
+                      <div className="text-sm opacity-90">סה"כ השאלות</div>
+                      <div className="text-xs mt-1 opacity-75">
+                        {reportsData.borrows?.returnRate || 0}% הוחזרו
+                      </div>
+                    </CardContent>
+                  </Card>
+                  <Card className="bg-gradient-to-br from-purple-500 to-purple-600 text-white">
+                    <CardContent className="p-4 text-center">
+                      <div className="text-3xl font-bold">{reportsData.requests?.total || 0}</div>
+                      <div className="text-sm opacity-90">סה"כ בקשות</div>
+                      <div className="text-xs mt-1 opacity-75">
+                        {reportsData.requests?.approvalRate || 0}% אושרו
+                      </div>
+                    </CardContent>
+                  </Card>
+                  <Card className="bg-gradient-to-br from-amber-500 to-amber-600 text-white">
+                    <CardContent className="p-4 text-center">
+                      <div className="text-3xl font-bold">{reportsData.equipment?.totalTypes || 0}</div>
+                      <div className="text-sm opacity-90">סוגי ציוד</div>
+                      <div className="text-xs mt-1 opacity-75">
+                        {reportsData.equipment?.faulty || 0} תקולים
+                      </div>
+                    </CardContent>
+                  </Card>
+                </div>
+
+                {/* Detailed Stats Row */}
+                <div className="grid grid-cols-2 md:grid-cols-6 gap-3 mb-6">
+                  <Card>
+                    <CardContent className="p-3 text-center">
+                      <div className="text-2xl font-bold text-green-600">{reportsData.borrows?.returned || 0}</div>
+                      <div className="text-xs text-gray-500">הושבו</div>
+                    </CardContent>
+                  </Card>
+                  <Card>
+                    <CardContent className="p-3 text-center">
+                      <div className="text-2xl font-bold text-orange-600">{reportsData.borrows?.pending || 0}</div>
+                      <div className="text-xs text-gray-500">טרם הושבו</div>
+                    </CardContent>
+                  </Card>
+                  <Card>
+                    <CardContent className="p-3 text-center">
+                      <div className="text-2xl font-bold text-blue-600">{reportsData.borrows?.pendingApproval || 0}</div>
+                      <div className="text-xs text-gray-500">ממתינים לאישור</div>
+                    </CardContent>
+                  </Card>
+                  <Card>
+                    <CardContent className="p-3 text-center">
+                      <div className="text-2xl font-bold text-green-600">{reportsData.requests?.approved || 0}</div>
+                      <div className="text-xs text-gray-500">בקשות אושרו</div>
+                    </CardContent>
+                  </Card>
+                  <Card>
+                    <CardContent className="p-3 text-center">
+                      <div className="text-2xl font-bold text-red-600">{reportsData.requests?.rejected || 0}</div>
+                      <div className="text-xs text-gray-500">בקשות נדחו</div>
+                    </CardContent>
+                  </Card>
+                  <Card>
+                    <CardContent className="p-3 text-center">
+                      <div className="text-2xl font-bold text-yellow-600">{reportsData.requests?.pending || 0}</div>
+                      <div className="text-xs text-gray-500">בקשות ממתינות</div>
+                    </CardContent>
+                  </Card>
+                </div>
+
+                {/* Alerts */}
+                {reportsData.alerts && reportsData.alerts.length > 0 && (
+                  <Card className="mb-6 border-amber-200 bg-amber-50">
+                    <CardHeader className="pb-2">
+                      <CardTitle className="text-lg flex items-center gap-2 text-amber-800">
+                        <span>⚠️</span> התראות
+                      </CardTitle>
+                    </CardHeader>
+                    <CardContent>
+                      <div className="space-y-2">
+                        {reportsData.alerts.map((alert: any, idx: number) => (
+                          <div key={idx} className="flex items-center gap-2 text-sm">
+                            <span className={
+                              alert.type === 'faulty' ? 'text-red-600' :
+                              alert.type === 'pending' ? 'text-yellow-600' :
+                              'text-gray-600'
+                            }>
+                              {alert.type === 'faulty' ? '🔧' : alert.type === 'pending' ? '⏳' : 'ℹ️'}
+                            </span>
+                            <span className="font-medium">{alert.cityName || 'כללי'}:</span>
+                            <span>{alert.message}</span>
+                          </div>
+                        ))}
+                      </div>
+                    </CardContent>
+                  </Card>
+                )}
+
+                {/* Trends Chart */}
+                {reportsData.trends && reportsData.trends.length > 0 && (
+                  <Card className="mb-6">
+                    <CardHeader className="pb-2">
+                      <CardTitle className="text-lg flex items-center gap-2">
+                        <span>📈</span> מגמות (6 חודשים אחרונים)
+                      </CardTitle>
+                    </CardHeader>
+                    <CardContent>
+                      <div className="flex items-end justify-around h-48 gap-2">
+                        {reportsData.trends.map((trend: any, idx: number) => {
+                          const maxBorrows = Math.max(...reportsData.trends.map((t: any) => t.borrows || 1))
+                          const height = ((trend.borrows || 0) / maxBorrows) * 100
+                          return (
+                            <div key={idx} className="flex flex-col items-center flex-1">
+                              <div className="text-xs text-gray-500 mb-1">{trend.borrows}</div>
+                              <div
+                                className="w-full bg-gradient-to-t from-indigo-600 to-indigo-400 rounded-t transition-all"
+                                style={{ height: `${Math.max(height, 5)}%` }}
+                              ></div>
+                              <div className="text-xs text-gray-600 mt-2 font-medium">{trend.month}</div>
+                            </div>
+                          )
+                        })}
+                      </div>
+                      <div className="flex justify-center gap-6 mt-4 text-sm">
+                        <div className="flex items-center gap-2">
+                          <div className="w-3 h-3 bg-indigo-500 rounded"></div>
+                          <span>השאלות</span>
+                        </div>
+                      </div>
+                    </CardContent>
+                  </Card>
+                )}
+
+                {/* Top Borrowed Items */}
+                {reportsData.topBorrowedItems && reportsData.topBorrowedItems.length > 0 && (
+                  <Card className="mb-6">
+                    <CardHeader className="pb-2">
+                      <CardTitle className="text-lg flex items-center gap-2">
+                        <span>🏆</span> פריטים מושאלים ביותר
+                      </CardTitle>
+                    </CardHeader>
+                    <CardContent>
+                      <div className="grid grid-cols-2 md:grid-cols-5 gap-3">
+                        {reportsData.topBorrowedItems.slice(0, 10).map((item: any, idx: number) => (
+                          <div key={idx} className="bg-gray-50 rounded-lg p-3 text-center">
+                            <div className="text-2xl font-bold text-indigo-600">{item.count}</div>
+                            <div className="text-sm text-gray-700 truncate">{item.name}</div>
+                            <div className="text-xs text-gray-400">#{idx + 1}</div>
+                          </div>
+                        ))}
+                      </div>
+                    </CardContent>
+                  </Card>
+                )}
+
+                {/* City Statistics Table */}
+                <Card className="mb-6">
+                  <CardHeader className="pb-2">
+                    <CardTitle className="text-lg flex items-center gap-2">
+                      <span>🏙️</span> סטטיסטיקות לפי עיר
+                    </CardTitle>
+                  </CardHeader>
+                  <CardContent>
+                    <div className="overflow-x-auto">
+                      <table className="w-full text-sm">
+                        <thead>
+                          <tr className="border-b bg-gray-50">
+                            <th className="p-2 text-right">עיר</th>
+                            <th className="p-2 text-center">סטטוס</th>
+                            <th className="p-2 text-center">השאלות</th>
+                            <th className="p-2 text-center">החזרות</th>
+                            <th className="p-2 text-center">מושאל כרגע</th>
+                            <th className="p-2 text-center">בקשות ממתינות</th>
+                            <th className="p-2 text-center">פריטים</th>
+                            <th className="p-2 text-center">תקולים</th>
+                          </tr>
+                        </thead>
+                        <tbody>
+                          {reportsData.cityStats?.map((city: any) => (
+                            <tr key={city.id} className="border-b hover:bg-gray-50">
+                              <td className="p-2 font-medium">{city.name}</td>
+                              <td className="p-2 text-center">
+                                {city.isBlocked ? (
+                                  <span className="bg-red-100 text-red-700 text-xs px-2 py-1 rounded">חסום</span>
+                                ) : (
+                                  <span className="bg-green-100 text-green-700 text-xs px-2 py-1 rounded">פעיל</span>
+                                )}
+                              </td>
+                              <td className="p-2 text-center font-semibold text-indigo-600">{city.borrowsThisMonth}</td>
+                              <td className="p-2 text-center text-green-600">{city.returnsThisMonth}</td>
+                              <td className="p-2 text-center text-orange-600">{city.currentlyBorrowed}</td>
+                              <td className="p-2 text-center">
+                                {city.pendingRequests > 0 ? (
+                                  <span className="bg-yellow-100 text-yellow-700 px-2 py-1 rounded">{city.pendingRequests}</span>
+                                ) : '-'}
+                              </td>
+                              <td className="p-2 text-center">{city.equipmentCount}</td>
+                              <td className="p-2 text-center">
+                                {city.faultyCount > 0 ? (
+                                  <span className="bg-red-100 text-red-700 px-2 py-1 rounded">{city.faultyCount}</span>
+                                ) : '-'}
+                              </td>
+                            </tr>
+                          ))}
+                        </tbody>
+                      </table>
+                    </div>
+                  </CardContent>
+                </Card>
+
+                {/* Export Button */}
+                <div className="flex justify-center">
+                  <Button
+                    onClick={() => {
+                      // Export to Excel
+                      if (!reportsData) return
+
+                      let csvContent = '\uFEFF' // BOM for Hebrew
+                      csvContent += 'דוח מרכזי - כל הערים\n'
+                      csvContent += `תקופה: ${reportsData.period?.start} - ${reportsData.period?.end}\n\n`
+
+                      csvContent += 'סיכום כללי\n'
+                      csvContent += `סה"כ ערים,${reportsData.summary?.totalCities}\n`
+                      csvContent += `ערים פעילות,${reportsData.summary?.activeCities}\n`
+                      csvContent += `ערים חסומות,${reportsData.summary?.blockedCities}\n\n`
+
+                      csvContent += 'השאלות\n'
+                      csvContent += `סה"כ השאלות,${reportsData.borrows?.total}\n`
+                      csvContent += `הוחזרו,${reportsData.borrows?.returned}\n`
+                      csvContent += `טרם הוחזרו,${reportsData.borrows?.pending}\n`
+                      csvContent += `אחוז החזרה,${reportsData.borrows?.returnRate}%\n\n`
+
+                      csvContent += 'בקשות\n'
+                      csvContent += `סה"כ בקשות,${reportsData.requests?.total}\n`
+                      csvContent += `אושרו,${reportsData.requests?.approved}\n`
+                      csvContent += `נדחו,${reportsData.requests?.rejected}\n`
+                      csvContent += `ממתינות,${reportsData.requests?.pending}\n\n`
+
+                      csvContent += 'סטטיסטיקות לפי עיר\n'
+                      csvContent += 'עיר,סטטוס,השאלות,החזרות,מושאל כרגע,בקשות ממתינות,פריטים,תקולים\n'
+                      reportsData.cityStats?.forEach((city: any) => {
+                        csvContent += `${city.name},${city.isBlocked ? 'חסום' : 'פעיל'},${city.borrowsThisMonth},${city.returnsThisMonth},${city.currentlyBorrowed},${city.pendingRequests},${city.equipmentCount},${city.faultyCount}\n`
+                      })
+
+                      const blob = new Blob([csvContent], { type: 'text/csv;charset=utf-8' })
+                      const url = URL.createObjectURL(blob)
+                      const link = document.createElement('a')
+                      link.href = url
+                      link.download = `דוח_מרכזי_${new Date().toLocaleDateString('he-IL').replace(/\./g, '-')}.csv`
+                      link.click()
+                      URL.revokeObjectURL(url)
+                    }}
+                    className="bg-green-600 hover:bg-green-700 text-white px-6"
+                  >
+                    <span className="ml-2">📥</span>
+                    ייצוא לאקסל
+                  </Button>
+                </div>
+              </>
+            ) : (
+              <Card>
+                <CardContent className="p-12 text-center">
+                  <div className="text-6xl mb-4">📊</div>
+                  <h3 className="text-xl font-semibold text-gray-700 mb-2">דוחות מרכזיים</h3>
+                  <p className="text-gray-500 mb-4">בחר טווח תאריכים ולחץ על "הצג דוחות" לצפייה בנתונים מכל הערים</p>
+                  <Button onClick={() => fetchReports()} className="bg-indigo-600 hover:bg-indigo-700 text-white">
+                    הצג דוחות
+                  </Button>
+                </CardContent>
+              </Card>
+            )}
           </>
         )}
       </div>
