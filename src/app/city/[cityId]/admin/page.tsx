@@ -1403,7 +1403,8 @@ export default function CityAdminPage() {
                   onClick={async () => {
                     setShowProfileDropdown(false)
                     await logout()
-                    router.push(`/city/${cityId}`)
+                    // Use hard navigation to ensure full page refresh and clear state
+                    window.location.href = `/city/${cityId}`
                   }}
                   className="w-full flex items-center gap-4 p-4 rounded-xl hover:bg-red-50 transition-colors text-right text-red-600"
                 >
@@ -3729,7 +3730,8 @@ export default function CityAdminPage() {
                     if (data.success) {
                       // If password was changed, update cookies with new tokens
                       if (data.passwordChanged && data.newAccessToken) {
-                        const maxAge = 60 * 60 * 24 * 7 // 7 days
+                        // Use 30 days - same as "remember me" since user is already logged in
+                        const maxAge = 60 * 60 * 24 * 30 // 30 days
                         const expiryDate = new Date(Date.now() + maxAge * 1000).toUTCString()
                         document.cookie = `sb-access-token=${data.newAccessToken}; path=/; max-age=${maxAge}; expires=${expiryDate}; SameSite=Lax`
                         if (data.newRefreshToken) {

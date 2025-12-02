@@ -612,7 +612,8 @@ export default function SuperAdminPage() {
 
       // If password was changed, update cookies with new tokens
       if (data.passwordChanged && data.newAccessToken) {
-        const maxAge = 60 * 60 * 24 * 7 // 7 days
+        // Use 30 days - same as "remember me" since user is already logged in
+        const maxAge = 60 * 60 * 24 * 30 // 30 days
         const expiryDate = new Date(Date.now() + maxAge * 1000).toUTCString()
         document.cookie = `sb-access-token=${data.newAccessToken}; path=/; max-age=${maxAge}; expires=${expiryDate}; SameSite=Lax`
         if (data.newRefreshToken) {

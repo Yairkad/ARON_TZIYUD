@@ -21,17 +21,9 @@ export async function POST(request: NextRequest) {
     const body = await request.json()
     const { full_name, phone, current_password, new_password } = body
 
-    // Validate required fields
-    if (!full_name || !phone) {
-      return NextResponse.json(
-        { success: false, error: 'שם וטלפון הם שדות חובה' },
-        { status: 400 }
-      )
-    }
-
     const supabase = createServiceClient()
 
-    // If password change requested, verify current password first
+    // If password change requested (can be done without updating name/phone)
     if (new_password) {
       if (!current_password) {
         return NextResponse.json(
@@ -92,6 +84,14 @@ export async function POST(request: NextRequest) {
         newRefreshToken: newSession.session.refresh_token,
         message: 'הסיסמה שונתה בהצלחה'
       })
+    }
+
+    // For profile updates (not just password), validate required fields
+    if (!full_name || !phone) {
+      return NextResponse.json(
+        { success: false, error: 'שם וטלפון הם שדות חובה' },
+        { status: 400 }
+      )
     }
 
     // Update user data in public.users table
