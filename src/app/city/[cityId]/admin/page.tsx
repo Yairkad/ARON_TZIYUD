@@ -3906,11 +3906,7 @@ export default function CityAdminPage() {
           <p className="text-gray-400 text-xs">
             מערכת ארון ציוד ידידים •{' '}
             <Link href={`/feedback?source=city_admin&city=${encodeURIComponent(city?.name || '')}`} className="text-indigo-500 hover:text-indigo-600 hover:underline">
-              דווח על בעיה
-            </Link>
-            {' '}•{' '}
-            <Link href={`/feedback?source=city_admin&city=${encodeURIComponent(city?.name || '')}`} className="text-indigo-500 hover:text-indigo-600 hover:underline">
-              הצע שיפור
+              דווח על בעיה או הצע שיפור
             </Link>
           </p>
         </div>

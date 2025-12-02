@@ -210,10 +210,24 @@ function ResetPasswordContent() {
         return
       }
 
-      // Get user info to determine where to redirect
+      // Get session and user info to determine where to redirect
+      const { data: { session } } = await supabase.auth.getSession()
       const { data: { user } } = await supabase.auth.getUser()
 
       if (user) {
+        // Store the access token in a cookie for server-side auth
+        if (session?.access_token) {
+          const maxAge = 60 * 60 * 24 * 7 // 7 days
+          const expiryDate = new Date(Date.now() + maxAge * 1000).toUTCString()
+          document.cookie = `sb-access-token=${session.access_token}; path=/; max-age=${maxAge}; expires=${expiryDate}; SameSite=Lax`
+          if (session.refresh_token) {
+            document.cookie = `sb-refresh-token=${session.refresh_token}; path=/; max-age=${maxAge}; expires=${expiryDate}; SameSite=Lax`
+          }
+        }
+
+        // Wait for cookies to be stored
+        await new Promise(resolve => setTimeout(resolve, 300))
+
         // Fetch user role and city_id from database
         const { data: userData } = await supabase
           .from('users')
