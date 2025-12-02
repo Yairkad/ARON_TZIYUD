@@ -281,6 +281,33 @@ ${details}
 }
 
 /**
+ * Send overdue return reminder to borrower
+ */
+export async function sendOverdueReminderWhatsApp(
+  phone: string,
+  borrowerName: string,
+  equipmentName: string,
+  borrowDate: string,
+  hoursOverdue: number,
+  cityName: string
+): Promise<WhatsAppMessageResult> {
+  const message = `⏰ תזכורת להחזרת ציוד
+
+שלום ${borrowerName},
+
+הציוד "${equipmentName}" שהושאל ב-${borrowDate} טרם הוחזר.
+עברו ${hoursOverdue} שעות מההשאלה.
+
+⚠️ שימו לב: לא ניתן להשאיל ציוד נוסף עד להחזרת הציוד ואישור המנהל.
+
+אנא החזר את הציוד בהקדם האפשרי.
+
+מערכת ארון ציוד ידידים - ${cityName}`
+
+  return sendWhatsAppMessage(phone, message)
+}
+
+/**
  * Send notification about request status change
  */
 export async function sendRequestStatusWhatsApp(

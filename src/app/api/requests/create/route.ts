@@ -122,6 +122,33 @@ export async function POST(request: NextRequest) {
       )
     }
 
+    // Check if borrower has overdue equipment (borrowed > 24 hours ago)
+    const normalizedPhone = body.requester_phone.replace(/\D/g, '')
+    const overdueThreshold = new Date()
+    overdueThreshold.setHours(overdueThreshold.getHours() - 24)
+
+    const { data: overdueItems } = await supabaseServer
+      .from('borrow_history')
+      .select('id, equipment_name, borrow_date')
+      .or(`phone.eq.${normalizedPhone},phone.eq.0${normalizedPhone},phone.eq.${normalizedPhone.replace(/^972/, '0')}`)
+      .eq('status', 'borrowed')
+      .lt('borrow_date', overdueThreshold.toISOString())
+      .limit(5)
+
+    if (overdueItems && overdueItems.length > 0) {
+      const itemNames = overdueItems.map(i => i.equipment_name).join(', ')
+      return NextResponse.json(
+        {
+          error: `לא ניתן לבצע השאלה חדשה. יש לך ציוד שטרם הוחזר: ${itemNames}. יש להחזיר את הציוד ולקבל אישור מנהל לפני השאלה חדשה.`,
+          overdueItems: overdueItems.map(i => ({
+            name: i.equipment_name,
+            borrowDate: i.borrow_date
+          }))
+        },
+        { status: 403 }
+      )
+    }
+
     // Check distance limit if configured
     const maxDistance = city.max_request_distance_km
     if (maxDistance && maxDistance > 0) {
