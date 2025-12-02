@@ -200,15 +200,19 @@ export async function POST(request: NextRequest) {
     if (manager1_email && newCity) {
       const serviceClient = createServiceClient()
 
-      // Check if user with this email already exists
+      // Check if user with this email already exists in public.users
       const { data: existingUser } = await serviceClient
         .from('users')
         .select('id, email')
         .eq('email', manager1_email)
         .single()
 
-      if (!existingUser) {
-        // Generate a random password
+      // Also check if user exists in auth.users (might exist there but not in public.users)
+      const { data: authUsers } = await serviceClient.auth.admin.listUsers()
+      const existingAuthUser = authUsers?.users?.find(u => u.email === manager1_email)
+
+      if (!existingUser && !existingAuthUser) {
+        // User doesn't exist anywhere - create new user
         const tempPassword = Math.random().toString(36).slice(-8) + 'A1!'
 
         // Create user in Supabase Auth
@@ -227,8 +231,27 @@ export async function POST(request: NextRequest) {
         })
 
         if (!createError && authData.user) {
-          // Wait for trigger to create user in public.users
-          await new Promise(resolve => setTimeout(resolve, 500))
+          // Create user in public.users table directly (don't rely on trigger)
+          const { error: insertUserError } = await serviceClient
+            .from('users')
+            .upsert({
+              id: authData.user.id,
+              email: manager1_email,
+              role: 'city_manager',
+              city_id: newCity.id,
+              full_name: manager1_name,
+              phone: manager1_phone,
+              permissions: 'full_access',
+              is_active: true,
+              created_at: new Date().toISOString(),
+              updated_at: new Date().toISOString()
+            }, { onConflict: 'id' })
+
+          if (insertUserError) {
+            console.error('Error inserting manager1 to users table:', insertUserError)
+          } else {
+            console.log('✅ Manager1 user created in public.users:', authData.user.id)
+          }
 
           // Link user to city as manager1 and sync name/phone
           await serviceClient
@@ -278,12 +301,48 @@ export async function POST(request: NextRequest) {
         } else {
           console.error('Error creating manager1 user:', createError)
         }
-      } else {
-        // User exists, link them to the city and sync name/phone
+      } else if (existingAuthUser && !existingUser) {
+        // User exists in auth but not in public.users - fix the gap
+        console.log('Manager1 exists in auth but not in users table, creating entry...')
+
+        // Create the missing entry in public.users
+        const { error: insertUserError } = await serviceClient
+          .from('users')
+          .upsert({
+            id: existingAuthUser.id,
+            email: manager1_email,
+            role: 'city_manager',
+            city_id: newCity.id,
+            full_name: manager1_name,
+            phone: manager1_phone,
+            permissions: 'full_access',
+            is_active: true,
+            created_at: new Date().toISOString(),
+            updated_at: new Date().toISOString()
+          }, { onConflict: 'id' })
+
+        if (insertUserError) {
+          console.error('Error inserting manager1 to users table:', insertUserError)
+        } else {
+          console.log('✅ Manager1 user added to public.users:', existingAuthUser.id)
+        }
+
+        // Link user to city as manager1
         await serviceClient
           .from('cities')
           .update({
-            manager1_user_id: existingUser.id,
+            manager1_user_id: existingAuthUser.id,
+            manager1_name: manager1_name,
+            manager1_phone: manager1_phone
+          })
+          .eq('id', newCity.id)
+      } else {
+        // User exists in public.users, link them to the city and sync name/phone
+        const userId = existingUser?.id || existingAuthUser?.id
+        await serviceClient
+          .from('cities')
+          .update({
+            manager1_user_id: userId,
             manager1_name: manager1_name,
             manager1_phone: manager1_phone
           })
@@ -299,7 +358,7 @@ export async function POST(request: NextRequest) {
             manager_role: 'manager1',
             updated_at: new Date().toISOString()
           })
-          .eq('id', existingUser.id)
+          .eq('id', userId)
       }
     }
 
@@ -307,15 +366,19 @@ export async function POST(request: NextRequest) {
     if (manager2_email && manager2_name && newCity) {
       const serviceClient = createServiceClient()
 
-      // Check if user with this email already exists
+      // Check if user with this email already exists in public.users
       const { data: existingUser } = await serviceClient
         .from('users')
         .select('id, email')
         .eq('email', manager2_email)
         .single()
 
-      if (!existingUser) {
-        // Generate a random password
+      // Also check if user exists in auth.users (might exist there but not in public.users)
+      const { data: authUsers } = await serviceClient.auth.admin.listUsers()
+      const existingAuthUser = authUsers?.users?.find(u => u.email === manager2_email)
+
+      if (!existingUser && !existingAuthUser) {
+        // User doesn't exist anywhere - create new user
         const tempPassword = Math.random().toString(36).slice(-8) + 'A1!'
 
         // Create user in Supabase Auth
@@ -334,8 +397,27 @@ export async function POST(request: NextRequest) {
         })
 
         if (!createError && authData.user) {
-          // Wait for trigger to create user in public.users
-          await new Promise(resolve => setTimeout(resolve, 500))
+          // Create user in public.users table directly (don't rely on trigger)
+          const { error: insertUserError } = await serviceClient
+            .from('users')
+            .upsert({
+              id: authData.user.id,
+              email: manager2_email,
+              role: 'city_manager',
+              city_id: newCity.id,
+              full_name: manager2_name,
+              phone: manager2_phone || null,
+              permissions: 'full_access',
+              is_active: true,
+              created_at: new Date().toISOString(),
+              updated_at: new Date().toISOString()
+            }, { onConflict: 'id' })
+
+          if (insertUserError) {
+            console.error('Error inserting manager2 to users table:', insertUserError)
+          } else {
+            console.log('✅ Manager2 user created in public.users:', authData.user.id)
+          }
 
           // Link user to city as manager2 and sync name/phone
           await serviceClient
@@ -385,12 +467,48 @@ export async function POST(request: NextRequest) {
         } else {
           console.error('Error creating manager2 user:', createError)
         }
-      } else {
-        // User exists, link them to the city and sync name/phone
+      } else if (existingAuthUser && !existingUser) {
+        // User exists in auth but not in public.users - fix the gap
+        console.log('Manager2 exists in auth but not in users table, creating entry...')
+
+        // Create the missing entry in public.users
+        const { error: insertUserError } = await serviceClient
+          .from('users')
+          .upsert({
+            id: existingAuthUser.id,
+            email: manager2_email,
+            role: 'city_manager',
+            city_id: newCity.id,
+            full_name: manager2_name,
+            phone: manager2_phone || null,
+            permissions: 'full_access',
+            is_active: true,
+            created_at: new Date().toISOString(),
+            updated_at: new Date().toISOString()
+          }, { onConflict: 'id' })
+
+        if (insertUserError) {
+          console.error('Error inserting manager2 to users table:', insertUserError)
+        } else {
+          console.log('✅ Manager2 user added to public.users:', existingAuthUser.id)
+        }
+
+        // Link user to city as manager2
         await serviceClient
           .from('cities')
           .update({
-            manager2_user_id: existingUser.id,
+            manager2_user_id: existingAuthUser.id,
+            manager2_name: manager2_name,
+            manager2_phone: manager2_phone || null
+          })
+          .eq('id', newCity.id)
+      } else {
+        // User exists in public.users, link them to the city and sync name/phone
+        const userId = existingUser?.id || existingAuthUser?.id
+        await serviceClient
+          .from('cities')
+          .update({
+            manager2_user_id: userId,
             manager2_name: manager2_name,
             manager2_phone: manager2_phone || null
           })
@@ -406,7 +524,7 @@ export async function POST(request: NextRequest) {
             manager_role: 'manager2',
             updated_at: new Date().toISOString()
           })
-          .eq('id', existingUser.id)
+          .eq('id', userId)
       }
     }
 
