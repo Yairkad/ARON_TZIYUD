@@ -99,6 +99,7 @@ export default function SuperAdminPage() {
     end: new Date().toISOString().split('T')[0]
   })
   const [reportsFilter, setReportsFilter] = useState<'all' | 'borrows' | 'requests' | 'equipment' | 'cities'>('all')
+  const [showFaultyDetail, setShowFaultyDetail] = useState(false)
 
   // Confirmation Modal State - Generic modal for all confirmations
   const [confirmModal, setConfirmModal] = useState<{
@@ -3731,11 +3732,42 @@ export default function SuperAdminPage() {
                           <div className="text-3xl font-bold text-blue-600">{reportsData.equipment?.totalQuantity || 0}</div>
                           <div className="text-sm text-gray-600">סה"כ פריטים</div>
                         </div>
-                        <div className="bg-red-50 rounded-lg p-4 text-center">
+                        <div
+                          className={`bg-red-50 rounded-lg p-4 text-center ${reportsData.equipment?.faulty > 0 ? 'cursor-pointer hover:bg-red-100 transition-colors' : ''}`}
+                          onClick={() => reportsData.equipment?.faulty > 0 && setShowFaultyDetail(!showFaultyDetail)}
+                        >
                           <div className="text-3xl font-bold text-red-600">{reportsData.equipment?.faulty || 0}</div>
                           <div className="text-sm text-gray-600">תקולים</div>
+                          {reportsData.equipment?.faulty > 0 && (
+                            <div className="text-xs text-red-500 mt-1">לחץ לפירוט</div>
+                          )}
                         </div>
                       </div>
+
+                      {/* Faulty Equipment Detail */}
+                      {showFaultyDetail && reportsData.equipment?.faultyList?.length > 0 && (
+                        <div className="mt-4 border-t border-red-200 pt-4">
+                          <h4 className="font-medium text-red-800 mb-2">רשימת ציוד תקול:</h4>
+                          <div className="max-h-48 overflow-y-auto">
+                            <table className="w-full text-sm">
+                              <thead className="bg-red-100 sticky top-0">
+                                <tr>
+                                  <th className="p-2 text-right">ציוד</th>
+                                  <th className="p-2 text-right">עיר</th>
+                                </tr>
+                              </thead>
+                              <tbody>
+                                {reportsData.equipment.faultyList.map((item: any, idx: number) => (
+                                  <tr key={idx} className="border-b border-red-100 hover:bg-red-50">
+                                    <td className="p-2">{item.equipmentName}</td>
+                                    <td className="p-2">{item.cityName}</td>
+                                  </tr>
+                                ))}
+                              </tbody>
+                            </table>
+                          </div>
+                        </div>
+                      )}
                     </CardContent>
                   </Card>
                 )}

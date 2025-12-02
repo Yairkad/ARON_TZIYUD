@@ -93,11 +93,18 @@ export async function GET(request: NextRequest) {
     // === EQUIPMENT STATISTICS (ALL CITIES) ===
     const { data: allEquipment } = await supabase
       .from('city_equipment')
-      .select('id, city_id, quantity, equipment_status')
+      .select(`
+        id,
+        city_id,
+        quantity,
+        equipment_status,
+        global_equipment:global_equipment_pool(id, name)
+      `)
 
     const totalEquipmentTypes = allEquipment?.length || 0
-    const totalQuantity = allEquipment?.reduce((sum, eq) => sum + eq.quantity, 0) || 0
-    const faultyEquipment = allEquipment?.filter(eq => eq.equipment_status === 'faulty').length || 0
+    const totalQuantity = allEquipment?.reduce((sum, eq) => sum + (eq.quantity || 0), 0) || 0
+    const faultyEquipmentList = allEquipment?.filter(eq => eq.equipment_status === 'faulty') || []
+    const faultyEquipment = faultyEquipmentList.length
 
     // === TOP BORROWED ITEMS (ALL CITIES) ===
     const borrowCounts: { [key: string]: { name: string; count: number } } = {}
@@ -237,7 +244,13 @@ export async function GET(request: NextRequest) {
       equipment: {
         totalTypes: totalEquipmentTypes,
         totalQuantity,
-        faulty: faultyEquipment
+        faulty: faultyEquipment,
+        faultyList: faultyEquipmentList.map(eq => ({
+          id: eq.id,
+          equipmentName: (eq.global_equipment as any)?.name || 'לא ידוע',
+          cityId: eq.city_id,
+          cityName: cities?.find(c => c.id === eq.city_id)?.name || 'לא ידוע'
+        }))
       },
       topBorrowedItems,
       trends: trendData,
