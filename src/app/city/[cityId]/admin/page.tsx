@@ -97,6 +97,7 @@ export default function CityAdminPage() {
   const [categories, setCategories] = useState<any[]>([])
   const [isAuthenticated, setIsAuthenticated] = useState(false)
   const [isCheckingAuth, setIsCheckingAuth] = useState(true) // Add loading state for auth check
+  const [isRedirecting, setIsRedirecting] = useState(false) // Prevent multiple redirects
   const [isBlocked, setIsBlocked] = useState(false)
   const [loading, setLoading] = useState(false)
   const [activeTab, setActiveTab] = useState<'equipment' | 'history' | 'requests' | 'reports' | 'settings'>('equipment')
@@ -526,6 +527,14 @@ export default function CityAdminPage() {
     }
     verifyAuth()
   }, [cityId])
+
+  // Handle redirect to login when not authenticated (use useEffect to avoid render loop)
+  useEffect(() => {
+    if (!isCheckingAuth && !isAuthenticated && !isBlocked && !isRedirecting) {
+      setIsRedirecting(true)
+      router.push('/login')
+    }
+  }, [isCheckingAuth, isAuthenticated, isBlocked, isRedirecting, router])
 
   const handleAddEquipment = async (e: React.FormEvent) => {
     e.preventDefault()
@@ -1231,9 +1240,8 @@ export default function CityAdminPage() {
     )
   }
 
-  if (!isAuthenticated) {
-    // Redirect to login page
-    router.push('/login')
+  if (!isAuthenticated || isRedirecting) {
+    // Show redirecting message - actual redirect happens in useEffect
     return (
       <div className="min-h-screen content-wrapper flex items-center justify-center">
         <div className="text-center">

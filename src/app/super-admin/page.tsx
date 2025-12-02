@@ -19,6 +19,7 @@ export default function SuperAdminPage() {
   const [unreadCount, setUnreadCount] = useState(0)
   const [isAuthenticated, setIsAuthenticated] = useState(false)
   const [isCheckingAuth, setIsCheckingAuth] = useState(true) // Add loading state for auth check
+  const [isRedirecting, setIsRedirecting] = useState(false) // Prevent multiple redirects
   const [email, setEmail] = useState('')
   const [password, setPassword] = useState('')
   const [rememberMe, setRememberMe] = useState(false)
@@ -139,6 +140,14 @@ export default function SuperAdminPage() {
     }
     verifyAuth()
   }, [])
+
+  // Handle redirect to login when not authenticated (use useEffect to avoid render loop)
+  useEffect(() => {
+    if (!isCheckingAuth && !isAuthenticated && !isRedirecting) {
+      setIsRedirecting(true)
+      router.push('/login')
+    }
+  }, [isCheckingAuth, isAuthenticated, isRedirecting, router])
 
   useEffect(() => {
     if (isAuthenticated) {
@@ -1233,16 +1242,12 @@ export default function SuperAdminPage() {
     )
   }
 
-  // Redirect to unified login if not authenticated (only after check is complete)
-  if (!isAuthenticated) {
-    if (typeof window !== 'undefined') {
-      console.log('🔄 Not authenticated, redirecting to /login')
-      window.location.href = '/login'
-    }
+  // Show redirecting message when not authenticated - actual redirect happens in useEffect
+  if (!isAuthenticated || isRedirecting) {
     return (
       <div className="min-h-screen content-wrapper flex items-center justify-center">
         <div className="text-center">
-          <div className="text-4xl mb-4">⏳</div>
+          <div className="text-4xl mb-4">🔐</div>
           <p className="text-gray-600">מעביר לדף התחברות...</p>
         </div>
       </div>
