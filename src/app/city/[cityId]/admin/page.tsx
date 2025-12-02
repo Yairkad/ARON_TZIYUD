@@ -144,6 +144,8 @@ export default function CityAdminPage() {
   const [showProfileDropdown, setShowProfileDropdown] = useState(false)
   const [volunteerViewMode, setVolunteerViewMode] = useState(false)
   const [showClosureConfirm, setShowClosureConfirm] = useState(false)
+  const [showImageNotAvailable, setShowImageNotAvailable] = useState(false)
+  const [checkingImage, setCheckingImage] = useState(false)
 
   // Confirmation Modal State - Generic modal for all confirmations
   const [confirmModal, setConfirmModal] = useState<{
@@ -171,6 +173,29 @@ export default function CityAdminPage() {
 
   const closeConfirmModal = () => {
     setConfirmModal(null)
+  }
+
+  // Function to check if image exists and open it or show "not available" popup
+  const openReturnImage = async (imageUrl: string) => {
+    setCheckingImage(true)
+    try {
+      // Try to fetch the image with HEAD request to check if it exists
+      const response = await fetch(imageUrl, { method: 'HEAD' })
+      if (response.ok) {
+        // Image exists, open it
+        window.open(imageUrl, '_blank')
+      } else {
+        // Image doesn't exist (404 or other error)
+        setShowImageNotAvailable(true)
+      }
+    } catch (error) {
+      // Network error or CORS issue - try opening directly
+      // If it fails, the browser will show its own error
+      // But for Vercel Blob, we can assume it's deleted
+      setShowImageNotAvailable(true)
+    } finally {
+      setCheckingImage(false)
+    }
   }
 
   const [accountForm, setAccountForm] = useState({
@@ -381,6 +406,7 @@ export default function CityAdminPage() {
       .from('borrow_history')
       .select('*')
       .eq('city_id', cityId)
+      .or('is_hidden.is.null,is_hidden.eq.false') // Filter out hidden records
       .order('borrow_date', { ascending: false })
 
     if (error) {
@@ -953,7 +979,7 @@ export default function CityAdminPage() {
     }
   }
 
-  // Print functionality
+  // Soft delete - hide from history but keep for reports
   const handleDeleteHistory = async (id: string) => {
     // Check permissions
     if (!canEdit) {
@@ -962,26 +988,26 @@ export default function CityAdminPage() {
     }
 
     showConfirmModal({
-      title: 'מחיקת רשומה',
-      message: 'האם אתה בטוח שברצונך למחוק רשומה זו?',
-      icon: '🗑️',
-      confirmText: 'מחק',
-      confirmColor: 'red',
+      title: 'הסתרת רשומה',
+      message: 'הרשומה תוסתר מההיסטוריה אך תישמר בדוחות הסטטיסטיקה. להמשיך?',
+      icon: '👁️‍🗨️',
+      confirmText: 'הסתר',
+      confirmColor: 'orange',
       onConfirm: async () => {
         setConfirmModal(prev => prev ? { ...prev, loading: true } : null)
         try {
           const { error } = await supabase
             .from('borrow_history')
-            .delete()
+            .update({ is_hidden: true })
             .eq('id', id)
 
           if (error) throw error
 
-          toast.success('הרשומה נמחקה בהצלחה!')
+          toast.success('הרשומה הוסתרה בהצלחה!')
           fetchHistory()
         } catch (error) {
-          console.error('Error deleting history:', error)
-          toast.error('אירעה שגיאה במחיקת הרשומה')
+          console.error('Error hiding history:', error)
+          toast.error('אירעה שגיאה בהסתרת הרשומה')
         } finally {
           closeConfirmModal()
         }
@@ -2326,14 +2352,13 @@ export default function CityAdminPage() {
                             </div>
                             <div className="flex flex-col gap-2">
                               {item.return_image_url && (
-                                <a
-                                  href={item.return_image_url}
-                                  target="_blank"
-                                  rel="noopener noreferrer"
-                                  className="inline-flex items-center justify-center gap-2 px-4 py-2 bg-blue-500 hover:bg-blue-600 text-white font-semibold rounded-lg transition-all"
+                                <Button
+                                  onClick={() => openReturnImage(item.return_image_url!)}
+                                  disabled={checkingImage}
+                                  className="inline-flex items-center justify-center gap-2 px-4 py-2 bg-blue-500 hover:bg-blue-600 text-white font-semibold rounded-lg transition-all disabled:opacity-50"
                                 >
-                                  📷 צפה בתמונה
-                                </a>
+                                  {checkingImage ? '⏳' : '📷'} צפה בתמונה
+                                </Button>
                               )}
                               <div className="flex gap-2">
                                 <Button
@@ -2427,12 +2452,13 @@ export default function CityAdminPage() {
                                           size="sm"
                                           onClick={(e) => {
                                             e.stopPropagation()
-                                            window.open(item.return_image_url!, '_blank')
+                                            openReturnImage(item.return_image_url!)
                                           }}
-                                          className="h-8 w-8 p-0 bg-blue-500 hover:bg-blue-600 text-white"
+                                          disabled={checkingImage}
+                                          className="h-8 w-8 p-0 bg-blue-500 hover:bg-blue-600 text-white disabled:opacity-50"
                                           title="צפה בתמונת החזרה"
                                         >
-                                          📷
+                                          {checkingImage ? '⏳' : '📷'}
                                         </Button>
                                       )}
                                       {/* Status toggle button */}
@@ -2462,19 +2488,19 @@ export default function CityAdminPage() {
                                           ⏳
                                         </span>
                                       )}
-                                      {/* Delete button */}
+                                      {/* Hide button */}
                                       <Button
                                         size="sm"
-                                        variant="destructive"
+                                        variant="ghost"
                                         onClick={(e) => {
                                           e.stopPropagation()
                                           handleDeleteHistory(item.id)
                                         }}
                                         disabled={loading || !canEdit}
-                                        className="h-8 w-8 p-0 bg-red-500 hover:bg-red-600 disabled:opacity-50 disabled:cursor-not-allowed"
-                                        title="מחק"
+                                        className="h-8 w-8 p-0 bg-gray-200 hover:bg-gray-300 disabled:opacity-50 disabled:cursor-not-allowed"
+                                        title="הסתר מההיסטוריה"
                                       >
-                                        🗑️
+                                        👁️‍🗨️
                                       </Button>
                                     </div>
                                   </div>
@@ -2537,11 +2563,12 @@ export default function CityAdminPage() {
                                       {(item.status === 'returned' || item.status === 'pending_approval') && item.return_image_url && (
                                         <Button
                                           size="sm"
-                                          onClick={() => window.open(item.return_image_url!, '_blank')}
-                                          className="h-8 w-8 p-0 bg-blue-500 hover:bg-blue-600 text-white"
+                                          onClick={() => openReturnImage(item.return_image_url!)}
+                                          disabled={checkingImage}
+                                          className="h-8 w-8 p-0 bg-blue-500 hover:bg-blue-600 text-white disabled:opacity-50"
                                           title="צפה בתמונת החזרה"
                                         >
-                                          📷
+                                          {checkingImage ? '⏳' : '📷'}
                                         </Button>
                                       )}
                                       {/* Status toggle button */}
@@ -2565,16 +2592,16 @@ export default function CityAdminPage() {
                                           ⏳ ממתין
                                         </span>
                                       )}
-                                      {/* Delete button */}
+                                      {/* Hide button */}
                                       <Button
                                         size="sm"
                                         variant="ghost"
                                         onClick={() => handleDeleteHistory(item.id)}
                                         disabled={loading || !canEdit}
-                                        className="h-8 w-8 p-0 hover:bg-red-100 hover:text-red-600 text-gray-400 disabled:opacity-50 disabled:cursor-not-allowed"
-                                        title={`מחק: ${item.equipment_name}`}
+                                        className="h-8 w-8 p-0 hover:bg-gray-200 text-gray-400 disabled:opacity-50 disabled:cursor-not-allowed"
+                                        title={`הסתר: ${item.equipment_name}`}
                                       >
-                                        🗑️
+                                        👁️‍🗨️
                                       </Button>
                                     </div>
                                   </div>
@@ -3904,6 +3931,43 @@ export default function CityAdminPage() {
                     מעבד...
                   </span>
                 ) : confirmModal.confirmText}
+              </Button>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* Image Not Available Modal */}
+      {showImageNotAvailable && (
+        <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50 p-4" onClick={() => setShowImageNotAvailable(false)}>
+          <div
+            className="bg-white rounded-2xl shadow-2xl max-w-sm w-full animate-in fade-in zoom-in duration-200"
+            onClick={(e) => e.stopPropagation()}
+          >
+            {/* Header */}
+            <div className="p-6 rounded-t-2xl bg-gradient-to-r from-gray-400 to-gray-500">
+              <div className="flex items-center justify-center">
+                <span className="text-6xl">🖼️</span>
+              </div>
+            </div>
+
+            {/* Body */}
+            <div className="p-6 text-center">
+              <h3 className="text-xl font-bold text-gray-800 mb-2">התמונה לא זמינה</h3>
+              <p className="text-gray-600">
+                תמונות החזרה נשמרות למשך 5 ימים בלבד.
+                <br />
+                תמונה זו כבר נמחקה מהמערכת.
+              </p>
+            </div>
+
+            {/* Footer */}
+            <div className="p-6 pt-0">
+              <Button
+                onClick={() => setShowImageNotAvailable(false)}
+                className="w-full bg-gradient-to-r from-gray-500 to-gray-600 hover:from-gray-600 hover:to-gray-700 text-white font-semibold py-3 rounded-xl transition-all"
+              >
+                הבנתי
               </Button>
             </div>
           </div>
