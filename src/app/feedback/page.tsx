@@ -126,6 +126,18 @@ function FeedbackPageContent() {
       return
     }
 
+    if (!senderEmail.trim()) {
+      setError('נא להזין כתובת מייל')
+      return
+    }
+
+    // Validate email format
+    const emailRegex = /^[A-Za-z0-9._%+-]+@[A-Za-z0-9.-]+\.[A-Za-z]{2,}$/
+    if (!emailRegex.test(senderEmail.trim())) {
+      setError('כתובת מייל לא תקינה')
+      return
+    }
+
     setSending(true)
 
     try {
@@ -375,7 +387,7 @@ function FeedbackPageContent() {
 
                 <div>
                   <label htmlFor="senderEmail" className="block text-sm font-medium text-gray-700 mb-2">
-                    מייל
+                    מייל <span className="text-red-500">*</span>
                   </label>
                   <Input
                     id="senderEmail"
@@ -386,6 +398,7 @@ function FeedbackPageContent() {
                     disabled={sending}
                     className="h-12"
                     dir="ltr"
+                    required
                   />
                 </div>
 
