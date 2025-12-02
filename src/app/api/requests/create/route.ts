@@ -86,15 +86,40 @@ export async function POST(request: NextRequest) {
       )
     }
 
-    // Get manager email from users table
-    let managerEmail: string | null = null
-    if (city.manager1_user_id) {
+    // Get all city managers' emails
+    const { data: cityManagers } = await supabaseServer
+      .from('city_managers')
+      .select('id, name, email')
+      .eq('city_id', cityId)
+
+    // Collect all manager emails (from city_managers table and users table)
+    const managerEmails: { email: string; name: string }[] = []
+
+    if (cityManagers && cityManagers.length > 0) {
+      for (const manager of cityManagers) {
+        // Get email from users table using manager id
+        const { data: userData } = await supabaseServer
+          .from('users')
+          .select('email')
+          .eq('id', manager.id)
+          .single()
+
+        if (userData?.email) {
+          managerEmails.push({ email: userData.email, name: manager.name || 'מנהל' })
+        }
+      }
+    }
+
+    // Fallback to manager1_user_id if no managers found in city_managers
+    if (managerEmails.length === 0 && city.manager1_user_id) {
       const { data: manager } = await supabaseServer
         .from('users')
         .select('email')
         .eq('id', city.manager1_user_id)
         .single()
-      managerEmail = manager?.email || null
+      if (manager?.email) {
+        managerEmails.push({ email: manager.email, name: city.manager1_name || 'מנהל' })
+      }
     }
 
     // Validate call_id if required
@@ -347,8 +372,8 @@ export async function POST(request: NextRequest) {
       // Continue anyway - push failure shouldn't block request creation
     }
 
-    // Send email notification to city manager (fire and forget)
-    if (managerEmail) {
+    // Send email notification to all city managers (fire and forget)
+    if (managerEmails.length > 0) {
       try {
         // Get equipment names for the email
         const { data: equipmentNames } = await supabaseServer
@@ -361,18 +386,23 @@ export async function POST(request: NextRequest) {
           quantity: item.quantity
         }))
 
-        await sendNewRequestEmail(
-          managerEmail,
-          city.manager1_name || 'מנהל',
-          body.requester_name,
-          body.requester_phone,
-          city.name || 'ארון ציוד',
-          itemsWithNames
-        ).catch(err => {
-          console.error('Failed to send email notification:', err)
-        })
+        // Send email to each manager
+        await Promise.all(
+          managerEmails.map(manager =>
+            sendNewRequestEmail(
+              manager.email,
+              manager.name,
+              body.requester_name,
+              body.requester_phone,
+              city.name || 'ארון ציוד',
+              itemsWithNames
+            ).catch(err => {
+              console.error(`Failed to send email to ${manager.email}:`, err)
+            })
+          )
+        )
       } catch (emailError) {
-        console.error('Error sending email notification:', emailError)
+        console.error('Error sending email notifications:', emailError)
         // Continue anyway - email failure shouldn't block request creation
       }
     }
