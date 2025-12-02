@@ -25,38 +25,45 @@ export default function UnifiedLoginPage() {
   useEffect(() => {
     async function checkCurrentUser() {
       try {
-        const { data: { user } } = await supabase.auth.getUser()
-        if (!user) {
+        // Use our API to check auth - this validates the cookie properly
+        // Don't use supabase.auth.getUser() as it reads from localStorage
+        // which might have stale data when cookie is invalid
+        const response = await fetch('/api/auth/me', {
+          credentials: 'include'
+        })
+
+        if (!response.ok) {
+          // Not authenticated - clear any stale localStorage data
+          await supabase.auth.signOut()
           setBackUrl('/')
           return
         }
 
-        const { data: userProfile } = await supabase
-          .from('users')
-          .select('role, city_id, is_active')
-          .eq('id', user.id)
-          .single()
+        const data = await response.json()
+        if (!data.success || !data.user) {
+          setBackUrl('/')
+          return
+        }
 
-        if (userProfile) {
-          // If user is blocked, don't auto-redirect - let them see the login page
-          if (userProfile.is_active === false) {
-            // Sign out the blocked user
-            await supabase.auth.signOut()
-            setBackUrl('/')
-            return
-          }
+        const userProfile = data.user
 
-          let redirectUrl = '/'
-          if (userProfile.role === 'super_admin') {
-            redirectUrl = '/super-admin'
-          } else if (userProfile.role === 'city_manager' && userProfile.city_id) {
-            redirectUrl = `/city/${userProfile.city_id}/admin`
-          }
-          setBackUrl(redirectUrl)
-          // Auto-redirect if already logged in
-          if (redirectUrl !== '/') {
-            router.push(redirectUrl)
-          }
+        // If user is blocked, don't auto-redirect
+        if (userProfile.is_active === false) {
+          await supabase.auth.signOut()
+          setBackUrl('/')
+          return
+        }
+
+        let redirectUrl = '/'
+        if (userProfile.role === 'super_admin') {
+          redirectUrl = '/super-admin'
+        } else if (userProfile.role === 'city_manager' && userProfile.city_id) {
+          redirectUrl = `/city/${userProfile.city_id}/admin`
+        }
+        setBackUrl(redirectUrl)
+        // Auto-redirect if already logged in with valid session
+        if (redirectUrl !== '/') {
+          router.push(redirectUrl)
         }
       } catch (error) {
         console.error('Error checking user:', error)
