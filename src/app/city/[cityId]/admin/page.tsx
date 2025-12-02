@@ -2447,19 +2447,6 @@ export default function CityAdminPage() {
                                           ⏳
                                         </span>
                                       )}
-                                      {(item.status === 'returned' || item.status === 'pending_approval') && item.return_image_url && (
-                                        <Button
-                                          size="sm"
-                                          onClick={(e) => {
-                                            e.stopPropagation()
-                                            window.open(item.return_image_url!, '_blank')
-                                          }}
-                                          className="h-8 w-8 p-0 text-xs font-semibold rounded-lg bg-blue-500 hover:bg-blue-600 text-white transition-all"
-                                          title="צפה בתמונת החזרה"
-                                        >
-                                          📷
-                                        </Button>
-                                      )}
                                       <Button
                                         size="sm"
                                         variant="destructive"
@@ -2583,18 +2570,6 @@ export default function CityAdminPage() {
                               <div className="flex gap-2">
                                 {group.items.map(item => (
                                   <div key={item.id} className="flex items-center gap-1">
-                                    {item.status === 'returned' && item.return_image_url && (
-                                      <a
-                                        href={item.return_image_url}
-                                        target="_blank"
-                                        rel="noopener noreferrer"
-                                        className="text-xl hover:scale-110 transition-transform"
-                                        title="צפה בתמונת החזרה"
-                                        onClick={(e) => e.stopPropagation()}
-                                      >
-                                        📷
-                                      </a>
-                                    )}
                                     <Button
                                       key={item.id}
                                       size="sm"
