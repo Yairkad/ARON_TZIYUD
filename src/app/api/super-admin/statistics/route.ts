@@ -47,7 +47,7 @@ export async function GET(request: NextRequest) {
     // === GET ALL CITIES ===
     const { data: cities, error: citiesError } = await supabase
       .from('cities')
-      .select('id, name, is_blocked, created_at')
+      .select('id, name, is_active, created_at')
       .order('name')
 
     if (citiesError) {
@@ -57,8 +57,8 @@ export async function GET(request: NextRequest) {
       return NextResponse.json({ error: 'Failed to fetch cities', details: citiesError.message }, { status: 500 })
     }
 
-    const activeCities = cities?.filter(c => !c.is_blocked).length || 0
-    const blockedCities = cities?.filter(c => c.is_blocked).length || 0
+    const activeCities = cities?.filter(c => c.is_active !== false).length || 0
+    const blockedCities = cities?.filter(c => c.is_active === false).length || 0
 
     // === BORROW STATISTICS (ALL CITIES) ===
     const { data: allBorrows } = await supabase
@@ -160,7 +160,7 @@ export async function GET(request: NextRequest) {
         return {
           id: city.id,
           name: city.name,
-          isBlocked: city.is_blocked,
+          isBlocked: city.is_active === false,
           borrowsThisMonth: cityBorrows.length,
           returnsThisMonth: cityBorrows.filter(b => b.status === 'returned').length,
           currentlyBorrowed: currentlyBorrowed?.length || 0,
