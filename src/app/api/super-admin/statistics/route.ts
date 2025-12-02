@@ -91,15 +91,22 @@ export async function GET(request: NextRequest) {
     const pendingRequests = allRequests?.filter(r => r.status === 'pending').length || 0
 
     // === EQUIPMENT STATISTICS (ALL CITIES) ===
-    const { data: allEquipment } = await supabase
+    const { data: allEquipment, error: equipmentError } = await supabase
       .from('city_equipment')
       .select(`
-        id,
-        city_id,
-        quantity,
-        equipment_status,
+        *,
         global_equipment:global_equipment_pool(id, name)
       `)
+
+    if (equipmentError) {
+      console.error('Error fetching equipment:', equipmentError)
+    }
+
+    // Debug: Log equipment data to see what fields exist
+    if (allEquipment && allEquipment.length > 0) {
+      console.log('📦 Sample equipment data:', JSON.stringify(allEquipment[0], null, 2))
+      console.log('📦 Equipment with faulty status:', allEquipment.filter(eq => eq.equipment_status === 'faulty').length)
+    }
 
     const totalEquipmentTypes = allEquipment?.length || 0
     const totalQuantity = allEquipment?.reduce((sum, eq) => sum + (eq.quantity || 0), 0) || 0
