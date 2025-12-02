@@ -52,7 +52,9 @@ export async function GET(request: NextRequest) {
 
     if (citiesError) {
       console.error('Error fetching cities:', citiesError)
-      return NextResponse.json({ error: 'Failed to fetch cities' }, { status: 500 })
+      console.error('Supabase URL:', process.env.NEXT_PUBLIC_SUPABASE_URL ? 'SET' : 'NOT SET')
+      console.error('Service Role Key:', process.env.SUPABASE_SERVICE_ROLE_KEY ? 'SET' : 'NOT SET')
+      return NextResponse.json({ error: 'Failed to fetch cities', details: citiesError.message }, { status: 500 })
     }
 
     const activeCities = cities?.filter(c => !c.is_blocked).length || 0

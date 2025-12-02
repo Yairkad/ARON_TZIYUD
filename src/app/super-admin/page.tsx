@@ -208,10 +208,11 @@ export default function SuperAdminPage() {
   }
 
   // Fetch reports data
-  const fetchReports = async () => {
+  const fetchReports = async (customRange?: { start: string; end: string }) => {
     setReportsLoading(true)
     try {
-      const url = `/api/super-admin/statistics?start_date=${reportsDateRange.start}&end_date=${reportsDateRange.end}`
+      const range = customRange || reportsDateRange
+      const url = `/api/super-admin/statistics?start_date=${range.start}&end_date=${range.end}`
       console.log('Fetching reports from:', url)
 
       const response = await fetch(url, { credentials: 'include' })
@@ -3529,10 +3530,12 @@ export default function SuperAdminPage() {
                       onClick={() => {
                         const now = new Date()
                         const start = new Date(now.getFullYear(), now.getMonth(), 1)
-                        setReportsDateRange({
+                        const newRange = {
                           start: start.toISOString().split('T')[0],
                           end: now.toISOString().split('T')[0]
-                        })
+                        }
+                        setReportsDateRange(newRange)
+                        fetchReports(newRange)
                       }}
                       className="text-sm"
                     >
@@ -3543,10 +3546,12 @@ export default function SuperAdminPage() {
                       onClick={() => {
                         const now = new Date()
                         const start = new Date(now.getTime() - 7 * 24 * 60 * 60 * 1000)
-                        setReportsDateRange({
+                        const newRange = {
                           start: start.toISOString().split('T')[0],
                           end: now.toISOString().split('T')[0]
-                        })
+                        }
+                        setReportsDateRange(newRange)
+                        fetchReports(newRange)
                       }}
                       className="text-sm"
                     >
@@ -3557,56 +3562,32 @@ export default function SuperAdminPage() {
                       onClick={() => {
                         const now = new Date()
                         const start = new Date(now.getFullYear(), 0, 1)
-                        setReportsDateRange({
+                        const newRange = {
                           start: start.toISOString().split('T')[0],
                           end: now.toISOString().split('T')[0]
-                        })
+                        }
+                        setReportsDateRange(newRange)
+                        fetchReports(newRange)
                       }}
                       className="text-sm"
                     >
                       השנה
                     </Button>
                   </div>
-                </div>
-                {/* Report Type Filter */}
-                <div className="mt-4 pt-4 border-t">
-                  <label className="block text-sm font-medium text-gray-700 mb-2">סוג דוח:</label>
-                  <div className="flex flex-wrap gap-2">
-                    <Button
-                      variant={reportsFilter === 'all' ? 'default' : 'outline'}
-                      onClick={() => setReportsFilter('all')}
-                      className={`text-sm ${reportsFilter === 'all' ? 'bg-indigo-600 text-white' : ''}`}
+                  {/* Report Type Filter - Dropdown */}
+                  <div>
+                    <label className="block text-sm font-medium text-gray-700 mb-1">סוג דוח</label>
+                    <select
+                      value={reportsFilter}
+                      onChange={(e) => setReportsFilter(e.target.value as any)}
+                      className="px-3 py-2 border rounded-lg bg-white min-w-[120px]"
                     >
-                      הכל
-                    </Button>
-                    <Button
-                      variant={reportsFilter === 'borrows' ? 'default' : 'outline'}
-                      onClick={() => setReportsFilter('borrows')}
-                      className={`text-sm ${reportsFilter === 'borrows' ? 'bg-green-600 text-white' : ''}`}
-                    >
-                      השאלות
-                    </Button>
-                    <Button
-                      variant={reportsFilter === 'requests' ? 'default' : 'outline'}
-                      onClick={() => setReportsFilter('requests')}
-                      className={`text-sm ${reportsFilter === 'requests' ? 'bg-purple-600 text-white' : ''}`}
-                    >
-                      בקשות
-                    </Button>
-                    <Button
-                      variant={reportsFilter === 'equipment' ? 'default' : 'outline'}
-                      onClick={() => setReportsFilter('equipment')}
-                      className={`text-sm ${reportsFilter === 'equipment' ? 'bg-amber-600 text-white' : ''}`}
-                    >
-                      ציוד
-                    </Button>
-                    <Button
-                      variant={reportsFilter === 'cities' ? 'default' : 'outline'}
-                      onClick={() => setReportsFilter('cities')}
-                      className={`text-sm ${reportsFilter === 'cities' ? 'bg-blue-600 text-white' : ''}`}
-                    >
-                      ערים
-                    </Button>
+                      <option value="all">הכל</option>
+                      <option value="borrows">השאלות</option>
+                      <option value="requests">בקשות</option>
+                      <option value="equipment">ציוד</option>
+                      <option value="cities">ערים</option>
+                    </select>
                   </div>
                 </div>
               </CardContent>
