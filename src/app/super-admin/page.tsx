@@ -98,6 +98,7 @@ export default function SuperAdminPage() {
     start: new Date(new Date().getFullYear(), new Date().getMonth(), 1).toISOString().split('T')[0],
     end: new Date().toISOString().split('T')[0]
   })
+  const [reportsFilter, setReportsFilter] = useState<'all' | 'borrows' | 'requests' | 'equipment' | 'cities'>('all')
 
   // Confirmation Modal State - Generic modal for all confirmations
   const [confirmModal, setConfirmModal] = useState<{
@@ -207,20 +208,20 @@ export default function SuperAdminPage() {
   }
 
   // Fetch reports data
-  const fetchReports = async (startDate?: string, endDate?: string) => {
+  const fetchReports = async () => {
     setReportsLoading(true)
     try {
-      let url = '/api/super-admin/statistics'
-      if (startDate && endDate) {
-        url += `?start_date=${startDate}&end_date=${endDate}`
-      }
+      const url = `/api/super-admin/statistics?start_date=${reportsDateRange.start}&end_date=${reportsDateRange.end}`
+      console.log('Fetching reports from:', url)
 
       const response = await fetch(url, { credentials: 'include' })
+      const data = await response.json()
+      console.log('Reports response:', data)
+
       if (response.ok) {
-        const data = await response.json()
         setReportsData(data)
       } else {
-        console.error('Error fetching reports')
+        console.error('Error fetching reports:', data.error)
       }
     } catch (error) {
       console.error('Error fetching reports:', error)
@@ -1263,6 +1264,13 @@ export default function SuperAdminPage() {
       fetchEmailLogs()
     }
   }, [isAuthenticated, activeTab, emailTypeFilter, emailSearchQuery])
+
+  // Load reports when switching to reports tab
+  useEffect(() => {
+    if (isAuthenticated && activeTab === 'reports' && !reportsData) {
+      fetchReports()
+    }
+  }, [isAuthenticated, activeTab])
 
   // Show loading while checking authentication
   if (isCheckingAuth) {
@@ -3560,6 +3568,47 @@ export default function SuperAdminPage() {
                     </Button>
                   </div>
                 </div>
+                {/* Report Type Filter */}
+                <div className="mt-4 pt-4 border-t">
+                  <label className="block text-sm font-medium text-gray-700 mb-2">סוג דוח:</label>
+                  <div className="flex flex-wrap gap-2">
+                    <Button
+                      variant={reportsFilter === 'all' ? 'default' : 'outline'}
+                      onClick={() => setReportsFilter('all')}
+                      className={`text-sm ${reportsFilter === 'all' ? 'bg-indigo-600 text-white' : ''}`}
+                    >
+                      הכל
+                    </Button>
+                    <Button
+                      variant={reportsFilter === 'borrows' ? 'default' : 'outline'}
+                      onClick={() => setReportsFilter('borrows')}
+                      className={`text-sm ${reportsFilter === 'borrows' ? 'bg-green-600 text-white' : ''}`}
+                    >
+                      השאלות
+                    </Button>
+                    <Button
+                      variant={reportsFilter === 'requests' ? 'default' : 'outline'}
+                      onClick={() => setReportsFilter('requests')}
+                      className={`text-sm ${reportsFilter === 'requests' ? 'bg-purple-600 text-white' : ''}`}
+                    >
+                      בקשות
+                    </Button>
+                    <Button
+                      variant={reportsFilter === 'equipment' ? 'default' : 'outline'}
+                      onClick={() => setReportsFilter('equipment')}
+                      className={`text-sm ${reportsFilter === 'equipment' ? 'bg-amber-600 text-white' : ''}`}
+                    >
+                      ציוד
+                    </Button>
+                    <Button
+                      variant={reportsFilter === 'cities' ? 'default' : 'outline'}
+                      onClick={() => setReportsFilter('cities')}
+                      className={`text-sm ${reportsFilter === 'cities' ? 'bg-blue-600 text-white' : ''}`}
+                    >
+                      ערים
+                    </Button>
+                  </div>
+                </div>
               </CardContent>
             </Card>
 
@@ -3569,88 +3618,149 @@ export default function SuperAdminPage() {
               </div>
             ) : reportsData ? (
               <>
-                {/* Summary Cards */}
-                <div className="grid grid-cols-2 md:grid-cols-4 gap-4 mb-6">
-                  <Card className="bg-gradient-to-br from-blue-500 to-blue-600 text-white">
-                    <CardContent className="p-4 text-center">
-                      <div className="text-3xl font-bold">{reportsData.summary?.totalCities || 0}</div>
-                      <div className="text-sm opacity-90">סה"כ ערים</div>
-                      <div className="text-xs mt-1 opacity-75">
-                        {reportsData.summary?.activeCities || 0} פעילות | {reportsData.summary?.blockedCities || 0} חסומות
-                      </div>
-                    </CardContent>
-                  </Card>
-                  <Card className="bg-gradient-to-br from-green-500 to-green-600 text-white">
-                    <CardContent className="p-4 text-center">
-                      <div className="text-3xl font-bold">{reportsData.borrows?.total || 0}</div>
-                      <div className="text-sm opacity-90">סה"כ השאלות</div>
-                      <div className="text-xs mt-1 opacity-75">
-                        {reportsData.borrows?.returnRate || 0}% הוחזרו
-                      </div>
-                    </CardContent>
-                  </Card>
-                  <Card className="bg-gradient-to-br from-purple-500 to-purple-600 text-white">
-                    <CardContent className="p-4 text-center">
-                      <div className="text-3xl font-bold">{reportsData.requests?.total || 0}</div>
-                      <div className="text-sm opacity-90">סה"כ בקשות</div>
-                      <div className="text-xs mt-1 opacity-75">
-                        {reportsData.requests?.approvalRate || 0}% אושרו
-                      </div>
-                    </CardContent>
-                  </Card>
-                  <Card className="bg-gradient-to-br from-amber-500 to-amber-600 text-white">
-                    <CardContent className="p-4 text-center">
-                      <div className="text-3xl font-bold">{reportsData.equipment?.totalTypes || 0}</div>
-                      <div className="text-sm opacity-90">סוגי ציוד</div>
-                      <div className="text-xs mt-1 opacity-75">
-                        {reportsData.equipment?.faulty || 0} תקולים
-                      </div>
-                    </CardContent>
-                  </Card>
-                </div>
+                {/* Summary Cards - always show */}
+                {reportsFilter === 'all' && (
+                  <div className="grid grid-cols-2 md:grid-cols-4 gap-4 mb-6">
+                    <Card className="bg-gradient-to-br from-blue-500 to-blue-600 text-white">
+                      <CardContent className="p-4 text-center">
+                        <div className="text-3xl font-bold">{reportsData.summary?.totalCities || 0}</div>
+                        <div className="text-sm opacity-90">סה"כ ערים</div>
+                        <div className="text-xs mt-1 opacity-75">
+                          {reportsData.summary?.activeCities || 0} פעילות | {reportsData.summary?.blockedCities || 0} חסומות
+                        </div>
+                      </CardContent>
+                    </Card>
+                    <Card className="bg-gradient-to-br from-green-500 to-green-600 text-white">
+                      <CardContent className="p-4 text-center">
+                        <div className="text-3xl font-bold">{reportsData.borrows?.total || 0}</div>
+                        <div className="text-sm opacity-90">סה"כ השאלות</div>
+                        <div className="text-xs mt-1 opacity-75">
+                          {reportsData.borrows?.returnRate || 0}% הוחזרו
+                        </div>
+                      </CardContent>
+                    </Card>
+                    <Card className="bg-gradient-to-br from-purple-500 to-purple-600 text-white">
+                      <CardContent className="p-4 text-center">
+                        <div className="text-3xl font-bold">{reportsData.requests?.total || 0}</div>
+                        <div className="text-sm opacity-90">סה"כ בקשות</div>
+                        <div className="text-xs mt-1 opacity-75">
+                          {reportsData.requests?.approvalRate || 0}% אושרו
+                        </div>
+                      </CardContent>
+                    </Card>
+                    <Card className="bg-gradient-to-br from-amber-500 to-amber-600 text-white">
+                      <CardContent className="p-4 text-center">
+                        <div className="text-3xl font-bold">{reportsData.equipment?.totalTypes || 0}</div>
+                        <div className="text-sm opacity-90">סוגי ציוד</div>
+                        <div className="text-xs mt-1 opacity-75">
+                          {reportsData.equipment?.faulty || 0} תקולים
+                        </div>
+                      </CardContent>
+                    </Card>
+                  </div>
+                )}
 
-                {/* Detailed Stats Row */}
-                <div className="grid grid-cols-2 md:grid-cols-6 gap-3 mb-6">
-                  <Card>
-                    <CardContent className="p-3 text-center">
-                      <div className="text-2xl font-bold text-green-600">{reportsData.borrows?.returned || 0}</div>
-                      <div className="text-xs text-gray-500">הושבו</div>
+                {/* Borrows Stats */}
+                {(reportsFilter === 'all' || reportsFilter === 'borrows') && (
+                  <Card className="mb-6">
+                    <CardHeader className="pb-2">
+                      <CardTitle className="text-lg flex items-center gap-2">
+                        <span>📦</span> סטטיסטיקות השאלות
+                      </CardTitle>
+                    </CardHeader>
+                    <CardContent>
+                      <div className="grid grid-cols-2 md:grid-cols-4 gap-3">
+                        <div className="bg-green-50 rounded-lg p-4 text-center">
+                          <div className="text-3xl font-bold text-green-600">{reportsData.borrows?.total || 0}</div>
+                          <div className="text-sm text-gray-600">סה"כ השאלות</div>
+                        </div>
+                        <div className="bg-blue-50 rounded-lg p-4 text-center">
+                          <div className="text-3xl font-bold text-blue-600">{reportsData.borrows?.returned || 0}</div>
+                          <div className="text-sm text-gray-600">הוחזרו</div>
+                        </div>
+                        <div className="bg-orange-50 rounded-lg p-4 text-center">
+                          <div className="text-3xl font-bold text-orange-600">{reportsData.borrows?.pending || 0}</div>
+                          <div className="text-sm text-gray-600">טרם הוחזרו</div>
+                        </div>
+                        <div className="bg-purple-50 rounded-lg p-4 text-center">
+                          <div className="text-3xl font-bold text-purple-600">{reportsData.borrows?.pendingApproval || 0}</div>
+                          <div className="text-sm text-gray-600">ממתינים לאישור</div>
+                        </div>
+                      </div>
+                      <div className="mt-4 text-center">
+                        <span className="text-lg font-semibold text-gray-700">
+                          אחוז החזרה: <span className="text-green-600">{reportsData.borrows?.returnRate || 0}%</span>
+                        </span>
+                      </div>
                     </CardContent>
                   </Card>
-                  <Card>
-                    <CardContent className="p-3 text-center">
-                      <div className="text-2xl font-bold text-orange-600">{reportsData.borrows?.pending || 0}</div>
-                      <div className="text-xs text-gray-500">טרם הושבו</div>
-                    </CardContent>
-                  </Card>
-                  <Card>
-                    <CardContent className="p-3 text-center">
-                      <div className="text-2xl font-bold text-blue-600">{reportsData.borrows?.pendingApproval || 0}</div>
-                      <div className="text-xs text-gray-500">ממתינים לאישור</div>
-                    </CardContent>
-                  </Card>
-                  <Card>
-                    <CardContent className="p-3 text-center">
-                      <div className="text-2xl font-bold text-green-600">{reportsData.requests?.approved || 0}</div>
-                      <div className="text-xs text-gray-500">בקשות אושרו</div>
-                    </CardContent>
-                  </Card>
-                  <Card>
-                    <CardContent className="p-3 text-center">
-                      <div className="text-2xl font-bold text-red-600">{reportsData.requests?.rejected || 0}</div>
-                      <div className="text-xs text-gray-500">בקשות נדחו</div>
-                    </CardContent>
-                  </Card>
-                  <Card>
-                    <CardContent className="p-3 text-center">
-                      <div className="text-2xl font-bold text-yellow-600">{reportsData.requests?.pending || 0}</div>
-                      <div className="text-xs text-gray-500">בקשות ממתינות</div>
-                    </CardContent>
-                  </Card>
-                </div>
+                )}
 
-                {/* Alerts */}
-                {reportsData.alerts && reportsData.alerts.length > 0 && (
+                {/* Requests Stats */}
+                {(reportsFilter === 'all' || reportsFilter === 'requests') && (
+                  <Card className="mb-6">
+                    <CardHeader className="pb-2">
+                      <CardTitle className="text-lg flex items-center gap-2">
+                        <span>📋</span> סטטיסטיקות בקשות
+                      </CardTitle>
+                    </CardHeader>
+                    <CardContent>
+                      <div className="grid grid-cols-2 md:grid-cols-4 gap-3">
+                        <div className="bg-purple-50 rounded-lg p-4 text-center">
+                          <div className="text-3xl font-bold text-purple-600">{reportsData.requests?.total || 0}</div>
+                          <div className="text-sm text-gray-600">סה"כ בקשות</div>
+                        </div>
+                        <div className="bg-green-50 rounded-lg p-4 text-center">
+                          <div className="text-3xl font-bold text-green-600">{reportsData.requests?.approved || 0}</div>
+                          <div className="text-sm text-gray-600">אושרו</div>
+                        </div>
+                        <div className="bg-red-50 rounded-lg p-4 text-center">
+                          <div className="text-3xl font-bold text-red-600">{reportsData.requests?.rejected || 0}</div>
+                          <div className="text-sm text-gray-600">נדחו</div>
+                        </div>
+                        <div className="bg-yellow-50 rounded-lg p-4 text-center">
+                          <div className="text-3xl font-bold text-yellow-600">{reportsData.requests?.pending || 0}</div>
+                          <div className="text-sm text-gray-600">ממתינות</div>
+                        </div>
+                      </div>
+                      <div className="mt-4 text-center">
+                        <span className="text-lg font-semibold text-gray-700">
+                          אחוז אישור: <span className="text-green-600">{reportsData.requests?.approvalRate || 0}%</span>
+                        </span>
+                      </div>
+                    </CardContent>
+                  </Card>
+                )}
+
+                {/* Equipment Stats */}
+                {(reportsFilter === 'all' || reportsFilter === 'equipment') && (
+                  <Card className="mb-6">
+                    <CardHeader className="pb-2">
+                      <CardTitle className="text-lg flex items-center gap-2">
+                        <span>🔧</span> סטטיסטיקות ציוד
+                      </CardTitle>
+                    </CardHeader>
+                    <CardContent>
+                      <div className="grid grid-cols-3 gap-3">
+                        <div className="bg-amber-50 rounded-lg p-4 text-center">
+                          <div className="text-3xl font-bold text-amber-600">{reportsData.equipment?.totalTypes || 0}</div>
+                          <div className="text-sm text-gray-600">סוגי ציוד</div>
+                        </div>
+                        <div className="bg-blue-50 rounded-lg p-4 text-center">
+                          <div className="text-3xl font-bold text-blue-600">{reportsData.equipment?.totalQuantity || 0}</div>
+                          <div className="text-sm text-gray-600">סה"כ פריטים</div>
+                        </div>
+                        <div className="bg-red-50 rounded-lg p-4 text-center">
+                          <div className="text-3xl font-bold text-red-600">{reportsData.equipment?.faulty || 0}</div>
+                          <div className="text-sm text-gray-600">תקולים</div>
+                        </div>
+                      </div>
+                    </CardContent>
+                  </Card>
+                )}
+
+                {/* Alerts - show for all, equipment (faulty), requests (pending) */}
+                {reportsFilter === 'all' && reportsData.alerts && reportsData.alerts.length > 0 && (
                   <Card className="mb-6 border-amber-200 bg-amber-50">
                     <CardHeader className="pb-2">
                       <CardTitle className="text-lg flex items-center gap-2 text-amber-800">
@@ -3677,8 +3787,8 @@ export default function SuperAdminPage() {
                   </Card>
                 )}
 
-                {/* Trends Chart */}
-                {reportsData.trends && reportsData.trends.length > 0 && (
+                {/* Trends Chart - show for all and borrows */}
+                {(reportsFilter === 'all' || reportsFilter === 'borrows') && reportsData.trends && reportsData.trends.length > 0 && (
                   <Card className="mb-6">
                     <CardHeader className="pb-2">
                       <CardTitle className="text-lg flex items-center gap-2">
@@ -3712,8 +3822,8 @@ export default function SuperAdminPage() {
                   </Card>
                 )}
 
-                {/* Top Borrowed Items */}
-                {reportsData.topBorrowedItems && reportsData.topBorrowedItems.length > 0 && (
+                {/* Top Borrowed Items - show for all, borrows, equipment */}
+                {(reportsFilter === 'all' || reportsFilter === 'borrows' || reportsFilter === 'equipment') && reportsData.topBorrowedItems && reportsData.topBorrowedItems.length > 0 && (
                   <Card className="mb-6">
                     <CardHeader className="pb-2">
                       <CardTitle className="text-lg flex items-center gap-2">
@@ -3734,7 +3844,8 @@ export default function SuperAdminPage() {
                   </Card>
                 )}
 
-                {/* City Statistics Table */}
+                {/* City Statistics Table - show for all and cities */}
+                {(reportsFilter === 'all' || reportsFilter === 'cities') && (
                 <Card className="mb-6">
                   <CardHeader className="pb-2">
                     <CardTitle className="text-lg flex items-center gap-2">
@@ -3788,6 +3899,7 @@ export default function SuperAdminPage() {
                     </div>
                   </CardContent>
                 </Card>
+                )}
 
                 {/* Export Button */}
                 <div className="flex justify-center">
