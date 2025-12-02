@@ -165,16 +165,24 @@ export async function GET(request: NextRequest, { params }: StatisticsParams) {
     const trendData: { month: string; borrows: number; returns: number }[] = []
     for (let i = 5; i >= 0; i--) {
       const monthStart = new Date(now.getFullYear(), now.getMonth() - i, 1)
+      monthStart.setHours(0, 0, 0, 0)
       const monthEnd = new Date(now.getFullYear(), now.getMonth() - i + 1, 0)
+      monthEnd.setHours(23, 59, 59, 999) // End of last day of month
 
-      const { data: monthBorrows } = await supabase
+      const { data: monthBorrows, error: monthError } = await supabase
         .from('borrow_history')
-        .select('id, status')
+        .select('id, status, borrow_date')
         .eq('city_id', cityId)
         .gte('borrow_date', monthStart.toISOString())
         .lte('borrow_date', monthEnd.toISOString())
 
       const monthName = monthStart.toLocaleDateString('he-IL', { month: 'short' })
+
+      // Debug logging
+      if (monthBorrows && monthBorrows.length > 0) {
+        console.log(`Trend ${monthName}: Found ${monthBorrows.length} borrows`, monthBorrows.map(b => b.borrow_date))
+      }
+
       trendData.push({
         month: monthName,
         borrows: monthBorrows?.length || 0,
