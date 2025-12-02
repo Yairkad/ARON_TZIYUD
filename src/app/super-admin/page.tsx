@@ -601,6 +601,26 @@ export default function SuperAdminPage() {
         return
       }
 
+      // If password was changed, update cookies with new tokens
+      if (data.passwordChanged && data.newAccessToken) {
+        const maxAge = 60 * 60 * 24 * 7 // 7 days
+        const expiryDate = new Date(Date.now() + maxAge * 1000).toUTCString()
+        document.cookie = `sb-access-token=${data.newAccessToken}; path=/; max-age=${maxAge}; expires=${expiryDate}; SameSite=Lax`
+        if (data.newRefreshToken) {
+          document.cookie = `sb-refresh-token=${data.newRefreshToken}; path=/; max-age=${maxAge}; expires=${expiryDate}; SameSite=Lax`
+        }
+        // Wait for cookies to be stored
+        await new Promise(resolve => setTimeout(resolve, 300))
+      }
+
+      // If re-login is required (edge case where re-auth failed)
+      if (data.requireReLogin) {
+        toast.success('הסיסמה שונתה בהצלחה! יש להתחבר מחדש.')
+        await logout()
+        router.push('/login')
+        return
+      }
+
       toast.success('הסיסמה שונתה בהצלחה!')
       setChangePasswordForm({ currentPassword: '', newPassword: '', confirmPassword: '' })
       setShowChangePassword(false)

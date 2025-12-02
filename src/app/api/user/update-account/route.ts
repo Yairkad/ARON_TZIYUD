@@ -66,6 +66,32 @@ export async function POST(request: NextRequest) {
           { status: 500 }
         )
       }
+
+      // Sign in with new password to get new tokens
+      const { data: newSession, error: reAuthError } = await supabase.auth.signInWithPassword({
+        email: user.email,
+        password: new_password
+      })
+
+      if (reAuthError || !newSession.session) {
+        console.error('Error re-authenticating after password change:', reAuthError)
+        // Password was changed successfully, but re-auth failed
+        // Client should handle re-login manually
+        return NextResponse.json({
+          success: true,
+          requireReLogin: true,
+          message: 'הסיסמה שונתה בהצלחה. יש להתחבר מחדש.'
+        })
+      }
+
+      // Return new tokens for client to update cookies
+      return NextResponse.json({
+        success: true,
+        passwordChanged: true,
+        newAccessToken: newSession.session.access_token,
+        newRefreshToken: newSession.session.refresh_token,
+        message: 'הסיסמה שונתה בהצלחה'
+      })
     }
 
     // Update user data in public.users table

@@ -75,10 +75,11 @@ export async function POST(request: NextRequest) {
       )
     }
 
-    // Update password in Supabase Auth
-    const { error: updateError } = await supabase.auth.updateUser({
-      password: newPassword
-    })
+    // Update password in Supabase Auth using admin API
+    const { error: updateError } = await supabase.auth.admin.updateUserById(
+      user.id,
+      { password: newPassword }
+    )
 
     if (updateError) {
       console.error('❌ Error updating super-admin password:', updateError)
@@ -90,8 +91,29 @@ export async function POST(request: NextRequest) {
 
     console.log('✅ Super-admin password changed successfully for:', userProfile.email)
 
+    // Sign in with new password to get new tokens
+    const { data: newSession, error: reAuthError } = await supabase.auth.signInWithPassword({
+      email: userProfile.email,
+      password: newPassword
+    })
+
+    if (reAuthError || !newSession.session) {
+      console.error('Error re-authenticating after password change:', reAuthError)
+      // Password was changed successfully, but re-auth failed
+      // Client should handle re-login manually
+      return NextResponse.json({
+        success: true,
+        requireReLogin: true,
+        message: 'הסיסמה שונתה בהצלחה. יש להתחבר מחדש.'
+      })
+    }
+
+    // Return new tokens for client to update cookies
     return NextResponse.json({
       success: true,
+      passwordChanged: true,
+      newAccessToken: newSession.session.access_token,
+      newRefreshToken: newSession.session.refresh_token,
       message: 'הסיסמה שונתה בהצלחה'
     })
   } catch (error) {
