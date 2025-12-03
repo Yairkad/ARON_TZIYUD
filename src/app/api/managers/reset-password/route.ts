@@ -45,7 +45,9 @@ export async function POST(request: NextRequest) {
       expiresAt.setHours(expiresAt.getHours() + 1) // 1 hour
 
       // Update user with reset token
-      const { error: updateError } = await supabase
+      console.log('📝 Saving reset token for user:', user.id, 'token:', resetToken.substring(0, 10) + '...')
+
+      const { data: updateData, error: updateError } = await supabase
         .from('users')
         .update({
           reset_token: resetToken,
@@ -53,14 +55,18 @@ export async function POST(request: NextRequest) {
           updated_at: new Date().toISOString()
         })
         .eq('id', user.id)
+        .select('reset_token')
+        .single()
 
       if (updateError) {
-        console.error('Error creating reset token:', updateError)
+        console.error('❌ Error saving reset token:', updateError)
         return NextResponse.json(
           { success: false, error: 'שגיאה ביצירת קישור איפוס' },
           { status: 500 }
         )
       }
+
+      console.log('✅ Token saved successfully:', updateData?.reset_token ? 'yes' : 'no')
 
       // Send password reset email
       const { sendPasswordResetEmail } = await import('@/lib/email')
