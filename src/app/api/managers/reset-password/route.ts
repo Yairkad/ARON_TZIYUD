@@ -76,6 +76,8 @@ export async function POST(request: NextRequest) {
     if (body.token && body.newPassword) {
       const { token, newPassword } = body
 
+      console.log('🔑 Password reset attempt with token:', token.substring(0, 10) + '...')
+
       if (newPassword.length < 6) {
         return NextResponse.json(
           { success: false, error: 'הסיסמה חייבת להכיל לפחות 6 תווים' },
@@ -90,9 +92,17 @@ export async function POST(request: NextRequest) {
         .eq('reset_token', token)
         .single()
 
+      console.log('🔍 Token lookup result:', {
+        found: !!user,
+        error: fetchError?.message,
+        errorCode: fetchError?.code,
+        userId: user?.id
+      })
+
       if (fetchError || !user) {
+        console.error('❌ Token not found in database. Error:', fetchError)
         return NextResponse.json(
-          { success: false, error: 'טוקן איפוס לא תקין' },
+          { success: false, error: 'טוקן איפוס לא תקין. ייתכן שפג תוקפו או שכבר נעשה בו שימוש.' },
           { status: 400 }
         )
       }

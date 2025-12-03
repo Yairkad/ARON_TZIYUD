@@ -43,7 +43,7 @@ const getAppUrl = () => process.env.NEXT_PUBLIC_APP_URL || 'http://localhost:300
 // Modern inline styles for email compatibility (Gmail strips <style> tags)
 const inlineStyles = {
   body: 'font-family: "Segoe UI", Tahoma, Geneva, Verdana, sans-serif; direction: rtl; text-align: right; background-color: #f1f5f9; margin: 0; padding: 30px 20px;',
-  container: 'max-width: 600px; margin: 0 auto; background: #ffffff; border-radius: 16px; overflow: hidden; box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1), 0 2px 4px -2px rgba(0, 0, 0, 0.1);',
+  container: 'max-width: 600px; margin: 0 auto; background: #ffffff; border-radius: 16px; overflow: hidden; box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1), 0 2px 4px -2px rgba(0, 0, 0, 0.1); direction: rtl; text-align: right;',
   // Header variants
   header: 'padding: 40px 30px; text-align: center; position: relative;',
   headerPrimary: 'background: linear-gradient(135deg, #2563eb 0%, #7c3aed 100%);',
@@ -55,44 +55,44 @@ const inlineStyles = {
   headerTitle: 'margin: 0; font-size: 26px; font-weight: 700; color: white; text-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);',
   headerSubtitle: 'color: rgba(255, 255, 255, 0.9); font-size: 14px; margin-top: 8px;',
   // Content
-  content: 'padding: 35px 30px;',
+  content: 'padding: 35px 30px; direction: rtl; text-align: right;',
   greeting: 'font-size: 18px; color: #1e293b; font-weight: 600; margin-bottom: 20px;',
   contentText: 'color: #475569; font-size: 15px; line-height: 1.7; margin: 0 0 18px 0;',
   // Info cards
-  infoCard: 'background: linear-gradient(135deg, #f8fafc 0%, #f1f5f9 100%); border-radius: 12px; padding: 20px; margin: 20px 0; border-right: 4px solid #3b82f6;',
+  infoCard: 'background: linear-gradient(135deg, #f8fafc 0%, #f1f5f9 100%); border-radius: 12px; padding: 20px; margin: 20px 0; border-right: 4px solid #3b82f6; direction: rtl; text-align: right;',
   infoCardWarning: 'background: linear-gradient(135deg, #fffbeb 0%, #fef3c7 100%); border-right-color: #f59e0b;',
   infoCardDanger: 'background: linear-gradient(135deg, #fef2f2 0%, #fee2e2 100%); border-right-color: #ef4444;',
   infoCardSuccess: 'background: linear-gradient(135deg, #ecfdf5 0%, #d1fae5 100%); border-right-color: #10b981;',
-  infoCardTitle: 'font-size: 14px; font-weight: 700; color: #334155; margin-bottom: 10px;',
-  infoCardContent: 'color: #64748b; font-size: 14px; line-height: 1.6;',
+  infoCardTitle: 'font-size: 14px; font-weight: 700; color: #334155; margin-bottom: 10px; text-align: right;',
+  infoCardContent: 'color: #64748b; font-size: 14px; line-height: 1.6; text-align: right;',
   // CTA Button
   ctaContainer: 'text-align: center; margin: 30px 0;',
   button: 'display: inline-block; background: linear-gradient(135deg, #2563eb 0%, #7c3aed 100%); color: white; padding: 16px 40px; text-decoration: none; border-radius: 12px; font-weight: 700; font-size: 16px; box-shadow: 0 10px 25px -5px rgba(37, 99, 235, 0.4);',
   buttonWarning: 'background: linear-gradient(135deg, #d97706 0%, #ea580c 100%); box-shadow: 0 10px 25px -5px rgba(217, 119, 6, 0.4);',
   buttonSuccess: 'background: linear-gradient(135deg, #059669 0%, #0d9488 100%); box-shadow: 0 10px 25px -5px rgba(5, 150, 105, 0.4);',
   // Alert boxes
-  alert: 'border-radius: 12px; padding: 16px 20px; margin: 20px 0; background: linear-gradient(135deg, #fffbeb 0%, #fef3c7 100%); border: 1px solid #fcd34d;',
+  alert: 'border-radius: 12px; padding: 16px 20px; margin: 20px 0; background: linear-gradient(135deg, #fffbeb 0%, #fef3c7 100%); border: 1px solid #fcd34d; direction: rtl; text-align: right;',
   alertDanger: 'background: linear-gradient(135deg, #fef2f2 0%, #fee2e2 100%); border: 1px solid #fca5a5;',
   alertInfo: 'background: linear-gradient(135deg, #eff6ff 0%, #dbeafe 100%); border: 1px solid #93c5fd;',
-  alertText: 'font-size: 14px; line-height: 1.5; color: #92400e;',
+  alertText: 'font-size: 14px; line-height: 1.5; color: #92400e; text-align: right;',
   alertTextDanger: 'color: #991b1b;',
   alertTextInfo: 'color: #1e40af;',
   // Table
-  table: 'width: 100%; border-collapse: separate; border-spacing: 0; margin: 20px 0; border-radius: 12px; overflow: hidden; box-shadow: 0 1px 3px rgba(0, 0, 0, 0.1);',
+  table: 'width: 100%; border-collapse: separate; border-spacing: 0; margin: 20px 0; border-radius: 12px; overflow: hidden; box-shadow: 0 1px 3px rgba(0, 0, 0, 0.1); direction: rtl;',
   th: 'background: linear-gradient(135deg, #1e293b 0%, #334155 100%); color: white; padding: 14px 16px; font-size: 13px; font-weight: 600; text-align: right;',
-  td: 'padding: 14px 16px; font-size: 14px; color: #475569; background: white; border-bottom: 1px solid #f1f5f9;',
+  td: 'padding: 14px 16px; font-size: 14px; color: #475569; background: white; border-bottom: 1px solid #f1f5f9; text-align: right;',
   // Items list
-  itemRow: 'display: flex; align-items: center; padding: 12px 16px; background: #f8fafc; border-radius: 10px; margin-bottom: 8px;',
-  itemIcon: 'width: 40px; height: 40px; background: linear-gradient(135deg, #e0e7ff 0%, #c7d2fe 100%); border-radius: 10px; display: inline-flex; align-items: center; justify-content: center; font-size: 18px; margin-left: 12px;',
-  itemName: 'font-weight: 600; color: #1e293b; font-size: 14px;',
-  itemMeta: 'font-size: 12px; color: #64748b;',
+  itemRow: 'padding: 12px 16px; background: #f8fafc; border-radius: 10px; margin-bottom: 8px; direction: rtl; text-align: right;',
+  itemIcon: 'display: inline-block; width: 40px; height: 40px; background: linear-gradient(135deg, #e0e7ff 0%, #c7d2fe 100%); border-radius: 10px; text-align: center; line-height: 40px; font-size: 18px; margin-left: 12px; vertical-align: middle;',
+  itemName: 'font-weight: 600; color: #1e293b; font-size: 14px; display: inline-block; vertical-align: middle;',
+  itemMeta: 'font-size: 12px; color: #64748b; display: block; margin-top: 4px; margin-right: 52px;',
   // Stats
   statsGrid: 'display: flex; gap: 12px; margin: 20px 0;',
   statCard: 'flex: 1; background: linear-gradient(135deg, #f8fafc 0%, #f1f5f9 100%); border-radius: 12px; padding: 16px; text-align: center;',
   statValue: 'font-size: 28px; font-weight: 800; color: #2563eb;',
   statLabel: 'font-size: 12px; color: #64748b; margin-top: 4px;',
-  // Section title
-  sectionTitle: 'font-size: 16px; font-weight: 700; color: #1e293b; margin: 25px 0 15px; padding-right: 12px; border-right: 4px solid #7c3aed;',
+  // Section title (stays right-aligned for RTL with right border)
+  sectionTitle: 'font-size: 16px; font-weight: 700; color: #1e293b; margin: 25px 0 15px; padding-right: 12px; border-right: 4px solid #7c3aed; text-align: right;',
   // Divider
   divider: 'height: 1px; background: linear-gradient(90deg, transparent, #e2e8f0 20%, #e2e8f0 80%, transparent); margin: 25px 0;',
   // Footer
@@ -100,8 +100,8 @@ const inlineStyles = {
   footerLogo: 'font-size: 18px; font-weight: 700; color: #334155; margin-bottom: 8px;',
   footerText: 'color: #94a3b8; font-size: 12px; line-height: 1.6;',
   // Legacy support
-  list: 'list-style: none; padding: 0; margin: 15px 0;',
-  listItem: 'padding: 12px 16px; background: #f8fafc; border-radius: 10px; margin-bottom: 8px; color: #475569;',
+  list: 'list-style: none; padding: 0; margin: 15px 0; direction: rtl;',
+  listItem: 'padding: 12px 16px; background: #f8fafc; border-radius: 10px; margin-bottom: 8px; color: #475569; text-align: right;',
 }
 
 // Header variant types
@@ -149,12 +149,14 @@ const styled = {
       </div>`
   },
 
-  // Data rows inside info card
+  // Data rows inside info card (table-based for better RTL support)
   dataRow: (label: string, value: string) => `
-    <div style="display: flex; justify-content: space-between; padding: 10px 0; border-bottom: 1px dashed #e2e8f0;">
-      <span style="color: #64748b; font-size: 14px;">${label}</span>
-      <span style="color: #1e293b; font-weight: 600; font-size: 14px;">${value}</span>
-    </div>`,
+    <table style="width: 100%; border-collapse: collapse; direction: rtl;">
+      <tr>
+        <td style="color: #64748b; font-size: 14px; padding: 10px 0; border-bottom: 1px dashed #e2e8f0; text-align: right;">${label}</td>
+        <td style="color: #1e293b; font-weight: 600; font-size: 14px; padding: 10px 0; border-bottom: 1px dashed #e2e8f0; text-align: left;">${value}</td>
+      </tr>
+    </table>`,
 
   // CTA button with variants
   button: (text: string, href: string, variant: ButtonVariant = 'primary') => {
@@ -194,14 +196,12 @@ const styled = {
   // Items list (modern card style)
   list: (items: string[]) => `<div style="${inlineStyles.list}">${items.map(item => `<div style="${inlineStyles.listItem}">📌 ${item}</div>`).join('')}</div>`,
 
-  // Item row with icon
+  // Item row with icon (RTL layout)
   itemRow: (icon: string, name: string, meta: string) => `
     <div style="${inlineStyles.itemRow}">
-      <div style="${inlineStyles.itemIcon}">${icon}</div>
-      <div>
-        <div style="${inlineStyles.itemName}">${name}</div>
-        <div style="${inlineStyles.itemMeta}">${meta}</div>
-      </div>
+      <span style="${inlineStyles.itemIcon}">${icon}</span>
+      <span style="${inlineStyles.itemName}">${name}</span>
+      <span style="${inlineStyles.itemMeta}">${meta}</span>
     </div>`,
 
   // Stats grid
