@@ -60,6 +60,14 @@ export async function GET(request: NextRequest) {
       )
     }
 
+    // At this point user is guaranteed to be non-null
+    if (!user) {
+      return NextResponse.json(
+        { success: false, error: 'User not found' },
+        { status: 401 }
+      )
+    }
+
     // Get user data from public.users table (more reliable than metadata)
     const { data: userData, error: userError } = await supabase
       .from('users')
