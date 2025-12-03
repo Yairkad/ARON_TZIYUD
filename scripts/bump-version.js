@@ -25,9 +25,22 @@ const major = parseInt(versionMatch[1])
 const minor = parseInt(versionMatch[2])
 const patch = parseInt(versionMatch[3])
 
-// Increment patch version
-const newPatch = patch + 1
-const newVersion = `${major}.${minor}.${newPatch}`
+// Increment version - after X.Y.9, go to X.(Y+1).0
+let newMajor = major
+let newMinor = minor
+let newPatch = patch + 1
+
+if (newPatch > 9) {
+  newPatch = 0
+  newMinor = minor + 1
+}
+
+if (newMinor > 9) {
+  newMinor = 0
+  newMajor = major + 1
+}
+
+const newVersion = `${newMajor}.${newMinor}.${newPatch}`
 
 console.log(`Bumping version: ${major}.${minor}.${patch} -> ${newVersion}`)
 
