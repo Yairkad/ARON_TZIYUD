@@ -672,10 +672,12 @@ export default function GlobalEquipmentPage() {
         <div className="flex items-center justify-between">
           {/* Back button */}
           <Link href="/super-admin">
-            <button className="p-2 rounded-full hover:bg-white/50 transition-colors">
-              <svg xmlns="http://www.w3.org/2000/svg" className="h-5 w-5 text-gray-600" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+            <button className="flex items-center gap-1.5 px-3 py-2 bg-white/80 hover:bg-white text-gray-700 rounded-lg transition-colors font-medium text-sm shadow-sm border border-gray-200">
+              <svg xmlns="http://www.w3.org/2000/svg" className="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                 <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 5l7 7-7 7" />
               </svg>
+              <span className="hidden sm:inline">חזרה לניהול</span>
+              <span className="sm:hidden">חזרה</span>
             </button>
           </Link>
 
@@ -686,7 +688,7 @@ export default function GlobalEquipmentPage() {
           </div>
 
           {/* Empty space for balance */}
-          <div className="w-9"></div>
+          <div className="w-24 sm:w-32"></div>
         </div>
       </div>
 

@@ -511,29 +511,343 @@
       }
     }
 
-    /* Responsive */
-    @media (max-width: 600px) {
+    /* Responsive - Tablet */
+    @media (max-width: 768px) {
+      body {
+        padding: 10px;
+      }
+
+      .header {
+        padding: 25px 15px;
+        margin-bottom: 20px;
+      }
+
       .header h1 {
-        font-size: 1.8rem;
+        font-size: 2rem;
       }
 
-      .timeline::before {
-        right: 25px;
+      .header p {
+        font-size: 1rem;
       }
 
-      .step {
-        padding-right: 70px;
-      }
-
-      .step-number {
-        right: 5px;
-        width: 38px;
-        height: 38px;
-        font-size: 1.1rem;
+      .process-section,
+      .tips-section {
+        padding: 20px;
+        margin-bottom: 20px;
       }
 
       .section-title {
-        font-size: 1.4rem;
+        font-size: 1.5rem;
+        margin-bottom: 20px;
+      }
+
+      .tips-grid {
+        grid-template-columns: repeat(2, 1fr);
+        gap: 15px;
+      }
+    }
+
+    /* Responsive - Mobile */
+    @media (max-width: 600px) {
+      body {
+        padding: 8px;
+      }
+
+      .header {
+        padding: 20px 12px;
+        border-radius: 16px;
+        margin-bottom: 15px;
+      }
+
+      .header h1 {
+        font-size: 1.5rem;
+      }
+
+      .header p {
+        font-size: 0.9rem;
+      }
+
+      .process-section,
+      .tips-section {
+        padding: 15px;
+        border-radius: 16px;
+        margin-bottom: 15px;
+      }
+
+      .section-title {
+        font-size: 1.2rem;
+        margin-bottom: 15px;
+        gap: 8px;
+      }
+
+      .section-title .icon {
+        font-size: 1.5rem;
+      }
+
+      /* Timeline - Simplified for mobile */
+      .timeline {
+        padding: 10px 0;
+      }
+
+      .timeline::before {
+        display: none;
+      }
+
+      .step {
+        padding-right: 0;
+        padding-bottom: 20px;
+      }
+
+      .step-number {
+        position: relative;
+        right: auto;
+        width: 36px;
+        height: 36px;
+        font-size: 1rem;
+        margin-bottom: 10px;
+        margin-right: auto;
+        margin-left: auto;
+      }
+
+      .step-content {
+        padding: 15px;
+        border-radius: 12px;
+      }
+
+      .step-title {
+        font-size: 1.1rem;
+        gap: 8px;
+        justify-content: center;
+        text-align: center;
+      }
+
+      .step-title .emoji {
+        font-size: 1.3rem;
+      }
+
+      .step-desc {
+        font-size: 0.9rem;
+        text-align: center;
+        margin-bottom: 12px;
+      }
+
+      /* Mock Screen - Mobile */
+      .mock-screen {
+        border-radius: 10px;
+      }
+
+      .mock-header {
+        padding: 8px 10px;
+        gap: 5px;
+      }
+
+      .mock-dot {
+        width: 8px;
+        height: 8px;
+      }
+
+      .mock-url {
+        font-size: 0.7rem;
+        padding: 4px 8px;
+      }
+
+      .mock-body {
+        padding: 12px;
+        min-height: 120px;
+      }
+
+      .mock-input {
+        padding: 10px 12px;
+        margin-bottom: 10px;
+        gap: 8px;
+      }
+
+      .mock-input-icon {
+        font-size: 1rem;
+      }
+
+      .mock-input-text {
+        font-size: 0.85rem;
+      }
+
+      .mock-button {
+        padding: 10px 15px;
+        font-size: 0.9rem;
+        gap: 6px;
+      }
+
+      /* Equipment List - Mobile */
+      .mock-equipment-list {
+        gap: 8px;
+      }
+
+      .mock-equipment-item {
+        padding: 10px 12px;
+        gap: 8px;
+        border-radius: 8px;
+      }
+
+      .mock-checkbox {
+        width: 18px;
+        height: 18px;
+        font-size: 0.7rem;
+      }
+
+      .mock-equipment-name {
+        font-size: 0.9rem;
+      }
+
+      .mock-equipment-qty {
+        font-size: 0.75rem;
+      }
+
+      .mock-equipment-icon {
+        font-size: 1.2rem;
+      }
+
+      /* Tabs - Mobile */
+      .mock-tabs {
+        margin-bottom: 12px;
+      }
+
+      .mock-tab {
+        padding: 10px 8px;
+        font-size: 0.85rem;
+      }
+
+      /* Status Badge - Mobile */
+      .mock-status {
+        padding: 4px 8px;
+        font-size: 0.75rem;
+        gap: 4px;
+      }
+
+      /* Camera - Mobile */
+      .mock-camera {
+        padding: 15px;
+      }
+
+      .mock-camera-frame {
+        padding: 25px 15px;
+        margin-bottom: 12px;
+      }
+
+      .mock-camera-icon {
+        font-size: 2rem;
+        margin-bottom: 8px;
+      }
+
+      .mock-camera-text {
+        font-size: 0.8rem;
+      }
+
+      .mock-camera-button {
+        width: 50px;
+        height: 50px;
+        font-size: 1.2rem;
+      }
+
+      /* Warning/Success Box - Mobile */
+      .warning-box,
+      .success-box {
+        padding: 12px 15px;
+        gap: 10px;
+        margin-top: 12px;
+        border-radius: 10px;
+      }
+
+      .warning-icon,
+      .success-icon {
+        font-size: 1.2rem;
+      }
+
+      .warning-text,
+      .success-text {
+        font-size: 0.85rem;
+        line-height: 1.4;
+      }
+
+      /* Tips - Mobile */
+      .tips-grid {
+        grid-template-columns: 1fr;
+        gap: 12px;
+      }
+
+      .tip-card {
+        padding: 15px;
+        border-radius: 12px;
+      }
+
+      .tip-icon {
+        font-size: 2rem;
+        margin-bottom: 8px;
+      }
+
+      .tip-title {
+        font-size: 1rem;
+        margin-bottom: 5px;
+      }
+
+      .tip-text {
+        font-size: 0.85rem;
+      }
+
+      /* Footer - Mobile */
+      .footer {
+        padding: 20px;
+      }
+
+      .footer p {
+        font-size: 0.85rem;
+      }
+    }
+
+    /* Extra small screens */
+    @media (max-width: 380px) {
+      .header h1 {
+        font-size: 1.3rem;
+      }
+
+      .section-title {
+        font-size: 1.1rem;
+      }
+
+      .step-title {
+        font-size: 1rem;
+      }
+
+      .mock-body {
+        padding: 10px;
+      }
+    }
+
+    /* Fix inline styles responsive behavior */
+    @media (max-width: 600px) {
+      .mock-body > div[style*="display: flex"][style*="gap: 15px"] {
+        flex-direction: column !important;
+        gap: 10px !important;
+      }
+
+      .mock-body p[style*="font-size: 1.1rem"] {
+        font-size: 0.95rem !important;
+      }
+
+      .mock-body div[style*="font-size: 3rem"],
+      .mock-body div[style*="font-size: 3.5rem"] {
+        font-size: 2.5rem !important;
+      }
+
+      .mock-body div[style*="font-size: 2.5rem"] {
+        font-size: 2rem !important;
+      }
+
+      .mock-body div[style*="font-size: 1.2rem"] {
+        font-size: 1rem !important;
+      }
+
+      .mock-body div[style*="padding: 20px"],
+      .mock-body div[style*="padding: 25px"] {
+        padding: 15px !important;
       }
     }
   </style>

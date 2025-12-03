@@ -211,17 +211,18 @@ function FeedbackPageContent() {
       <div className="max-w-2xl mx-auto py-8">
         {/* Header */}
         <div className="bg-white rounded-2xl shadow-xl p-8 mb-6">
-          <div className="flex items-center gap-4 mb-6">
-            <button
-              onClick={() => router.back()}
-              className="text-blue-600 hover:text-blue-800 text-2xl"
-            >
-              ←
-            </button>
+          <div className="flex items-center justify-between mb-6">
             <div>
               <h1 className="text-3xl font-bold text-gray-900">📣 שליחת פידבק</h1>
               <p className="text-gray-600">דווח על באג או שלח הצעה לשיפור המערכת</p>
             </div>
+            <button
+              onClick={() => router.back()}
+              className="flex items-center gap-2 px-4 py-2 bg-gray-100 hover:bg-gray-200 text-gray-700 rounded-lg transition-colors font-medium"
+            >
+              <span>סגור</span>
+              <span>✕</span>
+            </button>
           </div>
 
           {/* Error message */}
