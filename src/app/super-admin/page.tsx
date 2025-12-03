@@ -1948,8 +1948,7 @@ export default function SuperAdminPage() {
                               </a>
                             )}
                           </div>
-                          <p className="text-sm text-gray-500 mb-4">🔐 סיסמה: ••••••</p>
-                          <div className="flex flex-wrap gap-2">
+                          <div className="flex flex-wrap gap-2 mt-4">
                             <Button
                               onClick={() => router.push(`/city/${city.id}/admin`)}
                               className="bg-gradient-to-r from-purple-600 to-pink-600 hover:from-purple-700 hover:to-pink-700 text-white font-bold text-xs sm:text-sm px-2 sm:px-4 h-9 sm:h-10 flex-shrink-0"
@@ -1963,56 +1962,6 @@ export default function SuperAdminPage() {
                                   className="bg-blue-500 hover:bg-blue-600 text-xs sm:text-sm px-2 sm:px-4 h-9 sm:h-10 flex-shrink-0"
                                 >
                                   ✏️ ערוך
-                                </Button>
-                                <Button
-                                  onClick={async () => {
-                                    const newPassword = prompt('הזן סיסמה חדשה לעיר (השאר ריק עבור 123456):') ?? '123456'
-
-                                    if (newPassword.length < 4) {
-                                      toast.error('הסיסמה חייבת להכיל לפחות 4 תווים')
-                                      return
-                                    }
-
-                                    showConfirmModal({
-                                      title: 'איפוס סיסמת עיר',
-                                      message: `האם לאפס את הסיסמה של העיר ${city.name}?\n\nסיסמה חדשה: ${newPassword}`,
-                                      icon: '🔑',
-                                      confirmText: 'אפס סיסמה',
-                                      confirmColor: 'orange',
-                                      onConfirm: async () => {
-                                        setConfirmModal(prev => prev ? { ...prev, loading: true } : null)
-                                        try {
-                                          const response = await fetch('/api/admin/cities/reset-password', {
-                                            method: 'POST',
-                                            headers: { 'Content-Type': 'application/json' },
-                                            credentials: 'include',
-                                            body: JSON.stringify({
-                                              city_id: city.id,
-                                              new_password: newPassword
-                                            }),
-                                          })
-
-                                          const data = await response.json()
-
-                                          if (!response.ok) {
-                                            toast.error(data.error || 'שגיאה באיפוס סיסמה')
-                                            return
-                                          }
-
-                                          toast.success(data.message)
-                                        } catch (error) {
-                                          console.error('Error resetting city password:', error)
-                                          toast.error('אירעה שגיאה באיפוס הסיסמה')
-                                        } finally {
-                                          closeConfirmModal()
-                                        }
-                                      }
-                                    })
-                                  }}
-                                  disabled={loading}
-                                  className="bg-gradient-to-r from-amber-500 to-orange-500 hover:from-amber-600 hover:to-orange-600 text-xs sm:text-sm px-2 sm:px-4 h-9 sm:h-10 flex-shrink-0"
-                                >
-                                  🔑 סיסמה
                                 </Button>
                                 <Button
                                   onClick={() => handleToggleActive(city)}

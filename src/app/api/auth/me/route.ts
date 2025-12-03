@@ -18,6 +18,7 @@ export async function GET(request: NextRequest) {
 
     // Get access token from cookies
     const accessToken = request.cookies.get('sb-access-token')?.value
+    const refreshToken = request.cookies.get('sb-refresh-token')?.value
 
     if (!accessToken) {
       return NextResponse.json(
@@ -27,9 +28,32 @@ export async function GET(request: NextRequest) {
     }
 
     // Get user from token
-    const { data: { user }, error } = await supabase.auth.getUser(accessToken)
+    let { data: { user }, error } = await supabase.auth.getUser(accessToken)
 
-    if (error || !user) {
+    // If token expired, try to refresh it
+    let newAccessToken: string | null = null
+    let newRefreshToken: string | null = null
+
+    if ((error || !user) && refreshToken) {
+      console.log('🔄 Access token expired, attempting to refresh...')
+      const { data: refreshData, error: refreshError } = await supabase.auth.refreshSession({
+        refresh_token: refreshToken
+      })
+
+      if (refreshError || !refreshData.session) {
+        console.error('❌ Failed to refresh token:', refreshError)
+        return NextResponse.json(
+          { success: false, error: 'Session expired' },
+          { status: 401 }
+        )
+      }
+
+      // Use the new session
+      user = refreshData.user
+      newAccessToken = refreshData.session.access_token
+      newRefreshToken = refreshData.session.refresh_token
+      console.log('✅ Token refreshed successfully')
+    } else if (error || !user) {
       return NextResponse.json(
         { success: false, error: 'Invalid token' },
         { status: 401 }
@@ -127,6 +151,30 @@ export async function GET(request: NextRequest) {
     response.headers.set('Cache-Control', 'no-store, no-cache, must-revalidate, proxy-revalidate')
     response.headers.set('Pragma', 'no-cache')
     response.headers.set('Expires', '0')
+
+    // If we refreshed the token, update the cookies
+    if (newAccessToken && newRefreshToken) {
+      const cookieMaxAge = 60 * 60 * 24 * 30 // 30 days
+      const expiryDate = new Date(Date.now() + cookieMaxAge * 1000)
+
+      response.cookies.set('sb-access-token', newAccessToken, {
+        httpOnly: false,
+        secure: process.env.NODE_ENV === 'production',
+        sameSite: 'lax',
+        maxAge: cookieMaxAge,
+        expires: expiryDate,
+        path: '/',
+      })
+
+      response.cookies.set('sb-refresh-token', newRefreshToken, {
+        httpOnly: false,
+        secure: process.env.NODE_ENV === 'production',
+        sameSite: 'lax',
+        maxAge: cookieMaxAge,
+        expires: expiryDate,
+        path: '/',
+      })
+    }
 
     return response
   } catch (error) {
