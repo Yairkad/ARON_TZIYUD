@@ -23,6 +23,7 @@ import {
   isSubscribed
 } from '@/lib/push'
 import toast from 'react-hot-toast'
+import { VERSION } from '@/lib/version'
 
 // Function to extract coordinates from Google Maps URL
 // Handles both full URLs and short URLs (via API expansion)
@@ -3982,6 +3983,9 @@ export default function CityAdminPage() {
             <Link href={`/feedback?source=city_admin&city=${encodeURIComponent(city?.name || '')}`} className="text-indigo-500 hover:text-indigo-600 hover:underline">
               דווח על בעיה או הצע שיפור
             </Link>
+          </p>
+          <p className="text-gray-300 text-[10px] mt-1">
+            גירסה {VERSION}
           </p>
         </div>
       </div>

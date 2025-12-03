@@ -11,6 +11,7 @@ import { City, CityForm, AdminNotification } from '@/types'
 import Logo from '@/components/Logo'
 import { checkAuth, logout } from '@/lib/auth'
 import toast from 'react-hot-toast'
+import { VERSION } from '@/lib/version'
 
 export default function SuperAdminPage() {
   const router = useRouter()
@@ -4050,12 +4051,11 @@ export default function SuperAdminPage() {
           <p className="text-gray-400 text-xs">
             מערכת ארון ציוד ידידים •{' '}
             <Link href="/feedback?source=super_admin" className="text-indigo-500 hover:text-indigo-600 hover:underline">
-              דווח על בעיה
+              דווח על בעיה או הצע שיפור
             </Link>
-            {' '}•{' '}
-            <Link href="/feedback?source=super_admin" className="text-indigo-500 hover:text-indigo-600 hover:underline">
-              הצע שיפור
-            </Link>
+          </p>
+          <p className="text-gray-300 text-[10px] mt-1">
+            גירסה {VERSION}
           </p>
         </div>
       </div>

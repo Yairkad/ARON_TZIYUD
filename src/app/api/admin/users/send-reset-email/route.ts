@@ -104,7 +104,7 @@ export async function POST(request: NextRequest) {
     const emailResult = await sendPasswordResetEmail(
       body.email,
       resetToken,
-      user.full_name || cityManager?.name || 'משתמש'
+      user.full_name || 'משתמש'
     )
 
     // Log the email
