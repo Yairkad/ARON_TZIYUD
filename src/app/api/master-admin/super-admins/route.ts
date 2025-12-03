@@ -25,7 +25,7 @@ async function checkMasterAuth(): Promise<boolean> {
   return isValidSession(sessionToken)
 }
 
-// GET - List all super admins from Supabase Auth
+// GET - List all super admins from public.users table
 export async function GET(request: NextRequest) {
   try {
     const isAuth = await checkMasterAuth()
@@ -35,29 +35,31 @@ export async function GET(request: NextRequest) {
 
     const supabase = createServiceClient()
 
-    // List all users from Supabase Auth
-    const { data: { users }, error } = await supabase.auth.admin.listUsers()
+    // Get super admins from public.users table
+    const { data: superAdmins, error } = await supabase
+      .from('users')
+      .select('*')
+      .eq('role', 'super_admin')
+      .order('created_at', { ascending: false })
 
     if (error) {
       console.error('Fetch users error:', error)
       return NextResponse.json({ error: 'שגיאה בטעינת הנתונים' }, { status: 500 })
     }
 
-    // Filter only super_admin users
-    const superAdmins = users
-      .filter(user => user.user_metadata?.role === 'super_admin')
-      .map(user => ({
-        id: user.id,
-        email: user.email,
-        full_name: user.user_metadata?.full_name || '',
-        phone: user.phone || user.user_metadata?.phone || null,
-        permissions: user.user_metadata?.permissions || 'full_access',
-        is_active: !(user as any).banned_until,
-        created_at: user.created_at,
-      }))
+    // Transform to expected format
+    const admins = (superAdmins || []).map(user => ({
+      id: user.id,
+      email: user.email,
+      full_name: user.full_name || '',
+      phone: user.phone || null,
+      permissions: user.permissions || 'full_access',
+      is_active: user.is_active,
+      created_at: user.created_at,
+    }))
 
-    console.log('Super admins found:', superAdmins.length)
-    return NextResponse.json({ success: true, admins: superAdmins })
+    console.log('Super admins found:', admins.length)
+    return NextResponse.json({ success: true, admins })
   } catch (error) {
     console.error('GET error:', error)
     return NextResponse.json({ error: 'שגיאה בשרת' }, { status: 500 })
@@ -223,21 +225,49 @@ export async function PUT(request: NextRequest) {
       return NextResponse.json({ error: 'שגיאה בעדכון המשתמש' }, { status: 500 })
     }
 
-    // Also update in public.users table
-    const usersUpdateData: any = { updated_at: new Date().toISOString() }
-    if (email) usersUpdateData.email = email.toLowerCase()
-    if (full_name) usersUpdateData.full_name = full_name
-    if (phone !== undefined) usersUpdateData.phone = phone || null
-    if (permissions && validPermissions.includes(permissions)) usersUpdateData.permissions = permissions
-    if (is_active !== undefined) usersUpdateData.is_active = is_active
-
-    const { error: usersError } = await supabase
+    // Also update in public.users table (or create if doesn't exist)
+    const { data: existingUserRecord } = await supabase
       .from('users')
-      .update(usersUpdateData)
+      .select('id')
       .eq('id', id)
+      .single()
 
-    if (usersError) {
-      console.error('Failed to update user in public.users:', usersError)
+    if (existingUserRecord) {
+      // Update existing record
+      const usersUpdateData: any = { updated_at: new Date().toISOString() }
+      if (email) usersUpdateData.email = email.toLowerCase()
+      if (full_name) usersUpdateData.full_name = full_name
+      if (phone !== undefined) usersUpdateData.phone = phone || null
+      if (permissions && validPermissions.includes(permissions)) usersUpdateData.permissions = permissions
+      if (is_active !== undefined) usersUpdateData.is_active = is_active
+
+      const { error: usersError } = await supabase
+        .from('users')
+        .update(usersUpdateData)
+        .eq('id', id)
+
+      if (usersError) {
+        console.error('Failed to update user in public.users:', usersError)
+      }
+    } else {
+      // Create new record in users table (for users created before the fix)
+      const { error: usersError } = await supabase
+        .from('users')
+        .insert({
+          id: id,
+          email: data.user.email?.toLowerCase() || '',
+          full_name: data.user.user_metadata?.full_name || '',
+          phone: data.user.user_metadata?.phone || null,
+          role: 'super_admin',
+          permissions: data.user.user_metadata?.permissions || 'full_access',
+          is_active: !(data.user as any).banned_until,
+        })
+
+      if (usersError) {
+        console.error('Failed to create user in public.users:', usersError)
+      } else {
+        console.log('Created missing user record in public.users for:', id)
+      }
     }
 
     return NextResponse.json({
