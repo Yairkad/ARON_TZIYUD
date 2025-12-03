@@ -78,24 +78,27 @@ export async function POST(request: NextRequest) {
     const expiresAt = new Date()
     expiresAt.setHours(expiresAt.getHours() + 1) // 1 hour
 
-    // Store token in city_managers table (for city managers)
-    const { data: cityManager } = await supabase
-      .from('city_managers')
-      .select('id, name')
-      .eq('email', body.email)
-      .single()
+    console.log('📝 Saving reset token for user:', user.id, 'token:', resetToken.substring(0, 10) + '...')
 
-    if (cityManager) {
-      // Update city_managers with reset token
-      await supabase
-        .from('city_managers')
-        .update({
-          reset_token: resetToken,
-          reset_token_expires_at: expiresAt.toISOString(),
-          updated_at: new Date().toISOString()
-        })
-        .eq('id', cityManager.id)
+    // Store token in users table
+    const { error: updateError } = await supabase
+      .from('users')
+      .update({
+        reset_token: resetToken,
+        reset_token_expires_at: expiresAt.toISOString(),
+        updated_at: new Date().toISOString()
+      })
+      .eq('id', user.id)
+
+    if (updateError) {
+      console.error('❌ Error saving reset token:', updateError)
+      return NextResponse.json(
+        { success: false, error: 'שגיאה בשמירת טוקן איפוס' },
+        { status: 500 }
+      )
     }
+
+    console.log('✅ Token saved successfully to users table')
 
     // Send password reset email via Gmail SMTP
     const emailResult = await sendPasswordResetEmail(
