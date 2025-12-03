@@ -100,10 +100,11 @@ async function handleUpdate(request: NextRequest) {
 
     console.log('✅ Found user to update:', existingUser.email)
 
-    // Prevent changing super_admin permissions
-    if (existingUser.role === 'super_admin' && body.permissions && body.permissions !== 'full_access') {
+    // Prevent super_admin from changing their OWN permissions to view_only
+    // (But allow changing OTHER super_admins' permissions)
+    if (existingUser.id === authUser.id && body.permissions && body.permissions !== 'full_access') {
       return NextResponse.json(
-        { success: false, error: 'לא ניתן לשנות הרשאות של מנהל ראשי' },
+        { success: false, error: 'לא ניתן לשנות את ההרשאות של עצמך' },
         { status: 400 }
       )
     }
