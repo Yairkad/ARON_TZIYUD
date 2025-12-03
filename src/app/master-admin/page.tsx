@@ -445,28 +445,30 @@ export default function MasterAdminPage() {
     <div className="min-h-screen bg-gradient-to-br from-slate-900 via-purple-900 to-slate-900 p-4 md:p-8" dir="rtl">
       <div className="max-w-4xl mx-auto space-y-6">
         {/* Header */}
-        <div className="flex items-center justify-between">
+        <div className="flex flex-col md:flex-row md:items-center justify-between gap-4">
           <div>
-            <h1 className="text-3xl font-bold text-white flex items-center gap-3">
-              <span className="text-4xl">👑</span>
+            <h1 className="text-2xl md:text-3xl font-bold text-white flex items-center gap-2 md:gap-3">
+              <span className="text-3xl md:text-4xl">👑</span>
               ניהול סופר-אדמינים
             </h1>
-            <p className="text-gray-400 mt-1">יצירה, עריכה ומחיקה של מנהלים ראשיים</p>
+            <p className="text-gray-400 mt-1 text-sm md:text-base">יצירה, עריכה ומחיקה של מנהלים ראשיים</p>
           </div>
           <div className="flex gap-2">
             <Button
               onClick={() => setShowPasswordChange(!showPasswordChange)}
               variant="outline"
-              className="border-amber-500/50 text-amber-400 hover:bg-amber-500/20"
+              className="border-amber-500/50 text-amber-400 hover:bg-amber-500/20 text-xs md:text-sm px-2 md:px-4"
             >
-              🔑 שנה סיסמה
+              <span className="hidden md:inline">🔑 שנה סיסמה</span>
+              <span className="md:hidden">🔑</span>
             </Button>
             <Button
               onClick={handleLogout}
               variant="outline"
-              className="border-red-500/50 text-red-400 hover:bg-red-500/20"
+              className="border-red-500/50 text-red-400 hover:bg-red-500/20 text-xs md:text-sm px-2 md:px-4"
             >
-              🚪 התנתק
+              <span className="hidden md:inline">🚪 התנתק</span>
+              <span className="md:hidden">🚪</span>
             </Button>
           </div>
         </div>
