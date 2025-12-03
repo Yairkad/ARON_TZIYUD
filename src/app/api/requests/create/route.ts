@@ -72,7 +72,7 @@ export async function POST(request: NextRequest) {
     // Get city settings and manager info
     const { data: city, error: cityError } = await supabaseServer
       .from('cities')
-      .select('name, require_call_id, request_mode, max_request_distance_km, token_lat, token_lng, manager1_name, manager1_user_id')
+      .select('name, require_call_id, request_mode, max_request_distance_km, token_lat, token_lng, manager1_name, manager1_user_id, manager2_name, manager2_user_id')
       .eq('id', cityId)
       .single()
 
@@ -86,41 +86,34 @@ export async function POST(request: NextRequest) {
       )
     }
 
-    // Get all city managers' emails
-    const { data: cityManagers } = await supabaseServer
-      .from('city_managers')
-      .select('id, name, email')
-      .eq('city_id', cityId)
-
-    // Collect all manager emails (from city_managers table and users table)
+    // Collect all manager emails from cities table (manager1 and manager2)
     const managerEmails: { email: string; name: string }[] = []
 
-    if (cityManagers && cityManagers.length > 0) {
-      for (const manager of cityManagers) {
-        // Get email from users table using manager id
-        const { data: userData } = await supabaseServer
-          .from('users')
-          .select('email')
-          .eq('id', manager.id)
-          .single()
-
-        if (userData?.email) {
-          managerEmails.push({ email: userData.email, name: manager.name || 'מנהל' })
-        }
-      }
-    }
-
-    // Fallback to manager1_user_id if no managers found in city_managers
-    if (managerEmails.length === 0 && city.manager1_user_id) {
-      const { data: manager } = await supabaseServer
+    // Get manager1 email
+    if (city.manager1_user_id) {
+      const { data: manager1 } = await supabaseServer
         .from('users')
         .select('email')
         .eq('id', city.manager1_user_id)
         .single()
-      if (manager?.email) {
-        managerEmails.push({ email: manager.email, name: city.manager1_name || 'מנהל' })
+      if (manager1?.email) {
+        managerEmails.push({ email: manager1.email, name: city.manager1_name || 'מנהל ראשי' })
       }
     }
+
+    // Get manager2 email
+    if (city.manager2_user_id) {
+      const { data: manager2 } = await supabaseServer
+        .from('users')
+        .select('email')
+        .eq('id', city.manager2_user_id)
+        .single()
+      if (manager2?.email) {
+        managerEmails.push({ email: manager2.email, name: city.manager2_name || 'מנהל משני' })
+      }
+    }
+
+    console.log('Manager emails for notifications:', managerEmails.map(m => m.email))
 
     // Validate call_id if required
     // Use strict equality to handle null/undefined/false correctly
