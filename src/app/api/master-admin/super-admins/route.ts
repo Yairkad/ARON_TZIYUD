@@ -109,6 +109,24 @@ export async function POST(request: NextRequest) {
       return NextResponse.json({ error: 'שגיאה ביצירת המשתמש' }, { status: 500 })
     }
 
+    // Also create in public.users table for consistency
+    const { error: usersError } = await supabase
+      .from('users')
+      .insert({
+        id: data.user.id,
+        email: email.toLowerCase(),
+        full_name,
+        phone: phone || null,
+        role: 'super_admin',
+        permissions: userPermissions,
+        is_active: true,
+      })
+
+    if (usersError) {
+      console.error('Failed to create user in public.users:', usersError)
+      // Don't fail - the auth user was created successfully
+    }
+
     return NextResponse.json({
       success: true,
       admin: {
@@ -205,6 +223,23 @@ export async function PUT(request: NextRequest) {
       return NextResponse.json({ error: 'שגיאה בעדכון המשתמש' }, { status: 500 })
     }
 
+    // Also update in public.users table
+    const usersUpdateData: any = { updated_at: new Date().toISOString() }
+    if (email) usersUpdateData.email = email.toLowerCase()
+    if (full_name) usersUpdateData.full_name = full_name
+    if (phone !== undefined) usersUpdateData.phone = phone || null
+    if (permissions && validPermissions.includes(permissions)) usersUpdateData.permissions = permissions
+    if (is_active !== undefined) usersUpdateData.is_active = is_active
+
+    const { error: usersError } = await supabase
+      .from('users')
+      .update(usersUpdateData)
+      .eq('id', id)
+
+    if (usersError) {
+      console.error('Failed to update user in public.users:', usersError)
+    }
+
     return NextResponse.json({
       success: true,
       admin: {
@@ -259,6 +294,16 @@ export async function DELETE(request: NextRequest) {
     if (error) {
       console.error('Delete super admin error:', error)
       return NextResponse.json({ error: 'שגיאה במחיקת המשתמש' }, { status: 500 })
+    }
+
+    // Also delete from public.users table
+    const { error: usersError } = await supabase
+      .from('users')
+      .delete()
+      .eq('id', id)
+
+    if (usersError) {
+      console.error('Failed to delete user from public.users:', usersError)
     }
 
     return NextResponse.json({ success: true })

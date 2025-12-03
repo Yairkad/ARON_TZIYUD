@@ -73,11 +73,10 @@ export async function GET(request: NextRequest) {
     const sortBy = searchParams.get('sort') || 'name' // Default: alphabetical by name
     const sortOrder = searchParams.get('order') || 'asc'
 
-    // Build query
+    // Build query - get all users (both city_manager and super_admin)
     let query = supabase
       .from('users')
       .select('*')
-      .eq('role', 'city_manager')
 
     // Apply filters
     if (cityFilter) {
