@@ -1,0 +1,982 @@
+<!DOCTYPE html>
+<html lang="he" dir="rtl">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>מדריך למתנדב - ארון הציוד</title>
+  <style>
+    * {
+      box-sizing: border-box;
+      margin: 0;
+      padding: 0;
+    }
+
+    body {
+      font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, 'Helvetica Neue', Arial, sans-serif;
+      background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+      min-height: 100vh;
+      padding: 20px;
+      direction: rtl;
+    }
+
+    .container {
+      max-width: 900px;
+      margin: 0 auto;
+    }
+
+    /* Header */
+    .header {
+      text-align: center;
+      padding: 40px 20px;
+      background: rgba(255, 255, 255, 0.95);
+      border-radius: 24px;
+      margin-bottom: 30px;
+      box-shadow: 0 20px 60px rgba(0, 0, 0, 0.2);
+    }
+
+    .header h1 {
+      font-size: 2.5rem;
+      background: linear-gradient(135deg, #667eea, #764ba2);
+      -webkit-background-clip: text;
+      -webkit-text-fill-color: transparent;
+      background-clip: text;
+      margin-bottom: 10px;
+    }
+
+    .header p {
+      color: #666;
+      font-size: 1.2rem;
+    }
+
+    /* Process Section */
+    .process-section {
+      background: rgba(255, 255, 255, 0.95);
+      border-radius: 24px;
+      padding: 30px;
+      margin-bottom: 30px;
+      box-shadow: 0 20px 60px rgba(0, 0, 0, 0.15);
+    }
+
+    .section-title {
+      font-size: 1.8rem;
+      color: #333;
+      margin-bottom: 30px;
+      text-align: center;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      gap: 12px;
+    }
+
+    .section-title .icon {
+      font-size: 2rem;
+    }
+
+    /* Timeline Steps */
+    .timeline {
+      position: relative;
+      padding: 20px 0;
+    }
+
+    .timeline::before {
+      content: '';
+      position: absolute;
+      right: 40px;
+      top: 0;
+      bottom: 0;
+      width: 4px;
+      background: linear-gradient(to bottom, #667eea, #764ba2, #43e97b);
+      border-radius: 2px;
+    }
+
+    .step {
+      position: relative;
+      padding-right: 100px;
+      padding-bottom: 40px;
+    }
+
+    .step:last-child {
+      padding-bottom: 0;
+    }
+
+    .step-number {
+      position: absolute;
+      right: 20px;
+      width: 44px;
+      height: 44px;
+      background: linear-gradient(135deg, #667eea, #764ba2);
+      border-radius: 50%;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      color: white;
+      font-size: 1.3rem;
+      font-weight: bold;
+      box-shadow: 0 4px 15px rgba(102, 126, 234, 0.4);
+      z-index: 1;
+    }
+
+    .step-content {
+      background: #f8f9ff;
+      border-radius: 16px;
+      padding: 20px;
+      border: 2px solid #e8eaff;
+    }
+
+    .step-title {
+      font-size: 1.3rem;
+      color: #333;
+      margin-bottom: 10px;
+      display: flex;
+      align-items: center;
+      gap: 10px;
+    }
+
+    .step-title .emoji {
+      font-size: 1.5rem;
+    }
+
+    .step-desc {
+      color: #666;
+      line-height: 1.6;
+      margin-bottom: 15px;
+    }
+
+    /* Mock Screen */
+    .mock-screen {
+      background: white;
+      border-radius: 12px;
+      border: 2px solid #ddd;
+      overflow: hidden;
+      box-shadow: 0 4px 20px rgba(0, 0, 0, 0.1);
+    }
+
+    .mock-header {
+      background: linear-gradient(135deg, #667eea, #764ba2);
+      padding: 12px 15px;
+      display: flex;
+      align-items: center;
+      gap: 8px;
+    }
+
+    .mock-dot {
+      width: 12px;
+      height: 12px;
+      border-radius: 50%;
+      background: rgba(255, 255, 255, 0.3);
+    }
+
+    .mock-dot.red { background: #ff5f56; }
+    .mock-dot.yellow { background: #ffbd2e; }
+    .mock-dot.green { background: #27ca40; }
+
+    .mock-url {
+      background: rgba(255, 255, 255, 0.2);
+      color: white;
+      padding: 6px 12px;
+      border-radius: 6px;
+      font-size: 0.85rem;
+      margin-right: auto;
+      font-family: monospace;
+    }
+
+    .mock-body {
+      padding: 20px;
+      min-height: 150px;
+    }
+
+    /* Mock UI Elements */
+    .mock-input {
+      background: #f5f5f5;
+      border: 2px solid #e0e0e0;
+      border-radius: 8px;
+      padding: 12px 15px;
+      margin-bottom: 12px;
+      display: flex;
+      align-items: center;
+      gap: 10px;
+    }
+
+    .mock-input-icon {
+      color: #999;
+      font-size: 1.2rem;
+    }
+
+    .mock-input-text {
+      color: #666;
+      font-size: 0.95rem;
+    }
+
+    .mock-input.filled .mock-input-text {
+      color: #333;
+    }
+
+    .mock-button {
+      background: linear-gradient(135deg, #667eea, #764ba2);
+      color: white;
+      border: none;
+      border-radius: 8px;
+      padding: 12px 20px;
+      font-size: 1rem;
+      font-weight: 600;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      gap: 8px;
+      width: 100%;
+      cursor: pointer;
+    }
+
+    .mock-button.green {
+      background: linear-gradient(135deg, #43e97b, #38f9d7);
+    }
+
+    .mock-button.orange {
+      background: linear-gradient(135deg, #f7971e, #ffd200);
+    }
+
+    /* Equipment List */
+    .mock-equipment-list {
+      display: flex;
+      flex-direction: column;
+      gap: 10px;
+      margin-bottom: 15px;
+    }
+
+    .mock-equipment-item {
+      background: #f8f9ff;
+      border: 2px solid #e8eaff;
+      border-radius: 10px;
+      padding: 12px 15px;
+      display: flex;
+      align-items: center;
+      gap: 12px;
+    }
+
+    .mock-equipment-item.selected {
+      border-color: #667eea;
+      background: #f0f4ff;
+    }
+
+    .mock-checkbox {
+      width: 22px;
+      height: 22px;
+      border: 2px solid #ccc;
+      border-radius: 6px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      color: white;
+      font-size: 0.8rem;
+    }
+
+    .mock-checkbox.checked {
+      background: #667eea;
+      border-color: #667eea;
+    }
+
+    .mock-equipment-info {
+      flex: 1;
+    }
+
+    .mock-equipment-name {
+      font-weight: 600;
+      color: #333;
+    }
+
+    .mock-equipment-qty {
+      font-size: 0.85rem;
+      color: #666;
+    }
+
+    .mock-equipment-icon {
+      font-size: 1.5rem;
+    }
+
+    /* Tab Bar */
+    .mock-tabs {
+      display: flex;
+      border-bottom: 2px solid #eee;
+      margin-bottom: 15px;
+    }
+
+    .mock-tab {
+      flex: 1;
+      padding: 12px;
+      text-align: center;
+      color: #999;
+      font-weight: 500;
+      position: relative;
+    }
+
+    .mock-tab.active {
+      color: #667eea;
+    }
+
+    .mock-tab.active::after {
+      content: '';
+      position: absolute;
+      bottom: -2px;
+      left: 20%;
+      right: 20%;
+      height: 3px;
+      background: #667eea;
+      border-radius: 2px;
+    }
+
+    /* Status Badge */
+    .mock-status {
+      display: inline-flex;
+      align-items: center;
+      gap: 6px;
+      padding: 6px 12px;
+      border-radius: 20px;
+      font-size: 0.85rem;
+      font-weight: 500;
+    }
+
+    .mock-status.borrowed {
+      background: #fff3e0;
+      color: #e65100;
+    }
+
+    .mock-status.returned {
+      background: #e8f5e9;
+      color: #2e7d32;
+    }
+
+    .mock-status.pending {
+      background: #e3f2fd;
+      color: #1565c0;
+    }
+
+    /* Camera Mock */
+    .mock-camera {
+      background: #1a1a2e;
+      border-radius: 12px;
+      padding: 30px;
+      text-align: center;
+      position: relative;
+    }
+
+    .mock-camera-frame {
+      border: 3px dashed rgba(255, 255, 255, 0.3);
+      border-radius: 12px;
+      padding: 40px;
+      margin-bottom: 15px;
+    }
+
+    .mock-camera-icon {
+      font-size: 3rem;
+      margin-bottom: 10px;
+    }
+
+    .mock-camera-text {
+      color: rgba(255, 255, 255, 0.7);
+      font-size: 0.9rem;
+    }
+
+    .mock-camera-button {
+      background: white;
+      color: #1a1a2e;
+      border: none;
+      border-radius: 50%;
+      width: 60px;
+      height: 60px;
+      font-size: 1.5rem;
+      cursor: pointer;
+      box-shadow: 0 4px 15px rgba(0, 0, 0, 0.3);
+    }
+
+    /* Tips Section */
+    .tips-section {
+      background: rgba(255, 255, 255, 0.95);
+      border-radius: 24px;
+      padding: 30px;
+      margin-bottom: 30px;
+      box-shadow: 0 20px 60px rgba(0, 0, 0, 0.15);
+    }
+
+    .tips-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
+      gap: 20px;
+    }
+
+    .tip-card {
+      background: linear-gradient(135deg, #f8f9ff, #fff);
+      border: 2px solid #e8eaff;
+      border-radius: 16px;
+      padding: 20px;
+      text-align: center;
+    }
+
+    .tip-icon {
+      font-size: 2.5rem;
+      margin-bottom: 10px;
+    }
+
+    .tip-title {
+      font-size: 1.1rem;
+      color: #333;
+      margin-bottom: 8px;
+      font-weight: 600;
+    }
+
+    .tip-text {
+      color: #666;
+      font-size: 0.95rem;
+      line-height: 1.5;
+    }
+
+    /* Warning Box */
+    .warning-box {
+      background: linear-gradient(135deg, #fff3e0, #ffe0b2);
+      border: 2px solid #ffb74d;
+      border-radius: 12px;
+      padding: 15px 20px;
+      display: flex;
+      align-items: flex-start;
+      gap: 15px;
+      margin-top: 15px;
+    }
+
+    .warning-icon {
+      font-size: 1.5rem;
+    }
+
+    .warning-text {
+      color: #e65100;
+      font-weight: 500;
+      line-height: 1.5;
+    }
+
+    /* Success Box */
+    .success-box {
+      background: linear-gradient(135deg, #e8f5e9, #c8e6c9);
+      border: 2px solid #81c784;
+      border-radius: 12px;
+      padding: 15px 20px;
+      display: flex;
+      align-items: flex-start;
+      gap: 15px;
+      margin-top: 15px;
+    }
+
+    .success-icon {
+      font-size: 1.5rem;
+    }
+
+    .success-text {
+      color: #2e7d32;
+      font-weight: 500;
+      line-height: 1.5;
+    }
+
+    /* Footer */
+    .footer {
+      text-align: center;
+      padding: 30px;
+      color: rgba(255, 255, 255, 0.8);
+    }
+
+    .footer a {
+      color: white;
+      text-decoration: none;
+      font-weight: 600;
+    }
+
+    /* Print Styles */
+    @media print {
+      body {
+        background: white;
+        padding: 10px;
+      }
+
+      .header, .process-section, .tips-section {
+        box-shadow: none;
+        break-inside: avoid;
+      }
+
+      .timeline::before {
+        background: #333;
+      }
+
+      .step-number {
+        background: #333;
+      }
+
+      .mock-header {
+        background: #333;
+      }
+    }
+
+    /* Responsive */
+    @media (max-width: 600px) {
+      .header h1 {
+        font-size: 1.8rem;
+      }
+
+      .timeline::before {
+        right: 25px;
+      }
+
+      .step {
+        padding-right: 70px;
+      }
+
+      .step-number {
+        right: 5px;
+        width: 38px;
+        height: 38px;
+        font-size: 1.1rem;
+      }
+
+      .section-title {
+        font-size: 1.4rem;
+      }
+    }
+  </style>
+</head>
+<body>
+  <div class="container">
+    <!-- Header -->
+    <header class="header">
+      <h1>מדריך למתנדב</h1>
+      <p>איך להשתמש במערכת ארון הציוד - צעד אחר צעד</p>
+    </header>
+
+    <!-- BORROW PROCESS -->
+    <section class="process-section">
+      <h2 class="section-title">
+        <span class="icon">📦</span>
+        תהליך השאלת ציוד
+      </h2>
+
+      <div class="timeline">
+        <!-- Step 1: Enter City Page -->
+        <div class="step">
+          <div class="step-number">1</div>
+          <div class="step-content">
+            <h3 class="step-title">
+              <span class="emoji">🏠</span>
+              כניסה לדף העיר
+            </h3>
+            <p class="step-desc">
+              היכנס לקישור של ארון הציוד בעיר שלך. הקישור נשלח אליך בוואטסאפ או שתוכל למצוא אותו במפת הארונות.
+            </p>
+            <div class="mock-screen">
+              <div class="mock-header">
+                <span class="mock-dot red"></span>
+                <span class="mock-dot yellow"></span>
+                <span class="mock-dot green"></span>
+                <span class="mock-url">aron-tziyud.co.il/city/...</span>
+              </div>
+              <div class="mock-body">
+                <div class="mock-tabs">
+                  <div class="mock-tab active">השאלת ציוד</div>
+                  <div class="mock-tab">החזרת ציוד</div>
+                </div>
+                <p style="text-align: center; color: #667eea; font-weight: 600; margin-bottom: 10px;">ארון ציוד - תל אביב</p>
+                <p style="text-align: center; color: #666; font-size: 0.9rem;">בחר ציוד מהרשימה למטה</p>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <!-- Step 2: Select Equipment -->
+        <div class="step">
+          <div class="step-number">2</div>
+          <div class="step-content">
+            <h3 class="step-title">
+              <span class="emoji">✅</span>
+              בחירת ציוד
+            </h3>
+            <p class="step-desc">
+              סמן את הציוד שאתה צריך מהרשימה. ניתן לבחור מספר פריטים במקביל. שים לב לכמות הזמינה.
+            </p>
+            <div class="mock-screen">
+              <div class="mock-header">
+                <span class="mock-dot red"></span>
+                <span class="mock-dot yellow"></span>
+                <span class="mock-dot green"></span>
+              </div>
+              <div class="mock-body">
+                <div class="mock-equipment-list">
+                  <div class="mock-equipment-item selected">
+                    <div class="mock-checkbox checked">✓</div>
+                    <div class="mock-equipment-info">
+                      <div class="mock-equipment-name">ג'ק הידראולי</div>
+                      <div class="mock-equipment-qty">זמין: 2</div>
+                    </div>
+                    <div class="mock-equipment-icon">🔧</div>
+                  </div>
+                  <div class="mock-equipment-item">
+                    <div class="mock-checkbox"></div>
+                    <div class="mock-equipment-info">
+                      <div class="mock-equipment-name">קומפרסור אוויר</div>
+                      <div class="mock-equipment-qty">זמין: 1</div>
+                    </div>
+                    <div class="mock-equipment-icon">💨</div>
+                  </div>
+                  <div class="mock-equipment-item selected">
+                    <div class="mock-checkbox checked">✓</div>
+                    <div class="mock-equipment-info">
+                      <div class="mock-equipment-name">ערכת פתיחה</div>
+                      <div class="mock-equipment-qty">זמין: 1</div>
+                    </div>
+                    <div class="mock-equipment-icon">🔑</div>
+                  </div>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <!-- Step 3: Fill Details -->
+        <div class="step">
+          <div class="step-number">3</div>
+          <div class="step-content">
+            <h3 class="step-title">
+              <span class="emoji">📝</span>
+              מילוי פרטים
+            </h3>
+            <p class="step-desc">
+              הזן את השם המלא ומספר הטלפון שלך. אם נדרש מזהה קריאה - הזן גם אותו.
+            </p>
+            <div class="mock-screen">
+              <div class="mock-header">
+                <span class="mock-dot red"></span>
+                <span class="mock-dot yellow"></span>
+                <span class="mock-dot green"></span>
+              </div>
+              <div class="mock-body">
+                <div class="mock-input filled">
+                  <span class="mock-input-icon">👤</span>
+                  <span class="mock-input-text">ישראל ישראלי</span>
+                </div>
+                <div class="mock-input filled">
+                  <span class="mock-input-icon">📱</span>
+                  <span class="mock-input-text">054-1234567</span>
+                </div>
+                <div class="mock-input">
+                  <span class="mock-input-icon">🔢</span>
+                  <span class="mock-input-text">מזהה קריאה (אופציונלי)</span>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <!-- Step 4: Submit Request -->
+        <div class="step">
+          <div class="step-number">4</div>
+          <div class="step-content">
+            <h3 class="step-title">
+              <span class="emoji">🚀</span>
+              שליחת בקשה
+            </h3>
+            <p class="step-desc">
+              לחץ על "שלח בקשה". אם העיר במצב אישור - המנהל יקבל הודעה ויאשר את הבקשה. אם במצב חופשי - תוכל לקחת מיד.
+            </p>
+            <div class="mock-screen">
+              <div class="mock-header">
+                <span class="mock-dot red"></span>
+                <span class="mock-dot yellow"></span>
+                <span class="mock-dot green"></span>
+              </div>
+              <div class="mock-body">
+                <div style="background: #e8f5e9; border-radius: 12px; padding: 20px; text-align: center; margin-bottom: 15px;">
+                  <div style="font-size: 3rem; margin-bottom: 10px;">✅</div>
+                  <div style="color: #2e7d32; font-weight: 600; font-size: 1.1rem;">הבקשה נשלחה בהצלחה!</div>
+                  <div style="color: #666; font-size: 0.9rem; margin-top: 5px;">המנהל יאשר את הבקשה בקרוב</div>
+                </div>
+                <div class="mock-button green">
+                  📋 העתק קישור לאיסוף
+                </div>
+              </div>
+            </div>
+            <div class="warning-box">
+              <span class="warning-icon">⏰</span>
+              <span class="warning-text">שים לב! הקישור תקף לחצי שעה בלבד. אם פג התוקף - בקש קישור חדש מהמנהל.</span>
+            </div>
+          </div>
+        </div>
+
+        <!-- Step 5: Confirm Pickup -->
+        <div class="step">
+          <div class="step-number">5</div>
+          <div class="step-content">
+            <h3 class="step-title">
+              <span class="emoji">📍</span>
+              אישור לקיחה
+            </h3>
+            <p class="step-desc">
+              כשאתה מגיע לארון הציוד, לחץ על הקישור שקיבלת ואשר את לקיחת הציוד. המערכת תעדכן את המלאי אוטומטית.
+            </p>
+            <div class="mock-screen">
+              <div class="mock-header">
+                <span class="mock-dot red"></span>
+                <span class="mock-dot yellow"></span>
+                <span class="mock-dot green"></span>
+              </div>
+              <div class="mock-body">
+                <div style="text-align: center; margin-bottom: 15px;">
+                  <div style="font-size: 2.5rem; margin-bottom: 10px;">📦</div>
+                  <div style="font-weight: 600; color: #333; margin-bottom: 5px;">פריטים לאיסוף:</div>
+                  <div style="color: #666;">ג'ק הידראולי, ערכת פתיחה</div>
+                </div>
+                <div class="mock-button">
+                  ✓ אשר לקיחת ציוד
+                </div>
+              </div>
+            </div>
+            <div class="success-box">
+              <span class="success-icon">✅</span>
+              <span class="success-text">מעולה! הציוד נרשם על שמך. זכור להחזיר אותו בהקדם!</span>
+            </div>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <!-- RETURN PROCESS -->
+    <section class="process-section">
+      <h2 class="section-title">
+        <span class="icon">↩️</span>
+        תהליך החזרת ציוד
+      </h2>
+
+      <div class="timeline">
+        <!-- Step 1: Go to Return Tab -->
+        <div class="step">
+          <div class="step-number">1</div>
+          <div class="step-content">
+            <h3 class="step-title">
+              <span class="emoji">📱</span>
+              כניסה ללשונית החזרה
+            </h3>
+            <p class="step-desc">
+              היכנס לדף העיר ובחר בלשונית "החזרת ציוד".
+            </p>
+            <div class="mock-screen">
+              <div class="mock-header">
+                <span class="mock-dot red"></span>
+                <span class="mock-dot yellow"></span>
+                <span class="mock-dot green"></span>
+              </div>
+              <div class="mock-body">
+                <div class="mock-tabs">
+                  <div class="mock-tab">השאלת ציוד</div>
+                  <div class="mock-tab active">החזרת ציוד</div>
+                </div>
+                <div class="mock-input">
+                  <span class="mock-input-icon">📱</span>
+                  <span class="mock-input-text">הזן מספר טלפון...</span>
+                </div>
+                <div class="mock-button" style="background: linear-gradient(135deg, #43e97b, #38f9d7);">
+                  🔍 חפש השאלות
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <!-- Step 2: Enter Phone -->
+        <div class="step">
+          <div class="step-number">2</div>
+          <div class="step-content">
+            <h3 class="step-title">
+              <span class="emoji">🔍</span>
+              חיפוש לפי טלפון
+            </h3>
+            <p class="step-desc">
+              הזן את מספר הטלפון שאיתו ביצעת את ההשאלה. המערכת תציג את כל הציוד שנמצא אצלך.
+            </p>
+            <div class="mock-screen">
+              <div class="mock-header">
+                <span class="mock-dot red"></span>
+                <span class="mock-dot yellow"></span>
+                <span class="mock-dot green"></span>
+              </div>
+              <div class="mock-body">
+                <p style="text-align: center; color: #333; font-weight: 600; margin-bottom: 15px;">ציוד שנמצא אצלך:</p>
+                <div class="mock-equipment-list">
+                  <div class="mock-equipment-item">
+                    <div class="mock-equipment-icon">🔧</div>
+                    <div class="mock-equipment-info">
+                      <div class="mock-equipment-name">ג'ק הידראולי</div>
+                      <div class="mock-equipment-qty">הושאל: 03/12/2025</div>
+                    </div>
+                    <span class="mock-status borrowed">מושאל</span>
+                  </div>
+                  <div class="mock-equipment-item">
+                    <div class="mock-equipment-icon">🔑</div>
+                    <div class="mock-equipment-info">
+                      <div class="mock-equipment-name">ערכת פתיחה</div>
+                      <div class="mock-equipment-qty">הושאל: 03/12/2025</div>
+                    </div>
+                    <span class="mock-status borrowed">מושאל</span>
+                  </div>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <!-- Step 3: Select Status -->
+        <div class="step">
+          <div class="step-number">3</div>
+          <div class="step-content">
+            <h3 class="step-title">
+              <span class="emoji">📊</span>
+              דיווח מצב הציוד
+            </h3>
+            <p class="step-desc">
+              לחץ על "החזר" ליד הפריט שאתה מחזיר. ציין אם הציוד תקין או שיש בו תקלה.
+            </p>
+            <div class="mock-screen">
+              <div class="mock-header">
+                <span class="mock-dot red"></span>
+                <span class="mock-dot yellow"></span>
+                <span class="mock-dot green"></span>
+              </div>
+              <div class="mock-body">
+                <p style="text-align: center; color: #333; font-weight: 600; margin-bottom: 15px;">מה מצב הציוד?</p>
+                <div style="display: flex; gap: 15px; margin-bottom: 15px;">
+                  <div style="flex: 1; background: #e8f5e9; border: 3px solid #43e97b; border-radius: 12px; padding: 20px; text-align: center;">
+                    <div style="font-size: 2rem; margin-bottom: 5px;">✅</div>
+                    <div style="color: #2e7d32; font-weight: 600;">תקין</div>
+                  </div>
+                  <div style="flex: 1; background: #fff3e0; border: 2px solid #ddd; border-radius: 12px; padding: 20px; text-align: center; opacity: 0.7;">
+                    <div style="font-size: 2rem; margin-bottom: 5px;">⚠️</div>
+                    <div style="color: #e65100; font-weight: 600;">תקלה</div>
+                  </div>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <!-- Step 4: Take Photo -->
+        <div class="step">
+          <div class="step-number">4</div>
+          <div class="step-content">
+            <h3 class="step-title">
+              <span class="emoji">📸</span>
+              צילום הציוד
+            </h3>
+            <p class="step-desc">
+              <strong>חובה!</strong> צלם את הציוד כשהוא מונח במקומו בארון. התמונה מוכיחה שהחזרת את הציוד.
+            </p>
+            <div class="mock-screen">
+              <div class="mock-header">
+                <span class="mock-dot red"></span>
+                <span class="mock-dot yellow"></span>
+                <span class="mock-dot green"></span>
+              </div>
+              <div class="mock-body" style="padding: 0;">
+                <div class="mock-camera">
+                  <div class="mock-camera-frame">
+                    <div class="mock-camera-icon">📷</div>
+                    <div class="mock-camera-text">כוון את המצלמה לציוד בארון</div>
+                  </div>
+                  <button class="mock-camera-button">📸</button>
+                </div>
+              </div>
+            </div>
+            <div class="warning-box">
+              <span class="warning-icon">📸</span>
+              <span class="warning-text">חובה לצלם! ההחזרה לא תאושר בלי תמונה של הציוד במקומו בארון.</span>
+            </div>
+          </div>
+        </div>
+
+        <!-- Step 5: Confirm Return -->
+        <div class="step">
+          <div class="step-number">5</div>
+          <div class="step-content">
+            <h3 class="step-title">
+              <span class="emoji">✅</span>
+              אישור החזרה
+            </h3>
+            <p class="step-desc">
+              לחץ על "אשר החזרה". המערכת תעדכן את המלאי והציוד יהיה זמין לשימוש נוסף.
+            </p>
+            <div class="mock-screen">
+              <div class="mock-header">
+                <span class="mock-dot red"></span>
+                <span class="mock-dot yellow"></span>
+                <span class="mock-dot green"></span>
+              </div>
+              <div class="mock-body">
+                <div style="background: #e8f5e9; border-radius: 12px; padding: 25px; text-align: center;">
+                  <div style="font-size: 3.5rem; margin-bottom: 10px;">🎉</div>
+                  <div style="color: #2e7d32; font-weight: 700; font-size: 1.2rem;">הציוד הוחזר בהצלחה!</div>
+                  <div style="color: #666; font-size: 0.9rem; margin-top: 8px;">תודה על שיתוף הפעולה</div>
+                </div>
+              </div>
+            </div>
+            <div class="success-box">
+              <span class="success-icon">🙏</span>
+              <span class="success-text">תודה רבה! הציוד זמין כעת למתנדבים אחרים.</span>
+            </div>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <!-- TIPS SECTION -->
+    <section class="tips-section">
+      <h2 class="section-title">
+        <span class="icon">💡</span>
+        טיפים חשובים
+      </h2>
+
+      <div class="tips-grid">
+        <div class="tip-card">
+          <div class="tip-icon">⏰</div>
+          <h3 class="tip-title">החזר בזמן</h3>
+          <p class="tip-text">יש להחזיר את הציוד תוך 24 שעות. איחור מונע ממתנדבים אחרים להשתמש בציוד.</p>
+        </div>
+
+        <div class="tip-card">
+          <div class="tip-icon">📱</div>
+          <h3 class="tip-title">שמור את הקישור</h3>
+          <p class="tip-text">שמור את קישור האיסוף במקום נגיש. הקישור תקף לחצי שעה בלבד.</p>
+        </div>
+
+        <div class="tip-card">
+          <div class="tip-icon">📸</div>
+          <h3 class="tip-title">צלם בהחזרה</h3>
+          <p class="tip-text">חובה לצלם את הציוד במקומו בארון. זו ההוכחה שהחזרת אותו.</p>
+        </div>
+
+        <div class="tip-card">
+          <div class="tip-icon">⚠️</div>
+          <h3 class="tip-title">דווח על תקלות</h3>
+          <p class="tip-text">אם הציוד לא תקין - דווח בעת ההחזרה. המנהל יטפל בזה.</p>
+        </div>
+
+        <div class="tip-card">
+          <div class="tip-icon">📞</div>
+          <h3 class="tip-title">טלפון נכון</h3>
+          <p class="tip-text">ודא שמספר הטלפון שהזנת נכון - דרכו יתקשרו אליך במידת הצורך.</p>
+        </div>
+
+        <div class="tip-card">
+          <div class="tip-icon">🔍</div>
+          <h3 class="tip-title">בדוק זמינות</h3>
+          <p class="tip-text">לפני שאתה יוצא לדרך, בדוק שהציוד שאתה צריך זמין בארון.</p>
+        </div>
+      </div>
+    </section>
+
+    <!-- Footer -->
+    <footer class="footer">
+      <p>מערכת ארון הציוד | <a href="/">לדף הבית</a></p>
+      <p style="margin-top: 10px; font-size: 0.9rem; opacity: 0.8;">© 2025 כל הזכויות שמורות</p>
+    </footer>
+  </div>
+</body>
+</html>

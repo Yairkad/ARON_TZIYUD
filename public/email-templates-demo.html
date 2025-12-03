@@ -1,0 +1,1061 @@
+<!DOCTYPE html>
+<html dir="rtl" lang="he">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>תבניות מייל - ארון ציוד ידידים</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background: linear-gradient(135deg, #0f172a 0%, #1e293b 50%, #334155 100%);
+            min-height: 100vh;
+            padding: 40px 20px;
+            direction: rtl;
+        }
+
+        .page-header {
+            text-align: center;
+            margin-bottom: 50px;
+        }
+
+        .page-header h1 {
+            font-size: 42px;
+            background: linear-gradient(135deg, #60a5fa 0%, #a78bfa 50%, #f472b6 100%);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            background-clip: text;
+            margin-bottom: 15px;
+            font-weight: 800;
+        }
+
+        .page-header p {
+            color: #94a3b8;
+            font-size: 18px;
+        }
+
+        .templates-grid {
+            display: grid;
+            gap: 40px;
+            max-width: 1400px;
+            margin: 0 auto;
+        }
+
+        .template-section {
+            background: rgba(30, 41, 59, 0.5);
+            border-radius: 24px;
+            padding: 30px;
+            border: 1px solid rgba(148, 163, 184, 0.1);
+            backdrop-filter: blur(10px);
+        }
+
+        .template-title {
+            font-size: 24px;
+            color: #e2e8f0;
+            margin-bottom: 20px;
+            display: flex;
+            align-items: center;
+            gap: 12px;
+        }
+
+        .template-title span {
+            font-size: 28px;
+        }
+
+        .template-badge {
+            background: linear-gradient(135deg, #3b82f6 0%, #8b5cf6 100%);
+            color: white;
+            font-size: 12px;
+            padding: 4px 12px;
+            border-radius: 20px;
+            font-weight: 600;
+        }
+
+        .email-preview {
+            background: #f1f5f9;
+            border-radius: 16px;
+            overflow: hidden;
+            box-shadow: 0 25px 50px -12px rgba(0, 0, 0, 0.4);
+        }
+
+        /* Email Template Styles - These will be used in email.ts */
+        .email-container {
+            max-width: 600px;
+            margin: 0 auto;
+            background: #ffffff;
+            border-radius: 16px;
+            overflow: hidden;
+            box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1), 0 2px 4px -2px rgba(0, 0, 0, 0.1);
+        }
+
+        /* Header Variants */
+        .email-header {
+            padding: 40px 30px;
+            text-align: center;
+            position: relative;
+            overflow: hidden;
+        }
+
+        .email-header::before {
+            content: '';
+            position: absolute;
+            top: -50%;
+            left: -50%;
+            width: 200%;
+            height: 200%;
+            background: radial-gradient(circle, rgba(255,255,255,0.1) 0%, transparent 60%);
+            pointer-events: none;
+        }
+
+        .email-header.primary {
+            background: linear-gradient(135deg, #2563eb 0%, #7c3aed 100%);
+        }
+
+        .email-header.success {
+            background: linear-gradient(135deg, #059669 0%, #0d9488 100%);
+        }
+
+        .email-header.warning {
+            background: linear-gradient(135deg, #d97706 0%, #ea580c 100%);
+        }
+
+        .email-header.danger {
+            background: linear-gradient(135deg, #dc2626 0%, #be185d 100%);
+        }
+
+        .email-header.info {
+            background: linear-gradient(135deg, #0891b2 0%, #0284c7 100%);
+        }
+
+        .header-icon {
+            width: 70px;
+            height: 70px;
+            background: rgba(255, 255, 255, 0.2);
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            margin: 0 auto 20px;
+            font-size: 32px;
+            backdrop-filter: blur(10px);
+            border: 2px solid rgba(255, 255, 255, 0.3);
+        }
+
+        .header-title {
+            color: white;
+            font-size: 26px;
+            font-weight: 700;
+            margin: 0;
+            text-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+        }
+
+        .header-subtitle {
+            color: rgba(255, 255, 255, 0.9);
+            font-size: 14px;
+            margin-top: 8px;
+        }
+
+        /* Content Area */
+        .email-content {
+            padding: 35px 30px;
+        }
+
+        .greeting {
+            font-size: 18px;
+            color: #1e293b;
+            font-weight: 600;
+            margin-bottom: 20px;
+        }
+
+        .email-text {
+            color: #475569;
+            font-size: 15px;
+            line-height: 1.7;
+            margin-bottom: 18px;
+        }
+
+        /* Info Cards */
+        .info-card {
+            background: linear-gradient(135deg, #f8fafc 0%, #f1f5f9 100%);
+            border-radius: 12px;
+            padding: 20px;
+            margin: 20px 0;
+            border-right: 4px solid #3b82f6;
+        }
+
+        .info-card.warning {
+            border-right-color: #f59e0b;
+            background: linear-gradient(135deg, #fffbeb 0%, #fef3c7 100%);
+        }
+
+        .info-card.danger {
+            border-right-color: #ef4444;
+            background: linear-gradient(135deg, #fef2f2 0%, #fee2e2 100%);
+        }
+
+        .info-card.success {
+            border-right-color: #10b981;
+            background: linear-gradient(135deg, #ecfdf5 0%, #d1fae5 100%);
+        }
+
+        .info-card-title {
+            font-size: 14px;
+            font-weight: 700;
+            color: #334155;
+            margin-bottom: 10px;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
+
+        .info-card-content {
+            color: #64748b;
+            font-size: 14px;
+            line-height: 1.6;
+        }
+
+        .info-card-content a {
+            color: #2563eb;
+            text-decoration: none;
+            font-weight: 600;
+        }
+
+        /* Data Row */
+        .data-row {
+            display: flex;
+            justify-content: space-between;
+            padding: 10px 0;
+            border-bottom: 1px dashed #e2e8f0;
+        }
+
+        .data-row:last-child {
+            border-bottom: none;
+        }
+
+        .data-label {
+            color: #64748b;
+            font-size: 14px;
+        }
+
+        .data-value {
+            color: #1e293b;
+            font-weight: 600;
+            font-size: 14px;
+        }
+
+        /* Modern Table */
+        .email-table {
+            width: 100%;
+            border-collapse: separate;
+            border-spacing: 0;
+            margin: 20px 0;
+            border-radius: 12px;
+            overflow: hidden;
+            box-shadow: 0 1px 3px rgba(0, 0, 0, 0.1);
+        }
+
+        .email-table th {
+            background: linear-gradient(135deg, #1e293b 0%, #334155 100%);
+            color: white;
+            padding: 14px 16px;
+            font-size: 13px;
+            font-weight: 600;
+            text-align: right;
+        }
+
+        .email-table td {
+            padding: 14px 16px;
+            font-size: 14px;
+            color: #475569;
+            background: white;
+            border-bottom: 1px solid #f1f5f9;
+        }
+
+        .email-table tr:last-child td {
+            border-bottom: none;
+        }
+
+        .email-table tr:hover td {
+            background: #f8fafc;
+        }
+
+        /* Status Badges */
+        .status-badge {
+            display: inline-block;
+            padding: 4px 12px;
+            border-radius: 20px;
+            font-size: 12px;
+            font-weight: 600;
+        }
+
+        .status-badge.low {
+            background: #fef3c7;
+            color: #92400e;
+        }
+
+        .status-badge.critical {
+            background: #fee2e2;
+            color: #991b1b;
+        }
+
+        .status-badge.ok {
+            background: #d1fae5;
+            color: #065f46;
+        }
+
+        /* CTA Button */
+        .cta-container {
+            text-align: center;
+            margin: 30px 0;
+        }
+
+        .cta-button {
+            display: inline-block;
+            background: linear-gradient(135deg, #2563eb 0%, #7c3aed 100%);
+            color: white !important;
+            padding: 16px 40px;
+            text-decoration: none;
+            border-radius: 12px;
+            font-weight: 700;
+            font-size: 16px;
+            box-shadow: 0 10px 25px -5px rgba(37, 99, 235, 0.4);
+            transition: transform 0.2s, box-shadow 0.2s;
+        }
+
+        .cta-button:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 15px 30px -5px rgba(37, 99, 235, 0.5);
+        }
+
+        .cta-button.warning {
+            background: linear-gradient(135deg, #d97706 0%, #ea580c 100%);
+            box-shadow: 0 10px 25px -5px rgba(217, 119, 6, 0.4);
+        }
+
+        .cta-button.success {
+            background: linear-gradient(135deg, #059669 0%, #0d9488 100%);
+            box-shadow: 0 10px 25px -5px rgba(5, 150, 105, 0.4);
+        }
+
+        /* Alert Box */
+        .alert-box {
+            border-radius: 12px;
+            padding: 16px 20px;
+            margin: 20px 0;
+            display: flex;
+            align-items: flex-start;
+            gap: 12px;
+        }
+
+        .alert-box.info {
+            background: linear-gradient(135deg, #eff6ff 0%, #dbeafe 100%);
+            border: 1px solid #93c5fd;
+        }
+
+        .alert-box.info .alert-icon {
+            color: #2563eb;
+        }
+
+        .alert-box.info .alert-text {
+            color: #1e40af;
+        }
+
+        .alert-box.warning {
+            background: linear-gradient(135deg, #fffbeb 0%, #fef3c7 100%);
+            border: 1px solid #fcd34d;
+        }
+
+        .alert-box.warning .alert-icon {
+            color: #d97706;
+        }
+
+        .alert-box.warning .alert-text {
+            color: #92400e;
+        }
+
+        .alert-box.danger {
+            background: linear-gradient(135deg, #fef2f2 0%, #fee2e2 100%);
+            border: 1px solid #fca5a5;
+        }
+
+        .alert-box.danger .alert-icon {
+            color: #dc2626;
+        }
+
+        .alert-box.danger .alert-text {
+            color: #991b1b;
+        }
+
+        .alert-icon {
+            font-size: 20px;
+            flex-shrink: 0;
+        }
+
+        .alert-text {
+            font-size: 14px;
+            line-height: 1.5;
+        }
+
+        .alert-text strong {
+            display: block;
+            margin-bottom: 4px;
+        }
+
+        /* Items List */
+        .items-list {
+            margin: 20px 0;
+        }
+
+        .item-row {
+            display: flex;
+            align-items: center;
+            padding: 12px 16px;
+            background: #f8fafc;
+            border-radius: 10px;
+            margin-bottom: 8px;
+            gap: 12px;
+        }
+
+        .item-row:last-child {
+            margin-bottom: 0;
+        }
+
+        .item-icon {
+            width: 40px;
+            height: 40px;
+            background: linear-gradient(135deg, #e0e7ff 0%, #c7d2fe 100%);
+            border-radius: 10px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 18px;
+        }
+
+        .item-details {
+            flex: 1;
+        }
+
+        .item-name {
+            font-weight: 600;
+            color: #1e293b;
+            font-size: 14px;
+        }
+
+        .item-meta {
+            font-size: 12px;
+            color: #64748b;
+        }
+
+        /* Stats Grid */
+        .stats-grid {
+            display: grid;
+            grid-template-columns: repeat(3, 1fr);
+            gap: 12px;
+            margin: 20px 0;
+        }
+
+        .stat-card {
+            background: linear-gradient(135deg, #f8fafc 0%, #f1f5f9 100%);
+            border-radius: 12px;
+            padding: 16px;
+            text-align: center;
+        }
+
+        .stat-value {
+            font-size: 28px;
+            font-weight: 800;
+            background: linear-gradient(135deg, #2563eb 0%, #7c3aed 100%);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            background-clip: text;
+        }
+
+        .stat-label {
+            font-size: 12px;
+            color: #64748b;
+            margin-top: 4px;
+        }
+
+        /* Footer */
+        .email-footer {
+            background: linear-gradient(135deg, #f8fafc 0%, #f1f5f9 100%);
+            padding: 25px 30px;
+            text-align: center;
+            border-top: 1px solid #e2e8f0;
+        }
+
+        .footer-logo {
+            font-size: 18px;
+            font-weight: 700;
+            color: #334155;
+            margin-bottom: 8px;
+        }
+
+        .footer-text {
+            color: #94a3b8;
+            font-size: 12px;
+            line-height: 1.6;
+        }
+
+        .footer-links {
+            margin-top: 15px;
+            display: flex;
+            justify-content: center;
+            gap: 20px;
+        }
+
+        .footer-links a {
+            color: #64748b;
+            text-decoration: none;
+            font-size: 12px;
+        }
+
+        .footer-links a:hover {
+            color: #2563eb;
+        }
+
+        /* Divider */
+        .divider {
+            height: 1px;
+            background: linear-gradient(90deg, transparent, #e2e8f0 20%, #e2e8f0 80%, transparent);
+            margin: 25px 0;
+        }
+
+        /* Section Title */
+        .section-title {
+            font-size: 16px;
+            font-weight: 700;
+            color: #1e293b;
+            margin: 25px 0 15px;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
+
+        .section-title::before {
+            content: '';
+            width: 4px;
+            height: 20px;
+            background: linear-gradient(135deg, #2563eb 0%, #7c3aed 100%);
+            border-radius: 4px;
+        }
+    </style>
+</head>
+<body>
+    <div class="page-header">
+        <h1>📧 תבניות מייל - ארון ציוד ידידים</h1>
+        <p>עיצוב מודרני וחדשני לכל סוגי ההתראות והעדכונים</p>
+    </div>
+
+    <div class="templates-grid">
+
+        <!-- Template 1: Welcome Email -->
+        <div class="template-section">
+            <h2 class="template-title">
+                <span>🎉</span>
+                מייל ברוך הבא
+                <span class="template-badge">משתמש חדש</span>
+            </h2>
+            <div class="email-preview">
+                <div class="email-container">
+                    <div class="email-header primary">
+                        <div class="header-icon">🎉</div>
+                        <h1 class="header-title">ברוך הבא!</h1>
+                        <p class="header-subtitle">מערכת ארון ציוד ידידים</p>
+                    </div>
+                    <div class="email-content">
+                        <p class="greeting">שלום ישראל ישראלי,</p>
+                        <p class="email-text">
+                            ברוך הבא למערכת ארון ציוד ידידים - תל אביב!
+                        </p>
+                        <p class="email-text">
+                            חשבונך נוצר בהצלחה. כעת תוכל לגשת למערכת ולנהל את ארון הציוד שלך.
+                        </p>
+
+                        <div class="info-card success">
+                            <div class="info-card-title">
+                                ✅ החשבון שלך מוכן
+                            </div>
+                            <div class="info-card-content">
+                                לחץ על הכפתור למטה כדי להגדיר את הסיסמה שלך ולהתחיל.
+                            </div>
+                        </div>
+
+                        <div class="cta-container">
+                            <a href="#" class="cta-button">הגדרת סיסמה 🔐</a>
+                        </div>
+
+                        <div class="alert-box warning">
+                            <span class="alert-icon">⏰</span>
+                            <div class="alert-text">
+                                <strong>שים לב</strong>
+                                הקישור תקף לשעה אחת בלבד. לאחר הגדרת הסיסמה, תוכל להתחבר למערכת בכל עת.
+                            </div>
+                        </div>
+                    </div>
+                    <div class="email-footer">
+                        <div class="footer-logo">🏢 ארון ציוד ידידים</div>
+                        <p class="footer-text">מערכת לניהול השאלת ציוד חירום</p>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Template 2: New Request Email -->
+        <div class="template-section">
+            <h2 class="template-title">
+                <span>🔔</span>
+                התראת בקשה חדשה
+                <span class="template-badge">למנהל</span>
+            </h2>
+            <div class="email-preview">
+                <div class="email-container">
+                    <div class="email-header info">
+                        <div class="header-icon">🔔</div>
+                        <h1 class="header-title">בקשה חדשה לציוד!</h1>
+                        <p class="header-subtitle">ארון ציוד - תל אביב</p>
+                    </div>
+                    <div class="email-content">
+                        <p class="greeting">שלום מנהל יקר,</p>
+                        <p class="email-text">
+                            התקבלה בקשה חדשה לציוד בארון תל אביב.
+                        </p>
+
+                        <div class="info-card">
+                            <div class="info-card-title">
+                                👤 פרטי המבקש
+                            </div>
+                            <div class="info-card-content">
+                                <div class="data-row">
+                                    <span class="data-label">שם:</span>
+                                    <span class="data-value">דוד כהן</span>
+                                </div>
+                                <div class="data-row">
+                                    <span class="data-label">טלפון:</span>
+                                    <span class="data-value"><a href="tel:0501234567">050-123-4567</a></span>
+                                </div>
+                                <div class="data-row">
+                                    <span class="data-label">מספר קריאה:</span>
+                                    <span class="data-value">12345</span>
+                                </div>
+                            </div>
+                        </div>
+
+                        <div class="section-title">📦 פריטים מבוקשים</div>
+
+                        <div class="items-list">
+                            <div class="item-row">
+                                <div class="item-icon">🔦</div>
+                                <div class="item-details">
+                                    <div class="item-name">פנס חירום</div>
+                                    <div class="item-meta">כמות: 1</div>
+                                </div>
+                            </div>
+                            <div class="item-row">
+                                <div class="item-icon">🩹</div>
+                                <div class="item-details">
+                                    <div class="item-name">ערכת עזרה ראשונה</div>
+                                    <div class="item-meta">כמות: 1</div>
+                                </div>
+                            </div>
+                            <div class="item-row">
+                                <div class="item-icon">🧯</div>
+                                <div class="item-details">
+                                    <div class="item-name">מטף כיבוי אש</div>
+                                    <div class="item-meta">כמות: 2</div>
+                                </div>
+                            </div>
+                        </div>
+
+                        <div class="cta-container">
+                            <a href="#" class="cta-button">צפייה בבקשה 📋</a>
+                        </div>
+                    </div>
+                    <div class="email-footer">
+                        <div class="footer-logo">🏢 ארון ציוד ידידים</div>
+                        <p class="footer-text">יש לך 24 שעות לאשר או לדחות את הבקשה</p>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Template 3: Password Reset -->
+        <div class="template-section">
+            <h2 class="template-title">
+                <span>🔑</span>
+                איפוס סיסמה
+                <span class="template-badge">אבטחה</span>
+            </h2>
+            <div class="email-preview">
+                <div class="email-container">
+                    <div class="email-header primary">
+                        <div class="header-icon">🔑</div>
+                        <h1 class="header-title">איפוס סיסמה</h1>
+                        <p class="header-subtitle">אבטחת החשבון שלך</p>
+                    </div>
+                    <div class="email-content">
+                        <p class="greeting">שלום ישראל ישראלי,</p>
+                        <p class="email-text">
+                            קיבלנו בקשה לאיפוס הסיסמה שלך במערכת ארון ציוד ידידים.
+                        </p>
+                        <p class="email-text">
+                            לחץ על הכפתור הבא כדי לבחור סיסמה חדשה:
+                        </p>
+
+                        <div class="cta-container">
+                            <a href="#" class="cta-button">איפוס סיסמה 🔐</a>
+                        </div>
+
+                        <div class="alert-box warning">
+                            <span class="alert-icon">⏰</span>
+                            <div class="alert-text">
+                                <strong>שים לב</strong>
+                                הקישור תקף לשעה אחת בלבד.
+                            </div>
+                        </div>
+
+                        <div class="divider"></div>
+
+                        <p class="email-text" style="color: #94a3b8; font-size: 13px;">
+                            אם לא ביקשת לאפס את הסיסמה, התעלם מהודעה זו. הסיסמה שלך לא תשתנה.
+                        </p>
+                    </div>
+                    <div class="email-footer">
+                        <div class="footer-logo">🏢 ארון ציוד ידידים</div>
+                        <p class="footer-text">שמירה על אבטחת החשבון שלך</p>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Template 4: Low Stock Alert -->
+        <div class="template-section">
+            <h2 class="template-title">
+                <span>📦</span>
+                התראת מלאי נמוך
+                <span class="template-badge">דחוף</span>
+            </h2>
+            <div class="email-preview">
+                <div class="email-container">
+                    <div class="email-header warning">
+                        <div class="header-icon">📦</div>
+                        <h1 class="header-title">התראת מלאי נמוך</h1>
+                        <p class="header-subtitle">ארון ציוד - תל אביב</p>
+                    </div>
+                    <div class="email-content">
+                        <p class="greeting">שלום מנהל יקר,</p>
+                        <p class="email-text">
+                            הפריטים הבאים בארון תל אביב הגיעו למלאי נמוך:
+                        </p>
+
+                        <table class="email-table">
+                            <thead>
+                                <tr>
+                                    <th>פריט</th>
+                                    <th>כמות נוכחית</th>
+                                    <th>מינימום</th>
+                                    <th>סטטוס</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                <tr>
+                                    <td>פנס חירום</td>
+                                    <td>2</td>
+                                    <td>5</td>
+                                    <td><span class="status-badge low">נמוך</span></td>
+                                </tr>
+                                <tr>
+                                    <td>סוללות AA</td>
+                                    <td>4</td>
+                                    <td>20</td>
+                                    <td><span class="status-badge critical">קריטי</span></td>
+                                </tr>
+                                <tr>
+                                    <td>תחבושות</td>
+                                    <td>8</td>
+                                    <td>15</td>
+                                    <td><span class="status-badge low">נמוך</span></td>
+                                </tr>
+                            </tbody>
+                        </table>
+
+                        <div class="alert-box warning">
+                            <span class="alert-icon">⚠️</span>
+                            <div class="alert-text">
+                                <strong>מומלץ להשלים את המלאי בהקדם</strong>
+                                מלאי נמוך עלול לפגוע ביכולת לספק ציוד בחירום.
+                            </div>
+                        </div>
+
+                        <div class="cta-container">
+                            <a href="#" class="cta-button warning">צפייה במלאי 📊</a>
+                        </div>
+                    </div>
+                    <div class="email-footer">
+                        <div class="footer-logo">🏢 ארון ציוד ידידים</div>
+                        <p class="footer-text">התראה אוטומטית ממערכת ניהול המלאי</p>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Template 5: Faulty Equipment Reminder -->
+        <div class="template-section">
+            <h2 class="template-title">
+                <span>🔧</span>
+                תזכורת ציוד תקול
+                <span class="template-badge">תחזוקה</span>
+            </h2>
+            <div class="email-preview">
+                <div class="email-container">
+                    <div class="email-header danger">
+                        <div class="header-icon">🔧</div>
+                        <h1 class="header-title">ציוד תקול דורש טיפול</h1>
+                        <p class="header-subtitle">תזכורת שנייה - פעולה נדרשת</p>
+                    </div>
+                    <div class="email-content">
+                        <p class="greeting">שלום מנהל יקר,</p>
+                        <p class="email-text">
+                            <strong style="color: #dc2626;">זוהי תזכורת נוספת!</strong> הציוד הבא עדיין מסומן כתקול:
+                        </p>
+
+                        <table class="email-table">
+                            <thead>
+                                <tr>
+                                    <th>פריט</th>
+                                    <th>זמן בתקלה</th>
+                                    <th>הערות</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                <tr>
+                                    <td>מכשיר הנשמה</td>
+                                    <td>25 ימים</td>
+                                    <td>לא נדלק</td>
+                                </tr>
+                                <tr>
+                                    <td>דפיברילטור</td>
+                                    <td>18 ימים</td>
+                                    <td>בטריה תקולה</td>
+                                </tr>
+                            </tbody>
+                        </table>
+
+                        <div class="alert-box danger">
+                            <span class="alert-icon">🚨</span>
+                            <div class="alert-text">
+                                <strong>פעולה נדרשת!</strong>
+                                יש לטפל בציוד התקול בהקדם האפשרי או להחליפו כדי להבטיח מוכנות לחירום.
+                            </div>
+                        </div>
+
+                        <div class="cta-container">
+                            <a href="#" class="cta-button">ניהול ציוד 🛠️</a>
+                        </div>
+                    </div>
+                    <div class="email-footer">
+                        <div class="footer-logo">🏢 ארון ציוד ידידים</div>
+                        <p class="footer-text">ציוד תקין = מוכנות מלאה לחירום</p>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Template 6: Monthly Report -->
+        <div class="template-section">
+            <h2 class="template-title">
+                <span>📊</span>
+                דוח חודשי
+                <span class="template-badge">סטטיסטיקות</span>
+            </h2>
+            <div class="email-preview">
+                <div class="email-container">
+                    <div class="email-header success">
+                        <div class="header-icon">📊</div>
+                        <h1 class="header-title">דוח חודשי</h1>
+                        <p class="header-subtitle">ארון ציוד תל אביב • נובמבר 2024</p>
+                    </div>
+                    <div class="email-content">
+                        <p class="greeting">שלום מנהל יקר,</p>
+                        <p class="email-text">
+                            להלן סיכום הפעילות החודשית בארון תל אביב:
+                        </p>
+
+                        <div class="section-title">📈 סטטיסטיקות השאלות</div>
+                        <div class="stats-grid">
+                            <div class="stat-card">
+                                <div class="stat-value">47</div>
+                                <div class="stat-label">השאלות</div>
+                            </div>
+                            <div class="stat-card">
+                                <div class="stat-value">42</div>
+                                <div class="stat-label">החזרות</div>
+                            </div>
+                            <div class="stat-card">
+                                <div class="stat-value">5</div>
+                                <div class="stat-label">ממתינות</div>
+                            </div>
+                        </div>
+
+                        <div class="section-title">📋 סטטיסטיקות בקשות</div>
+                        <div class="stats-grid">
+                            <div class="stat-card">
+                                <div class="stat-value">23</div>
+                                <div class="stat-label">אושרו</div>
+                            </div>
+                            <div class="stat-card">
+                                <div class="stat-value">3</div>
+                                <div class="stat-label">נדחו</div>
+                            </div>
+                            <div class="stat-card">
+                                <div class="stat-value">2</div>
+                                <div class="stat-label">ממתינות</div>
+                            </div>
+                        </div>
+
+                        <div class="section-title">🏆 הפריטים המושאלים ביותר</div>
+                        <div class="items-list">
+                            <div class="item-row">
+                                <div class="item-icon" style="background: linear-gradient(135deg, #fef3c7 0%, #fde68a 100%);">🥇</div>
+                                <div class="item-details">
+                                    <div class="item-name">פנס חירום</div>
+                                    <div class="item-meta">12 השאלות</div>
+                                </div>
+                            </div>
+                            <div class="item-row">
+                                <div class="item-icon" style="background: linear-gradient(135deg, #e5e7eb 0%, #d1d5db 100%);">🥈</div>
+                                <div class="item-details">
+                                    <div class="item-name">ערכת עזרה ראשונה</div>
+                                    <div class="item-meta">8 השאלות</div>
+                                </div>
+                            </div>
+                            <div class="item-row">
+                                <div class="item-icon" style="background: linear-gradient(135deg, #fed7aa 0%, #fdba74 100%);">🥉</div>
+                                <div class="item-details">
+                                    <div class="item-name">רדיו חירום</div>
+                                    <div class="item-meta">6 השאלות</div>
+                                </div>
+                            </div>
+                        </div>
+
+                        <div class="info-card success">
+                            <div class="info-card-title">
+                                ✅ מצב מלאי
+                            </div>
+                            <div class="info-card-content">
+                                כל הפריטים במלאי תקין - אין פריטים במלאי נמוך 👍
+                            </div>
+                        </div>
+
+                        <div class="cta-container">
+                            <a href="#" class="cta-button success">צפייה בדוח מלא 📈</a>
+                        </div>
+                    </div>
+                    <div class="email-footer">
+                        <div class="footer-logo">🏢 ארון ציוד ידידים</div>
+                        <p class="footer-text">דוח זה נשלח אוטומטית בתחילת כל חודש</p>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Template 7: Email Verification -->
+        <div class="template-section">
+            <h2 class="template-title">
+                <span>✉️</span>
+                אימות כתובת מייל
+                <span class="template-badge">אבטחה</span>
+            </h2>
+            <div class="email-preview">
+                <div class="email-container">
+                    <div class="email-header info">
+                        <div class="header-icon">✉️</div>
+                        <h1 class="header-title">אימות כתובת מייל</h1>
+                        <p class="header-subtitle">עדכון פרטי חשבון</p>
+                    </div>
+                    <div class="email-content">
+                        <p class="greeting">שלום ישראל ישראלי,</p>
+                        <p class="email-text">
+                            כתובת המייל שלך במערכת ארון ציוד ידידים עודכנה.
+                        </p>
+                        <p class="email-text">
+                            לחץ על הכפתור הבא כדי לאמת את כתובת המייל החדשה:
+                        </p>
+
+                        <div class="cta-container">
+                            <a href="#" class="cta-button">אימות כתובת מייל ✓</a>
+                        </div>
+
+                        <div class="alert-box info">
+                            <span class="alert-icon">ℹ️</span>
+                            <div class="alert-text">
+                                <strong>שים לב</strong>
+                                הקישור תקף ל-24 שעות בלבד.
+                            </div>
+                        </div>
+
+                        <div class="divider"></div>
+
+                        <p class="email-text" style="color: #94a3b8; font-size: 13px;">
+                            אם לא ביקשת לשנות את כתובת המייל, פנה למנהל המערכת מיידית.
+                        </p>
+                    </div>
+                    <div class="email-footer">
+                        <div class="footer-logo">🏢 ארון ציוד ידידים</div>
+                        <p class="footer-text">שמירה על אבטחת החשבון שלך</p>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Template 8: Custom Message -->
+        <div class="template-section">
+            <h2 class="template-title">
+                <span>📧</span>
+                הודעה מותאמת אישית
+                <span class="template-badge">כללי</span>
+            </h2>
+            <div class="email-preview">
+                <div class="email-container">
+                    <div class="email-header primary">
+                        <div class="header-icon">📧</div>
+                        <h1 class="header-title">הודעה מארון ציוד ידידים</h1>
+                    </div>
+                    <div class="email-content">
+                        <p class="greeting">שלום ישראל ישראלי,</p>
+                        <p class="email-text">
+                            זוהי הודעה מותאמת אישית שנשלחה על ידי מנהל המערכת.
+                        </p>
+                        <p class="email-text">
+                            תוכן ההודעה יופיע כאן בפורמט חופשי, עם שמירה על העיצוב האחיד של המערכת.
+                        </p>
+
+                        <div class="info-card">
+                            <div class="info-card-title">
+                                💡 דוגמה לתוכן מותאם
+                            </div>
+                            <div class="info-card-content">
+                                ניתן להוסיף מידע חשוב, עדכונים, או כל הודעה שתרצו לשלוח למשתמשים.
+                            </div>
+                        </div>
+
+                        <div class="cta-container">
+                            <a href="#" class="cta-button">כניסה למערכת 🚀</a>
+                        </div>
+                    </div>
+                    <div class="email-footer">
+                        <div class="footer-logo">🏢 ארון ציוד ידידים</div>
+                        <p class="footer-text">מערכת לניהול השאלת ציוד חירום</p>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+    </div>
+</body>
+</html>

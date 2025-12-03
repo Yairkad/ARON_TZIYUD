@@ -40,40 +40,185 @@ interface EmailResult {
 // App URL for links
 const getAppUrl = () => process.env.NEXT_PUBLIC_APP_URL || 'http://localhost:3000'
 
-// Inline styles for email compatibility (Gmail strips <style> tags)
+// Modern inline styles for email compatibility (Gmail strips <style> tags)
 const inlineStyles = {
-  body: 'font-family: Arial, sans-serif; direction: rtl; text-align: right; background-color: #f3f4f6; margin: 0; padding: 20px;',
-  container: 'max-width: 600px; margin: 0 auto; background: white; border-radius: 12px; overflow: hidden; box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);',
-  header: 'background: linear-gradient(135deg, #2563eb 0%, #4f46e5 100%); color: white; padding: 30px 20px; text-align: center;',
-  headerTitle: 'margin: 0; font-size: 24px; font-weight: bold;',
-  content: 'padding: 30px 20px;',
-  contentText: 'color: #374151; font-size: 16px; line-height: 1.6; margin: 0 0 15px 0;',
-  button: 'display: inline-block; background: linear-gradient(135deg, #2563eb 0%, #4f46e5 100%); color: white; padding: 14px 28px; text-decoration: none; border-radius: 8px; font-weight: bold; font-size: 16px;',
-  alert: 'background: #fef3c7; border: 2px solid #f59e0b; padding: 15px; border-radius: 8px; margin: 20px 0; color: #92400e;',
-  alertDanger: 'background: #fee2e2; border: 2px solid #ef4444; padding: 15px; border-radius: 8px; margin: 20px 0; color: #991b1b;',
-  footer: 'background: #f9fafb; padding: 20px; text-align: center; font-size: 13px; color: #6b7280; border-top: 1px solid #e5e7eb;',
-  table: 'width: 100%; border-collapse: collapse; margin: 15px 0;',
-  th: 'padding: 12px; border: 1px solid #e5e7eb; text-align: right; background: #f3f4f6; font-weight: bold; color: #374151;',
-  td: 'padding: 12px; border: 1px solid #e5e7eb; text-align: right; color: #4b5563;',
+  body: 'font-family: "Segoe UI", Tahoma, Geneva, Verdana, sans-serif; direction: rtl; text-align: right; background-color: #f1f5f9; margin: 0; padding: 30px 20px;',
+  container: 'max-width: 600px; margin: 0 auto; background: #ffffff; border-radius: 16px; overflow: hidden; box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1), 0 2px 4px -2px rgba(0, 0, 0, 0.1);',
+  // Header variants
+  header: 'padding: 40px 30px; text-align: center; position: relative;',
+  headerPrimary: 'background: linear-gradient(135deg, #2563eb 0%, #7c3aed 100%);',
+  headerSuccess: 'background: linear-gradient(135deg, #059669 0%, #0d9488 100%);',
+  headerWarning: 'background: linear-gradient(135deg, #d97706 0%, #ea580c 100%);',
+  headerDanger: 'background: linear-gradient(135deg, #dc2626 0%, #be185d 100%);',
+  headerInfo: 'background: linear-gradient(135deg, #0891b2 0%, #0284c7 100%);',
+  headerIcon: 'width: 70px; height: 70px; background: rgba(255, 255, 255, 0.2); border-radius: 50%; display: inline-flex; align-items: center; justify-content: center; margin: 0 auto 20px; font-size: 32px; border: 2px solid rgba(255, 255, 255, 0.3);',
+  headerTitle: 'margin: 0; font-size: 26px; font-weight: 700; color: white; text-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);',
+  headerSubtitle: 'color: rgba(255, 255, 255, 0.9); font-size: 14px; margin-top: 8px;',
+  // Content
+  content: 'padding: 35px 30px;',
+  greeting: 'font-size: 18px; color: #1e293b; font-weight: 600; margin-bottom: 20px;',
+  contentText: 'color: #475569; font-size: 15px; line-height: 1.7; margin: 0 0 18px 0;',
+  // Info cards
+  infoCard: 'background: linear-gradient(135deg, #f8fafc 0%, #f1f5f9 100%); border-radius: 12px; padding: 20px; margin: 20px 0; border-right: 4px solid #3b82f6;',
+  infoCardWarning: 'background: linear-gradient(135deg, #fffbeb 0%, #fef3c7 100%); border-right-color: #f59e0b;',
+  infoCardDanger: 'background: linear-gradient(135deg, #fef2f2 0%, #fee2e2 100%); border-right-color: #ef4444;',
+  infoCardSuccess: 'background: linear-gradient(135deg, #ecfdf5 0%, #d1fae5 100%); border-right-color: #10b981;',
+  infoCardTitle: 'font-size: 14px; font-weight: 700; color: #334155; margin-bottom: 10px;',
+  infoCardContent: 'color: #64748b; font-size: 14px; line-height: 1.6;',
+  // CTA Button
+  ctaContainer: 'text-align: center; margin: 30px 0;',
+  button: 'display: inline-block; background: linear-gradient(135deg, #2563eb 0%, #7c3aed 100%); color: white; padding: 16px 40px; text-decoration: none; border-radius: 12px; font-weight: 700; font-size: 16px; box-shadow: 0 10px 25px -5px rgba(37, 99, 235, 0.4);',
+  buttonWarning: 'background: linear-gradient(135deg, #d97706 0%, #ea580c 100%); box-shadow: 0 10px 25px -5px rgba(217, 119, 6, 0.4);',
+  buttonSuccess: 'background: linear-gradient(135deg, #059669 0%, #0d9488 100%); box-shadow: 0 10px 25px -5px rgba(5, 150, 105, 0.4);',
+  // Alert boxes
+  alert: 'border-radius: 12px; padding: 16px 20px; margin: 20px 0; background: linear-gradient(135deg, #fffbeb 0%, #fef3c7 100%); border: 1px solid #fcd34d;',
+  alertDanger: 'background: linear-gradient(135deg, #fef2f2 0%, #fee2e2 100%); border: 1px solid #fca5a5;',
+  alertInfo: 'background: linear-gradient(135deg, #eff6ff 0%, #dbeafe 100%); border: 1px solid #93c5fd;',
+  alertText: 'font-size: 14px; line-height: 1.5; color: #92400e;',
+  alertTextDanger: 'color: #991b1b;',
+  alertTextInfo: 'color: #1e40af;',
+  // Table
+  table: 'width: 100%; border-collapse: separate; border-spacing: 0; margin: 20px 0; border-radius: 12px; overflow: hidden; box-shadow: 0 1px 3px rgba(0, 0, 0, 0.1);',
+  th: 'background: linear-gradient(135deg, #1e293b 0%, #334155 100%); color: white; padding: 14px 16px; font-size: 13px; font-weight: 600; text-align: right;',
+  td: 'padding: 14px 16px; font-size: 14px; color: #475569; background: white; border-bottom: 1px solid #f1f5f9;',
+  // Items list
+  itemRow: 'display: flex; align-items: center; padding: 12px 16px; background: #f8fafc; border-radius: 10px; margin-bottom: 8px;',
+  itemIcon: 'width: 40px; height: 40px; background: linear-gradient(135deg, #e0e7ff 0%, #c7d2fe 100%); border-radius: 10px; display: inline-flex; align-items: center; justify-content: center; font-size: 18px; margin-left: 12px;',
+  itemName: 'font-weight: 600; color: #1e293b; font-size: 14px;',
+  itemMeta: 'font-size: 12px; color: #64748b;',
+  // Stats
+  statsGrid: 'display: flex; gap: 12px; margin: 20px 0;',
+  statCard: 'flex: 1; background: linear-gradient(135deg, #f8fafc 0%, #f1f5f9 100%); border-radius: 12px; padding: 16px; text-align: center;',
+  statValue: 'font-size: 28px; font-weight: 800; color: #2563eb;',
+  statLabel: 'font-size: 12px; color: #64748b; margin-top: 4px;',
+  // Section title
+  sectionTitle: 'font-size: 16px; font-weight: 700; color: #1e293b; margin: 25px 0 15px; padding-right: 12px; border-right: 4px solid #7c3aed;',
+  // Divider
+  divider: 'height: 1px; background: linear-gradient(90deg, transparent, #e2e8f0 20%, #e2e8f0 80%, transparent); margin: 25px 0;',
+  // Footer
+  footer: 'background: linear-gradient(135deg, #f8fafc 0%, #f1f5f9 100%); padding: 25px 30px; text-align: center; border-top: 1px solid #e2e8f0;',
+  footerLogo: 'font-size: 18px; font-weight: 700; color: #334155; margin-bottom: 8px;',
+  footerText: 'color: #94a3b8; font-size: 12px; line-height: 1.6;',
+  // Legacy support
   list: 'list-style: none; padding: 0; margin: 15px 0;',
-  listItem: 'padding: 10px 0; border-bottom: 1px solid #e5e7eb; color: #4b5563;',
+  listItem: 'padding: 12px 16px; background: #f8fafc; border-radius: 10px; margin-bottom: 8px; color: #475569;',
+}
+
+// Header variant types
+type HeaderVariant = 'primary' | 'success' | 'warning' | 'danger' | 'info'
+type AlertVariant = 'warning' | 'danger' | 'info'
+type ButtonVariant = 'primary' | 'warning' | 'success'
+
+const headerVariants: Record<HeaderVariant, string> = {
+  primary: inlineStyles.headerPrimary,
+  success: inlineStyles.headerSuccess,
+  warning: inlineStyles.headerWarning,
+  danger: inlineStyles.headerDanger,
+  info: inlineStyles.headerInfo,
 }
 
 // Helper to create styled elements
 const styled = {
   container: (content: string) => `<div style="${inlineStyles.container}">${content}</div>`,
-  header: (title: string, emoji?: string) => `<div style="${inlineStyles.header}"><h1 style="${inlineStyles.headerTitle}">${emoji ? emoji + ' ' : ''}${title}</h1></div>`,
+
+  // Modern header with icon
+  header: (title: string, emoji?: string, variant: HeaderVariant = 'primary', subtitle?: string) => `
+    <div style="${inlineStyles.header} ${headerVariants[variant]}">
+      ${emoji ? `<div style="${inlineStyles.headerIcon}">${emoji}</div>` : ''}
+      <h1 style="${inlineStyles.headerTitle}">${title}</h1>
+      ${subtitle ? `<p style="${inlineStyles.headerSubtitle}">${subtitle}</p>` : ''}
+    </div>`,
+
   content: (html: string) => `<div style="${inlineStyles.content}">${html}</div>`,
+
+  // Greeting text
+  greeting: (name: string) => `<p style="${inlineStyles.greeting}">שלום ${name},</p>`,
+
+  // Regular text
   text: (text: string) => `<p style="${inlineStyles.contentText}">${text}</p>`,
-  button: (text: string, href: string) => `<p style="text-align: center; margin: 25px 0;"><a href="${href}" style="${inlineStyles.button}">${text}</a></p>`,
-  alert: (html: string, danger = false) => `<div style="${danger ? inlineStyles.alertDanger : inlineStyles.alert}">${html}</div>`,
-  footer: (text: string) => `<div style="${inlineStyles.footer}">${text}</div>`,
+
+  // Info card with title
+  infoCard: (title: string, content: string, variant: 'default' | 'warning' | 'danger' | 'success' = 'default') => {
+    const variantStyle = variant === 'warning' ? inlineStyles.infoCardWarning :
+                         variant === 'danger' ? inlineStyles.infoCardDanger :
+                         variant === 'success' ? inlineStyles.infoCardSuccess : ''
+    return `
+      <div style="${inlineStyles.infoCard} ${variantStyle}">
+        <div style="${inlineStyles.infoCardTitle}">${title}</div>
+        <div style="${inlineStyles.infoCardContent}">${content}</div>
+      </div>`
+  },
+
+  // Data rows inside info card
+  dataRow: (label: string, value: string) => `
+    <div style="display: flex; justify-content: space-between; padding: 10px 0; border-bottom: 1px dashed #e2e8f0;">
+      <span style="color: #64748b; font-size: 14px;">${label}</span>
+      <span style="color: #1e293b; font-weight: 600; font-size: 14px;">${value}</span>
+    </div>`,
+
+  // CTA button with variants
+  button: (text: string, href: string, variant: ButtonVariant = 'primary') => {
+    const buttonStyle = variant === 'warning' ? `${inlineStyles.button} ${inlineStyles.buttonWarning}` :
+                        variant === 'success' ? `${inlineStyles.button} ${inlineStyles.buttonSuccess}` :
+                        inlineStyles.button
+    return `<p style="${inlineStyles.ctaContainer}"><a href="${href}" style="${buttonStyle}">${text}</a></p>`
+  },
+
+  // Alert boxes
+  alert: (html: string, variant: AlertVariant = 'warning') => {
+    const alertStyle = variant === 'danger' ? inlineStyles.alertDanger :
+                       variant === 'info' ? inlineStyles.alertInfo : inlineStyles.alert
+    const textStyle = variant === 'danger' ? inlineStyles.alertTextDanger :
+                      variant === 'info' ? inlineStyles.alertTextInfo : inlineStyles.alertText
+    return `<div style="${alertStyle}"><p style="${textStyle}">${html}</p></div>`
+  },
+
+  // Modern footer
+  footer: (text: string, subtext?: string) => `
+    <div style="${inlineStyles.footer}">
+      <div style="${inlineStyles.footerLogo}">🏢 ארון ציוד ידידים</div>
+      <p style="${inlineStyles.footerText}">${text}</p>
+      ${subtext ? `<p style="${inlineStyles.footerText}">${subtext}</p>` : ''}
+    </div>`,
+
+  // Modern table
   table: (headers: string[], rows: string[][]) => {
     const headerRow = headers.map(h => `<th style="${inlineStyles.th}">${h}</th>`).join('')
     const bodyRows = rows.map(row => `<tr>${row.map(cell => `<td style="${inlineStyles.td}">${cell}</td>`).join('')}</tr>`).join('')
     return `<table style="${inlineStyles.table}"><thead><tr>${headerRow}</tr></thead><tbody>${bodyRows}</tbody></table>`
   },
-  list: (items: string[]) => `<ul style="${inlineStyles.list}">${items.map(item => `<li style="${inlineStyles.listItem}">${item}</li>`).join('')}</ul>`,
+
+  // Section title
+  sectionTitle: (emoji: string, title: string) => `<h3 style="${inlineStyles.sectionTitle}">${emoji} ${title}</h3>`,
+
+  // Items list (modern card style)
+  list: (items: string[]) => `<div style="${inlineStyles.list}">${items.map(item => `<div style="${inlineStyles.listItem}">📌 ${item}</div>`).join('')}</div>`,
+
+  // Item row with icon
+  itemRow: (icon: string, name: string, meta: string) => `
+    <div style="${inlineStyles.itemRow}">
+      <div style="${inlineStyles.itemIcon}">${icon}</div>
+      <div>
+        <div style="${inlineStyles.itemName}">${name}</div>
+        <div style="${inlineStyles.itemMeta}">${meta}</div>
+      </div>
+    </div>`,
+
+  // Stats grid
+  statsGrid: (stats: { value: string | number; label: string }[]) => `
+    <table style="width: 100%; border-collapse: collapse; margin: 20px 0;">
+      <tr>
+        ${stats.map(stat => `
+          <td style="${inlineStyles.statCard}">
+            <div style="${inlineStyles.statValue}">${stat.value}</div>
+            <div style="${inlineStyles.statLabel}">${stat.label}</div>
+          </td>
+        `).join('')}
+      </tr>
+    </table>`,
+
+  // Divider
+  divider: () => `<div style="${inlineStyles.divider}"></div>`,
 }
 
 /**
@@ -164,24 +309,25 @@ export async function sendNewRequestEmail(
   cityName: string,
   items: { name: string; quantity: number }[]
 ): Promise<EmailResult> {
-  const itemsListHtml = items
-    .map(item => `${item.name} (כמות: ${item.quantity})`)
+  const itemsHtml = items
+    .map(item => styled.itemRow('📦', item.name, `כמות: ${item.quantity}`))
+    .join('')
 
   const html = styled.container(
-    styled.header('בקשה חדשה לציוד', '🔔') +
+    styled.header('בקשה חדשה לציוד!', '🔔', 'info', `ארון ציוד - ${cityName}`) +
     styled.content(
-      styled.text(`שלום ${managerName},`) +
-      styled.text(`התקבלה בקשה חדשה לציוד בארון ${cityName}:`) +
-      styled.alert(
-        `<strong>פרטי המבקש:</strong><br>` +
-        `שם: ${requesterName}<br>` +
-        `טלפון: <a href="tel:${requesterPhone}" style="color: #92400e;">${requesterPhone}</a>`
+      styled.greeting(managerName) +
+      styled.text(`התקבלה בקשה חדשה לציוד בארון ${cityName}.`) +
+      styled.infoCard(
+        '👤 פרטי המבקש',
+        styled.dataRow('שם:', requesterName) +
+        styled.dataRow('טלפון:', `<a href="tel:${requesterPhone}" style="color: #2563eb; text-decoration: none; font-weight: 600;">${requesterPhone}</a>`)
       ) +
-      `<p style="${inlineStyles.contentText}"><strong>פריטים מבוקשים:</strong></p>` +
-      styled.list(itemsListHtml) +
-      styled.button('כניסה למערכת', getAppUrl())
+      styled.sectionTitle('📦', 'פריטים מבוקשים') +
+      `<div style="margin: 15px 0;">${itemsHtml}</div>` +
+      styled.button('צפייה בבקשה 📋', getAppUrl())
     ) +
-    styled.footer('מערכת ארון ציוד ידידים')
+    styled.footer('מערכת לניהול השאלת ציוד חירום', 'יש לך 24 שעות לאשר או לדחות את הבקשה')
   )
 
   return sendEmail(
@@ -202,16 +348,17 @@ export async function sendPasswordResetEmail(
   const resetLink = `${getAppUrl()}/reset-password?token=${resetToken}`
 
   const html = styled.container(
-    styled.header('איפוס סיסמה', '🔑') +
+    styled.header('איפוס סיסמה', '🔑', 'primary', 'אבטחת החשבון שלך') +
     styled.content(
-      styled.text(`שלום ${recipientName},`) +
+      styled.greeting(recipientName) +
       styled.text('קיבלנו בקשה לאיפוס הסיסמה שלך במערכת ארון ציוד ידידים.') +
-      styled.text('לחץ על הכפתור הבא כדי לאפס את הסיסמה:') +
-      styled.button('איפוס סיסמה', resetLink) +
-      styled.alert('<strong>שים לב:</strong> הקישור תקף לשעה אחת בלבד.') +
-      styled.text('אם לא ביקשת לאפס את הסיסמה, התעלם מהודעה זו.')
+      styled.text('לחץ על הכפתור הבא כדי לבחור סיסמה חדשה:') +
+      styled.button('איפוס סיסמה 🔐', resetLink) +
+      styled.alert('<strong>⏰ שים לב:</strong> הקישור תקף לשעה אחת בלבד.') +
+      styled.divider() +
+      styled.text('<span style="color: #94a3b8; font-size: 13px;">אם לא ביקשת לאפס את הסיסמה, התעלם מהודעה זו. הסיסמה שלך לא תשתנה.</span>')
     ) +
-    styled.footer('מערכת ארון ציוד ידידים')
+    styled.footer('שמירה על אבטחת החשבון שלך')
   )
 
   return sendEmail(
@@ -233,16 +380,20 @@ export async function sendWelcomeEmail(
   const resetLink = `${getAppUrl()}/reset-password?token=${resetToken}`
 
   const html = styled.container(
-    styled.header('ברוך הבא!', '🎉') +
+    styled.header('ברוך הבא!', '🎉', 'primary', 'מערכת ארון ציוד ידידים') +
     styled.content(
-      styled.text(`שלום ${recipientName},`) +
+      styled.greeting(recipientName) +
       styled.text(`ברוך הבא למערכת ארון ציוד ידידים - ${cityName}!`) +
-      styled.text('חשבונך נוצר בהצלחה. לחץ על הכפתור הבא כדי להגדיר את הסיסמה שלך:') +
-      styled.button('הגדרת סיסמה', resetLink) +
-      styled.alert('<strong>שים לב:</strong> הקישור תקף לשעה אחת בלבד.') +
-      styled.text('לאחר הגדרת הסיסמה, תוכל להתחבר למערכת ולנהל את ארון הציוד.')
+      styled.text('חשבונך נוצר בהצלחה. כעת תוכל לגשת למערכת ולנהל את ארון הציוד שלך.') +
+      styled.infoCard(
+        '✅ החשבון שלך מוכן',
+        'לחץ על הכפתור למטה כדי להגדיר את הסיסמה שלך ולהתחיל.',
+        'success'
+      ) +
+      styled.button('הגדרת סיסמה 🔐', resetLink) +
+      styled.alert('<strong>⏰ שים לב:</strong> הקישור תקף לשעה אחת בלבד. לאחר הגדרת הסיסמה, תוכל להתחבר למערכת בכל עת.')
     ) +
-    styled.footer('מערכת ארון ציוד ידידים')
+    styled.footer('מערכת לניהול השאלת ציוד חירום')
   )
 
   return sendEmail(
@@ -263,16 +414,17 @@ export async function sendVerificationEmail(
   const verifyLink = `${getAppUrl()}/verify-email?token=${verificationToken}`
 
   const html = styled.container(
-    styled.header('אימות כתובת מייל', '✉️') +
+    styled.header('אימות כתובת מייל', '✉️', 'info', 'עדכון פרטי חשבון') +
     styled.content(
-      styled.text(`שלום ${recipientName},`) +
+      styled.greeting(recipientName) +
       styled.text('כתובת המייל שלך במערכת ארון ציוד ידידים עודכנה.') +
       styled.text('לחץ על הכפתור הבא כדי לאמת את כתובת המייל החדשה:') +
-      styled.button('אימות כתובת מייל', verifyLink) +
-      styled.alert('<strong>שים לב:</strong> הקישור תקף ל-24 שעות בלבד.') +
-      styled.text('אם לא ביקשת לשנות את כתובת המייל, פנה למנהל המערכת.')
+      styled.button('אימות כתובת מייל ✓', verifyLink) +
+      styled.alert('<strong>ℹ️ שים לב:</strong> הקישור תקף ל-24 שעות בלבד.', 'info') +
+      styled.divider() +
+      styled.text('<span style="color: #94a3b8; font-size: 13px;">אם לא ביקשת לשנות את כתובת המייל, פנה למנהל המערכת מיידית.</span>')
     ) +
-    styled.footer('מערכת ארון ציוד ידידים')
+    styled.footer('שמירה על אבטחת החשבון שלך')
   )
 
   return sendEmail(
@@ -292,12 +444,13 @@ export async function sendCustomEmail(
   recipientName?: string
 ): Promise<EmailResult> {
   const html = styled.container(
-    styled.header('הודעה מארון ציוד ידידים', '📧') +
+    styled.header('הודעה מארון ציוד ידידים', '📧', 'primary') +
     styled.content(
-      (recipientName ? styled.text(`שלום ${recipientName},`) : '') +
-      `<div style="${inlineStyles.contentText} white-space: pre-wrap;">${message}</div>`
+      (recipientName ? styled.greeting(recipientName) : '') +
+      `<div style="${inlineStyles.contentText}; white-space: pre-wrap;">${message}</div>` +
+      styled.button('כניסה למערכת 🚀', getAppUrl())
     ) +
-    styled.footer('מערכת ארון ציוד ידידים')
+    styled.footer('מערכת לניהול השאלת ציוד חירום')
   )
 
   return sendEmail(to, subject, html)
@@ -312,20 +465,23 @@ export async function sendLowStockEmail(
   cityName: string,
   items: { name: string; quantity: number; minQuantity: number }[]
 ): Promise<EmailResult> {
-  const tableRows = items.map(item => [item.name, String(item.quantity), String(item.minQuantity)])
+  const tableRows = items.map(item => {
+    const status = item.quantity <= Math.floor(item.minQuantity / 2)
+      ? '<span style="display: inline-block; padding: 4px 12px; border-radius: 20px; font-size: 12px; font-weight: 600; background: #fee2e2; color: #991b1b;">קריטי</span>'
+      : '<span style="display: inline-block; padding: 4px 12px; border-radius: 20px; font-size: 12px; font-weight: 600; background: #fef3c7; color: #92400e;">נמוך</span>'
+    return [item.name, String(item.quantity), String(item.minQuantity), status]
+  })
 
   const html = styled.container(
-    `<div style="${inlineStyles.header} background: linear-gradient(135deg, #f59e0b 0%, #d97706 100%);">` +
-      `<h1 style="${inlineStyles.headerTitle}">📦 התראת מלאי נמוך</h1>` +
-    '</div>' +
+    styled.header('התראת מלאי נמוך', '📦', 'warning', `ארון ציוד - ${cityName}`) +
     styled.content(
-      styled.text(`שלום ${managerName},`) +
+      styled.greeting(managerName) +
       styled.text(`הפריטים הבאים בארון ${cityName} הגיעו למלאי נמוך:`) +
-      styled.table(['פריט', 'כמות נוכחית', 'כמות מינימלית'], tableRows) +
-      styled.alert('מומלץ להשלים את המלאי בהקדם האפשרי.') +
-      styled.button('כניסה למערכת', getAppUrl())
+      styled.table(['פריט', 'כמות נוכחית', 'מינימום', 'סטטוס'], tableRows) +
+      styled.alert('<strong>⚠️ מומלץ להשלים את המלאי בהקדם</strong><br>מלאי נמוך עלול לפגוע ביכולת לספק ציוד בחירום.') +
+      styled.button('צפייה במלאי 📊', getAppUrl(), 'warning')
     ) +
-    styled.footer('מערכת ארון ציוד ידידים')
+    styled.footer('התראה אוטומטית ממערכת ניהול המלאי')
   )
 
   return sendEmail(
@@ -345,29 +501,38 @@ export async function sendStockRefillReminder(
   items: { name: string; quantity: number; minQuantity: number }[],
   isFollowUp: boolean
 ): Promise<EmailResult> {
-  const tableRows = items.map(item => [item.name, String(item.quantity), String(item.minQuantity)])
-  const title = isFollowUp ? '⏰ תזכורת שנייה: מילוי מלאי נדרש' : '📦 תזכורת: מילוי מלאי נדרש'
-  const headerColor = isFollowUp ? '#ef4444 0%, #dc2626 100%' : '#f59e0b 0%, #d97706 100%'
+  const tableRows = items.map(item => {
+    const status = item.quantity <= Math.floor(item.minQuantity / 2)
+      ? '<span style="display: inline-block; padding: 4px 12px; border-radius: 20px; font-size: 12px; font-weight: 600; background: #fee2e2; color: #991b1b;">קריטי</span>'
+      : '<span style="display: inline-block; padding: 4px 12px; border-radius: 20px; font-size: 12px; font-weight: 600; background: #fef3c7; color: #92400e;">נמוך</span>'
+    return [item.name, String(item.quantity), String(item.minQuantity), status]
+  })
+  const title = isFollowUp ? 'תזכורת שנייה: מילוי מלאי נדרש' : 'תזכורת: מילוי מלאי נדרש'
+  const emoji = isFollowUp ? '🚨' : '📦'
+  const variant = isFollowUp ? 'danger' : 'warning' as const
 
   const html = styled.container(
-    `<div style="${inlineStyles.header} background: linear-gradient(135deg, ${headerColor});">` +
-      `<h1 style="${inlineStyles.headerTitle}">${title}</h1>` +
-    '</div>' +
+    styled.header(title, emoji, variant, `ארון ציוד - ${cityName}`) +
     styled.content(
-      styled.text(`שלום ${managerName},`) +
+      styled.greeting(managerName) +
       (isFollowUp
-        ? styled.text(`<strong>זוהי תזכורת נוספת!</strong> הפריטים הבאים עדיין במלאי נמוך:`)
+        ? styled.text('<strong style="color: #dc2626;">זוהי תזכורת נוספת!</strong> הפריטים הבאים עדיין במלאי נמוך:')
         : styled.text(`הפריטים הבאים בארון ${cityName} נמצאים במלאי נמוך:`)) +
-      styled.table(['פריט', 'כמות נוכחית', 'כמות מינימלית'], tableRows) +
-      styled.alert(isFollowUp ? 'יש למלא את המלאי בהקדם האפשרי!' : 'מומלץ להשלים את המלאי בהקדם.', isFollowUp) +
-      styled.button('כניסה למערכת', getAppUrl())
+      styled.table(['פריט', 'כמות נוכחית', 'מינימום', 'סטטוס'], tableRows) +
+      styled.alert(
+        isFollowUp
+          ? '<strong>🚨 פעולה נדרשת!</strong> יש למלא את המלאי בהקדם האפשרי!'
+          : '<strong>⚠️ מומלץ להשלים את המלאי בהקדם</strong>',
+        isFollowUp ? 'danger' : 'warning'
+      ) +
+      styled.button('צפייה במלאי 📊', getAppUrl(), isFollowUp ? 'warning' : 'warning')
     ) +
-    styled.footer('מערכת ארון ציוד ידידים')
+    styled.footer('התראה אוטומטית ממערכת ניהול המלאי')
   )
 
   return sendEmail(
     managerEmail,
-    `${title} - ${cityName}`,
+    `${emoji} ${title} - ${cityName}`,
     html
   )
 }
@@ -383,28 +548,33 @@ export async function sendFaultyEquipmentReminder(
   isFollowUp: boolean
 ): Promise<EmailResult> {
   const tableRows = items.map(item => [item.name, `${item.faultyDays} ימים`, item.notes || '-'])
-  const title = isFollowUp ? '⏰ תזכורת שנייה: ציוד תקול דורש תיקון' : '🔧 תזכורת: ציוד תקול דורש תיקון'
-  const headerColor = isFollowUp ? '#ef4444 0%, #dc2626 100%' : '#f59e0b 0%, #d97706 100%'
+  const title = isFollowUp ? 'ציוד תקול דורש טיפול' : 'תזכורת: ציוד תקול דורש תיקון'
+  const emoji = isFollowUp ? '🚨' : '🔧'
+  const variant = isFollowUp ? 'danger' : 'warning' as const
+  const subtitle = isFollowUp ? 'תזכורת שנייה - פעולה נדרשת' : `ארון ציוד - ${cityName}`
 
   const html = styled.container(
-    `<div style="${inlineStyles.header} background: linear-gradient(135deg, ${headerColor});">` +
-      `<h1 style="${inlineStyles.headerTitle}">${title}</h1>` +
-    '</div>' +
+    styled.header(title, emoji, variant, subtitle) +
     styled.content(
-      styled.text(`שלום ${managerName},`) +
+      styled.greeting(managerName) +
       (isFollowUp
-        ? styled.text(`<strong>זוהי תזכורת נוספת!</strong> הציוד הבא עדיין מסומן כתקול:`)
+        ? styled.text('<strong style="color: #dc2626;">זוהי תזכורת נוספת!</strong> הציוד הבא עדיין מסומן כתקול:')
         : styled.text(`הציוד הבא בארון ${cityName} מסומן כתקול כבר מעל 3 שבועות:`)) +
       styled.table(['פריט', 'זמן בתקלה', 'הערות'], tableRows) +
-      styled.alert(isFollowUp ? 'יש לטפל בציוד התקול בהקדם האפשרי!' : 'מומלץ לטפל בציוד התקול או להחליפו.', isFollowUp) +
-      styled.button('כניסה למערכת', getAppUrl())
+      styled.alert(
+        isFollowUp
+          ? '<strong>🚨 פעולה נדרשת!</strong> יש לטפל בציוד התקול בהקדם האפשרי או להחליפו כדי להבטיח מוכנות לחירום.'
+          : '<strong>⚠️ מומלץ לטפל בציוד התקול או להחליפו</strong>',
+        isFollowUp ? 'danger' : 'warning'
+      ) +
+      styled.button('ניהול ציוד 🛠️', getAppUrl())
     ) +
-    styled.footer('מערכת ארון ציוד ידידים')
+    styled.footer('ציוד תקין = מוכנות מלאה לחירום')
   )
 
   return sendEmail(
     managerEmail,
-    `${title} - ${cityName}`,
+    `${emoji} ${title} - ${cityName}`,
     html
   )
 }
@@ -435,54 +605,60 @@ export async function sendMonthlyReportEmail(
   managerName: string,
   data: MonthlyReportData
 ): Promise<EmailResult> {
-  const topBorrowedItems = data.topBorrowedItems.length > 0
-    ? data.topBorrowedItems.map(item => `${item.name}: ${item.count} השאלות`)
-    : ['אין נתונים']
+  // Top borrowed items with medals
+  const medals = ['🥇', '🥈', '🥉']
+  const topBorrowedHtml = data.topBorrowedItems.length > 0
+    ? data.topBorrowedItems.slice(0, 5).map((item, idx) =>
+        styled.itemRow(medals[idx] || '📦', item.name, `${item.count} השאלות`)
+      ).join('')
+    : styled.infoCard('📊 אין נתונים', 'לא נרשמו השאלות בתקופה זו', 'default')
 
-  const lowStockItems = data.lowStockItems.length > 0
-    ? data.lowStockItems.map(item => `${item.name}: ${item.quantity} יחידות`)
-    : ['אין פריטים במלאי נמוך 👍']
+  // Low stock items
+  const lowStockHtml = data.lowStockItems.length > 0
+    ? data.lowStockItems.map(item =>
+        styled.itemRow('⚠️', item.name, `${item.quantity} יחידות`)
+      ).join('')
+    : styled.infoCard('✅ מצב מלאי', 'כל הפריטים במלאי תקין - אין פריטים במלאי נמוך 👍', 'success')
 
-  const faultyItems = data.faultyItems.length > 0
-    ? data.faultyItems.map(item => `${item.name}: ${item.days} ימים`)
-    : ['אין ציוד תקול 👍']
-
-  const sectionTitle = (emoji: string, title: string) =>
-    `<h3 style="color: #374151; margin: 25px 0 10px 0; font-size: 18px;">${emoji} ${title}</h3>`
+  // Faulty items
+  const faultyHtml = data.faultyItems.length > 0
+    ? data.faultyItems.map(item =>
+        styled.itemRow('🔧', item.name, `${item.days} ימים`)
+      ).join('')
+    : styled.infoCard('✅ מצב ציוד', 'אין ציוד תקול 👍', 'success')
 
   const html = styled.container(
-    `<div style="${inlineStyles.header} background: linear-gradient(135deg, #059669 0%, #047857 100%);">` +
-      `<h1 style="${inlineStyles.headerTitle}">📊 דוח חודשי - ${data.cityName}</h1>` +
-      `<p style="margin: 5px 0 0 0; font-size: 14px; color: rgba(255,255,255,0.9);">${data.periodStart} - ${data.periodEnd}</p>` +
-    '</div>' +
+    styled.header('דוח חודשי', '📊', 'success', `ארון ציוד ${data.cityName} • ${data.periodStart} - ${data.periodEnd}`) +
     styled.content(
-      styled.text(`שלום ${managerName},`) +
+      styled.greeting(managerName) +
       styled.text(`להלן סיכום הפעילות החודשית בארון ${data.cityName}:`) +
 
-      sectionTitle('📈', 'סטטיסטיקות השאלות') +
-      styled.table(
-        ['סה"כ השאלות', 'החזרות', 'ממתינות להחזרה'],
-        [[String(data.totalBorrows), String(data.totalReturns), String(data.pendingReturns)]]
-      ) +
+      styled.sectionTitle('📈', 'סטטיסטיקות השאלות') +
+      styled.statsGrid([
+        { value: data.totalBorrows, label: 'השאלות' },
+        { value: data.totalReturns, label: 'החזרות' },
+        { value: data.pendingReturns, label: 'ממתינות' },
+      ]) +
 
-      sectionTitle('📋', 'סטטיסטיקות בקשות') +
-      styled.table(
-        ['בקשות פעילות', 'בקשות שאושרו', 'בקשות שנדחו'],
-        [[String(data.activeRequestsCount), String(data.approvedRequestsCount), String(data.rejectedRequestsCount)]]
-      ) +
+      styled.sectionTitle('📋', 'סטטיסטיקות בקשות') +
+      styled.statsGrid([
+        { value: data.approvedRequestsCount, label: 'אושרו' },
+        { value: data.rejectedRequestsCount, label: 'נדחו' },
+        { value: data.activeRequestsCount, label: 'ממתינות' },
+      ]) +
 
-      sectionTitle('🏆', 'הפריטים המושאלים ביותר') +
-      styled.list(topBorrowedItems) +
+      styled.sectionTitle('🏆', 'הפריטים המושאלים ביותר') +
+      `<div style="margin: 15px 0;">${topBorrowedHtml}</div>` +
 
-      sectionTitle('📦', 'פריטים במלאי נמוך') +
-      styled.list(lowStockItems) +
+      styled.sectionTitle('📦', 'פריטים במלאי נמוך') +
+      `<div style="margin: 15px 0;">${lowStockHtml}</div>` +
 
-      sectionTitle('🔧', 'ציוד תקול') +
-      styled.list(faultyItems) +
+      styled.sectionTitle('🔧', 'ציוד תקול') +
+      `<div style="margin: 15px 0;">${faultyHtml}</div>` +
 
-      styled.button('כניסה למערכת', getAppUrl())
+      styled.button('צפייה בדוח מלא 📈', getAppUrl(), 'success')
     ) +
-    styled.footer('מערכת ארון ציוד ידידים<br>דוח זה נשלח אוטומטית בתחילת כל חודש')
+    styled.footer('דוח זה נשלח אוטומטית בתחילת כל חודש')
   )
 
   return sendEmail(

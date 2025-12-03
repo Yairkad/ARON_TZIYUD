@@ -254,11 +254,11 @@ export default function HomePage() {
               </div>
             </div>
             <div className="flex justify-center">
-              <Link href="/user-guide">
+              <a href="/volunteer-guide.html" target="_blank" rel="noopener noreferrer">
                 <Button size="sm" className="gap-1 bg-purple-600 hover:bg-purple-700 text-white text-xs">
-                  📖 מדריך מפורט
+                  📖 מדריך ויזואלי למתנדב
                 </Button>
-              </Link>
+              </a>
             </div>
           </CardContent>
         </Card>
