@@ -159,6 +159,9 @@ export default function SuperAdminPage() {
     }
   }, [isCheckingAuth, isAuthenticated, isRedirecting, router])
 
+  // Permission check - only super_admin with full_access can edit
+  const canEdit = currentUser?.permissions === 'full_access'
+
   useEffect(() => {
     if (isAuthenticated) {
       fetchCities()
@@ -404,6 +407,10 @@ export default function SuperAdminPage() {
 
   const handleAddCity = async (e: React.FormEvent) => {
     e.preventDefault()
+    if (!canEdit) {
+      toast.error('אין לך הרשאה לבצע פעולה זו')
+      return
+    }
     if (!newCity.name || !newCity.manager1_name || !newCity.manager1_phone) {
       toast.error('אנא מלא את כל השדות החובה (שם עיר, מנהל ראשון, טלפון)')
       return
@@ -472,6 +479,10 @@ export default function SuperAdminPage() {
 
   const handleUpdateCity = async (e: React.FormEvent) => {
     e.preventDefault()
+    if (!canEdit) {
+      toast.error('אין לך הרשאה לבצע פעולה זו')
+      return
+    }
     if (!editingCity) return
 
     if (!editingCity.name || !editingCity.manager1_name || !editingCity.manager1_phone) {
@@ -527,6 +538,10 @@ export default function SuperAdminPage() {
   }
 
   const handleToggleActive = async (city: City) => {
+    if (!canEdit) {
+      toast.error('אין לך הרשאה לבצע פעולה זו')
+      return
+    }
     const action = city.is_active ? 'השבתת' : 'הפעלת'
     const isActivating = !city.is_active
 
@@ -575,6 +590,10 @@ export default function SuperAdminPage() {
   }
 
   const handleDeleteCity = async (city: City) => {
+    if (!canEdit) {
+      toast.error('אין לך הרשאה לבצע פעולה זו')
+      return
+    }
     showConfirmModal({
       title: 'מחיקת עיר',
       message: `האם אתה בטוח שברצונך למחוק את העיר ${city.name}?\n\nאזהרה: פעולה זו תמחק גם את כל הציוד וההיסטוריה הקשורים לעיר!`,
@@ -615,6 +634,10 @@ export default function SuperAdminPage() {
 
   const handleChangePassword = async (e: React.FormEvent) => {
     e.preventDefault()
+    if (!canEdit) {
+      toast.error('אין לך הרשאה לבצע פעולה זו')
+      return
+    }
 
     if (changePasswordForm.newPassword !== changePasswordForm.confirmPassword) {
       toast.error('הסיסמאות החדשות אינן תואמות')
@@ -729,6 +752,10 @@ export default function SuperAdminPage() {
   }
 
   const handleDeleteEmailLog = async (logId: string) => {
+    if (!canEdit) {
+      toast.error('אין לך הרשאה לבצע פעולה זו')
+      return
+    }
     showConfirmModal({
       title: 'מחיקת רשומת מייל',
       message: 'האם אתה בטוח שברצונך למחוק את רשומת המייל הזו?',
@@ -828,6 +855,10 @@ export default function SuperAdminPage() {
 
   const handleSendCustomEmail = async (e: React.FormEvent) => {
     e.preventDefault()
+    if (!canEdit) {
+      toast.error('אין לך הרשאה לבצע פעולה זו')
+      return
+    }
 
     const hasSelectedUsers = selectedUsersForEmail.size > 0
     if (!sendToAllUsers && !hasSelectedUsers && !customEmailTo) {
@@ -928,6 +959,10 @@ export default function SuperAdminPage() {
 
   const handleDeleteSelectedEmails = async () => {
     if (selectedEmails.size === 0) return
+    if (!canEdit) {
+      toast.error('אין לך הרשאה לבצע פעולה זו')
+      return
+    }
 
     showConfirmModal({
       title: 'מחיקת מיילים נבחרים',
@@ -967,6 +1002,10 @@ export default function SuperAdminPage() {
 
   const handleCreateUser = async (e: React.FormEvent) => {
     e.preventDefault()
+    if (!canEdit) {
+      toast.error('אין לך הרשאה לבצע פעולה זו')
+      return
+    }
 
     // Validation
     if (!userForm.email || !userForm.password || !userForm.full_name || !userForm.role) {
@@ -1033,6 +1072,10 @@ export default function SuperAdminPage() {
 
   const handleUpdateUser = async (e: React.FormEvent) => {
     e.preventDefault()
+    if (!canEdit) {
+      toast.error('אין לך הרשאה לבצע פעולה זו')
+      return
+    }
 
     if (!editingUser) return
 
@@ -1113,6 +1156,10 @@ export default function SuperAdminPage() {
   }
 
   const handleDeleteUser = async (user: any) => {
+    if (!canEdit) {
+      toast.error('אין לך הרשאה לבצע פעולה זו')
+      return
+    }
     showConfirmModal({
       title: 'מחיקת משתמש',
       message: `האם אתה בטוח שברצונך למחוק את המשתמש ${user.full_name || user.email}?`,
@@ -1538,41 +1585,45 @@ export default function SuperAdminPage() {
         {activeTab === 'cities' && (
           <>
             {/* Add City Button - Desktop */}
-            <div className="mb-6 hidden md:block">
-              <Button
-                onClick={() => setShowAddCity(!showAddCity)}
-                className="bg-gradient-to-r from-green-500 to-emerald-500 hover:from-green-600 hover:to-emerald-600 text-white font-bold px-6 py-3 rounded-xl shadow-lg hover:shadow-xl transition-all duration-200"
-              >
-                {showAddCity ? '❌ ביטול' : '➕ הוספת עיר חדשה'}
-              </Button>
-            </div>
+            {canEdit && (
+              <div className="mb-6 hidden md:block">
+                <Button
+                  onClick={() => setShowAddCity(!showAddCity)}
+                  className="bg-gradient-to-r from-green-500 to-emerald-500 hover:from-green-600 hover:to-emerald-600 text-white font-bold px-6 py-3 rounded-xl shadow-lg hover:shadow-xl transition-all duration-200"
+                >
+                  {showAddCity ? '❌ ביטול' : '➕ הוספת עיר חדשה'}
+                </Button>
+              </div>
+            )}
 
             {/* Add City FAB - Mobile */}
-            <Button
-              onClick={() => {
-                setShowAddCity(!showAddCity)
-                if (!showAddCity) {
-                  // Scroll to form after it's rendered
-                  setTimeout(() => {
-                    addCityFormRef.current?.scrollIntoView({ behavior: 'smooth', block: 'start' })
-                  }, 100)
-                }
-              }}
-              className="md:hidden fixed bottom-6 left-6 z-40 w-14 h-14 rounded-full bg-gradient-to-br from-green-500 to-emerald-600 hover:from-green-600 hover:to-emerald-700 text-white shadow-lg hover:shadow-xl transition-all duration-200 flex items-center justify-center border-2 border-white"
-            >
-              {showAddCity ? (
-                <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
-                </svg>
-              ) : (
-                <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 4v16m8-8H4" />
-                </svg>
-              )}
-            </Button>
+            {canEdit && (
+              <Button
+                onClick={() => {
+                  setShowAddCity(!showAddCity)
+                  if (!showAddCity) {
+                    // Scroll to form after it's rendered
+                    setTimeout(() => {
+                      addCityFormRef.current?.scrollIntoView({ behavior: 'smooth', block: 'start' })
+                    }, 100)
+                  }
+                }}
+                className="md:hidden fixed bottom-6 left-6 z-40 w-14 h-14 rounded-full bg-gradient-to-br from-green-500 to-emerald-600 hover:from-green-600 hover:to-emerald-700 text-white shadow-lg hover:shadow-xl transition-all duration-200 flex items-center justify-center border-2 border-white"
+              >
+                {showAddCity ? (
+                  <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
+                  </svg>
+                ) : (
+                  <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 4v16m8-8H4" />
+                  </svg>
+                )}
+              </Button>
+            )}
 
         {/* Add City Form */}
-        {showAddCity && (
+        {showAddCity && canEdit && (
           <Card ref={addCityFormRef} className="mb-8 border-0 shadow-xl rounded-lg overflow-hidden bg-white">
             <CardHeader className="bg-gradient-to-r from-green-50 to-emerald-50 py-4 px-4 md:px-6">
               <CardTitle className="text-lg md:text-xl font-bold text-gray-800">➕ הוספת עיר חדשה</CardTitle>
@@ -1905,7 +1956,7 @@ export default function SuperAdminPage() {
                             >
                               🚪 ניהול
                             </Button>
-                            {currentUser?.permissions !== 'view_only' && (
+                            {canEdit && (
                               <>
                                 <Button
                                   onClick={() => setEditingCity(city)}
@@ -1979,7 +2030,7 @@ export default function SuperAdminPage() {
                                 </Button>
                               </>
                             )}
-                            {currentUser?.permissions === 'view_only' && (
+                            {!canEdit && (
                               <span className="text-sm text-gray-500 italic">צפייה בלבד</span>
                             )}
                           </div>
@@ -2241,60 +2292,64 @@ export default function SuperAdminPage() {
               {/* Top row: Add button and count */}
               <div className="flex flex-col sm:flex-row gap-4 items-start sm:items-center justify-between">
                 {/* Add User Button - Desktop */}
-                <Button
-                  onClick={() => {
-                    setShowAddUser(!showAddUser)
-                    setEditingUser(null)
-                    setUserForm({
-                      email: '',
-                      password: '',
-                      full_name: '',
-                      role: 'city_manager',
-                      city_id: '',
-                      permissions: 'full_access',
-                      phone: '',
-                      manager_role: '',
-                    })
-                  }}
-                  className="hidden md:flex bg-gradient-to-r from-green-500 to-emerald-500 hover:from-green-600 hover:to-emerald-600 text-white font-bold px-6 py-3 rounded-xl shadow-lg hover:shadow-xl transition-all duration-200"
-                >
-                  {showAddUser ? '❌ ביטול' : '➕ הוספת משתמש חדש'}
-                </Button>
+                {canEdit && (
+                  <Button
+                    onClick={() => {
+                      setShowAddUser(!showAddUser)
+                      setEditingUser(null)
+                      setUserForm({
+                        email: '',
+                        password: '',
+                        full_name: '',
+                        role: 'city_manager',
+                        city_id: '',
+                        permissions: 'full_access',
+                        phone: '',
+                        manager_role: '',
+                      })
+                    }}
+                    className="hidden md:flex bg-gradient-to-r from-green-500 to-emerald-500 hover:from-green-600 hover:to-emerald-600 text-white font-bold px-6 py-3 rounded-xl shadow-lg hover:shadow-xl transition-all duration-200"
+                  >
+                    {showAddUser ? '❌ ביטול' : '➕ הוספת משתמש חדש'}
+                  </Button>
+                )}
 
                 {/* Add User FAB - Mobile */}
-                <Button
-                  onClick={() => {
-                    setShowAddUser(!showAddUser)
-                    setEditingUser(null)
-                    setUserForm({
-                      email: '',
-                      password: '',
-                      full_name: '',
-                      role: 'city_manager',
-                      city_id: '',
-                      permissions: 'full_access',
-                      phone: '',
-                      manager_role: '',
-                    })
-                    if (!showAddUser) {
-                      // Scroll to form after it's rendered
-                      setTimeout(() => {
-                        addUserFormRef.current?.scrollIntoView({ behavior: 'smooth', block: 'start' })
-                      }, 100)
-                    }
-                  }}
-                  className="md:hidden fixed bottom-6 left-6 z-40 w-14 h-14 rounded-full bg-gradient-to-br from-green-500 to-emerald-600 hover:from-green-600 hover:to-emerald-700 text-white shadow-lg hover:shadow-xl transition-all duration-200 flex items-center justify-center border-2 border-white"
-                >
-                  {showAddUser ? (
-                    <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
-                    </svg>
-                  ) : (
-                    <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 4v16m8-8H4" />
-                    </svg>
-                  )}
-                </Button>
+                {canEdit && (
+                  <Button
+                    onClick={() => {
+                      setShowAddUser(!showAddUser)
+                      setEditingUser(null)
+                      setUserForm({
+                        email: '',
+                        password: '',
+                        full_name: '',
+                        role: 'city_manager',
+                        city_id: '',
+                        permissions: 'full_access',
+                        phone: '',
+                        manager_role: '',
+                      })
+                      if (!showAddUser) {
+                        // Scroll to form after it's rendered
+                        setTimeout(() => {
+                          addUserFormRef.current?.scrollIntoView({ behavior: 'smooth', block: 'start' })
+                        }, 100)
+                      }
+                    }}
+                    className="md:hidden fixed bottom-6 left-6 z-40 w-14 h-14 rounded-full bg-gradient-to-br from-green-500 to-emerald-600 hover:from-green-600 hover:to-emerald-700 text-white shadow-lg hover:shadow-xl transition-all duration-200 flex items-center justify-center border-2 border-white"
+                  >
+                    {showAddUser ? (
+                      <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
+                      </svg>
+                    ) : (
+                      <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 4v16m8-8H4" />
+                      </svg>
+                    )}
+                  </Button>
+                )}
 
                 {/* User count */}
                 <div className="px-4 py-2 bg-gradient-to-r from-purple-50 to-pink-50 rounded-lg border-2 border-purple-200">
@@ -2815,18 +2870,19 @@ export default function SuperAdminPage() {
 
                           {/* Action buttons - Compact on mobile */}
                           <div className="flex gap-1.5 md:gap-2 flex-wrap w-full">
-                            <Button
-                              type="button"
-                              onClick={(e) => {
-                                e.preventDefault()
-                                e.stopPropagation()
-                                handleEditUser(user)
-                                setShowAddUser(false)
-                              }}
-                              className="bg-gradient-to-r from-blue-500 to-cyan-500 hover:from-blue-600 hover:to-cyan-600 text-white font-semibold text-xs md:text-sm px-2 md:px-4 py-1.5 md:py-2 rounded-lg transition-all duration-200 hover:scale-105 flex-1 md:flex-none"
-                            >
-                              <span className="md:hidden">✏️</span>
-                              <span className="hidden md:inline">✏️ ערוך</span>
+                            {canEdit && (<>
+                              <Button
+                                type="button"
+                                onClick={(e) => {
+                                  e.preventDefault()
+                                  e.stopPropagation()
+                                  handleEditUser(user)
+                                  setShowAddUser(false)
+                                }}
+                                className="bg-gradient-to-r from-blue-500 to-cyan-500 hover:from-blue-600 hover:to-cyan-600 text-white font-semibold text-xs md:text-sm px-2 md:px-4 py-1.5 md:py-2 rounded-lg transition-all duration-200 hover:scale-105 flex-1 md:flex-none"
+                              >
+                                <span className="md:hidden">✏️</span>
+                                <span className="hidden md:inline">✏️ ערוך</span>
                             </Button>
                             <Button
                               type="button"
@@ -2944,6 +3000,10 @@ export default function SuperAdminPage() {
                               <span className="md:hidden">🗑️</span>
                               <span className="hidden md:inline">🗑️ מחק</span>
                             </Button>
+                            </>)}
+                            {!canEdit && (
+                              <span className="text-sm text-gray-500 italic py-2">צפייה בלבד</span>
+                            )}
                           </div>
                         </div>
                       </div>
