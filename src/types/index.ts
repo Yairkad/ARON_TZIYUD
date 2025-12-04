@@ -56,6 +56,19 @@ export interface GlobalEquipmentPoolWithCategory extends GlobalEquipmentPool {
   category?: EquipmentCategory
 }
 
+export interface GlobalEquipmentPoolWithCreator extends GlobalEquipmentPool {
+  category?: EquipmentCategory
+  creator?: {
+    id: string
+    full_name?: string
+    city_id?: string
+    city?: {
+      id: string
+      name: string
+    }
+  }
+}
+
 export interface CityEquipment {
   id: string
   city_id: string

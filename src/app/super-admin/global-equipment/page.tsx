@@ -7,7 +7,7 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/com
 import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
 import { supabase } from '@/lib/supabase'
-import { GlobalEquipmentPool, EquipmentCategory } from '@/types'
+import { GlobalEquipmentPool, EquipmentCategory, GlobalEquipmentPoolWithCreator } from '@/types'
 import Logo from '@/components/Logo'
 import { checkAuth } from '@/lib/auth'
 import toast from 'react-hot-toast'
@@ -20,7 +20,7 @@ export default function GlobalEquipmentPage() {
 
   // Equipment state
   const [equipment, setEquipment] = useState<GlobalEquipmentPool[]>([])
-  const [pendingEquipment, setPendingEquipment] = useState<GlobalEquipmentPool[]>([])
+  const [pendingEquipment, setPendingEquipment] = useState<GlobalEquipmentPoolWithCreator[]>([])
   const [categories, setCategories] = useState<EquipmentCategory[]>([])
   const [loading, setLoading] = useState(false)
 
@@ -67,6 +67,15 @@ export default function GlobalEquipmentPage() {
   const [showMergeModal, setShowMergeModal] = useState(false)
   const [mergeSource, setMergeSource] = useState<GlobalEquipmentPool | null>(null)
   const [mergeTarget, setMergeTarget] = useState<string>('')
+
+  // Pending request action state (approve with merge / reject with reason)
+  const [pendingActionModal, setPendingActionModal] = useState<{
+    show: boolean
+    item: GlobalEquipmentPoolWithCreator | null
+    action: 'merge' | 'reject'
+  } | null>(null)
+  const [rejectReason, setRejectReason] = useState('')
+  const [pendingMergeTarget, setPendingMergeTarget] = useState<string>('')
 
   // Category equipment popup state
   const [showCategoryEquipment, setShowCategoryEquipment] = useState(false)
@@ -277,37 +286,82 @@ export default function GlobalEquipmentPage() {
     }
   }
 
-  const handleRejectEquipment = async (id: string, name: string) => {
-    showConfirmModal({
-      title: 'דחיית ציוד',
-      message: `האם אתה בטוח שברצונך לדחות את "${name}"?`,
-      icon: '❌',
-      confirmText: 'דחה',
-      confirmColor: 'orange',
-      onConfirm: async () => {
-        setConfirmModal(prev => prev ? { ...prev, loading: true } : null)
-        try {
-          const response = await fetch('/api/global-equipment/approve', {
-            method: 'POST',
-            headers: { 'Content-Type': 'application/json' },
-            body: JSON.stringify({ equipmentId: id, action: 'reject' })
-          })
+  const openMergeModal = (item: GlobalEquipmentPoolWithCreator) => {
+    setPendingActionModal({ show: true, item, action: 'merge' })
+    setPendingMergeTarget('')
+  }
 
-          const data = await response.json()
+  const openRejectModal = (item: GlobalEquipmentPoolWithCreator) => {
+    setPendingActionModal({ show: true, item, action: 'reject' })
+    setRejectReason('')
+  }
 
-          if (!response.ok) {
-            throw new Error(data.error || 'שגיאה בדחיית ציוד')
-          }
+  const closePendingActionModal = () => {
+    setPendingActionModal(null)
+    setRejectReason('')
+    setPendingMergeTarget('')
+  }
 
-          toast.success(data.message)
-          fetchEquipment()
-        } catch (error: any) {
-          toast.error(error.message)
-        } finally {
-          closeConfirmModal()
-        }
+  const handleMergeRequest = async () => {
+    if (!pendingActionModal?.item || !pendingMergeTarget) return
+
+    setLoading(true)
+    try {
+      const response = await fetch('/api/global-equipment/approve', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          equipmentId: pendingActionModal.item.id,
+          action: 'merge',
+          mergeTargetId: pendingMergeTarget
+        })
+      })
+
+      const data = await response.json()
+
+      if (!response.ok) {
+        throw new Error(data.error || 'שגיאה במיזוג')
       }
-    })
+
+      toast.success(data.message)
+      fetchEquipment()
+      closePendingActionModal()
+    } catch (error: any) {
+      toast.error(error.message)
+    } finally {
+      setLoading(false)
+    }
+  }
+
+  const handleRejectWithReason = async () => {
+    if (!pendingActionModal?.item) return
+
+    setLoading(true)
+    try {
+      const response = await fetch('/api/global-equipment/approve', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          equipmentId: pendingActionModal.item.id,
+          action: 'reject',
+          rejectReason: rejectReason.trim() || undefined
+        })
+      })
+
+      const data = await response.json()
+
+      if (!response.ok) {
+        throw new Error(data.error || 'שגיאה בדחיית ציוד')
+      }
+
+      toast.success(data.message)
+      fetchEquipment()
+      closePendingActionModal()
+    } catch (error: any) {
+      toast.error(error.message)
+    } finally {
+      setLoading(false)
+    }
   }
 
   const startEdit = (item: GlobalEquipmentPool) => {
@@ -1077,6 +1131,11 @@ export default function GlobalEquipmentPage() {
                                 <span className="inline-flex items-center px-2 py-0.5 rounded-full text-xs bg-white text-gray-600 border border-gray-200">
                                   {category?.name || 'ללא קטגוריה'}
                                 </span>
+                                {item.creator?.city?.name && (
+                                  <span className="inline-flex items-center px-2 py-0.5 rounded-full text-xs bg-blue-100 text-blue-700 border border-blue-200">
+                                    🏙️ {item.creator.city.name}
+                                  </span>
+                                )}
                                 <span className="text-xs text-gray-500">
                                   {new Date(item.created_at).toLocaleDateString('he-IL')}
                                 </span>
@@ -1085,19 +1144,26 @@ export default function GlobalEquipmentPage() {
                           </div>
 
                           {/* Actions */}
-                          <div className="flex gap-2 mt-3">
+                          <div className="flex flex-wrap gap-2 mt-3">
                             <Button
                               size="sm"
                               onClick={() => handleApproveEquipment(item.id, item.name)}
-                              className="flex-1 bg-green-600 hover:bg-green-700 text-white"
+                              className="flex-1 bg-green-600 hover:bg-green-700 text-white min-w-[80px]"
                             >
-                              ✓ אשר
+                              ✓ אשר חדש
                             </Button>
                             <Button
                               size="sm"
-                              variant="destructive"
-                              onClick={() => handleRejectEquipment(item.id, item.name)}
-                              className="flex-1"
+                              onClick={() => openMergeModal(item)}
+                              className="flex-1 bg-blue-600 hover:bg-blue-700 text-white min-w-[80px]"
+                            >
+                              🔄 מזג עם קיים
+                            </Button>
+                            <Button
+                              size="sm"
+                              variant="outline"
+                              onClick={() => openRejectModal(item)}
+                              className="flex-1 border-orange-300 text-orange-600 hover:bg-orange-50 min-w-[80px]"
                             >
                               ✗ דחה
                             </Button>
@@ -1489,6 +1555,121 @@ export default function GlobalEquipmentPage() {
             <div className="p-4 border-t border-gray-200">
               <Button onClick={() => setShowCategoryEquipment(false)} className="w-full">
                 סגור
+              </Button>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* Pending Action Modal (Merge / Reject with reason) */}
+      {pendingActionModal && pendingActionModal.show && (
+        <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50 p-4" onClick={closePendingActionModal}>
+          <div
+            className="bg-white rounded-2xl shadow-2xl max-w-lg w-full animate-in fade-in zoom-in duration-200"
+            onClick={(e) => e.stopPropagation()}
+          >
+            {/* Header */}
+            <div className={`p-6 rounded-t-2xl ${
+              pendingActionModal.action === 'merge'
+                ? 'bg-gradient-to-r from-blue-500 to-cyan-500'
+                : 'bg-gradient-to-r from-amber-500 to-orange-500'
+            }`}>
+              <div className="flex items-center gap-3">
+                <span className="text-4xl">
+                  {pendingActionModal.action === 'merge' ? '🔄' : '❌'}
+                </span>
+                <div>
+                  <h3 className="text-xl font-bold text-white">
+                    {pendingActionModal.action === 'merge' ? 'מיזוג עם פריט קיים' : 'דחיית בקשה'}
+                  </h3>
+                  <p className="text-white/80 text-sm">
+                    {pendingActionModal.item?.name}
+                    {pendingActionModal.item?.creator?.city?.name && (
+                      <span className="mr-2">• מעיר {pendingActionModal.item.creator.city.name}</span>
+                    )}
+                  </p>
+                </div>
+              </div>
+            </div>
+
+            {/* Content */}
+            <div className="p-6 space-y-4">
+              {pendingActionModal.action === 'merge' ? (
+                <>
+                  <p className="text-gray-600">
+                    בחר את הפריט הקיים במאגר שאליו תרצה למזג את הבקשה.
+                    הפריט הנבחר יתווסף לעיר המבקשת.
+                  </p>
+                  <div>
+                    <label className="block text-sm font-medium text-gray-700 mb-2">
+                      בחר פריט קיים למיזוג *
+                    </label>
+                    <select
+                      value={pendingMergeTarget}
+                      onChange={(e) => setPendingMergeTarget(e.target.value)}
+                      className="w-full p-3 border border-gray-300 rounded-xl text-base focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
+                    >
+                      <option value="">-- בחר פריט --</option>
+                      {equipment
+                        .filter(eq => eq.id !== pendingActionModal.item?.id)
+                        .map(eq => (
+                          <option key={eq.id} value={eq.id}>
+                            {eq.name}
+                            {categories.find(c => c.id === eq.category_id)?.name &&
+                              ` (${categories.find(c => c.id === eq.category_id)?.name})`
+                            }
+                          </option>
+                        ))
+                      }
+                    </select>
+                  </div>
+                </>
+              ) : (
+                <>
+                  <p className="text-gray-600">
+                    האם אתה בטוח שברצונך לדחות בקשה זו? ניתן להוסיף סיבה אופציונלית.
+                  </p>
+                  <div>
+                    <label className="block text-sm font-medium text-gray-700 mb-2">
+                      סיבת דחייה (אופציונלי)
+                    </label>
+                    <textarea
+                      value={rejectReason}
+                      onChange={(e) => setRejectReason(e.target.value)}
+                      placeholder="למשל: פריט דומה כבר קיים במאגר בשם אחר"
+                      rows={3}
+                      className="w-full p-3 border border-gray-300 rounded-xl text-base focus:ring-2 focus:ring-orange-500 focus:border-orange-500 resize-none"
+                    />
+                  </div>
+                </>
+              )}
+            </div>
+
+            {/* Actions */}
+            <div className="flex gap-3 p-6 pt-0">
+              <Button
+                onClick={closePendingActionModal}
+                disabled={loading}
+                className="flex-1 bg-gray-100 hover:bg-gray-200 text-gray-700 font-semibold py-3 rounded-xl"
+              >
+                ביטול
+              </Button>
+              <Button
+                onClick={pendingActionModal.action === 'merge' ? handleMergeRequest : handleRejectWithReason}
+                disabled={loading || (pendingActionModal.action === 'merge' && !pendingMergeTarget)}
+                className={`flex-1 text-white font-semibold py-3 rounded-xl ${
+                  pendingActionModal.action === 'merge'
+                    ? 'bg-gradient-to-r from-blue-500 to-cyan-500 hover:from-blue-600 hover:to-cyan-600'
+                    : 'bg-gradient-to-r from-amber-500 to-orange-500 hover:from-amber-600 hover:to-orange-600'
+                } disabled:opacity-50`}
+              >
+                {loading ? (
+                  <span className="animate-spin">⏳</span>
+                ) : pendingActionModal.action === 'merge' ? (
+                  '🔄 מזג'
+                ) : (
+                  '❌ דחה'
+                )}
               </Button>
             </div>
           </div>

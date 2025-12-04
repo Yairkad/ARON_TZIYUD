@@ -47,12 +47,21 @@ export async function GET(request: Request) {
       .eq('id', user.id)
       .single()
 
+    // Build select query - include creator info for pending items
+    let selectQuery = includeCategories
+      ? '*, category:equipment_categories(*)'
+      : '*'
+
+    // For pending items, also include creator's city info
+    if (status === 'pending_approval') {
+      selectQuery = includeCategories
+        ? '*, category:equipment_categories(*), creator:users!created_by(id, full_name, city_id, city:cities!city_id(id, name))'
+        : '*, creator:users!created_by(id, full_name, city_id, city:cities!city_id(id, name))'
+    }
+
     let query = supabase
       .from('global_equipment_pool')
-      .select(includeCategories
-        ? '*, category:equipment_categories(*)'
-        : '*'
-      )
+      .select(selectQuery)
       .order('name', { ascending: true })
 
     // Filter by status
