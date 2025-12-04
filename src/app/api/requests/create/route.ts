@@ -365,6 +365,24 @@ export async function POST(request: NextRequest) {
       // Continue anyway - push failure shouldn't block request creation
     }
 
+    // Send push notification to super admins who subscribed to this city
+    try {
+      await fetch(`${process.env.NEXT_PUBLIC_APP_URL || 'http://localhost:3000'}/api/push/send-to-city-subscribers`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          cityId,
+          title: `בקשה חדשה - ${city.name}`,
+          body: `${body.requester_name} שלח/ה בקשה לציוד`,
+          url: `/super-admin?tab=requests`
+        })
+      }).catch(err => {
+        console.error('Failed to send push to city subscribers:', err)
+      })
+    } catch (pushError) {
+      console.error('Error sending push to city subscribers:', pushError)
+    }
+
     // Send email notification to all city managers (fire and forget)
     if (managerEmails.length > 0) {
       try {
