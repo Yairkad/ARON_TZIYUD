@@ -2,7 +2,42 @@ import { NextResponse } from 'next/server'
 import type { NextRequest } from 'next/server'
 import { createServiceClient } from '@/lib/supabase-server'
 
+// UUID regex pattern
+const UUID_REGEX = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i
+
 export async function middleware(request: NextRequest) {
+  const pathname = request.nextUrl.pathname
+
+  // Handle city slug to UUID resolution
+  // Match /city/[slug] or /city/[slug]/admin patterns
+  const cityMatch = pathname.match(/^\/city\/([^\/]+)(\/.*)?$/)
+  if (cityMatch) {
+    const cityIdentifier = decodeURIComponent(cityMatch[1])
+    const restOfPath = cityMatch[2] || ''
+
+    // If it's not a UUID, try to resolve slug to UUID
+    if (!UUID_REGEX.test(cityIdentifier)) {
+      try {
+        const supabase = createServiceClient()
+        const { data: city } = await supabase
+          .from('cities')
+          .select('id')
+          .eq('slug', cityIdentifier)
+          .single()
+
+        if (city) {
+          // Rewrite the URL internally to use UUID (browser still shows slug)
+          const newUrl = new URL(request.url)
+          newUrl.pathname = `/city/${city.id}${restOfPath}`
+          return NextResponse.rewrite(newUrl)
+        }
+        // If slug not found, continue (page will handle 404)
+      } catch (error) {
+        console.error('Error resolving city slug:', error)
+      }
+    }
+  }
+
   const response = NextResponse.next()
 
   // Get tokens from cookies

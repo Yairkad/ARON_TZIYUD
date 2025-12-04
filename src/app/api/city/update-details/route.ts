@@ -220,6 +220,22 @@ export async function POST(request: NextRequest) {
     if (updateData.max_request_distance_km !== undefined && city.max_request_distance_km !== updateData.max_request_distance_km) changedFields.push('טווח מרחק לבקשות')
     if (updateData.is_temporarily_closed !== undefined && city.is_temporarily_closed !== updateData.is_temporarily_closed) {
       changedFields.push(updateData.is_temporarily_closed ? 'הארון נסגר זמנית' : 'הארון נפתח')
+
+      // Send push notification to super admins
+      try {
+        await fetch(`${process.env.NEXT_PUBLIC_APP_URL || 'http://localhost:3000'}/api/push/send-to-super-admins`, {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({
+            title: updateData.is_temporarily_closed ? 'ארון נסגר' : 'ארון נפתח',
+            body: `${city.name}: ${updateData.is_temporarily_closed ? 'הארון נסגר זמנית' : 'הארון נפתח מחדש'}`,
+            url: '/super-admin?tab=cities',
+            type: 'cabinet-status-change'
+          })
+        })
+      } catch (pushError) {
+        console.error('Error sending push to super admins:', pushError)
+      }
     }
 
     if (changedFields.length > 0) {

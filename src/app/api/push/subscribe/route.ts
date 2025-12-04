@@ -29,6 +29,15 @@ export async function POST(request: NextRequest) {
       )
     }
 
+    // Get user role
+    const { data: userData } = await supabase
+      .from('users')
+      .select('role')
+      .eq('id', user.id)
+      .single()
+
+    const isSuperAdmin = userData?.role === 'super_admin'
+
     const body = await request.json()
     const { subscription, userAgent, cityId } = body
 
@@ -39,7 +48,8 @@ export async function POST(request: NextRequest) {
       )
     }
 
-    if (!cityId) {
+    // cityId is required for city managers, optional for super admin
+    if (!cityId && !isSuperAdmin) {
       return NextResponse.json(
         { success: false, error: 'חסר cityId' },
         { status: 400 }
@@ -58,11 +68,12 @@ export async function POST(request: NextRequest) {
       const { error: updateError } = await supabase
         .from('push_subscriptions')
         .update({
-          city_id: cityId,
+          city_id: cityId || null,
           p256dh: subscription.keys.p256dh,
           auth: subscription.keys.auth,
           user_agent: userAgent,
           is_active: true,
+          is_super_admin: isSuperAdmin,
           updated_at: new Date().toISOString(),
         })
         .eq('id', existingSub.id)
@@ -86,11 +97,12 @@ export async function POST(request: NextRequest) {
       .from('push_subscriptions')
       .insert({
         user_id: user.id,
-        city_id: cityId,
+        city_id: cityId || null,
         endpoint: subscription.endpoint,
         p256dh: subscription.keys.p256dh,
         auth: subscription.keys.auth,
         user_agent: userAgent,
+        is_super_admin: isSuperAdmin,
       })
 
     if (insertError) {

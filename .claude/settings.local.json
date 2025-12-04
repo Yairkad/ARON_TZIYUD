@@ -18,7 +18,12 @@
       "Bash(git -C \"c:\\Users\\יאיר קדוש\\ARON_TZIYUD\" commit -m \"$(cat <<''EOF''\nFeature: Consolidated edit details modal for station managers\n\n1. Replaced separate \"Edit Contacts\" and \"Change Password\" buttons\n   with a single \"Edit Details\" (ערוך פרטים) button\n\n2. New Edit Details modal with 3 sections:\n   - Address editing (new feature)\n   - Contacts management (moved from separate modal)\n   - Password change (moved from separate modal)\n\n3. Updated /api/wheel-stations/[stationId] PUT:\n   - Station managers can now update address (in addition to super admin)\n   - Uses manager_phone + current_password for manager auth\n   - Super admin auth remains unchanged\n\n4. UI improvements:\n   - Each section in its own styled box\n   - Responsive flex layouts for inputs\n   - Added smallBtn and removeBtn styles\n\n🤖 Generated with [Claude Code](https://claude.com/claude-code)\n\nCo-Authored-By: Claude <noreply@anthropic.com>\nEOF\n)\")",
       "Bash(git -C \"c:\\Users\\יאיר קדוש\\ARON_TZIYUD\" push)",
       "Bash(git checkout:*)",
-      "Bash(git add:*)"
+      "Bash(git add:*)",
+      "Bash(git commit -m \"$(cat <<''EOF''\nFix: Push notifications not saving cityId\n\nThe subscribe API was trying to get cityId from a non-existent\nuser_cities table. Now it correctly receives cityId from the\nclient request body (which push.ts already sends).\n\nAlso added caching to service worker for PWA support.\n\n🤖 Generated with [Claude Code](https://claude.com/claude-code)\n\nCo-Authored-By: Claude <noreply@anthropic.com>\nEOF\n)\")",
+      "Bash(git push:*)",
+      "Bash(npm run build:*)",
+      "Bash(git commit:*)",
+      "Bash(git -C \"C:\\Users\\יאיר קדוש\\ARON_TZIYUD\" add src/middleware.ts src/types/index.ts src/lib/city-url.ts src/app/api/super-admin/add-city/route.ts supabase/migrations/20251204_add_city_slug.sql)"
     ],
     "deny": [],
     "ask": []

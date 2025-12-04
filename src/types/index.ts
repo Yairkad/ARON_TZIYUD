@@ -1,6 +1,7 @@
 export interface City {
   id: string
   name: string
+  slug?: string | null  // URL-friendly identifier (Hebrew name with hyphens)
   manager1_name: string
   manager1_phone: string
   manager2_name?: string | null

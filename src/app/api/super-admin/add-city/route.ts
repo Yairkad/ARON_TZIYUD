@@ -2,6 +2,7 @@ import { NextRequest, NextResponse } from 'next/server'
 import { supabaseServer, createServiceClient } from '@/lib/supabase-server'
 import bcrypt from 'bcryptjs'
 import { logEmail } from '@/lib/email'
+import { generateSlug } from '@/lib/city-url'
 
 /**
  * Extract coordinates from a Google Maps URL
@@ -165,11 +166,15 @@ export async function POST(request: NextRequest) {
       }
     }
 
+    // Generate slug from city name (Hebrew name with hyphens)
+    const slug = generateSlug(name)
+
     // הוספת העיר
     const { data, error } = await supabaseServer
       .from('cities')
       .insert([{
         name,
+        slug,
         manager1_name,
         manager1_phone,
         manager2_name: manager2_name || null,

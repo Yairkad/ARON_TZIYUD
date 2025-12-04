@@ -169,6 +169,24 @@ export async function POST(request: Request) {
       return NextResponse.json({ error: error.message }, { status: 500 })
     }
 
+    // Send push notification to super admins if pending approval
+    if (status === 'pending_approval') {
+      try {
+        await fetch(`${process.env.NEXT_PUBLIC_APP_URL || 'http://localhost:3000'}/api/push/send-to-super-admins`, {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({
+            title: 'ציוד חדש ממתין לאישור',
+            body: `הפריט "${name.trim()}" נוסף ומחכה לאישור`,
+            url: '/super-admin?tab=equipment',
+            type: 'equipment-pending'
+          })
+        })
+      } catch (pushError) {
+        console.error('Error sending push to super admins:', pushError)
+      }
+    }
+
     return NextResponse.json({
       equipment: newEquipment,
       message: status === 'pending_approval'

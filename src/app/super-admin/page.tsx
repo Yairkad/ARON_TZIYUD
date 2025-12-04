@@ -12,6 +12,13 @@ import Logo from '@/components/Logo'
 import { checkAuth, logout } from '@/lib/auth'
 import toast from 'react-hot-toast'
 import { VERSION } from '@/lib/version'
+import {
+  isPushSupported,
+  requestNotificationPermission,
+  subscribeToPush,
+  unsubscribeFromPush,
+  isSubscribed as checkPushSubscribed
+} from '@/lib/push'
 
 export default function SuperAdminPage() {
   const router = useRouter()
@@ -92,6 +99,11 @@ export default function SuperAdminPage() {
   // Profile dropdown state
   const [showProfileDropdown, setShowProfileDropdown] = useState(false)
 
+  // Push notifications state
+  const [pushEnabled, setPushEnabled] = useState(false)
+  const [pushSupported, setPushSupported] = useState(false)
+  const [enablingPush, setEnablingPush] = useState(false)
+
   // Reports State
   const [reportsData, setReportsData] = useState<any>(null)
   const [reportsLoading, setReportsLoading] = useState(false)
@@ -130,6 +142,44 @@ export default function SuperAdminPage() {
     setConfirmModal(null)
   }
 
+  // Toggle push notifications for super admin
+  const handleTogglePush = async () => {
+    if (enablingPush) return
+
+    setEnablingPush(true)
+    try {
+      if (pushEnabled) {
+        // Disable push
+        await unsubscribeFromPush()
+        setPushEnabled(false)
+        toast.success('התראות הושבתו')
+      } else {
+        // Enable push
+        const permissionGranted = await requestNotificationPermission()
+        if (!permissionGranted) {
+          toast.error('יש לאשר התראות בדפדפן')
+          return
+        }
+
+        const vapidKey = process.env.NEXT_PUBLIC_VAPID_PUBLIC_KEY
+        if (!vapidKey) {
+          toast.error('מפתח VAPID לא מוגדר')
+          return
+        }
+
+        // Subscribe without cityId for super admin
+        await subscribeToPush('', vapidKey)
+        setPushEnabled(true)
+        toast.success('התראות הופעלו בהצלחה!')
+      }
+    } catch (error) {
+      console.error('Error toggling push:', error)
+      toast.error('שגיאה בהפעלת/השבתת התראות')
+    } finally {
+      setEnablingPush(false)
+    }
+  }
+
   // Check authentication on mount
   useEffect(() => {
     const verifyAuth = async () => {
@@ -141,6 +191,13 @@ export default function SuperAdminPage() {
         setIsAuthenticated(true)
         setCurrentUser(user)
         console.log('✅ User is authenticated as super admin')
+
+        // Check push notification status
+        if (isPushSupported()) {
+          setPushSupported(true)
+          const subscribed = await checkPushSubscribed()
+          setPushEnabled(subscribed)
+        }
       } else {
         setIsAuthenticated(false)
         setCurrentUser(null)
@@ -1415,6 +1472,23 @@ export default function SuperAdminPage() {
                   <span className="text-2xl">🔑</span>
                   <span className="text-gray-700 text-base sm:text-lg font-medium">שינוי סיסמה</span>
                 </button>
+                {pushSupported && (
+                  <button
+                    onClick={handleTogglePush}
+                    disabled={enablingPush}
+                    className="w-full flex items-center justify-between p-4 rounded-xl hover:bg-gray-50 transition-colors text-right"
+                  >
+                    <div className="flex items-center gap-4">
+                      <span className="text-2xl">{pushEnabled ? '🔔' : '🔕'}</span>
+                      <span className="text-gray-700 text-base sm:text-lg font-medium">
+                        {enablingPush ? 'מעדכן...' : 'התראות דחיפה'}
+                      </span>
+                    </div>
+                    <div className={`w-12 h-7 rounded-full transition-colors ${pushEnabled ? 'bg-green-500' : 'bg-gray-300'} relative`}>
+                      <div className={`absolute top-1 w-5 h-5 rounded-full bg-white shadow transition-transform ${pushEnabled ? 'right-1' : 'left-1'}`} />
+                    </div>
+                  </button>
+                )}
                 <div className="border-t border-gray-200 my-3" />
                 <button
                   onClick={async () => {
