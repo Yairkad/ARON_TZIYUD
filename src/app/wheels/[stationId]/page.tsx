@@ -279,7 +279,11 @@ export default function StationPage({ params }: { params: Promise<{ stationId: s
       const response = await fetch(`/api/wheel-stations/${stationId}/wheels/${selectedWheel.id}/borrow`, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify(borrowForm)
+        body: JSON.stringify({
+          ...borrowForm,
+          manager_phone: currentManager?.phone,
+          manager_password: sessionPassword
+        })
       })
       if (!response.ok) {
         const data = await response.json()
@@ -316,7 +320,12 @@ export default function StationPage({ params }: { params: Promise<{ stationId: s
         setActionLoading(true)
         try {
           const response = await fetch(`/api/wheel-stations/${stationId}/wheels/${wheel.id}/borrow`, {
-            method: 'PUT'
+            method: 'PUT',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({
+              manager_phone: currentManager?.phone,
+              manager_password: sessionPassword
+            })
           })
           if (!response.ok) throw new Error('Failed to return')
           await fetchStation()
@@ -348,7 +357,9 @@ export default function StationPage({ params }: { params: Promise<{ stationId: s
           bolt_spacing: parseFloat(wheelForm.bolt_spacing),
           category: wheelForm.category || null,
           is_donut: wheelForm.is_donut,
-          notes: wheelForm.notes || null
+          notes: wheelForm.notes || null,
+          manager_phone: currentManager?.phone,
+          manager_password: sessionPassword
         })
       })
       if (!response.ok) {
@@ -386,7 +397,12 @@ export default function StationPage({ params }: { params: Promise<{ stationId: s
         setActionLoading(true)
         try {
           const response = await fetch(`/api/wheel-stations/${stationId}/wheels/${wheel.id}`, {
-            method: 'DELETE'
+            method: 'DELETE',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({
+              manager_phone: currentManager?.phone,
+              manager_password: sessionPassword
+            })
           })
           if (!response.ok) throw new Error('Failed to delete')
           await fetchStation()
@@ -1072,7 +1088,7 @@ export default function StationPage({ params }: { params: Promise<{ stationId: s
                 onChange={e => setWheelForm({...wheelForm, category: e.target.value})}
                 style={styles.input}
               >
-                <option value="">בחר קטגוריה</option>
+                <option value="">ללא קטגוריה</option>
                 <option value="מכוניות גרמניות">מכוניות גרמניות</option>
                 <option value="מכוניות צרפתיות">מכוניות צרפתיות</option>
                 <option value="מכוניות יפניות וקוראניות">מכוניות יפניות וקוראניות</option>

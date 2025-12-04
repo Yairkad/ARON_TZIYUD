@@ -6,7 +6,6 @@
 
 import { NextRequest, NextResponse } from 'next/server'
 import { createClient } from '@supabase/supabase-js'
-import { cookies } from 'next/headers'
 
 const supabase = createClient(
   process.env.NEXT_PUBLIC_SUPABASE_URL!,
@@ -17,46 +16,38 @@ interface RouteParams {
   params: Promise<{ stationId: string }>
 }
 
-// Helper to verify station manager or super admin
-async function verifyManager(stationId: string): Promise<{ success: boolean; error?: string; userId?: string }> {
-  const cookieStore = await cookies()
-  const accessToken = cookieStore.get('access_token')?.value
-
-  if (!accessToken) {
-    return { success: false, error: 'Unauthorized' }
-  }
-
-  const { data: { user }, error: authError } = await supabase.auth.getUser(accessToken)
-  if (authError || !user) {
-    return { success: false, error: 'Unauthorized' }
-  }
-
-  const { data: userData } = await supabase
-    .from('users')
-    .select('role, phone')
-    .eq('id', user.id)
+// Helper to verify station manager (by phone and password)
+async function verifyStationManager(stationId: string, phone: string, password: string): Promise<{ success: boolean; error?: string }> {
+  // Get station with password and managers
+  const { data: station, error } = await supabase
+    .from('wheel_stations')
+    .select(`
+      manager_password,
+      wheel_station_managers (phone)
+    `)
+    .eq('id', stationId)
     .single()
 
-  // Super admins can manage all stations
-  if (userData?.role === 'super_admin') {
-    return { success: true, userId: user.id }
+  if (error || !station) {
+    return { success: false, error: 'Station not found' }
   }
 
-  // Check if user is a station manager by phone number
-  if (userData?.phone) {
-    const { data: manager } = await supabase
-      .from('wheel_station_managers')
-      .select('id')
-      .eq('station_id', stationId)
-      .eq('phone', userData.phone)
-      .single()
-
-    if (manager) {
-      return { success: true, userId: user.id }
-    }
+  // Check password
+  if (station.manager_password !== password) {
+    return { success: false, error: 'סיסמא שגויה' }
   }
 
-  return { success: false, error: 'Forbidden - Station manager only' }
+  // Check if phone is in managers list
+  const cleanPhone = phone.replace(/\D/g, '')
+  const isManager = station.wheel_station_managers.some((m: { phone: string }) =>
+    m.phone.replace(/\D/g, '') === cleanPhone
+  )
+
+  if (!isManager) {
+    return { success: false, error: 'מספר הטלפון לא נמצא ברשימת המנהלים' }
+  }
+
+  return { success: true }
 }
 
 // GET - Get all wheels for a station (public access)
@@ -86,14 +77,18 @@ export async function GET(request: NextRequest, { params }: RouteParams) {
 export async function POST(request: NextRequest, { params }: RouteParams) {
   try {
     const { stationId } = await params
+    const body = await request.json()
+    const { wheel_number, rim_size, bolt_count, bolt_spacing, category, is_donut, notes, manager_phone, manager_password } = body
 
-    const auth = await verifyManager(stationId)
-    if (!auth.success) {
-      return NextResponse.json({ error: auth.error }, { status: auth.error === 'Unauthorized' ? 401 : 403 })
+    // Verify manager credentials
+    if (!manager_phone || !manager_password) {
+      return NextResponse.json({ error: 'נדרש טלפון וסיסמא לביצוע פעולה זו' }, { status: 401 })
     }
 
-    const body = await request.json()
-    const { wheel_number, rim_size, bolt_count, bolt_spacing, category, is_donut, notes } = body
+    const auth = await verifyStationManager(stationId, manager_phone, manager_password)
+    if (!auth.success) {
+      return NextResponse.json({ error: auth.error }, { status: 401 })
+    }
 
     if (!wheel_number || !rim_size || !bolt_count || !bolt_spacing) {
       return NextResponse.json({ error: 'Missing required fields' }, { status: 400 })

@@ -6,7 +6,6 @@
 
 import { NextRequest, NextResponse } from 'next/server'
 import { createClient } from '@supabase/supabase-js'
-import { cookies } from 'next/headers'
 
 const supabase = createClient(
   process.env.NEXT_PUBLIC_SUPABASE_URL!,
@@ -17,56 +16,55 @@ interface RouteParams {
   params: Promise<{ stationId: string; wheelId: string }>
 }
 
-// Helper to verify station manager or super admin
-async function verifyManager(stationId: string): Promise<{ success: boolean; error?: string; userId?: string }> {
-  const cookieStore = await cookies()
-  const accessToken = cookieStore.get('access_token')?.value
-
-  if (!accessToken) {
-    return { success: false, error: 'Unauthorized' }
-  }
-
-  const { data: { user }, error: authError } = await supabase.auth.getUser(accessToken)
-  if (authError || !user) {
-    return { success: false, error: 'Unauthorized' }
-  }
-
-  const { data: userData } = await supabase
-    .from('users')
-    .select('role, phone')
-    .eq('id', user.id)
+// Helper to verify station manager (by phone and password)
+async function verifyStationManager(stationId: string, phone: string, password: string): Promise<{ success: boolean; error?: string; managerId?: string }> {
+  // Get station with password and managers
+  const { data: station, error } = await supabase
+    .from('wheel_stations')
+    .select(`
+      manager_password,
+      wheel_station_managers (id, phone)
+    `)
+    .eq('id', stationId)
     .single()
 
-  // Super admins can manage all stations
-  if (userData?.role === 'super_admin') {
-    return { success: true, userId: user.id }
+  if (error || !station) {
+    return { success: false, error: 'Station not found' }
   }
 
-  // Check if user is a station manager by phone number
-  if (userData?.phone) {
-    const { data: manager } = await supabase
-      .from('wheel_station_managers')
-      .select('id')
-      .eq('station_id', stationId)
-      .eq('phone', userData.phone)
-      .single()
-
-    if (manager) {
-      return { success: true, userId: user.id }
-    }
+  // Check password
+  if (station.manager_password !== password) {
+    return { success: false, error: 'סיסמא שגויה' }
   }
 
-  return { success: false, error: 'Forbidden - Station manager only' }
+  // Check if phone is in managers list
+  const cleanPhone = phone.replace(/\D/g, '')
+  const manager = station.wheel_station_managers.find((m: { id: string; phone: string }) =>
+    m.phone.replace(/\D/g, '') === cleanPhone
+  )
+
+  if (!manager) {
+    return { success: false, error: 'מספר הטלפון לא נמצא ברשימת המנהלים' }
+  }
+
+  return { success: true, managerId: manager.id }
 }
 
 // POST - Mark wheel as borrowed
 export async function POST(request: NextRequest, { params }: RouteParams) {
   try {
     const { stationId, wheelId } = await params
+    const body = await request.json()
+    const { borrower_name, borrower_phone, expected_return_date, deposit_type, deposit_details, notes, manager_phone, manager_password } = body
 
-    const auth = await verifyManager(stationId)
+    // Verify manager credentials
+    if (!manager_phone || !manager_password) {
+      return NextResponse.json({ error: 'נדרש טלפון וסיסמא לביצוע פעולה זו' }, { status: 401 })
+    }
+
+    const auth = await verifyStationManager(stationId, manager_phone, manager_password)
     if (!auth.success) {
-      return NextResponse.json({ error: auth.error }, { status: auth.error === 'Unauthorized' ? 401 : 403 })
+      return NextResponse.json({ error: auth.error }, { status: 401 })
     }
 
     // Check wheel exists and is available
@@ -82,14 +80,11 @@ export async function POST(request: NextRequest, { params }: RouteParams) {
     }
 
     if (!wheel.is_available) {
-      return NextResponse.json({ error: 'Wheel is already borrowed' }, { status: 400 })
+      return NextResponse.json({ error: 'הגלגל כבר מושאל' }, { status: 400 })
     }
 
-    const body = await request.json()
-    const { borrower_name, borrower_phone, expected_return_date, deposit_type, deposit_details, notes } = body
-
     if (!borrower_name || !borrower_phone) {
-      return NextResponse.json({ error: 'Borrower name and phone are required' }, { status: 400 })
+      return NextResponse.json({ error: 'נא למלא שם וטלפון של השואל' }, { status: 400 })
     }
 
     // Create borrow record
@@ -105,7 +100,7 @@ export async function POST(request: NextRequest, { params }: RouteParams) {
         deposit_details,
         notes,
         status: 'borrowed',
-        created_by_manager_id: auth.userId
+        created_by_manager_id: auth.managerId
       })
       .select()
       .single()
@@ -139,10 +134,17 @@ export async function POST(request: NextRequest, { params }: RouteParams) {
 export async function PUT(request: NextRequest, { params }: RouteParams) {
   try {
     const { stationId, wheelId } = await params
+    const body = await request.json()
+    const { manager_phone, manager_password } = body
 
-    const auth = await verifyManager(stationId)
+    // Verify manager credentials
+    if (!manager_phone || !manager_password) {
+      return NextResponse.json({ error: 'נדרש טלפון וסיסמא לביצוע פעולה זו' }, { status: 401 })
+    }
+
+    const auth = await verifyStationManager(stationId, manager_phone, manager_password)
     if (!auth.success) {
-      return NextResponse.json({ error: auth.error }, { status: auth.error === 'Unauthorized' ? 401 : 403 })
+      return NextResponse.json({ error: auth.error }, { status: 401 })
     }
 
     // Find active borrow
@@ -154,7 +156,7 @@ export async function PUT(request: NextRequest, { params }: RouteParams) {
       .single()
 
     if (borrowError || !borrow) {
-      return NextResponse.json({ error: 'No active borrow found' }, { status: 404 })
+      return NextResponse.json({ error: 'לא נמצאה השאלה פעילה' }, { status: 404 })
     }
 
     // Update borrow record
@@ -163,7 +165,7 @@ export async function PUT(request: NextRequest, { params }: RouteParams) {
       .update({
         status: 'returned',
         actual_return_date: new Date().toISOString(),
-        returned_by_manager_id: auth.userId
+        returned_by_manager_id: auth.managerId
       })
       .eq('id', borrow.id)
 
