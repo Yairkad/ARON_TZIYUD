@@ -109,15 +109,24 @@ export async function GET(request: NextRequest) {
     const results = Array.from(stationMap.values())
 
     // Get unique filter options from all wheels (for dropdown suggestions)
-    const { data: allWheels } = await supabase
+    const { data: allWheels, error: filterError } = await supabase
       .from('wheels')
-      .select('rim_size, bolt_count, bolt_spacing')
+      .select(`
+        rim_size,
+        bolt_count,
+        bolt_spacing,
+        wheel_stations!inner (is_active)
+      `)
       .eq('wheel_stations.is_active', true)
 
+    if (filterError) {
+      console.error('Error fetching filter options:', filterError)
+    }
+
     const filterOptions = {
-      rim_sizes: [...new Set(allWheels?.map(w => w.rim_size))].sort(),
-      bolt_counts: [...new Set(allWheels?.map(w => w.bolt_count))].sort((a, b) => a - b),
-      bolt_spacings: [...new Set(allWheels?.map(w => w.bolt_spacing))].sort((a, b) => a - b)
+      rim_sizes: [...new Set(allWheels?.map(w => w.rim_size).filter(Boolean))].sort(),
+      bolt_counts: [...new Set(allWheels?.map(w => w.bolt_count).filter(Boolean))].sort((a, b) => a - b),
+      bolt_spacings: [...new Set(allWheels?.map(w => w.bolt_spacing).filter(Boolean))].sort((a, b) => a - b)
     }
 
     return NextResponse.json({
