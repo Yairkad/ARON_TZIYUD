@@ -54,10 +54,34 @@ export async function GET(request: NextRequest, { params }: RouteParams) {
       .eq('station_id', stationId)
       .order('wheel_number')
 
+    // Get active borrows to show borrower info
+    const { data: activeBorrows } = await supabase
+      .from('wheel_borrows')
+      .select('wheel_id, borrower_name, borrower_phone, borrow_date, expected_return_date, deposit_type, deposit_details')
+      .eq('station_id', stationId)
+      .eq('status', 'borrowed')
+
+    // Map borrows to wheels
+    const borrowMap = new Map(
+      activeBorrows?.map(b => [b.wheel_id, {
+        borrower_name: b.borrower_name,
+        borrower_phone: b.borrower_phone,
+        borrow_date: b.borrow_date,
+        expected_return_date: b.expected_return_date,
+        deposit_type: b.deposit_type,
+        deposit_details: b.deposit_details
+      }]) || []
+    )
+
+    const wheelsWithBorrowInfo = wheels?.map(w => ({
+      ...w,
+      current_borrow: w.is_available ? undefined : borrowMap.get(w.id)
+    })) || []
+
     return NextResponse.json({
       station: {
         ...station,
-        wheels: wheels || [],
+        wheels: wheelsWithBorrowInfo,
         totalWheels: wheels?.length || 0,
         availableWheels: wheels?.filter(w => w.is_available).length || 0
       }

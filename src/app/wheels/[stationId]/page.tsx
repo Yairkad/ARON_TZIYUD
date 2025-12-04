@@ -13,6 +13,14 @@ interface Wheel {
   is_donut: boolean
   notes: string | null
   is_available: boolean
+  current_borrow?: {
+    borrower_name: string
+    borrower_phone: string
+    borrow_date: string
+    expected_return_date?: string
+    deposit_type?: string
+    deposit_details?: string
+  }
 }
 
 interface Manager {
@@ -33,6 +41,25 @@ interface Station {
   availableWheels: number
 }
 
+interface BorrowForm {
+  borrower_name: string
+  borrower_phone: string
+  expected_return_date: string
+  deposit_type: string
+  deposit_details: string
+  notes: string
+}
+
+interface WheelForm {
+  wheel_number: string
+  rim_size: string
+  bolt_count: string
+  bolt_spacing: string
+  category: string
+  is_donut: boolean
+  notes: string
+}
+
 type ViewMode = 'cards' | 'table'
 
 export default function StationPage({ params }: { params: Promise<{ stationId: string }> }) {
@@ -42,6 +69,40 @@ export default function StationPage({ params }: { params: Promise<{ stationId: s
   const [error, setError] = useState<string | null>(null)
   const [viewMode, setViewMode] = useState<ViewMode>('cards')
   const [showAdvancedFilters, setShowAdvancedFilters] = useState(false)
+
+  // Manager mode
+  const [isManager, setIsManager] = useState(false)
+  const [showLoginModal, setShowLoginModal] = useState(false)
+  const [loginPhone, setLoginPhone] = useState('')
+  const [loginPassword, setLoginPassword] = useState('')
+  const [loginError, setLoginError] = useState('')
+
+  // Modals
+  const [showBorrowModal, setShowBorrowModal] = useState(false)
+  const [showAddWheelModal, setShowAddWheelModal] = useState(false)
+  const [showEditWheelModal, setShowEditWheelModal] = useState(false)
+  const [selectedWheel, setSelectedWheel] = useState<Wheel | null>(null)
+  const [actionLoading, setActionLoading] = useState(false)
+
+  // Forms
+  const [borrowForm, setBorrowForm] = useState<BorrowForm>({
+    borrower_name: '',
+    borrower_phone: '',
+    expected_return_date: '',
+    deposit_type: '',
+    deposit_details: '',
+    notes: ''
+  })
+
+  const [wheelForm, setWheelForm] = useState<WheelForm>({
+    wheel_number: '',
+    rim_size: '',
+    bolt_count: '4',
+    bolt_spacing: '',
+    category: '',
+    is_donut: false,
+    notes: ''
+  })
 
   // Filters
   const [rimSizeFilter, setRimSizeFilter] = useState('')
@@ -53,7 +114,16 @@ export default function StationPage({ params }: { params: Promise<{ stationId: s
 
   useEffect(() => {
     fetchStation()
+    // Check if already logged in
+    const managerToken = localStorage.getItem(`wheel_manager_${stationId}`)
+    if (managerToken) {
+      setIsManager(true)
+    }
   }, [stationId])
+
+  // Contacts management
+  const [showContactsModal, setShowContactsModal] = useState(false)
+  const [contacts, setContacts] = useState<Manager[]>([])
 
   const fetchStation = async () => {
     try {
@@ -61,12 +131,188 @@ export default function StationPage({ params }: { params: Promise<{ stationId: s
       if (!response.ok) throw new Error('Failed to fetch station')
       const data = await response.json()
       setStation(data.station)
+      setContacts(data.station.wheel_station_managers || [])
     } catch (err) {
       setError('שגיאה בטעינת התחנה')
       console.error(err)
     } finally {
       setLoading(false)
     }
+  }
+
+  // Manager login - check if phone is in station managers
+  const handleLogin = () => {
+    const cleanPhone = loginPhone.replace(/\D/g, '')
+    const manager = station?.wheel_station_managers.find(m =>
+      m.phone.replace(/\D/g, '') === cleanPhone
+    )
+    if (manager) {
+      setIsManager(true)
+      localStorage.setItem(`wheel_manager_${stationId}`, 'true')
+      setShowLoginModal(false)
+      setLoginError('')
+    } else {
+      setLoginError('מספר הטלפון לא נמצא ברשימת המנהלים')
+    }
+  }
+
+  const handleLogout = () => {
+    setIsManager(false)
+    localStorage.removeItem(`wheel_manager_${stationId}`)
+  }
+
+  // Borrow wheel
+  const handleBorrow = async () => {
+    if (!selectedWheel || !borrowForm.borrower_name || !borrowForm.borrower_phone) {
+      alert('נא למלא שם וטלפון של השואל')
+      return
+    }
+    setActionLoading(true)
+    try {
+      const response = await fetch(`/api/wheel-stations/${stationId}/wheels/${selectedWheel.id}/borrow`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(borrowForm)
+      })
+      if (!response.ok) {
+        const data = await response.json()
+        throw new Error(data.error || 'Failed to borrow')
+      }
+      await fetchStation()
+      setShowBorrowModal(false)
+      setSelectedWheel(null)
+      setBorrowForm({
+        borrower_name: '',
+        borrower_phone: '',
+        expected_return_date: '',
+        deposit_type: '',
+        deposit_details: '',
+        notes: ''
+      })
+      alert('הגלגל הושאל בהצלחה!')
+    } catch (err: unknown) {
+      alert(err instanceof Error ? err.message : 'שגיאה בהשאלה')
+    } finally {
+      setActionLoading(false)
+    }
+  }
+
+  // Return wheel
+  const handleReturn = async (wheel: Wheel) => {
+    if (!confirm(`להחזיר את גלגל #${wheel.wheel_number}?`)) return
+    setActionLoading(true)
+    try {
+      const response = await fetch(`/api/wheel-stations/${stationId}/wheels/${wheel.id}/borrow`, {
+        method: 'PUT'
+      })
+      if (!response.ok) throw new Error('Failed to return')
+      await fetchStation()
+      alert('הגלגל הוחזר בהצלחה!')
+    } catch {
+      alert('שגיאה בהחזרה')
+    } finally {
+      setActionLoading(false)
+    }
+  }
+
+  // Add wheel
+  const handleAddWheel = async () => {
+    if (!wheelForm.wheel_number || !wheelForm.rim_size || !wheelForm.bolt_spacing) {
+      alert('נא למלא מספר גלגל, גודל ג\'אנט ומרווח ברגים')
+      return
+    }
+    setActionLoading(true)
+    try {
+      const response = await fetch(`/api/wheel-stations/${stationId}/wheels`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          wheel_number: parseInt(wheelForm.wheel_number),
+          rim_size: wheelForm.rim_size,
+          bolt_count: parseInt(wheelForm.bolt_count),
+          bolt_spacing: parseFloat(wheelForm.bolt_spacing),
+          category: wheelForm.category || null,
+          is_donut: wheelForm.is_donut,
+          notes: wheelForm.notes || null
+        })
+      })
+      if (!response.ok) {
+        const data = await response.json()
+        throw new Error(data.error || 'Failed to add')
+      }
+      await fetchStation()
+      setShowAddWheelModal(false)
+      setWheelForm({
+        wheel_number: '',
+        rim_size: '',
+        bolt_count: '4',
+        bolt_spacing: '',
+        category: '',
+        is_donut: false,
+        notes: ''
+      })
+      alert('הגלגל נוסף בהצלחה!')
+    } catch (err: unknown) {
+      alert(err instanceof Error ? err.message : 'שגיאה בהוספה')
+    } finally {
+      setActionLoading(false)
+    }
+  }
+
+  // Delete wheel
+  const handleDeleteWheel = async (wheel: Wheel) => {
+    if (!confirm(`למחוק את גלגל #${wheel.wheel_number}?`)) return
+    setActionLoading(true)
+    try {
+      const response = await fetch(`/api/wheel-stations/${stationId}/wheels/${wheel.id}`, {
+        method: 'DELETE'
+      })
+      if (!response.ok) throw new Error('Failed to delete')
+      await fetchStation()
+      alert('הגלגל נמחק!')
+    } catch {
+      alert('שגיאה במחיקה')
+    } finally {
+      setActionLoading(false)
+    }
+  }
+
+  // Save contacts
+  const handleSaveContacts = async () => {
+    setActionLoading(true)
+    try {
+      const response = await fetch(`/api/wheel-stations/${stationId}/managers`, {
+        method: 'PUT',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ managers: contacts })
+      })
+      if (!response.ok) throw new Error('Failed to save')
+      await fetchStation()
+      setShowContactsModal(false)
+      alert('אנשי הקשר עודכנו!')
+    } catch {
+      alert('שגיאה בשמירה')
+    } finally {
+      setActionLoading(false)
+    }
+  }
+
+  const addContact = () => {
+    if (contacts.length >= 4) {
+      alert('ניתן להוסיף עד 4 אנשי קשר')
+      return
+    }
+    setContacts([...contacts, { id: '', full_name: '', phone: '', role: 'מנהל תחנה', is_primary: false }])
+  }
+
+  const removeContact = (index: number) => {
+    setContacts(contacts.filter((_, i) => i !== index))
+  }
+
+  const updateContact = (index: number, field: string, value: string | boolean) => {
+    const updated = [...contacts]
+    updated[index] = { ...updated[index], [field]: value }
+    setContacts(updated)
   }
 
   const filteredWheels = station?.wheels.filter(wheel => {
@@ -114,10 +360,19 @@ export default function StationPage({ params }: { params: Promise<{ stationId: s
       <header style={styles.header}>
         <div style={styles.headerTop}>
           <Link href="/wheels" style={styles.backBtn}>← חזרה</Link>
-          <button style={styles.managerBtn}>🔐 כניסת מנהל</button>
+          {isManager ? (
+            <div style={styles.managerActions}>
+              <button style={styles.addBtn} onClick={() => setShowAddWheelModal(true)}>➕ הוסף גלגל</button>
+              <button style={styles.editContactsBtn} onClick={() => setShowContactsModal(true)}>👥 ערוך אנשי קשר</button>
+              <button style={styles.logoutBtn} onClick={handleLogout}>🚪 יציאה</button>
+            </div>
+          ) : (
+            <button style={styles.managerBtn} onClick={() => setShowLoginModal(true)}>🔐 כניסת מנהל</button>
+          )}
         </div>
         <h1 style={styles.title}>🏙️ {station.name}</h1>
         {station.address && <p style={styles.address}>📍 {station.address}</p>}
+        {isManager && <div style={styles.managerBadge}>🔓 מצב ניהול</div>}
       </header>
 
       {/* Stats */}
@@ -287,6 +542,46 @@ export default function StationPage({ params }: { params: Promise<{ stationId: s
                 </div>
                 {wheel.category && <div style={styles.cardCategory}>{wheel.category}</div>}
                 {wheel.notes && <div style={styles.cardNotes}>{wheel.notes}</div>}
+
+                {/* Borrower info when wheel is taken */}
+                {!wheel.is_available && wheel.current_borrow && (
+                  <div style={styles.borrowerInfo}>
+                    <div style={styles.borrowerName}>👤 {wheel.current_borrow.borrower_name}</div>
+                    <div style={styles.borrowerPhone}>📱 {wheel.current_borrow.borrower_phone}</div>
+                    {wheel.current_borrow.borrow_date && (
+                      <div style={styles.borrowDate}>📅 {new Date(wheel.current_borrow.borrow_date).toLocaleDateString('he-IL')}</div>
+                    )}
+                  </div>
+                )}
+
+                {/* Manager action buttons */}
+                {isManager && (
+                  <div style={styles.cardActions}>
+                    {wheel.is_available ? (
+                      <button
+                        style={styles.borrowBtn}
+                        onClick={() => { setSelectedWheel(wheel); setShowBorrowModal(true) }}
+                      >
+                        📤 השאל
+                      </button>
+                    ) : (
+                      <button
+                        style={styles.returnBtn}
+                        onClick={() => handleReturn(wheel)}
+                        disabled={actionLoading}
+                      >
+                        📥 החזר
+                      </button>
+                    )}
+                    <button
+                      style={styles.deleteBtn}
+                      onClick={() => handleDeleteWheel(wheel)}
+                      disabled={actionLoading}
+                    >
+                      🗑️
+                    </button>
+                  </div>
+                )}
               </div>
             </div>
           ))}
@@ -368,6 +663,247 @@ export default function StationPage({ params }: { params: Promise<{ stationId: s
                 </div>
               )
             })}
+          </div>
+        </div>
+      )}
+
+      {/* Login Modal */}
+      {showLoginModal && (
+        <div style={styles.modalOverlay} onClick={() => setShowLoginModal(false)}>
+          <div style={styles.modal} onClick={e => e.stopPropagation()}>
+            <h3 style={styles.modalTitle}>🔐 כניסת מנהל</h3>
+            <p style={styles.modalSubtitle}>הזן את מספר הטלפון שלך</p>
+            <input
+              type="tel"
+              placeholder="מספר טלפון"
+              value={loginPhone}
+              onChange={e => setLoginPhone(e.target.value)}
+              style={styles.input}
+            />
+            {loginError && <div style={styles.errorText}>{loginError}</div>}
+            <div style={styles.modalButtons}>
+              <button style={styles.cancelBtn} onClick={() => setShowLoginModal(false)}>ביטול</button>
+              <button style={styles.submitBtn} onClick={handleLogin}>כניסה</button>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* Borrow Modal */}
+      {showBorrowModal && selectedWheel && (
+        <div style={styles.modalOverlay} onClick={() => setShowBorrowModal(false)}>
+          <div style={styles.modal} onClick={e => e.stopPropagation()}>
+            <h3 style={styles.modalTitle}>📤 השאלת גלגל #{selectedWheel.wheel_number}</h3>
+            <div style={styles.formGroup}>
+              <label style={styles.label}>שם השואל *</label>
+              <input
+                type="text"
+                value={borrowForm.borrower_name}
+                onChange={e => setBorrowForm({...borrowForm, borrower_name: e.target.value})}
+                style={styles.input}
+              />
+            </div>
+            <div style={styles.formGroup}>
+              <label style={styles.label}>טלפון *</label>
+              <input
+                type="tel"
+                value={borrowForm.borrower_phone}
+                onChange={e => setBorrowForm({...borrowForm, borrower_phone: e.target.value})}
+                style={styles.input}
+              />
+            </div>
+            <div style={styles.formGroup}>
+              <label style={styles.label}>תאריך החזרה צפוי</label>
+              <input
+                type="date"
+                value={borrowForm.expected_return_date}
+                onChange={e => setBorrowForm({...borrowForm, expected_return_date: e.target.value})}
+                style={styles.input}
+              />
+            </div>
+            <div style={styles.formGroup}>
+              <label style={styles.label}>סוג פיקדון</label>
+              <select
+                value={borrowForm.deposit_type}
+                onChange={e => setBorrowForm({...borrowForm, deposit_type: e.target.value})}
+                style={styles.input}
+              >
+                <option value="">ללא</option>
+                <option value="id">תעודת זהות</option>
+                <option value="cash">מזומן</option>
+                <option value="other">אחר</option>
+              </select>
+            </div>
+            {borrowForm.deposit_type && (
+              <div style={styles.formGroup}>
+                <label style={styles.label}>פרטי פיקדון</label>
+                <input
+                  type="text"
+                  placeholder={borrowForm.deposit_type === 'cash' ? 'סכום' : 'פרטים'}
+                  value={borrowForm.deposit_details}
+                  onChange={e => setBorrowForm({...borrowForm, deposit_details: e.target.value})}
+                  style={styles.input}
+                />
+              </div>
+            )}
+            <div style={styles.formGroup}>
+              <label style={styles.label}>הערות</label>
+              <textarea
+                value={borrowForm.notes}
+                onChange={e => setBorrowForm({...borrowForm, notes: e.target.value})}
+                style={{...styles.input, minHeight: '60px'}}
+              />
+            </div>
+            <div style={styles.modalButtons}>
+              <button style={styles.cancelBtn} onClick={() => setShowBorrowModal(false)}>ביטול</button>
+              <button style={styles.submitBtn} onClick={handleBorrow} disabled={actionLoading}>
+                {actionLoading ? 'שומר...' : 'השאל'}
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* Add Wheel Modal */}
+      {showAddWheelModal && (
+        <div style={styles.modalOverlay} onClick={() => setShowAddWheelModal(false)}>
+          <div style={styles.modal} onClick={e => e.stopPropagation()}>
+            <h3 style={styles.modalTitle}>➕ הוספת גלגל חדש</h3>
+            <div style={styles.formRow}>
+              <div style={styles.formGroup}>
+                <label style={styles.label}>מספר גלגל *</label>
+                <input
+                  type="number"
+                  value={wheelForm.wheel_number}
+                  onChange={e => setWheelForm({...wheelForm, wheel_number: e.target.value})}
+                  style={styles.input}
+                />
+              </div>
+              <div style={styles.formGroup}>
+                <label style={styles.label}>גודל ג'אנט *</label>
+                <input
+                  type="text"
+                  placeholder='14", 15", 16"'
+                  value={wheelForm.rim_size}
+                  onChange={e => setWheelForm({...wheelForm, rim_size: e.target.value})}
+                  style={styles.input}
+                />
+              </div>
+            </div>
+            <div style={styles.formRow}>
+              <div style={styles.formGroup}>
+                <label style={styles.label}>כמות ברגים</label>
+                <select
+                  value={wheelForm.bolt_count}
+                  onChange={e => setWheelForm({...wheelForm, bolt_count: e.target.value})}
+                  style={styles.input}
+                >
+                  <option value="4">4</option>
+                  <option value="5">5</option>
+                  <option value="6">6</option>
+                </select>
+              </div>
+              <div style={styles.formGroup}>
+                <label style={styles.label}>מרווח ברגים *</label>
+                <input
+                  type="text"
+                  placeholder="100, 108, 114.3"
+                  value={wheelForm.bolt_spacing}
+                  onChange={e => setWheelForm({...wheelForm, bolt_spacing: e.target.value})}
+                  style={styles.input}
+                />
+              </div>
+            </div>
+            <div style={styles.formGroup}>
+              <label style={styles.label}>קטגוריה</label>
+              <select
+                value={wheelForm.category}
+                onChange={e => setWheelForm({...wheelForm, category: e.target.value})}
+                style={styles.input}
+              >
+                <option value="">בחר קטגוריה</option>
+                <option value="מכוניות גרמניות">מכוניות גרמניות</option>
+                <option value="מכוניות צרפתיות">מכוניות צרפתיות</option>
+                <option value="מכוניות יפניות וקוראניות">מכוניות יפניות וקוראניות</option>
+              </select>
+            </div>
+            <div style={styles.checkboxGroup}>
+              <input
+                type="checkbox"
+                id="is_donut"
+                checked={wheelForm.is_donut}
+                onChange={e => setWheelForm({...wheelForm, is_donut: e.target.checked})}
+              />
+              <label htmlFor="is_donut" style={styles.checkboxLabel}>גלגל דונאט (חילוף)</label>
+            </div>
+            <div style={styles.formGroup}>
+              <label style={styles.label}>הערות</label>
+              <input
+                type="text"
+                value={wheelForm.notes}
+                onChange={e => setWheelForm({...wheelForm, notes: e.target.value})}
+                style={styles.input}
+              />
+            </div>
+            <div style={styles.modalButtons}>
+              <button style={styles.cancelBtn} onClick={() => setShowAddWheelModal(false)}>ביטול</button>
+              <button style={styles.submitBtn} onClick={handleAddWheel} disabled={actionLoading}>
+                {actionLoading ? 'שומר...' : 'הוסף'}
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* Edit Contacts Modal */}
+      {showContactsModal && (
+        <div style={styles.modalOverlay} onClick={() => setShowContactsModal(false)}>
+          <div style={{...styles.modal, maxWidth: '500px'}} onClick={e => e.stopPropagation()}>
+            <h3 style={styles.modalTitle}>👥 עריכת אנשי קשר</h3>
+            <p style={styles.modalSubtitle}>ניתן להוסיף עד 4 אנשי קשר</p>
+
+            {contacts.map((contact, index) => (
+              <div key={index} style={styles.contactEditRow}>
+                <div style={styles.contactEditFields}>
+                  <input
+                    type="text"
+                    placeholder="שם מלא"
+                    value={contact.full_name}
+                    onChange={e => updateContact(index, 'full_name', e.target.value)}
+                    style={styles.inputSmall}
+                  />
+                  <input
+                    type="tel"
+                    placeholder="טלפון"
+                    value={contact.phone}
+                    onChange={e => updateContact(index, 'phone', e.target.value)}
+                    style={styles.inputSmall}
+                  />
+                  <select
+                    value={contact.role}
+                    onChange={e => updateContact(index, 'role', e.target.value)}
+                    style={styles.inputSmall}
+                  >
+                    <option value="מנהל תחנה">מנהל תחנה</option>
+                    <option value="מנהל תחנה ראשי">מנהל תחנה ראשי</option>
+                  </select>
+                </div>
+                <button style={styles.removeContactBtn} onClick={() => removeContact(index)}>✕</button>
+              </div>
+            ))}
+
+            {contacts.length < 4 && (
+              <button style={styles.addContactBtn} onClick={addContact}>
+                ➕ הוסף איש קשר
+              </button>
+            )}
+
+            <div style={styles.modalButtons}>
+              <button style={styles.cancelBtn} onClick={() => setShowContactsModal(false)}>ביטול</button>
+              <button style={styles.submitBtn} onClick={handleSaveContacts} disabled={actionLoading}>
+                {actionLoading ? 'שומר...' : 'שמור'}
+              </button>
+            </div>
           </div>
         </div>
       )}
@@ -773,5 +1309,252 @@ const styles: { [key: string]: React.CSSProperties } = {
     alignItems: 'center',
     justifyContent: 'center',
     gap: '6px',
+  },
+  // Manager mode styles
+  managerActions: {
+    display: 'flex',
+    gap: '8px',
+    flexWrap: 'wrap',
+  },
+  addBtn: {
+    background: '#10b981',
+    color: 'white',
+    border: 'none',
+    padding: '8px 16px',
+    borderRadius: '8px',
+    cursor: 'pointer',
+    fontWeight: 'bold',
+    fontSize: '0.85rem',
+  },
+  editContactsBtn: {
+    background: '#3b82f6',
+    color: 'white',
+    border: 'none',
+    padding: '8px 16px',
+    borderRadius: '8px',
+    cursor: 'pointer',
+    fontWeight: 'bold',
+    fontSize: '0.85rem',
+  },
+  logoutBtn: {
+    background: '#6b7280',
+    color: 'white',
+    border: 'none',
+    padding: '8px 16px',
+    borderRadius: '8px',
+    cursor: 'pointer',
+    fontWeight: 'bold',
+    fontSize: '0.85rem',
+  },
+  managerBadge: {
+    display: 'inline-block',
+    background: 'rgba(16, 185, 129, 0.2)',
+    color: '#10b981',
+    padding: '4px 12px',
+    borderRadius: '12px',
+    fontSize: '0.85rem',
+    marginTop: '10px',
+  },
+  // Card action buttons
+  borrowerInfo: {
+    marginTop: '10px',
+    padding: '10px',
+    background: 'rgba(239, 68, 68, 0.1)',
+    borderRadius: '8px',
+    border: '1px solid rgba(239, 68, 68, 0.3)',
+  },
+  borrowerName: {
+    fontWeight: 'bold',
+    color: '#ef4444',
+    fontSize: '0.85rem',
+  },
+  borrowerPhone: {
+    color: '#f87171',
+    fontSize: '0.8rem',
+  },
+  borrowDate: {
+    color: '#a0aec0',
+    fontSize: '0.75rem',
+    marginTop: '4px',
+  },
+  cardActions: {
+    display: 'flex',
+    gap: '8px',
+    marginTop: '12px',
+    borderTop: '1px solid rgba(255,255,255,0.1)',
+    paddingTop: '12px',
+  },
+  borrowBtn: {
+    flex: 1,
+    background: '#10b981',
+    color: 'white',
+    border: 'none',
+    padding: '8px 12px',
+    borderRadius: '8px',
+    cursor: 'pointer',
+    fontWeight: 'bold',
+    fontSize: '0.85rem',
+  },
+  returnBtn: {
+    flex: 1,
+    background: '#3b82f6',
+    color: 'white',
+    border: 'none',
+    padding: '8px 12px',
+    borderRadius: '8px',
+    cursor: 'pointer',
+    fontWeight: 'bold',
+    fontSize: '0.85rem',
+  },
+  deleteBtn: {
+    background: '#ef4444',
+    color: 'white',
+    border: 'none',
+    padding: '8px 12px',
+    borderRadius: '8px',
+    cursor: 'pointer',
+    fontSize: '0.85rem',
+  },
+  // Modal styles
+  modalOverlay: {
+    position: 'fixed',
+    top: 0,
+    left: 0,
+    right: 0,
+    bottom: 0,
+    background: 'rgba(0,0,0,0.7)',
+    display: 'flex',
+    alignItems: 'center',
+    justifyContent: 'center',
+    zIndex: 1000,
+    padding: '20px',
+  },
+  modal: {
+    background: '#1e293b',
+    borderRadius: '16px',
+    padding: '25px',
+    width: '100%',
+    maxWidth: '400px',
+    maxHeight: '90vh',
+    overflowY: 'auto',
+  },
+  modalTitle: {
+    color: '#f59e0b',
+    marginBottom: '10px',
+    fontSize: '1.3rem',
+  },
+  modalSubtitle: {
+    color: '#a0aec0',
+    fontSize: '0.9rem',
+    marginBottom: '20px',
+  },
+  formGroup: {
+    marginBottom: '15px',
+  },
+  formRow: {
+    display: 'flex',
+    gap: '12px',
+    marginBottom: '15px',
+  },
+  label: {
+    display: 'block',
+    marginBottom: '5px',
+    color: '#a0aec0',
+    fontSize: '0.85rem',
+  },
+  input: {
+    width: '100%',
+    padding: '10px 12px',
+    borderRadius: '8px',
+    border: '1px solid #4a5568',
+    background: '#2d3748',
+    color: 'white',
+    fontSize: '0.95rem',
+  },
+  inputSmall: {
+    flex: 1,
+    padding: '8px 10px',
+    borderRadius: '6px',
+    border: '1px solid #4a5568',
+    background: '#2d3748',
+    color: 'white',
+    fontSize: '0.85rem',
+    minWidth: '80px',
+  },
+  checkboxGroup: {
+    display: 'flex',
+    alignItems: 'center',
+    gap: '8px',
+    marginBottom: '15px',
+  },
+  checkboxLabel: {
+    color: '#a0aec0',
+    fontSize: '0.9rem',
+  },
+  modalButtons: {
+    display: 'flex',
+    gap: '10px',
+    marginTop: '20px',
+  },
+  cancelBtn: {
+    flex: 1,
+    background: '#4a5568',
+    color: 'white',
+    border: 'none',
+    padding: '12px',
+    borderRadius: '8px',
+    cursor: 'pointer',
+    fontWeight: 'bold',
+  },
+  submitBtn: {
+    flex: 1,
+    background: '#f59e0b',
+    color: '#000',
+    border: 'none',
+    padding: '12px',
+    borderRadius: '8px',
+    cursor: 'pointer',
+    fontWeight: 'bold',
+  },
+  errorText: {
+    color: '#ef4444',
+    fontSize: '0.85rem',
+    marginTop: '8px',
+  },
+  // Contact edit styles
+  contactEditRow: {
+    display: 'flex',
+    gap: '10px',
+    alignItems: 'center',
+    marginBottom: '12px',
+    padding: '10px',
+    background: 'rgba(255,255,255,0.05)',
+    borderRadius: '8px',
+  },
+  contactEditFields: {
+    flex: 1,
+    display: 'flex',
+    flexDirection: 'column',
+    gap: '8px',
+  },
+  removeContactBtn: {
+    background: '#ef4444',
+    color: 'white',
+    border: 'none',
+    width: '30px',
+    height: '30px',
+    borderRadius: '6px',
+    cursor: 'pointer',
+    fontWeight: 'bold',
+  },
+  addContactBtn: {
+    width: '100%',
+    background: 'transparent',
+    border: '2px dashed #4a5568',
+    color: '#a0aec0',
+    padding: '12px',
+    borderRadius: '8px',
+    cursor: 'pointer',
+    marginTop: '10px',
   },
 }
