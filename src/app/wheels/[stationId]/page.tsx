@@ -2,6 +2,7 @@
 
 import { useState, useEffect, use } from 'react'
 import Link from 'next/link'
+import toast, { Toaster } from 'react-hot-toast'
 
 interface Wheel {
   id: string
@@ -76,6 +77,21 @@ export default function StationPage({ params }: { params: Promise<{ stationId: s
   const [loginPhone, setLoginPhone] = useState('')
   const [loginPassword, setLoginPassword] = useState('')
   const [loginError, setLoginError] = useState('')
+  const [currentManager, setCurrentManager] = useState<Manager | null>(null)
+  const [sessionPassword, setSessionPassword] = useState('')
+  const [showChangePasswordModal, setShowChangePasswordModal] = useState(false)
+  const [passwordForm, setPasswordForm] = useState({ current: '', new: '', confirm: '' })
+
+  // Confirm dialog state
+  const [showConfirmDialog, setShowConfirmDialog] = useState(false)
+  const [confirmDialogData, setConfirmDialogData] = useState<{
+    title: string
+    message: string
+    onConfirm: () => void
+    confirmText?: string
+    cancelText?: string
+    variant?: 'danger' | 'warning' | 'info'
+  } | null>(null)
 
   // Modals
   const [showBorrowModal, setShowBorrowModal] = useState(false)
@@ -115,9 +131,17 @@ export default function StationPage({ params }: { params: Promise<{ stationId: s
   useEffect(() => {
     fetchStation()
     // Check if already logged in
-    const managerToken = localStorage.getItem(`wheel_manager_${stationId}`)
-    if (managerToken) {
-      setIsManager(true)
+    const savedSession = localStorage.getItem(`wheel_manager_${stationId}`)
+    if (savedSession) {
+      try {
+        const session = JSON.parse(savedSession)
+        setIsManager(true)
+        setCurrentManager(session.manager)
+        setSessionPassword(session.password || '')
+      } catch {
+        // Old format or invalid, clear it
+        localStorage.removeItem(`wheel_manager_${stationId}`)
+      }
     }
   }, [stationId])
 
@@ -140,31 +164,94 @@ export default function StationPage({ params }: { params: Promise<{ stationId: s
     }
   }
 
-  // Manager login - check if phone is in station managers
-  const handleLogin = () => {
-    const cleanPhone = loginPhone.replace(/\D/g, '')
-    const manager = station?.wheel_station_managers.find(m =>
-      m.phone.replace(/\D/g, '') === cleanPhone
-    )
-    if (manager) {
+  // Manager login - verify phone + password via API
+  const handleLogin = async () => {
+    if (!loginPhone || !loginPassword) {
+      setLoginError('נא להזין טלפון וסיסמא')
+      return
+    }
+    setActionLoading(true)
+    try {
+      const response = await fetch(`/api/wheel-stations/${stationId}/auth`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ phone: loginPhone, password: loginPassword })
+      })
+      const data = await response.json()
+      if (!response.ok) {
+        setLoginError(data.error || 'שגיאה בכניסה')
+        return
+      }
       setIsManager(true)
-      localStorage.setItem(`wheel_manager_${stationId}`, 'true')
+      setCurrentManager(data.manager)
+      setSessionPassword(loginPassword)
+      localStorage.setItem(`wheel_manager_${stationId}`, JSON.stringify({
+        manager: data.manager,
+        password: loginPassword,
+        token: data.token
+      }))
       setShowLoginModal(false)
       setLoginError('')
-    } else {
-      setLoginError('מספר הטלפון לא נמצא ברשימת המנהלים')
+      setLoginPhone('')
+      setLoginPassword('')
+    } catch {
+      setLoginError('שגיאה בכניסה')
+    } finally {
+      setActionLoading(false)
     }
   }
 
   const handleLogout = () => {
     setIsManager(false)
+    setCurrentManager(null)
+    setSessionPassword('')
     localStorage.removeItem(`wheel_manager_${stationId}`)
+  }
+
+  // Change password
+  const handleChangePassword = async () => {
+    if (!passwordForm.current || !passwordForm.new || !passwordForm.confirm) {
+      toast.error('נא למלא את כל השדות')
+      return
+    }
+    if (passwordForm.new !== passwordForm.confirm) {
+      toast.error('הסיסמאות החדשות לא תואמות')
+      return
+    }
+    if (passwordForm.new.length < 4) {
+      toast.error('הסיסמא חייבת להכיל לפחות 4 תווים')
+      return
+    }
+    setActionLoading(true)
+    try {
+      const response = await fetch(`/api/wheel-stations/${stationId}/auth`, {
+        method: 'PUT',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          phone: currentManager?.phone,
+          current_password: passwordForm.current,
+          new_password: passwordForm.new
+        })
+      })
+      const data = await response.json()
+      if (!response.ok) {
+        toast.error(data.error || 'שגיאה בשינוי סיסמא')
+        return
+      }
+      toast.success('הסיסמא שונתה בהצלחה!')
+      setShowChangePasswordModal(false)
+      setPasswordForm({ current: '', new: '', confirm: '' })
+    } catch {
+      toast.error('שגיאה בשינוי סיסמא')
+    } finally {
+      setActionLoading(false)
+    }
   }
 
   // Borrow wheel
   const handleBorrow = async () => {
     if (!selectedWheel || !borrowForm.borrower_name || !borrowForm.borrower_phone) {
-      alert('נא למלא שם וטלפון של השואל')
+      toast.error('נא למלא שם וטלפון של השואל')
       return
     }
     setActionLoading(true)
@@ -189,9 +276,9 @@ export default function StationPage({ params }: { params: Promise<{ stationId: s
         deposit_details: '',
         notes: ''
       })
-      alert('הגלגל הושאל בהצלחה!')
+      toast.success('הגלגל הושאל בהצלחה!')
     } catch (err: unknown) {
-      alert(err instanceof Error ? err.message : 'שגיאה בהשאלה')
+      toast.error(err instanceof Error ? err.message : 'שגיאה בהשאלה')
     } finally {
       setActionLoading(false)
     }
@@ -199,26 +286,34 @@ export default function StationPage({ params }: { params: Promise<{ stationId: s
 
   // Return wheel
   const handleReturn = async (wheel: Wheel) => {
-    if (!confirm(`להחזיר את גלגל #${wheel.wheel_number}?`)) return
-    setActionLoading(true)
-    try {
-      const response = await fetch(`/api/wheel-stations/${stationId}/wheels/${wheel.id}/borrow`, {
-        method: 'PUT'
-      })
-      if (!response.ok) throw new Error('Failed to return')
-      await fetchStation()
-      alert('הגלגל הוחזר בהצלחה!')
-    } catch {
-      alert('שגיאה בהחזרה')
-    } finally {
-      setActionLoading(false)
-    }
+    showConfirm({
+      title: '📥 החזרת גלגל',
+      message: `להחזיר את גלגל #${wheel.wheel_number}?`,
+      confirmText: 'החזר',
+      variant: 'info',
+      onConfirm: async () => {
+        closeConfirmDialog()
+        setActionLoading(true)
+        try {
+          const response = await fetch(`/api/wheel-stations/${stationId}/wheels/${wheel.id}/borrow`, {
+            method: 'PUT'
+          })
+          if (!response.ok) throw new Error('Failed to return')
+          await fetchStation()
+          toast.success('הגלגל הוחזר בהצלחה!')
+        } catch {
+          toast.error('שגיאה בהחזרה')
+        } finally {
+          setActionLoading(false)
+        }
+      }
+    })
   }
 
   // Add wheel
   const handleAddWheel = async () => {
     if (!wheelForm.wheel_number || !wheelForm.rim_size || !wheelForm.bolt_spacing) {
-      alert('נא למלא מספר גלגל, גודל ג\'אנט ומרווח ברגים')
+      toast.error('נא למלא מספר גלגל, גודל ג\'אנט ומרווח ברגים')
       return
     }
     setActionLoading(true)
@@ -251,9 +346,9 @@ export default function StationPage({ params }: { params: Promise<{ stationId: s
         is_donut: false,
         notes: ''
       })
-      alert('הגלגל נוסף בהצלחה!')
+      toast.success('הגלגל נוסף בהצלחה!')
     } catch (err: unknown) {
-      alert(err instanceof Error ? err.message : 'שגיאה בהוספה')
+      toast.error(err instanceof Error ? err.message : 'שגיאה בהוספה')
     } finally {
       setActionLoading(false)
     }
@@ -261,20 +356,28 @@ export default function StationPage({ params }: { params: Promise<{ stationId: s
 
   // Delete wheel
   const handleDeleteWheel = async (wheel: Wheel) => {
-    if (!confirm(`למחוק את גלגל #${wheel.wheel_number}?`)) return
-    setActionLoading(true)
-    try {
-      const response = await fetch(`/api/wheel-stations/${stationId}/wheels/${wheel.id}`, {
-        method: 'DELETE'
-      })
-      if (!response.ok) throw new Error('Failed to delete')
-      await fetchStation()
-      alert('הגלגל נמחק!')
-    } catch {
-      alert('שגיאה במחיקה')
-    } finally {
-      setActionLoading(false)
-    }
+    showConfirm({
+      title: '🗑️ מחיקת גלגל',
+      message: `למחוק את גלגל #${wheel.wheel_number}? פעולה זו אינה ניתנת לביטול`,
+      confirmText: 'מחק',
+      variant: 'danger',
+      onConfirm: async () => {
+        closeConfirmDialog()
+        setActionLoading(true)
+        try {
+          const response = await fetch(`/api/wheel-stations/${stationId}/wheels/${wheel.id}`, {
+            method: 'DELETE'
+          })
+          if (!response.ok) throw new Error('Failed to delete')
+          await fetchStation()
+          toast.success('הגלגל נמחק!')
+        } catch {
+          toast.error('שגיאה במחיקה')
+        } finally {
+          setActionLoading(false)
+        }
+      }
+    })
   }
 
   // Save contacts
@@ -284,14 +387,21 @@ export default function StationPage({ params }: { params: Promise<{ stationId: s
       const response = await fetch(`/api/wheel-stations/${stationId}/managers`, {
         method: 'PUT',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ managers: contacts })
+        body: JSON.stringify({
+          managers: contacts,
+          manager_phone: currentManager?.phone,
+          manager_password: sessionPassword
+        })
       })
-      if (!response.ok) throw new Error('Failed to save')
+      if (!response.ok) {
+        const data = await response.json()
+        throw new Error(data.error || 'Failed to save')
+      }
       await fetchStation()
       setShowContactsModal(false)
-      alert('אנשי הקשר עודכנו!')
-    } catch {
-      alert('שגיאה בשמירה')
+      toast.success('אנשי הקשר עודכנו!')
+    } catch (err: unknown) {
+      toast.error(err instanceof Error ? err.message : 'שגיאה בשמירה')
     } finally {
       setActionLoading(false)
     }
@@ -299,7 +409,7 @@ export default function StationPage({ params }: { params: Promise<{ stationId: s
 
   const addContact = () => {
     if (contacts.length >= 4) {
-      alert('ניתן להוסיף עד 4 אנשי קשר')
+      toast.error('ניתן להוסיף עד 4 אנשי קשר')
       return
     }
     setContacts([...contacts, { id: '', full_name: '', phone: '', role: 'מנהל תחנה', is_primary: false }])
@@ -313,6 +423,24 @@ export default function StationPage({ params }: { params: Promise<{ stationId: s
     const updated = [...contacts]
     updated[index] = { ...updated[index], [field]: value }
     setContacts(updated)
+  }
+
+  // Custom confirm dialog helper
+  const showConfirm = (options: {
+    title: string
+    message: string
+    onConfirm: () => void
+    confirmText?: string
+    cancelText?: string
+    variant?: 'danger' | 'warning' | 'info'
+  }) => {
+    setConfirmDialogData(options)
+    setShowConfirmDialog(true)
+  }
+
+  const closeConfirmDialog = () => {
+    setShowConfirmDialog(false)
+    setConfirmDialogData(null)
   }
 
   const filteredWheels = station?.wheels.filter(wheel => {
@@ -357,6 +485,33 @@ export default function StationPage({ params }: { params: Promise<{ stationId: s
 
   return (
     <div style={styles.container}>
+      <Toaster
+        position="top-center"
+        toastOptions={{
+          duration: 3000,
+          style: {
+            background: '#1e293b',
+            color: '#fff',
+            border: '1px solid #334155',
+            direction: 'rtl',
+            padding: '16px',
+            borderRadius: '12px',
+            fontSize: '0.95rem',
+          },
+          success: {
+            iconTheme: {
+              primary: '#10b981',
+              secondary: '#fff',
+            },
+          },
+          error: {
+            iconTheme: {
+              primary: '#ef4444',
+              secondary: '#fff',
+            },
+          },
+        }}
+      />
       <header style={styles.header}>
         <div style={styles.headerTop}>
           <Link href="/wheels" style={styles.backBtn}>← חזרה</Link>
@@ -364,6 +519,7 @@ export default function StationPage({ params }: { params: Promise<{ stationId: s
             <div style={styles.managerActions}>
               <button style={styles.addBtn} onClick={() => setShowAddWheelModal(true)}>➕ הוסף גלגל</button>
               <button style={styles.editContactsBtn} onClick={() => setShowContactsModal(true)}>👥 ערוך אנשי קשר</button>
+              <button style={styles.changePasswordBtn} onClick={() => setShowChangePasswordModal(true)}>🔑 שנה סיסמא</button>
               <button style={styles.logoutBtn} onClick={handleLogout}>🚪 יציאה</button>
             </div>
           ) : (
@@ -634,31 +790,26 @@ export default function StationPage({ params }: { params: Promise<{ stationId: s
       {/* Contact Cards */}
       {station.wheel_station_managers.length > 0 && (
         <div style={styles.contacts}>
-          <h3 style={styles.contactsTitle}>📞 מנהלי התחנה - יצירת קשר</h3>
+          <h3 style={styles.contactsTitle}>👥 אנשי קשר</h3>
           <div style={styles.contactsGrid}>
             {station.wheel_station_managers.map(manager => {
               const cleanPhone = manager.phone.replace(/\D/g, '')
               const internationalPhone = cleanPhone.startsWith('0') ? '972' + cleanPhone.slice(1) : cleanPhone
               return (
                 <div key={manager.id} style={styles.contactCard}>
-                  <div style={styles.contactAvatar}>👤</div>
-                  <div style={styles.contactInfo}>
-                    <div style={styles.contactName}>{manager.full_name}</div>
-                    <div style={styles.contactRole}>{manager.role}</div>
-                    <div style={styles.contactPhoneText}>📱 {manager.phone}</div>
-                    <div style={styles.contactButtons}>
-                      <a href={`tel:${cleanPhone}`} style={styles.contactBtnCall}>
-                        📞 התקשר
-                      </a>
-                      <a
-                        href={`https://wa.me/${internationalPhone}`}
-                        target="_blank"
-                        rel="noopener noreferrer"
-                        style={styles.contactBtnWhatsapp}
-                      >
-                        💬 וואטסאפ
-                      </a>
-                    </div>
+                  <div style={styles.contactName}>{manager.full_name}</div>
+                  <div style={styles.contactButtons}>
+                    <a href={`tel:${cleanPhone}`} style={styles.contactBtnCall}>
+                      📞 התקשר
+                    </a>
+                    <a
+                      href={`https://wa.me/${internationalPhone}`}
+                      target="_blank"
+                      rel="noopener noreferrer"
+                      style={styles.contactBtnWhatsapp}
+                    >
+                      💬 וואטסאפ
+                    </a>
                   </div>
                 </div>
               )
@@ -672,18 +823,34 @@ export default function StationPage({ params }: { params: Promise<{ stationId: s
         <div style={styles.modalOverlay} onClick={() => setShowLoginModal(false)}>
           <div style={styles.modal} onClick={e => e.stopPropagation()}>
             <h3 style={styles.modalTitle}>🔐 כניסת מנהל</h3>
-            <p style={styles.modalSubtitle}>הזן את מספר הטלפון שלך</p>
-            <input
-              type="tel"
-              placeholder="מספר טלפון"
-              value={loginPhone}
-              onChange={e => setLoginPhone(e.target.value)}
-              style={styles.input}
-            />
+            <p style={styles.modalSubtitle}>הזן את פרטי ההתחברות שלך</p>
+            <div style={styles.formGroup}>
+              <label style={styles.label}>מספר טלפון</label>
+              <input
+                type="tel"
+                placeholder="050-1234567"
+                value={loginPhone}
+                onChange={e => setLoginPhone(e.target.value)}
+                style={styles.input}
+              />
+            </div>
+            <div style={styles.formGroup}>
+              <label style={styles.label}>סיסמת תחנה</label>
+              <input
+                type="password"
+                placeholder="סיסמא"
+                value={loginPassword}
+                onChange={e => setLoginPassword(e.target.value)}
+                style={styles.input}
+                onKeyDown={e => e.key === 'Enter' && handleLogin()}
+              />
+            </div>
             {loginError && <div style={styles.errorText}>{loginError}</div>}
             <div style={styles.modalButtons}>
               <button style={styles.cancelBtn} onClick={() => setShowLoginModal(false)}>ביטול</button>
-              <button style={styles.submitBtn} onClick={handleLogin}>כניסה</button>
+              <button style={styles.submitBtn} onClick={handleLogin} disabled={actionLoading}>
+                {actionLoading ? 'מתחבר...' : 'כניסה'}
+              </button>
             </div>
           </div>
         </div>
@@ -902,6 +1069,80 @@ export default function StationPage({ params }: { params: Promise<{ stationId: s
               <button style={styles.cancelBtn} onClick={() => setShowContactsModal(false)}>ביטול</button>
               <button style={styles.submitBtn} onClick={handleSaveContacts} disabled={actionLoading}>
                 {actionLoading ? 'שומר...' : 'שמור'}
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* Change Password Modal */}
+      {showChangePasswordModal && (
+        <div style={styles.modalOverlay} onClick={() => setShowChangePasswordModal(false)}>
+          <div style={styles.modal} onClick={e => e.stopPropagation()}>
+            <h3 style={styles.modalTitle}>🔑 שינוי סיסמת תחנה</h3>
+            <p style={styles.modalSubtitle}>הסיסמא משותפת לכל מנהלי התחנה</p>
+            <div style={styles.formGroup}>
+              <label style={styles.label}>סיסמא נוכחית</label>
+              <input
+                type="password"
+                value={passwordForm.current}
+                onChange={e => setPasswordForm({...passwordForm, current: e.target.value})}
+                style={styles.input}
+              />
+            </div>
+            <div style={styles.formGroup}>
+              <label style={styles.label}>סיסמא חדשה</label>
+              <input
+                type="password"
+                value={passwordForm.new}
+                onChange={e => setPasswordForm({...passwordForm, new: e.target.value})}
+                style={styles.input}
+              />
+            </div>
+            <div style={styles.formGroup}>
+              <label style={styles.label}>אימות סיסמא חדשה</label>
+              <input
+                type="password"
+                value={passwordForm.confirm}
+                onChange={e => setPasswordForm({...passwordForm, confirm: e.target.value})}
+                style={styles.input}
+              />
+            </div>
+            <div style={styles.modalButtons}>
+              <button style={styles.cancelBtn} onClick={() => setShowChangePasswordModal(false)}>ביטול</button>
+              <button style={styles.submitBtn} onClick={handleChangePassword} disabled={actionLoading}>
+                {actionLoading ? 'שומר...' : 'שנה סיסמא'}
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* Confirm Dialog Modal */}
+      {showConfirmDialog && confirmDialogData && (
+        <div style={styles.modalOverlay} onClick={closeConfirmDialog}>
+          <div style={styles.confirmDialog} onClick={e => e.stopPropagation()}>
+            <h3 style={{
+              ...styles.confirmTitle,
+              color: confirmDialogData.variant === 'danger' ? '#ef4444' :
+                     confirmDialogData.variant === 'warning' ? '#f59e0b' : '#3b82f6'
+            }}>
+              {confirmDialogData.title}
+            </h3>
+            <p style={styles.confirmMessage}>{confirmDialogData.message}</p>
+            <div style={styles.confirmButtons}>
+              <button style={styles.cancelBtn} onClick={closeConfirmDialog}>
+                {confirmDialogData.cancelText || 'ביטול'}
+              </button>
+              <button
+                style={{
+                  ...styles.confirmBtn,
+                  background: confirmDialogData.variant === 'danger' ? '#ef4444' :
+                             confirmDialogData.variant === 'warning' ? '#f59e0b' : '#3b82f6'
+                }}
+                onClick={confirmDialogData.onConfirm}
+              >
+                {confirmDialogData.confirmText || 'אישור'}
               </button>
             </div>
           </div>
@@ -1232,55 +1473,37 @@ const styles: { [key: string]: React.CSSProperties } = {
   },
   contacts: {
     marginTop: '30px',
-    padding: '20px',
-    background: 'rgba(255,255,255,0.03)',
-    borderRadius: '16px',
   },
   contactsTitle: {
     color: '#f59e0b',
-    marginBottom: '20px',
+    marginBottom: '15px',
+    fontSize: '1.1rem',
   },
   contactsGrid: {
-    display: 'grid',
-    gridTemplateColumns: 'repeat(auto-fill, minmax(250px, 1fr))',
-    gap: '15px',
+    display: 'flex',
+    flexDirection: 'column',
+    gap: '12px',
   },
   contactCard: {
-    display: 'flex',
-    gap: '15px',
-    padding: '15px',
-    background: 'rgba(255,255,255,0.05)',
+    padding: '16px',
+    background: 'linear-gradient(135deg, #eff6ff, #e0e7ff)',
     borderRadius: '12px',
+    border: '2px solid #bfdbfe',
   },
-  contactAvatar: {
-    fontSize: '2.5rem',
-  },
-  contactInfo: {},
   contactName: {
     fontWeight: 'bold',
-    marginBottom: '4px',
-  },
-  contactRole: {
-    color: '#a0aec0',
-    fontSize: '0.85rem',
-    marginBottom: '8px',
-  },
-  contactPhone: {
-    color: '#10b981',
-    textDecoration: 'none',
-  },
-  contactPhoneText: {
-    color: '#a0aec0',
-    fontSize: '0.9rem',
-    marginBottom: '10px',
+    color: '#1e293b',
+    marginBottom: '12px',
+    fontSize: '1rem',
+    textAlign: 'center',
   },
   contactButtons: {
     display: 'flex',
-    gap: '8px',
+    gap: '12px',
+    justifyContent: 'center',
   },
   contactBtnCall: {
-    flex: 1,
-    padding: '10px 16px',
+    padding: '10px 20px',
     border: 'none',
     borderRadius: '12px',
     background: '#3b82f6',
@@ -1288,15 +1511,13 @@ const styles: { [key: string]: React.CSSProperties } = {
     fontWeight: 600,
     fontSize: '0.9rem',
     textDecoration: 'none',
-    textAlign: 'center',
     display: 'flex',
     alignItems: 'center',
-    justifyContent: 'center',
     gap: '6px',
+    cursor: 'pointer',
   },
   contactBtnWhatsapp: {
-    flex: 1,
-    padding: '10px 16px',
+    padding: '10px 20px',
     border: 'none',
     borderRadius: '12px',
     background: '#22c55e',
@@ -1304,11 +1525,10 @@ const styles: { [key: string]: React.CSSProperties } = {
     fontWeight: 600,
     fontSize: '0.9rem',
     textDecoration: 'none',
-    textAlign: 'center',
     display: 'flex',
     alignItems: 'center',
-    justifyContent: 'center',
     gap: '6px',
+    cursor: 'pointer',
   },
   // Manager mode styles
   managerActions: {
@@ -1328,6 +1548,16 @@ const styles: { [key: string]: React.CSSProperties } = {
   },
   editContactsBtn: {
     background: '#3b82f6',
+    color: 'white',
+    border: 'none',
+    padding: '8px 16px',
+    borderRadius: '8px',
+    cursor: 'pointer',
+    fontWeight: 'bold',
+    fontSize: '0.85rem',
+  },
+  changePasswordBtn: {
+    background: '#8b5cf6',
     color: 'white',
     border: 'none',
     padding: '8px 16px',
@@ -1556,5 +1786,40 @@ const styles: { [key: string]: React.CSSProperties } = {
     borderRadius: '8px',
     cursor: 'pointer',
     marginTop: '10px',
+  },
+  // Confirm dialog styles
+  confirmDialog: {
+    background: '#1e293b',
+    borderRadius: '16px',
+    padding: '25px',
+    width: '100%',
+    maxWidth: '360px',
+    textAlign: 'center',
+    boxShadow: '0 20px 40px rgba(0,0,0,0.5)',
+  },
+  confirmTitle: {
+    fontSize: '1.3rem',
+    marginBottom: '12px',
+    fontWeight: 'bold',
+  },
+  confirmMessage: {
+    color: '#a0aec0',
+    fontSize: '1rem',
+    marginBottom: '25px',
+    lineHeight: 1.5,
+  },
+  confirmButtons: {
+    display: 'flex',
+    gap: '12px',
+  },
+  confirmBtn: {
+    flex: 1,
+    color: 'white',
+    border: 'none',
+    padding: '14px',
+    borderRadius: '10px',
+    cursor: 'pointer',
+    fontWeight: 'bold',
+    fontSize: '1rem',
   },
 }

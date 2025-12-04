@@ -1,19 +1,20 @@
 /**
- * Wheel Stations API
- * GET /api/wheel-stations - List all active wheel stations
- * POST /api/wheel-stations - Create a new station (super admin only)
+ * Wheel Stations Admin API (password protected)
+ * GET /api/wheel-stations/admin - List all stations with full details
+ * POST /api/wheel-stations/admin - Create a new station
  */
 
 import { NextRequest, NextResponse } from 'next/server'
 import { createClient } from '@supabase/supabase-js'
-import { cookies } from 'next/headers'
 
 const supabase = createClient(
   process.env.NEXT_PUBLIC_SUPABASE_URL!,
   process.env.SUPABASE_SERVICE_ROLE_KEY!
 )
 
-// GET - List all active wheel stations (public access)
+const WHEELS_ADMIN_PASSWORD = process.env.WHEELS_ADMIN_PASSWORD || 'wheels2024'
+
+// GET - List all stations with full details (no auth needed for listing)
 export async function GET() {
   try {
     const { data: stations, error } = await supabase
@@ -23,6 +24,8 @@ export async function GET() {
         name,
         address,
         city_id,
+        is_active,
+        manager_password,
         cities (name),
         wheel_station_managers (
           id,
@@ -36,7 +39,6 @@ export async function GET() {
           is_available
         )
       `)
-      .eq('is_active', true)
       .order('name')
 
     if (error) {
@@ -51,55 +53,47 @@ export async function GET() {
         ...station,
         totalWheels: wheels.length,
         availableWheels: wheels.filter((w: { is_available: boolean }) => w.is_available).length,
-        wheels: undefined // Don't send individual wheels in list view
+        wheels: undefined // Don't send individual wheels
       }
     })
 
     return NextResponse.json({ stations: stationsWithStats })
   } catch (error) {
-    console.error('Error in GET /api/wheel-stations:', error)
+    console.error('Error in GET /api/wheel-stations/admin:', error)
     return NextResponse.json({ error: 'Internal server error' }, { status: 500 })
   }
 }
 
-// POST - Create a new wheel station (super admin only)
+// POST - Create a new station (password protected)
 export async function POST(request: NextRequest) {
   try {
-    // Verify super admin
-    const cookieStore = await cookies()
-    const accessToken = cookieStore.get('access_token')?.value
-
-    if (!accessToken) {
-      return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
-    }
-
-    const { data: { user }, error: authError } = await supabase.auth.getUser(accessToken)
-    if (authError || !user) {
-      return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
-    }
-
-    const { data: userData } = await supabase
-      .from('users')
-      .select('role')
-      .eq('id', user.id)
-      .single()
-
-    if (userData?.role !== 'super_admin') {
-      return NextResponse.json({ error: 'Forbidden - Super admin only' }, { status: 403 })
-    }
-
     const body = await request.json()
-    const { name, address, city_id, managers, manager_password } = body
+    const { admin_password, name, address, city_id, manager_password, managers } = body
+
+    // Verify admin password
+    if (admin_password !== WHEELS_ADMIN_PASSWORD) {
+      return NextResponse.json({ error: 'סיסמת מנהל שגויה' }, { status: 403 })
+    }
 
     if (!name) {
-      return NextResponse.json({ error: 'Station name is required' }, { status: 400 })
+      return NextResponse.json({ error: 'שם תחנה הוא שדה חובה' }, { status: 400 })
     }
 
-    // Create station with optional password
-    const stationData: { name: string; address?: string; city_id?: string; manager_password?: string } = { name, address, city_id }
-    if (manager_password) {
-      stationData.manager_password = manager_password
+    // Create station
+    const stationData: {
+      name: string
+      address?: string
+      city_id?: string
+      manager_password?: string
+      is_active: boolean
+    } = {
+      name,
+      is_active: true
     }
+
+    if (address) stationData.address = address
+    if (city_id) stationData.city_id = city_id
+    if (manager_password) stationData.manager_password = manager_password
 
     const { data: station, error: stationError } = await supabase
       .from('wheel_stations')
@@ -109,14 +103,17 @@ export async function POST(request: NextRequest) {
 
     if (stationError) {
       console.error('Error creating station:', stationError)
-      return NextResponse.json({ error: 'Failed to create station' }, { status: 500 })
+      return NextResponse.json({ error: 'שגיאה ביצירת תחנה' }, { status: 500 })
     }
 
     // Add managers if provided
     if (managers && managers.length > 0) {
       const managersWithStation = managers.map((m: { full_name: string; phone: string; role?: string; is_primary?: boolean }) => ({
-        ...m,
-        station_id: station.id
+        station_id: station.id,
+        full_name: m.full_name,
+        phone: m.phone,
+        role: m.role || 'מנהל תחנה',
+        is_primary: m.is_primary || false
       }))
 
       const { error: managersError } = await supabase
@@ -125,13 +122,12 @@ export async function POST(request: NextRequest) {
 
       if (managersError) {
         console.error('Error adding managers:', managersError)
-        // Station was created but managers failed - log but don't fail
       }
     }
 
     return NextResponse.json({ station }, { status: 201 })
   } catch (error) {
-    console.error('Error in POST /api/wheel-stations:', error)
+    console.error('Error in POST /api/wheel-stations/admin:', error)
     return NextResponse.json({ error: 'Internal server error' }, { status: 500 })
   }
 }

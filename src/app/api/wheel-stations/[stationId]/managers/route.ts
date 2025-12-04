@@ -1,12 +1,11 @@
 /**
- * Station Managers API (for city managers)
- * GET /api/wheel-stations/[stationId]/managers - Get managers list
- * PUT /api/wheel-stations/[stationId]/managers - Update managers (city manager or super admin)
+ * Station Managers API
+ * GET /api/wheel-stations/[stationId]/managers - Get managers list (public)
+ * PUT /api/wheel-stations/[stationId]/managers - Update managers (station manager or admin password)
  */
 
 import { NextRequest, NextResponse } from 'next/server'
 import { createClient } from '@supabase/supabase-js'
-import { cookies } from 'next/headers'
 
 const supabase = createClient(
   process.env.NEXT_PUBLIC_SUPABASE_URL!,
@@ -25,46 +24,38 @@ interface Manager {
   is_primary?: boolean
 }
 
-// Helper to verify city manager or super admin
-async function verifyCityManagerOrAdmin(stationId: string): Promise<{ success: boolean; error?: string; userId?: string }> {
-  const cookieStore = await cookies()
-  const accessToken = cookieStore.get('access_token')?.value
-
-  if (!accessToken) {
-    return { success: false, error: 'Unauthorized' }
-  }
-
-  const { data: { user }, error: authError } = await supabase.auth.getUser(accessToken)
-  if (authError || !user) {
-    return { success: false, error: 'Unauthorized' }
-  }
-
-  const { data: userData } = await supabase
-    .from('users')
-    .select('role, city_id')
-    .eq('id', user.id)
+// Helper to verify station manager access (by phone and password)
+async function verifyStationManager(stationId: string, phone: string, password: string): Promise<{ success: boolean; error?: string }> {
+  // Get station with password and managers
+  const { data: station, error } = await supabase
+    .from('wheel_stations')
+    .select(`
+      manager_password,
+      wheel_station_managers (phone)
+    `)
+    .eq('id', stationId)
     .single()
 
-  // Super admins can manage all stations
-  if (userData?.role === 'super_admin') {
-    return { success: true, userId: user.id }
+  if (error || !station) {
+    return { success: false, error: 'Station not found' }
   }
 
-  // City managers can only manage stations in their city
-  if (userData?.role === 'city_manager' && userData.city_id) {
-    // Check if station belongs to this city
-    const { data: station } = await supabase
-      .from('wheel_stations')
-      .select('city_id')
-      .eq('id', stationId)
-      .single()
-
-    if (station && station.city_id === userData.city_id) {
-      return { success: true, userId: user.id }
-    }
+  // Check password
+  if (station.manager_password !== password) {
+    return { success: false, error: 'סיסמא שגויה' }
   }
 
-  return { success: false, error: 'Forbidden - City manager or super admin only' }
+  // Check if phone is in managers list
+  const cleanPhone = phone.replace(/\D/g, '')
+  const isManager = station.wheel_station_managers.some((m: { phone: string }) =>
+    m.phone.replace(/\D/g, '') === cleanPhone
+  )
+
+  if (!isManager) {
+    return { success: false, error: 'מספר הטלפון לא נמצא ברשימת המנהלים' }
+  }
+
+  return { success: true }
 }
 
 // GET - Get managers for station
@@ -94,14 +85,22 @@ export async function GET(request: NextRequest, { params }: RouteParams) {
 export async function PUT(request: NextRequest, { params }: RouteParams) {
   try {
     const { stationId } = await params
-
-    const auth = await verifyCityManagerOrAdmin(stationId)
-    if (!auth.success) {
-      return NextResponse.json({ error: auth.error }, { status: auth.error === 'Unauthorized' ? 401 : 403 })
+    const body = await request.json()
+    const { managers, manager_phone, manager_password } = body as {
+      managers: Manager[]
+      manager_phone?: string
+      manager_password?: string
     }
 
-    const body = await request.json()
-    const { managers } = body as { managers: Manager[] }
+    // Verify station manager access
+    if (!manager_phone || !manager_password) {
+      return NextResponse.json({ error: 'נדרש טלפון וסיסמא לעדכון' }, { status: 401 })
+    }
+
+    const auth = await verifyStationManager(stationId, manager_phone, manager_password)
+    if (!auth.success) {
+      return NextResponse.json({ error: auth.error }, { status: 403 })
+    }
 
     if (!managers || !Array.isArray(managers)) {
       return NextResponse.json({ error: 'Managers array required' }, { status: 400 })

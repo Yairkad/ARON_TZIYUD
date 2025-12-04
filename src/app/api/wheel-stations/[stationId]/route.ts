@@ -31,6 +31,7 @@ export async function GET(request: NextRequest, { params }: RouteParams) {
         address,
         city_id,
         is_active,
+        manager_password,
         cities (name),
         wheel_station_managers (
           id,
@@ -129,12 +130,20 @@ export async function PUT(request: NextRequest, { params }: RouteParams) {
 
     const { stationId } = await params
     const body = await request.json()
-    const { name, address, city_id, is_active, managers } = body
+    const { name, address, city_id, is_active, managers, manager_password } = body
+
+    // Build update object
+    const updateData: { name?: string; address?: string; city_id?: string; is_active?: boolean; manager_password?: string } = {}
+    if (name !== undefined) updateData.name = name
+    if (address !== undefined) updateData.address = address
+    if (city_id !== undefined) updateData.city_id = city_id
+    if (is_active !== undefined) updateData.is_active = is_active
+    if (manager_password !== undefined) updateData.manager_password = manager_password
 
     // Update station
     const { error: updateError } = await supabase
       .from('wheel_stations')
-      .update({ name, address, city_id, is_active })
+      .update(updateData)
       .eq('id', stationId)
 
     if (updateError) {

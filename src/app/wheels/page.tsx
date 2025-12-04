@@ -2,6 +2,7 @@
 
 import { useState, useEffect } from 'react'
 import Link from 'next/link'
+import toast, { Toaster } from 'react-hot-toast'
 
 interface Station {
   id: string
@@ -22,10 +23,48 @@ interface Manager {
   is_primary: boolean
 }
 
+interface SearchResult {
+  station: {
+    id: string
+    name: string
+    address: string
+    city: string | null
+  }
+  wheels: {
+    id: string
+    wheel_number: number
+    rim_size: string
+    bolt_count: number
+    bolt_spacing: number
+    is_donut: boolean
+    is_available: boolean
+  }[]
+  availableCount: number
+  totalCount: number
+}
+
+interface FilterOptions {
+  rim_sizes: string[]
+  bolt_counts: number[]
+  bolt_spacings: number[]
+}
+
 export default function WheelStationsPage() {
   const [stations, setStations] = useState<Station[]>([])
   const [loading, setLoading] = useState(true)
   const [error, setError] = useState<string | null>(null)
+
+  // Search state
+  const [showSearchModal, setShowSearchModal] = useState(false)
+  const [searchLoading, setSearchLoading] = useState(false)
+  const [searchResults, setSearchResults] = useState<SearchResult[] | null>(null)
+  const [filterOptions, setFilterOptions] = useState<FilterOptions | null>(null)
+  const [searchFilters, setSearchFilters] = useState({
+    rim_size: '',
+    bolt_count: '',
+    bolt_spacing: '',
+    available_only: true
+  })
 
   useEffect(() => {
     fetchStations()
@@ -43,6 +82,62 @@ export default function WheelStationsPage() {
     } finally {
       setLoading(false)
     }
+  }
+
+  const handleSearch = async () => {
+    // Need at least one filter
+    if (!searchFilters.rim_size && !searchFilters.bolt_count && !searchFilters.bolt_spacing) {
+      toast.error('נא לבחור לפחות פילטר אחד')
+      return
+    }
+
+    setSearchLoading(true)
+    try {
+      const params = new URLSearchParams()
+      if (searchFilters.rim_size) params.append('rim_size', searchFilters.rim_size)
+      if (searchFilters.bolt_count) params.append('bolt_count', searchFilters.bolt_count)
+      if (searchFilters.bolt_spacing) params.append('bolt_spacing', searchFilters.bolt_spacing)
+      if (searchFilters.available_only) params.append('available_only', 'true')
+
+      const response = await fetch(`/api/wheel-stations/search?${params}`)
+      if (!response.ok) throw new Error('Failed to search')
+      const data = await response.json()
+      setSearchResults(data.results)
+      setFilterOptions(data.filterOptions)
+    } catch (err) {
+      console.error(err)
+      toast.error('שגיאה בחיפוש')
+    } finally {
+      setSearchLoading(false)
+    }
+  }
+
+  const openSearchModal = async () => {
+    setShowSearchModal(true)
+    setSearchResults(null)
+    // Fetch filter options
+    if (!filterOptions) {
+      try {
+        const response = await fetch('/api/wheel-stations/search?')
+        if (response.ok) {
+          const data = await response.json()
+          setFilterOptions(data.filterOptions)
+        }
+      } catch (err) {
+        console.error(err)
+      }
+    }
+  }
+
+  const closeSearchModal = () => {
+    setShowSearchModal(false)
+    setSearchResults(null)
+    setSearchFilters({
+      rim_size: '',
+      bolt_count: '',
+      bolt_spacing: '',
+      available_only: true
+    })
   }
 
   if (loading) {
@@ -69,10 +164,36 @@ export default function WheelStationsPage() {
 
   return (
     <div style={styles.container}>
+      <Toaster
+        position="top-center"
+        toastOptions={{
+          duration: 3000,
+          style: {
+            background: '#1e293b',
+            color: '#fff',
+            border: '1px solid #334155',
+            direction: 'rtl',
+            padding: '16px',
+            borderRadius: '12px',
+            fontSize: '0.95rem',
+          },
+          success: {
+            iconTheme: { primary: '#10b981', secondary: '#fff' },
+          },
+          error: {
+            iconTheme: { primary: '#ef4444', secondary: '#fff' },
+          },
+        }}
+      />
       <header style={styles.header}>
         <div style={styles.headerIcon}>⚫</div>
         <h1 style={styles.title}>תחנות השאלת גלגלים</h1>
         <p style={styles.subtitle}>בחר תחנה כדי לראות את המלאי הזמין</p>
+
+        {/* Search Button */}
+        <button style={styles.searchBtn} onClick={openSearchModal}>
+          🔍 חיפוש גלגל בכל התחנות
+        </button>
       </header>
 
       {stations.length === 0 ? (
@@ -117,8 +238,130 @@ export default function WheelStationsPage() {
       )}
 
       <footer style={styles.footer}>
-        <Link href="/" style={styles.footerLink}>← חזרה לדף הראשי</Link>
+        <Link href="/wheels/admin" style={styles.adminLink}>⚙️ ניהול</Link>
       </footer>
+
+      {/* Search Modal */}
+      {showSearchModal && (
+        <div style={styles.modalOverlay} onClick={closeSearchModal}>
+          <div style={styles.modal} onClick={e => e.stopPropagation()}>
+            <div style={styles.modalHeader}>
+              <h3 style={styles.modalTitle}>🔍 חיפוש גלגל</h3>
+              <button style={styles.closeBtn} onClick={closeSearchModal}>✕</button>
+            </div>
+
+            {!searchResults ? (
+              <>
+                <p style={styles.modalSubtitle}>בחר מפרט לחיפוש בכל התחנות</p>
+
+                <div style={styles.filterGrid}>
+                  <div style={styles.filterGroup}>
+                    <label style={styles.filterLabel}>גודל ג'אנט</label>
+                    <select
+                      style={styles.filterSelect}
+                      value={searchFilters.rim_size}
+                      onChange={e => setSearchFilters({...searchFilters, rim_size: e.target.value})}
+                    >
+                      <option value="">בחר...</option>
+                      {filterOptions?.rim_sizes.map(size => (
+                        <option key={size} value={size}>{size}"</option>
+                      ))}
+                    </select>
+                  </div>
+
+                  <div style={styles.filterGroup}>
+                    <label style={styles.filterLabel}>כמות ברגים</label>
+                    <select
+                      style={styles.filterSelect}
+                      value={searchFilters.bolt_count}
+                      onChange={e => setSearchFilters({...searchFilters, bolt_count: e.target.value})}
+                    >
+                      <option value="">בחר...</option>
+                      {filterOptions?.bolt_counts.map(count => (
+                        <option key={count} value={count}>{count}</option>
+                      ))}
+                    </select>
+                  </div>
+
+                  <div style={styles.filterGroup}>
+                    <label style={styles.filterLabel}>מרווח ברגים</label>
+                    <select
+                      style={styles.filterSelect}
+                      value={searchFilters.bolt_spacing}
+                      onChange={e => setSearchFilters({...searchFilters, bolt_spacing: e.target.value})}
+                    >
+                      <option value="">בחר...</option>
+                      {filterOptions?.bolt_spacings.map(spacing => (
+                        <option key={spacing} value={spacing}>{spacing}</option>
+                      ))}
+                    </select>
+                  </div>
+                </div>
+
+                <div style={styles.checkboxRow}>
+                  <input
+                    type="checkbox"
+                    id="available_only"
+                    checked={searchFilters.available_only}
+                    onChange={e => setSearchFilters({...searchFilters, available_only: e.target.checked})}
+                  />
+                  <label htmlFor="available_only" style={styles.checkboxLabel}>הצג רק זמינים</label>
+                </div>
+
+                <button
+                  style={styles.searchSubmitBtn}
+                  onClick={handleSearch}
+                  disabled={searchLoading}
+                >
+                  {searchLoading ? 'מחפש...' : '🔍 חפש'}
+                </button>
+              </>
+            ) : (
+              <>
+                <button style={styles.backToFiltersBtn} onClick={() => setSearchResults(null)}>
+                  ← חזרה לסינון
+                </button>
+
+                {searchResults.length === 0 ? (
+                  <div style={styles.noResults}>
+                    <p>😕 לא נמצאו גלגלים מתאימים</p>
+                    <p style={styles.noResultsHint}>נסה לשנות את הפילטרים</p>
+                  </div>
+                ) : (
+                  <div style={styles.resultsList}>
+                    <div style={styles.resultsHeader}>
+                      נמצאו {searchResults.reduce((acc, r) => acc + r.totalCount, 0)} גלגלים ב-{searchResults.length} תחנות
+                    </div>
+
+                    {searchResults.map(result => (
+                      <Link
+                        key={result.station.id}
+                        href={`/wheels/${result.station.id}`}
+                        style={styles.resultCard}
+                        onClick={closeSearchModal}
+                      >
+                        <div style={styles.resultStationInfo}>
+                          <div style={styles.resultStationName}>🏙️ {result.station.name}</div>
+                          {result.station.city && (
+                            <div style={styles.resultCityBadge}>{result.station.city}</div>
+                          )}
+                        </div>
+                        {result.station.address && (
+                          <div style={styles.resultAddress}>📍 {result.station.address}</div>
+                        )}
+                        <div style={styles.resultStats}>
+                          <span style={styles.resultAvailable}>✅ {result.availableCount} זמינים</span>
+                          <span style={styles.resultTotal}>מתוך {result.totalCount}</span>
+                        </div>
+                      </Link>
+                    ))}
+                  </div>
+                )}
+              </>
+            )}
+          </div>
+        </div>
+      )}
     </div>
   )
 }
@@ -147,6 +390,20 @@ const styles: { [key: string]: React.CSSProperties } = {
   subtitle: {
     color: '#a0aec0',
     fontSize: '1.1rem',
+    marginBottom: '20px',
+  },
+  searchBtn: {
+    background: 'linear-gradient(135deg, #3b82f6, #2563eb)',
+    color: 'white',
+    border: 'none',
+    padding: '14px 28px',
+    borderRadius: '12px',
+    cursor: 'pointer',
+    fontWeight: 'bold',
+    fontSize: '1rem',
+    display: 'inline-flex',
+    alignItems: 'center',
+    gap: '8px',
   },
   loading: {
     display: 'flex',
@@ -250,8 +507,169 @@ const styles: { [key: string]: React.CSSProperties } = {
     paddingTop: '20px',
     borderTop: '1px solid rgba(255,255,255,0.1)',
   },
-  footerLink: {
-    color: '#a0aec0',
+  adminLink: {
+    color: '#f59e0b',
     textDecoration: 'none',
+    fontSize: '0.9rem',
+  },
+  // Modal styles
+  modalOverlay: {
+    position: 'fixed',
+    top: 0,
+    left: 0,
+    right: 0,
+    bottom: 0,
+    background: 'rgba(0,0,0,0.8)',
+    display: 'flex',
+    alignItems: 'center',
+    justifyContent: 'center',
+    zIndex: 1000,
+    padding: '20px',
+  },
+  modal: {
+    background: '#1e293b',
+    borderRadius: '16px',
+    padding: '25px',
+    width: '100%',
+    maxWidth: '450px',
+    maxHeight: '80vh',
+    overflowY: 'auto',
+  },
+  modalHeader: {
+    display: 'flex',
+    justifyContent: 'space-between',
+    alignItems: 'center',
+    marginBottom: '15px',
+  },
+  modalTitle: {
+    color: '#f59e0b',
+    margin: 0,
+    fontSize: '1.3rem',
+  },
+  closeBtn: {
+    background: 'transparent',
+    border: 'none',
+    color: '#a0aec0',
+    fontSize: '1.5rem',
+    cursor: 'pointer',
+  },
+  modalSubtitle: {
+    color: '#a0aec0',
+    marginBottom: '20px',
+  },
+  filterGrid: {
+    display: 'grid',
+    gridTemplateColumns: 'repeat(3, 1fr)',
+    gap: '12px',
+    marginBottom: '15px',
+  },
+  filterGroup: {
+    display: 'flex',
+    flexDirection: 'column',
+    gap: '5px',
+  },
+  filterLabel: {
+    color: '#a0aec0',
+    fontSize: '0.8rem',
+  },
+  filterSelect: {
+    padding: '10px',
+    borderRadius: '8px',
+    border: '1px solid #4a5568',
+    background: '#2d3748',
+    color: 'white',
+    fontSize: '0.9rem',
+  },
+  checkboxRow: {
+    display: 'flex',
+    alignItems: 'center',
+    gap: '8px',
+    marginBottom: '20px',
+  },
+  checkboxLabel: {
+    color: '#a0aec0',
+    fontSize: '0.9rem',
+  },
+  searchSubmitBtn: {
+    width: '100%',
+    background: 'linear-gradient(135deg, #10b981, #059669)',
+    color: 'white',
+    border: 'none',
+    padding: '14px',
+    borderRadius: '10px',
+    cursor: 'pointer',
+    fontWeight: 'bold',
+    fontSize: '1rem',
+  },
+  backToFiltersBtn: {
+    background: 'transparent',
+    border: 'none',
+    color: '#3b82f6',
+    cursor: 'pointer',
+    marginBottom: '15px',
+    fontSize: '0.9rem',
+  },
+  noResults: {
+    textAlign: 'center',
+    padding: '30px',
+  },
+  noResultsHint: {
+    color: '#a0aec0',
+    fontSize: '0.9rem',
+  },
+  resultsList: {
+    display: 'flex',
+    flexDirection: 'column',
+    gap: '10px',
+  },
+  resultsHeader: {
+    color: '#10b981',
+    fontWeight: 'bold',
+    marginBottom: '10px',
+    textAlign: 'center',
+  },
+  resultCard: {
+    background: 'rgba(255,255,255,0.05)',
+    borderRadius: '12px',
+    padding: '15px',
+    textDecoration: 'none',
+    color: '#fff',
+    display: 'block',
+    border: '1px solid transparent',
+    transition: 'all 0.2s',
+  },
+  resultStationInfo: {
+    display: 'flex',
+    alignItems: 'center',
+    gap: '10px',
+    marginBottom: '5px',
+  },
+  resultStationName: {
+    fontWeight: 'bold',
+    color: '#f59e0b',
+  },
+  resultCityBadge: {
+    background: 'rgba(59, 130, 246, 0.2)',
+    color: '#60a5fa',
+    padding: '3px 8px',
+    borderRadius: '6px',
+    fontSize: '0.8rem',
+  },
+  resultAddress: {
+    color: '#a0aec0',
+    fontSize: '0.85rem',
+    marginBottom: '8px',
+  },
+  resultStats: {
+    display: 'flex',
+    gap: '15px',
+  },
+  resultAvailable: {
+    color: '#10b981',
+    fontWeight: 'bold',
+  },
+  resultTotal: {
+    color: '#a0aec0',
+    fontSize: '0.9rem',
   },
 }
