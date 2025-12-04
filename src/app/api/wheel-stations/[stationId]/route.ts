@@ -1,7 +1,7 @@
 /**
  * Single Wheel Station API
  * GET /api/wheel-stations/[stationId] - Get station details with all wheels
- * PUT /api/wheel-stations/[stationId] - Update station (super admin only)
+ * PUT /api/wheel-stations/[stationId] - Update station (super admin or station manager for address only)
  * DELETE /api/wheel-stations/[stationId] - Delete station (super admin only)
  */
 
@@ -16,6 +16,40 @@ const supabase = createClient(
 
 interface RouteParams {
   params: Promise<{ stationId: string }>
+}
+
+// Helper to verify station manager (by phone and password)
+async function verifyStationManager(stationId: string, phone: string, password: string): Promise<{ success: boolean; error?: string }> {
+  // Get station with password and managers
+  const { data: station, error } = await supabase
+    .from('wheel_stations')
+    .select(`
+      manager_password,
+      wheel_station_managers (phone)
+    `)
+    .eq('id', stationId)
+    .single()
+
+  if (error || !station) {
+    return { success: false, error: 'Station not found' }
+  }
+
+  // Check password
+  if (station.manager_password !== password) {
+    return { success: false, error: 'סיסמא שגויה' }
+  }
+
+  // Check if phone is in managers list
+  const cleanPhone = phone.replace(/\D/g, '')
+  const isManager = station.wheel_station_managers.some((m: { phone: string }) =>
+    m.phone.replace(/\D/g, '') === cleanPhone
+  )
+
+  if (!isManager) {
+    return { success: false, error: 'מספר הטלפון לא נמצא ברשימת המנהלים' }
+  }
+
+  return { success: true }
 }
 
 // GET - Get station details with all wheels (public access)
@@ -120,17 +154,41 @@ async function verifySuperAdmin(): Promise<{ success: boolean; error?: string }>
   return { success: true }
 }
 
-// PUT - Update station
+// PUT - Update station (super admin for all fields, station manager for address only)
 export async function PUT(request: NextRequest, { params }: RouteParams) {
   try {
+    const { stationId } = await params
+    const body = await request.json()
+    const { name, address, city_id, is_active, managers, manager_password, manager_phone, current_password } = body
+
+    // Check if this is a station manager update (has manager_phone and current_password)
+    if (manager_phone && current_password) {
+      const managerAuth = await verifyStationManager(stationId, manager_phone, current_password)
+      if (!managerAuth.success) {
+        return NextResponse.json({ error: managerAuth.error }, { status: 401 })
+      }
+
+      // Station managers can only update address
+      if (address !== undefined) {
+        const { error: updateError } = await supabase
+          .from('wheel_stations')
+          .update({ address })
+          .eq('id', stationId)
+
+        if (updateError) {
+          console.error('Error updating station address:', updateError)
+          return NextResponse.json({ error: 'Failed to update address' }, { status: 500 })
+        }
+      }
+
+      return NextResponse.json({ success: true, message: 'הכתובת עודכנה בהצלחה' })
+    }
+
+    // Super admin authentication
     const auth = await verifySuperAdmin()
     if (!auth.success) {
       return NextResponse.json({ error: auth.error }, { status: auth.error === 'Unauthorized' ? 401 : 403 })
     }
-
-    const { stationId } = await params
-    const body = await request.json()
-    const { name, address, city_id, is_active, managers, manager_password } = body
 
     // Build update object
     const updateData: { name?: string; address?: string; city_id?: string; is_active?: boolean; manager_password?: string } = {}

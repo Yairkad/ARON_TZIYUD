@@ -169,6 +169,10 @@ export default function StationPage({ params }: { params: Promise<{ stationId: s
   const [showContactsModal, setShowContactsModal] = useState(false)
   const [contacts, setContacts] = useState<Manager[]>([])
 
+  // Edit station details
+  const [showEditDetailsModal, setShowEditDetailsModal] = useState(false)
+  const [editAddress, setEditAddress] = useState('')
+
   const fetchStation = async () => {
     try {
       const response = await fetch(`/api/wheel-stations/${stationId}`)
@@ -615,8 +619,7 @@ export default function StationPage({ params }: { params: Promise<{ stationId: s
           {isManager ? (
             <div style={styles.managerActions} className="station-manager-actions">
               <button style={styles.addBtn} className="station-manager-btn" onClick={() => setShowAddWheelModal(true)}>➕ <span className="btn-text">הוסף גלגל</span></button>
-              <button style={styles.editContactsBtn} className="station-manager-btn" onClick={() => setShowContactsModal(true)}>👥 <span className="btn-text">ערוך אנשי קשר</span></button>
-              <button style={styles.changePasswordBtn} className="station-manager-btn" onClick={() => setShowChangePasswordModal(true)}>🔑 <span className="btn-text">שנה סיסמא</span></button>
+              <button style={styles.editContactsBtn} className="station-manager-btn" onClick={() => { setEditAddress(station.address || ''); setShowEditDetailsModal(true) }}>⚙️ <span className="btn-text">ערוך פרטים</span></button>
               <button style={styles.logoutBtn} className="station-manager-btn" onClick={handleLogout}>🚪 <span className="btn-text">יציאה</span></button>
             </div>
           ) : (
@@ -1175,45 +1178,127 @@ export default function StationPage({ params }: { params: Promise<{ stationId: s
         </div>
       )}
 
-      {/* Change Password Modal */}
-      {showChangePasswordModal && (
-        <div style={styles.modalOverlay} onClick={() => setShowChangePasswordModal(false)}>
-          <div style={styles.modal} onClick={e => e.stopPropagation()}>
-            <h3 style={styles.modalTitle}>🔑 שינוי סיסמת תחנה</h3>
-            <p style={styles.modalSubtitle}>הסיסמא משותפת לכל מנהלי התחנה</p>
-            <div style={styles.formGroup}>
-              <label style={styles.label}>סיסמא נוכחית</label>
-              <input
-                type="password"
-                value={passwordForm.current}
-                onChange={e => setPasswordForm({...passwordForm, current: e.target.value})}
-                style={styles.input}
-              />
-            </div>
-            <div style={styles.formGroup}>
-              <label style={styles.label}>סיסמא חדשה</label>
-              <input
-                type="password"
-                value={passwordForm.new}
-                onChange={e => setPasswordForm({...passwordForm, new: e.target.value})}
-                style={styles.input}
-              />
-            </div>
-            <div style={styles.formGroup}>
-              <label style={styles.label}>אימות סיסמא חדשה</label>
-              <input
-                type="password"
-                value={passwordForm.confirm}
-                onChange={e => setPasswordForm({...passwordForm, confirm: e.target.value})}
-                style={styles.input}
-              />
-            </div>
-            <div style={styles.modalButtons}>
-              <button style={styles.cancelBtn} onClick={() => setShowChangePasswordModal(false)}>ביטול</button>
-              <button style={styles.submitBtn} onClick={handleChangePassword} disabled={actionLoading}>
-                {actionLoading ? 'שומר...' : 'שנה סיסמא'}
+      {/* Edit Details Modal */}
+      {showEditDetailsModal && (
+        <div style={styles.modalOverlay} onClick={() => setShowEditDetailsModal(false)}>
+          <div style={{...styles.modal, maxWidth: '550px'}} onClick={e => e.stopPropagation()}>
+            <h3 style={styles.modalTitle}>⚙️ עריכת פרטי תחנה</h3>
+
+            {/* Section: Address */}
+            <div style={{marginBottom: '20px', padding: '15px', background: 'rgba(255,255,255,0.05)', borderRadius: '10px'}}>
+              <h4 style={{margin: '0 0 12px', color: '#f59e0b', fontSize: '1rem'}}>📍 כתובת התחנה</h4>
+              <div style={styles.formGroup}>
+                <input
+                  type="text"
+                  value={editAddress}
+                  onChange={e => setEditAddress(e.target.value)}
+                  style={styles.input}
+                  placeholder="רחוב, מספר, עיר"
+                />
+              </div>
+              <button
+                style={{...styles.smallBtn, background: '#10b981'}}
+                onClick={async () => {
+                  setActionLoading(true)
+                  try {
+                    const response = await fetch(`/api/wheel-stations/${stationId}`, {
+                      method: 'PUT',
+                      headers: { 'Content-Type': 'application/json' },
+                      body: JSON.stringify({
+                        address: editAddress,
+                        manager_phone: currentManager?.phone,
+                        current_password: sessionPassword
+                      })
+                    })
+                    if (!response.ok) {
+                      const data = await response.json()
+                      throw new Error(data.error || 'Failed to update')
+                    }
+                    await fetchStation()
+                    toast.success('הכתובת עודכנה!')
+                  } catch (err: unknown) {
+                    toast.error(err instanceof Error ? err.message : 'שגיאה בעדכון')
+                  } finally {
+                    setActionLoading(false)
+                  }
+                }}
+                disabled={actionLoading}
+              >
+                {actionLoading ? 'שומר...' : 'שמור כתובת'}
               </button>
             </div>
+
+            {/* Section: Contacts */}
+            <div style={{marginBottom: '20px', padding: '15px', background: 'rgba(255,255,255,0.05)', borderRadius: '10px'}}>
+              <h4 style={{margin: '0 0 12px', color: '#f59e0b', fontSize: '1rem'}}>👥 אנשי קשר ({contacts.length}/4)</h4>
+              {contacts.map((contact, index) => (
+                <div key={index} style={{display: 'flex', gap: '8px', marginBottom: '8px', flexWrap: 'wrap'}} className="edit-details-contact-row">
+                  <input
+                    type="text"
+                    placeholder="שם מלא"
+                    value={contact.full_name}
+                    onChange={e => updateContact(index, 'full_name', e.target.value)}
+                    style={{...styles.input, flex: 1, minWidth: '120px'}}
+                  />
+                  <input
+                    type="tel"
+                    placeholder="טלפון"
+                    value={contact.phone}
+                    onChange={e => updateContact(index, 'phone', e.target.value)}
+                    style={{...styles.input, flex: 1, minWidth: '100px'}}
+                  />
+                  <button style={styles.removeBtn} onClick={() => removeContact(index)}>✕</button>
+                </div>
+              ))}
+              <div style={{display: 'flex', gap: '8px', flexWrap: 'wrap'}}>
+                <button style={{...styles.smallBtn, background: '#3b82f6'}} onClick={addContact} disabled={contacts.length >= 4}>
+                  ➕ הוסף איש קשר
+                </button>
+                <button style={{...styles.smallBtn, background: '#10b981'}} onClick={handleSaveContacts} disabled={actionLoading}>
+                  {actionLoading ? 'שומר...' : 'שמור אנשי קשר'}
+                </button>
+              </div>
+            </div>
+
+            {/* Section: Password */}
+            <div style={{marginBottom: '20px', padding: '15px', background: 'rgba(255,255,255,0.05)', borderRadius: '10px'}}>
+              <h4 style={{margin: '0 0 12px', color: '#f59e0b', fontSize: '1rem'}}>🔑 שינוי סיסמה</h4>
+              <p style={{fontSize: '0.85rem', color: '#a0aec0', margin: '0 0 12px'}}>הסיסמה משותפת לכל מנהלי התחנה</p>
+              <div style={styles.formGroup}>
+                <label style={styles.label}>סיסמה נוכחית</label>
+                <input
+                  type="password"
+                  value={passwordForm.current}
+                  onChange={e => setPasswordForm({...passwordForm, current: e.target.value})}
+                  style={styles.input}
+                />
+              </div>
+              <div style={{display: 'flex', gap: '10px', flexWrap: 'wrap'}}>
+                <div style={{...styles.formGroup, flex: 1, minWidth: '120px'}}>
+                  <label style={styles.label}>סיסמה חדשה</label>
+                  <input
+                    type="password"
+                    value={passwordForm.new}
+                    onChange={e => setPasswordForm({...passwordForm, new: e.target.value})}
+                    style={styles.input}
+                  />
+                </div>
+                <div style={{...styles.formGroup, flex: 1, minWidth: '120px'}}>
+                  <label style={styles.label}>אימות</label>
+                  <input
+                    type="password"
+                    value={passwordForm.confirm}
+                    onChange={e => setPasswordForm({...passwordForm, confirm: e.target.value})}
+                    style={styles.input}
+                  />
+                </div>
+              </div>
+              <button style={{...styles.smallBtn, background: '#f59e0b', color: '#000'}} onClick={handleChangePassword} disabled={actionLoading}>
+                {actionLoading ? 'שומר...' : 'שנה סיסמה'}
+              </button>
+            </div>
+
+            <button style={{...styles.cancelBtn, width: '100%'}} onClick={() => setShowEditDetailsModal(false)}>סגור</button>
           </div>
         </div>
       )}
@@ -1845,6 +1930,30 @@ const styles: { [key: string]: React.CSSProperties } = {
     borderRadius: '8px',
     cursor: 'pointer',
     fontWeight: 'bold',
+  },
+  smallBtn: {
+    background: '#3b82f6',
+    color: '#fff',
+    border: 'none',
+    padding: '8px 16px',
+    borderRadius: '6px',
+    cursor: 'pointer',
+    fontWeight: 'bold',
+    fontSize: '0.85rem',
+  },
+  removeBtn: {
+    background: '#ef4444',
+    color: '#fff',
+    border: 'none',
+    width: '32px',
+    height: '32px',
+    borderRadius: '6px',
+    cursor: 'pointer',
+    fontWeight: 'bold',
+    fontSize: '0.9rem',
+    display: 'flex',
+    alignItems: 'center',
+    justifyContent: 'center',
   },
   errorText: {
     color: '#ef4444',
