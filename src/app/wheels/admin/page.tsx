@@ -298,6 +298,48 @@ export default function WheelsAdminPage() {
 
   return (
     <div style={styles.container}>
+      <style>{`
+        @media (max-width: 600px) {
+          .admin-header-title {
+            font-size: 1.4rem !important;
+          }
+          .admin-header-top {
+            flex-wrap: wrap;
+            gap: 8px;
+          }
+          .admin-btn {
+            padding: 6px 12px !important;
+            font-size: 0.8rem !important;
+          }
+          .admin-btn-text {
+            display: none;
+          }
+          .admin-action-btn {
+            padding: 6px 10px !important;
+            font-size: 0.75rem !important;
+          }
+          .admin-add-btn {
+            padding: 12px !important;
+            font-size: 0.9rem !important;
+          }
+          .admin-station-actions {
+            flex-direction: column;
+            gap: 6px !important;
+          }
+          .admin-station-actions button,
+          .admin-station-actions a {
+            width: 100% !important;
+            text-align: center !important;
+          }
+          .admin-manager-row {
+            flex-direction: column !important;
+            gap: 6px !important;
+          }
+          .admin-manager-row input {
+            width: 100% !important;
+          }
+        }
+      `}</style>
       <Toaster
         position="top-center"
         toastOptions={{
@@ -320,16 +362,16 @@ export default function WheelsAdminPage() {
         }}
       />
       <header style={styles.header}>
-        <div style={styles.headerTop}>
-          <Link href="/wheels" style={styles.backBtn}>← חזרה</Link>
-          <button style={styles.logoutBtn} onClick={handleLogout}>🚪 יציאה</button>
+        <div style={styles.headerTop} className="admin-header-top">
+          <Link href="/wheels" style={styles.backBtn} className="admin-btn">← <span className="admin-btn-text">חזרה</span></Link>
+          <button style={styles.logoutBtn} onClick={handleLogout} className="admin-btn">🚪 <span className="admin-btn-text">יציאה</span></button>
         </div>
-        <h1 style={styles.title}>⚙️ ניהול תחנות גלגלים</h1>
+        <h1 style={styles.title} className="admin-header-title">⚙️ ניהול תחנות גלגלים</h1>
         <p style={styles.subtitle}>{stations.length} תחנות במערכת</p>
       </header>
 
       {/* Add Station Button */}
-      <button style={styles.addStationBtn} onClick={() => { resetForm(); setShowAddStation(true) }}>
+      <button style={styles.addStationBtn} className="admin-add-btn" onClick={() => { resetForm(); setShowAddStation(true) }}>
         ➕ הוסף תחנה חדשה
       </button>
 
@@ -385,19 +427,20 @@ export default function WheelsAdminPage() {
                     </div>
                   )}
 
-                  <div style={styles.stationActions}>
-                    <button style={styles.editBtn} onClick={() => openEditModal(station)}>✏️ ערוך</button>
+                  <div style={styles.stationActions} className="admin-station-actions">
+                    <button style={styles.editBtn} className="admin-action-btn" onClick={() => openEditModal(station)}>✏️ ערוך</button>
                     <button
                       style={station.is_active ? styles.deactivateBtn : styles.activateBtn}
+                      className="admin-action-btn"
                       onClick={() => handleToggleActive(station)}
                       disabled={actionLoading}
                     >
                       {station.is_active ? '🔴 השבת' : '🟢 הפעל'}
                     </button>
-                    <button style={styles.deleteBtn} onClick={() => handleDeleteStation(station)} disabled={actionLoading}>
+                    <button style={styles.deleteBtn} className="admin-action-btn" onClick={() => handleDeleteStation(station)} disabled={actionLoading}>
                       🗑️ מחק
                     </button>
-                    <Link href={`/wheels/${station.id}`} style={styles.viewBtn}>👁️ צפה</Link>
+                    <Link href={`/wheels/${station.id}`} style={styles.viewBtn} className="admin-action-btn">👁️ צפה</Link>
                   </div>
                 </div>
               )}
@@ -470,7 +513,7 @@ export default function WheelsAdminPage() {
               </div>
 
               {stationForm.managers.map((manager, index) => (
-                <div key={index} style={styles.managerRow}>
+                <div key={index} style={styles.managerRow} className="admin-manager-row">
                   <input
                     type="text"
                     placeholder="שם מלא"

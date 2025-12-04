@@ -145,6 +145,26 @@ export default function StationPage({ params }: { params: Promise<{ stationId: s
     }
   }, [stationId])
 
+  // Scroll to wheel when hash is in URL (from search results)
+  useEffect(() => {
+    if (!loading && station && typeof window !== 'undefined') {
+      const hash = window.location.hash
+      if (hash && hash.startsWith('#wheel-')) {
+        setTimeout(() => {
+          const element = document.getElementById(hash.slice(1))
+          if (element) {
+            element.scrollIntoView({ behavior: 'smooth', block: 'center' })
+            // Highlight the wheel briefly
+            element.style.boxShadow = '0 0 0 4px #f59e0b'
+            setTimeout(() => {
+              element.style.boxShadow = ''
+            }, 2000)
+          }
+        }, 300)
+      }
+    }
+  }, [loading, station])
+
   // Contacts management
   const [showContactsModal, setShowContactsModal] = useState(false)
   const [contacts, setContacts] = useState<Manager[]>([])
@@ -485,6 +505,67 @@ export default function StationPage({ params }: { params: Promise<{ stationId: s
 
   return (
     <div style={styles.container}>
+      <style>{`
+        @media (max-width: 600px) {
+          .station-header-title {
+            font-size: 1.4rem !important;
+          }
+          .station-header-top {
+            flex-wrap: wrap;
+            gap: 8px;
+          }
+          .station-manager-actions {
+            flex-wrap: wrap;
+            gap: 6px !important;
+            justify-content: flex-end;
+          }
+          .station-manager-btn {
+            padding: 6px 10px !important;
+            font-size: 0.75rem !important;
+          }
+          .station-manager-btn .btn-text {
+            display: none;
+          }
+          .station-login-btn {
+            padding: 8px 14px !important;
+            font-size: 0.85rem !important;
+          }
+          .station-filter-row {
+            flex-direction: column;
+            gap: 8px !important;
+          }
+          .station-filter-group {
+            min-width: 100% !important;
+          }
+          .station-card-actions {
+            flex-direction: column;
+            gap: 6px !important;
+          }
+          .station-card-actions button {
+            width: 100% !important;
+          }
+          .station-grid {
+            grid-template-columns: repeat(auto-fill, minmax(140px, 1fr)) !important;
+            gap: 10px !important;
+          }
+          .station-stats {
+            flex-wrap: wrap;
+            justify-content: center;
+          }
+          .station-stat {
+            min-width: 80px !important;
+            padding: 12px 15px !important;
+          }
+          .station-contact-buttons {
+            flex-direction: column;
+            gap: 8px !important;
+          }
+          .station-contact-btn {
+            width: 100% !important;
+            justify-content: center !important;
+          }
+        }
+      `}</style>
       <Toaster
         position="top-center"
         toastOptions={{
@@ -513,35 +594,35 @@ export default function StationPage({ params }: { params: Promise<{ stationId: s
         }}
       />
       <header style={styles.header}>
-        <div style={styles.headerTop}>
+        <div style={styles.headerTop} className="station-header-top">
           <Link href="/wheels" style={styles.backBtn}>← חזרה</Link>
           {isManager ? (
-            <div style={styles.managerActions}>
-              <button style={styles.addBtn} onClick={() => setShowAddWheelModal(true)}>➕ הוסף גלגל</button>
-              <button style={styles.editContactsBtn} onClick={() => setShowContactsModal(true)}>👥 ערוך אנשי קשר</button>
-              <button style={styles.changePasswordBtn} onClick={() => setShowChangePasswordModal(true)}>🔑 שנה סיסמא</button>
-              <button style={styles.logoutBtn} onClick={handleLogout}>🚪 יציאה</button>
+            <div style={styles.managerActions} className="station-manager-actions">
+              <button style={styles.addBtn} className="station-manager-btn" onClick={() => setShowAddWheelModal(true)}>➕ <span className="btn-text">הוסף גלגל</span></button>
+              <button style={styles.editContactsBtn} className="station-manager-btn" onClick={() => setShowContactsModal(true)}>👥 <span className="btn-text">ערוך אנשי קשר</span></button>
+              <button style={styles.changePasswordBtn} className="station-manager-btn" onClick={() => setShowChangePasswordModal(true)}>🔑 <span className="btn-text">שנה סיסמא</span></button>
+              <button style={styles.logoutBtn} className="station-manager-btn" onClick={handleLogout}>🚪 <span className="btn-text">יציאה</span></button>
             </div>
           ) : (
-            <button style={styles.managerBtn} onClick={() => setShowLoginModal(true)}>🔐 כניסת מנהל</button>
+            <button style={styles.managerBtn} className="station-login-btn" onClick={() => setShowLoginModal(true)}>🔐 כניסת מנהל</button>
           )}
         </div>
-        <h1 style={styles.title}>🏙️ {station.name}</h1>
+        <h1 style={styles.title} className="station-header-title">🏙️ {station.name}</h1>
         {station.address && <p style={styles.address}>📍 {station.address}</p>}
         {isManager && <div style={styles.managerBadge}>🔓 מצב ניהול</div>}
       </header>
 
       {/* Stats */}
-      <div style={styles.stats}>
-        <div style={styles.stat}>
+      <div style={styles.stats} className="station-stats">
+        <div style={styles.stat} className="station-stat">
           <div style={styles.statValue}>{station.totalWheels}</div>
           <div style={styles.statLabel}>סה"כ גלגלים</div>
         </div>
-        <div style={{...styles.stat, ...styles.statAvailable}}>
+        <div style={{...styles.stat, ...styles.statAvailable}} className="station-stat">
           <div style={{...styles.statValue, color: '#10b981'}}>{station.availableWheels}</div>
           <div style={styles.statLabel}>זמינים</div>
         </div>
-        <div style={{...styles.stat, ...styles.statTaken}}>
+        <div style={{...styles.stat, ...styles.statTaken}} className="station-stat">
           <div style={{...styles.statValue, color: '#ef4444'}}>{station.totalWheels - station.availableWheels}</div>
           <div style={styles.statLabel}>מושאלים</div>
         </div>
@@ -558,8 +639,8 @@ export default function StationPage({ params }: { params: Promise<{ stationId: s
             {showAdvancedFilters ? '- פחות אפשרויות' : '+ עוד אפשרויות'}
           </button>
         </div>
-        <div style={styles.filterRow}>
-          <div style={styles.filterGroup}>
+        <div style={styles.filterRow} className="station-filter-row">
+          <div style={styles.filterGroup} className="station-filter-group">
             <label style={styles.filterLabel}>גודל ג'אנט</label>
             <select
               style={styles.filterSelect}
@@ -572,7 +653,7 @@ export default function StationPage({ params }: { params: Promise<{ stationId: s
               ))}
             </select>
           </div>
-          <div style={styles.filterGroup}>
+          <div style={styles.filterGroup} className="station-filter-group">
             <label style={styles.filterLabel}>כמות ברגים</label>
             <select
               style={styles.filterSelect}
@@ -585,7 +666,7 @@ export default function StationPage({ params }: { params: Promise<{ stationId: s
               ))}
             </select>
           </div>
-          <div style={styles.filterGroup}>
+          <div style={styles.filterGroup} className="station-filter-group">
             <label style={styles.filterLabel}>מרווח ברגים</label>
             <select
               style={styles.filterSelect}
@@ -600,8 +681,8 @@ export default function StationPage({ params }: { params: Promise<{ stationId: s
           </div>
         </div>
         {showAdvancedFilters && (
-          <div style={styles.filterRow}>
-            <div style={styles.filterGroup}>
+          <div style={styles.filterRow} className="station-filter-row">
+            <div style={styles.filterGroup} className="station-filter-group">
               <label style={styles.filterLabel}>קטגוריה</label>
               <select
                 style={styles.filterSelect}
@@ -614,7 +695,7 @@ export default function StationPage({ params }: { params: Promise<{ stationId: s
                 ))}
               </select>
             </div>
-            <div style={styles.filterGroup}>
+            <div style={styles.filterGroup} className="station-filter-group">
               <label style={styles.filterLabel}>סוג</label>
               <select
                 style={styles.filterSelect}
@@ -626,7 +707,7 @@ export default function StationPage({ params }: { params: Promise<{ stationId: s
                 <option value="donut">דונאט</option>
               </select>
             </div>
-            <div style={styles.filterGroup}>
+            <div style={styles.filterGroup} className="station-filter-group">
               <label style={styles.filterLabel}>זמינות</label>
               <select
                 style={styles.filterSelect}
@@ -667,13 +748,15 @@ export default function StationPage({ params }: { params: Promise<{ stationId: s
 
       {/* Wheels Grid (Cards View) */}
       {viewMode === 'cards' && (
-        <div style={styles.grid}>
+        <div style={styles.grid} className="station-grid">
           {filteredWheels.map(wheel => (
             <div
               key={wheel.id}
+              id={`wheel-${wheel.wheel_number}`}
               style={{
                 ...styles.card,
-                ...(wheel.is_available ? {} : styles.cardTaken)
+                ...(wheel.is_available ? {} : styles.cardTaken),
+                transition: 'box-shadow 0.3s ease'
               }}
             >
               <div style={styles.cardImage}>
@@ -712,7 +795,7 @@ export default function StationPage({ params }: { params: Promise<{ stationId: s
 
                 {/* Manager action buttons */}
                 {isManager && (
-                  <div style={styles.cardActions}>
+                  <div style={styles.cardActions} className="station-card-actions">
                     {wheel.is_available ? (
                       <button
                         style={styles.borrowBtn}
@@ -761,7 +844,7 @@ export default function StationPage({ params }: { params: Promise<{ stationId: s
             </thead>
             <tbody>
               {filteredWheels.map(wheel => (
-                <tr key={wheel.id} style={wheel.is_available ? {} : styles.rowTaken}>
+                <tr key={wheel.id} id={`wheel-${wheel.wheel_number}`} style={{...(wheel.is_available ? {} : styles.rowTaken), transition: 'box-shadow 0.3s ease'}}>
                   <td style={styles.td}><strong>{wheel.wheel_number}</strong></td>
                   <td style={styles.td}>{wheel.rim_size}"</td>
                   <td style={styles.td}>{wheel.bolt_count}×{wheel.bolt_spacing}</td>
@@ -798,8 +881,8 @@ export default function StationPage({ params }: { params: Promise<{ stationId: s
               return (
                 <div key={manager.id} style={styles.contactCard}>
                   <div style={styles.contactName}>{manager.full_name}</div>
-                  <div style={styles.contactButtons}>
-                    <a href={`tel:${cleanPhone}`} style={styles.contactBtnCall}>
+                  <div style={styles.contactButtons} className="station-contact-buttons">
+                    <a href={`tel:${cleanPhone}`} style={styles.contactBtnCall} className="station-contact-btn">
                       📞 התקשר
                     </a>
                     <a
@@ -807,6 +890,7 @@ export default function StationPage({ params }: { params: Promise<{ stationId: s
                       target="_blank"
                       rel="noopener noreferrer"
                       style={styles.contactBtnWhatsapp}
+                      className="station-contact-btn"
                     >
                       💬 וואטסאפ
                     </a>

@@ -164,6 +164,26 @@ export default function WheelStationsPage() {
 
   return (
     <div style={styles.container}>
+      <style>{`
+        @media (max-width: 600px) {
+          .wheels-search-btn {
+            padding: 12px 20px !important;
+            font-size: 0.9rem !important;
+          }
+          .wheels-header-title {
+            font-size: 1.8rem !important;
+          }
+          .wheels-header-icon {
+            font-size: 3rem !important;
+          }
+          .wheels-filter-grid {
+            grid-template-columns: 1fr !important;
+          }
+          .wheels-admin-link {
+            padding: 10px 16px !important;
+          }
+        }
+      `}</style>
       <Toaster
         position="top-center"
         toastOptions={{
@@ -186,12 +206,12 @@ export default function WheelStationsPage() {
         }}
       />
       <header style={styles.header}>
-        <div style={styles.headerIcon}>⚫</div>
-        <h1 style={styles.title}>תחנות השאלת גלגלים</h1>
+        <div style={styles.headerIcon} className="wheels-header-icon">⚫</div>
+        <h1 style={styles.title} className="wheels-header-title">תחנות השאלת גלגלים</h1>
         <p style={styles.subtitle}>בחר תחנה כדי לראות את המלאי הזמין</p>
 
         {/* Search Button */}
-        <button style={styles.searchBtn} onClick={openSearchModal}>
+        <button style={styles.searchBtn} className="wheels-search-btn" onClick={openSearchModal}>
           🔍 חיפוש גלגל בכל התחנות
         </button>
       </header>
@@ -238,7 +258,7 @@ export default function WheelStationsPage() {
       )}
 
       <footer style={styles.footer}>
-        <Link href="/wheels/admin" style={styles.adminLink}>⚙️ ניהול</Link>
+        <Link href="/wheels/admin" style={styles.adminLink} className="wheels-admin-link">⚙️ ניהול</Link>
       </footer>
 
       {/* Search Modal */}
@@ -254,7 +274,7 @@ export default function WheelStationsPage() {
               <>
                 <p style={styles.modalSubtitle}>בחר מפרט לחיפוש בכל התחנות</p>
 
-                <div style={styles.filterGrid}>
+                <div style={styles.filterGrid} className="wheels-filter-grid">
                   <div style={styles.filterGroup}>
                     <label style={styles.filterLabel}>גודל ג'אנט</label>
                     <select
@@ -334,13 +354,8 @@ export default function WheelStationsPage() {
                     </div>
 
                     {searchResults.map(result => (
-                      <Link
-                        key={result.station.id}
-                        href={`/wheels/${result.station.id}`}
-                        style={styles.resultCard}
-                        onClick={closeSearchModal}
-                      >
-                        <div style={styles.resultStationInfo}>
+                      <div key={result.station.id} style={styles.resultStationGroup}>
+                        <div style={styles.resultStationHeader}>
                           <div style={styles.resultStationName}>🏙️ {result.station.name}</div>
                           {result.station.city && (
                             <div style={styles.resultCityBadge}>{result.station.city}</div>
@@ -349,11 +364,33 @@ export default function WheelStationsPage() {
                         {result.station.address && (
                           <div style={styles.resultAddress}>📍 {result.station.address}</div>
                         )}
-                        <div style={styles.resultStats}>
-                          <span style={styles.resultAvailable}>✅ {result.availableCount} זמינים</span>
-                          <span style={styles.resultTotal}>מתוך {result.totalCount}</span>
+                        <div style={styles.resultWheelsList}>
+                          {result.wheels.map(wheel => (
+                            <Link
+                              key={wheel.id}
+                              href={`/wheels/${result.station.id}#wheel-${wheel.wheel_number}`}
+                              style={{
+                                ...styles.resultWheelCard,
+                                ...(wheel.is_available ? {} : styles.resultWheelTaken)
+                              }}
+                              onClick={closeSearchModal}
+                            >
+                              <div style={styles.resultWheelNumber}>#{wheel.wheel_number}</div>
+                              <div style={styles.resultWheelSpecs}>
+                                <span>{wheel.rim_size}"</span>
+                                <span>{wheel.bolt_count}×{wheel.bolt_spacing}</span>
+                                {wheel.is_donut && <span style={styles.resultDonutBadge}>דונאט</span>}
+                              </div>
+                              <div style={{
+                                ...styles.resultWheelStatus,
+                                color: wheel.is_available ? '#10b981' : '#ef4444'
+                              }}>
+                                {wheel.is_available ? '✅ זמין' : '🔴 מושאל'}
+                              </div>
+                            </Link>
+                          ))}
                         </div>
-                      </Link>
+                      </div>
                     ))}
                   </div>
                 )}
@@ -644,6 +681,18 @@ const styles: { [key: string]: React.CSSProperties } = {
     gap: '10px',
     marginBottom: '5px',
   },
+  resultStationGroup: {
+    background: 'rgba(255,255,255,0.03)',
+    borderRadius: '12px',
+    padding: '12px',
+    marginBottom: '12px',
+  },
+  resultStationHeader: {
+    display: 'flex',
+    alignItems: 'center',
+    gap: '10px',
+    marginBottom: '5px',
+  },
   resultStationName: {
     fontWeight: 'bold',
     color: '#f59e0b',
@@ -658,7 +707,52 @@ const styles: { [key: string]: React.CSSProperties } = {
   resultAddress: {
     color: '#a0aec0',
     fontSize: '0.85rem',
-    marginBottom: '8px',
+    marginBottom: '10px',
+  },
+  resultWheelsList: {
+    display: 'flex',
+    flexWrap: 'wrap',
+    gap: '8px',
+  },
+  resultWheelCard: {
+    background: 'rgba(16, 185, 129, 0.1)',
+    border: '1px solid rgba(16, 185, 129, 0.3)',
+    borderRadius: '8px',
+    padding: '10px 14px',
+    textDecoration: 'none',
+    color: '#fff',
+    display: 'flex',
+    flexDirection: 'column',
+    gap: '4px',
+    minWidth: '100px',
+    transition: 'all 0.2s',
+  },
+  resultWheelTaken: {
+    background: 'rgba(239, 68, 68, 0.1)',
+    border: '1px solid rgba(239, 68, 68, 0.3)',
+    opacity: 0.7,
+  },
+  resultWheelNumber: {
+    fontWeight: 'bold',
+    fontSize: '1.1rem',
+    color: '#f59e0b',
+  },
+  resultWheelSpecs: {
+    display: 'flex',
+    gap: '6px',
+    fontSize: '0.8rem',
+    color: '#a0aec0',
+  },
+  resultDonutBadge: {
+    background: 'rgba(168, 85, 247, 0.3)',
+    color: '#a855f7',
+    padding: '1px 5px',
+    borderRadius: '4px',
+    fontSize: '0.7rem',
+  },
+  resultWheelStatus: {
+    fontSize: '0.8rem',
+    fontWeight: 'bold',
   },
   resultStats: {
     display: 'flex',
