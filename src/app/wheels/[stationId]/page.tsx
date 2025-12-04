@@ -45,6 +45,7 @@ export default function StationPage({ params }: { params: Promise<{ stationId: s
 
   // Filters
   const [rimSizeFilter, setRimSizeFilter] = useState('')
+  const [boltCountFilter, setBoltCountFilter] = useState('')
   const [boltSpacingFilter, setBoltSpacingFilter] = useState('')
   const [categoryFilter, setCategoryFilter] = useState('')
   const [typeFilter, setTypeFilter] = useState('')
@@ -70,6 +71,7 @@ export default function StationPage({ params }: { params: Promise<{ stationId: s
 
   const filteredWheels = station?.wheels.filter(wheel => {
     if (rimSizeFilter && wheel.rim_size !== rimSizeFilter) return false
+    if (boltCountFilter && wheel.bolt_count.toString() !== boltCountFilter) return false
     if (boltSpacingFilter && wheel.bolt_spacing.toString() !== boltSpacingFilter) return false
     if (categoryFilter && wheel.category !== categoryFilter) return false
     if (typeFilter === 'donut' && !wheel.is_donut) return false
@@ -81,6 +83,7 @@ export default function StationPage({ params }: { params: Promise<{ stationId: s
 
   // Get unique values for filters
   const rimSizes = [...new Set(station?.wheels.map(w => w.rim_size))].sort()
+  const boltCounts = [...new Set(station?.wheels.map(w => w.bolt_count.toString()))].sort()
   const boltSpacings = [...new Set(station?.wheels.map(w => w.bolt_spacing.toString()))].sort()
   const categories = [...new Set(station?.wheels.map(w => w.category).filter(Boolean))]
 
@@ -109,7 +112,10 @@ export default function StationPage({ params }: { params: Promise<{ stationId: s
   return (
     <div style={styles.container}>
       <header style={styles.header}>
-        <Link href="/wheels" style={styles.backBtn}>← חזרה</Link>
+        <div style={styles.headerTop}>
+          <Link href="/wheels" style={styles.backBtn}>← חזרה</Link>
+          <button style={styles.managerBtn}>🔐 כניסת מנהל</button>
+        </div>
         <h1 style={styles.title}>🏙️ {station.name}</h1>
         {station.address && <p style={styles.address}>📍 {station.address}</p>}
       </header>
@@ -152,6 +158,19 @@ export default function StationPage({ params }: { params: Promise<{ stationId: s
               <option value="">הכל</option>
               {rimSizes.map(size => (
                 <option key={size} value={size}>{size}"</option>
+              ))}
+            </select>
+          </div>
+          <div style={styles.filterGroup}>
+            <label style={styles.filterLabel}>כמות ברגים</label>
+            <select
+              style={styles.filterSelect}
+              value={boltCountFilter}
+              onChange={e => setBoltCountFilter(e.target.value)}
+            >
+              <option value="">הכל</option>
+              {boltCounts.map(count => (
+                <option key={count} value={count}>{count}</option>
               ))}
             </select>
           </div>
@@ -322,25 +341,37 @@ export default function StationPage({ params }: { params: Promise<{ stationId: s
         <div style={styles.contacts}>
           <h3 style={styles.contactsTitle}>📞 מנהלי התחנה - יצירת קשר</h3>
           <div style={styles.contactsGrid}>
-            {station.wheel_station_managers.map(manager => (
-              <div key={manager.id} style={styles.contactCard}>
-                <div style={styles.contactAvatar}>👤</div>
-                <div style={styles.contactInfo}>
-                  <div style={styles.contactName}>{manager.full_name}</div>
-                  <div style={styles.contactRole}>{manager.role}</div>
-                  <a href={`tel:${manager.phone}`} style={styles.contactPhone}>
-                    📱 {manager.phone}
-                  </a>
+            {station.wheel_station_managers.map(manager => {
+              const cleanPhone = manager.phone.replace(/\D/g, '')
+              const internationalPhone = cleanPhone.startsWith('0') ? '972' + cleanPhone.slice(1) : cleanPhone
+              return (
+                <div key={manager.id} style={styles.contactCard}>
+                  <div style={styles.contactAvatar}>👤</div>
+                  <div style={styles.contactInfo}>
+                    <div style={styles.contactName}>{manager.full_name}</div>
+                    <div style={styles.contactRole}>{manager.role}</div>
+                    <div style={styles.contactPhoneText}>📱 {manager.phone}</div>
+                    <div style={styles.contactButtons}>
+                      <a href={`tel:${cleanPhone}`} style={styles.contactBtnCall}>
+                        📞 התקשר
+                      </a>
+                      <a
+                        href={`https://wa.me/${internationalPhone}`}
+                        target="_blank"
+                        rel="noopener noreferrer"
+                        style={styles.contactBtnWhatsapp}
+                      >
+                        💬 וואטסאפ
+                      </a>
+                    </div>
+                  </div>
                 </div>
-              </div>
-            ))}
+              )
+            })}
           </div>
         </div>
       )}
 
-      <footer style={styles.footer}>
-        <Link href="/wheels" style={styles.footerLink}>← חזרה לרשימת התחנות</Link>
-      </footer>
     </div>
   )
 }
@@ -357,9 +388,25 @@ const styles: { [key: string]: React.CSSProperties } = {
   header: {
     marginBottom: '20px',
   },
+  headerTop: {
+    display: 'flex',
+    justifyContent: 'space-between',
+    alignItems: 'center',
+    marginBottom: '10px',
+  },
   backBtn: {
     color: '#a0aec0',
     textDecoration: 'none',
+    fontSize: '0.9rem',
+  },
+  managerBtn: {
+    background: 'linear-gradient(135deg, #f59e0b, #d97706)',
+    color: '#000',
+    border: 'none',
+    padding: '10px 20px',
+    borderRadius: '8px',
+    cursor: 'pointer',
+    fontWeight: 'bold',
     fontSize: '0.9rem',
   },
   title: {
@@ -686,14 +733,45 @@ const styles: { [key: string]: React.CSSProperties } = {
     color: '#10b981',
     textDecoration: 'none',
   },
-  footer: {
-    textAlign: 'center',
-    marginTop: '40px',
-    paddingTop: '20px',
-    borderTop: '1px solid rgba(255,255,255,0.1)',
-  },
-  footerLink: {
+  contactPhoneText: {
     color: '#a0aec0',
+    fontSize: '0.9rem',
+    marginBottom: '10px',
+  },
+  contactButtons: {
+    display: 'flex',
+    gap: '8px',
+  },
+  contactBtnCall: {
+    flex: 1,
+    padding: '10px 16px',
+    border: 'none',
+    borderRadius: '12px',
+    background: '#3b82f6',
+    color: 'white',
+    fontWeight: 600,
+    fontSize: '0.9rem',
     textDecoration: 'none',
+    textAlign: 'center',
+    display: 'flex',
+    alignItems: 'center',
+    justifyContent: 'center',
+    gap: '6px',
+  },
+  contactBtnWhatsapp: {
+    flex: 1,
+    padding: '10px 16px',
+    border: 'none',
+    borderRadius: '12px',
+    background: '#22c55e',
+    color: 'white',
+    fontWeight: 600,
+    fontSize: '0.9rem',
+    textDecoration: 'none',
+    textAlign: 'center',
+    display: 'flex',
+    alignItems: 'center',
+    justifyContent: 'center',
+    gap: '6px',
   },
 }
