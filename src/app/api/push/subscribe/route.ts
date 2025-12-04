@@ -1,7 +1,7 @@
 /**
  * API Route: Subscribe to Push Notifications
  * POST /api/push/subscribe
- * 
+ *
  * Saves a push subscription to the database
  */
 
@@ -29,22 +29,19 @@ export async function POST(request: NextRequest) {
       )
     }
 
-    // Get user's city_id from user_cities table
-    const { data: userCity } = await supabase
-      .from('user_cities')
-      .select('city_id')
-      .eq('user_id', user.id)
-      .limit(1)
-      .single()
-
-    const cityId = userCity?.city_id || null
-
     const body = await request.json()
-    const { subscription, userAgent } = body
+    const { subscription, userAgent, cityId } = body
 
     if (!subscription || !subscription.endpoint || !subscription.keys) {
       return NextResponse.json(
         { success: false, error: 'נתוני subscription חסרים' },
+        { status: 400 }
+      )
+    }
+
+    if (!cityId) {
+      return NextResponse.json(
+        { success: false, error: 'חסר cityId' },
         { status: 400 }
       )
     }
@@ -116,4 +113,3 @@ export async function POST(request: NextRequest) {
     )
   }
 }
-

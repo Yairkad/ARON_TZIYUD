@@ -1,24 +1,51 @@
-// Service Worker for Web Push Notifications
-// This file handles push notifications and displays them to the user
+// Service Worker - Caching + Push Notifications
 
+const CACHE_NAME = 'pwa-cache'
+const HOSTNAME_WHITELIST = [
+  self.location.hostname,
+  'fonts.gstatic.com',
+  'fonts.googleapis.com',
+  'cdn.jsdelivr.net'
+]
+
+// Install
 self.addEventListener('install', (event) => {
-  console.log('Service Worker: Installed')
   self.skipWaiting()
 })
 
+// Activate - clean old caches
 self.addEventListener('activate', (event) => {
-  console.log('Service Worker: Activated')
   event.waitUntil(self.clients.claim())
 })
 
-// Listen for push events
-self.addEventListener('push', (event) => {
-  console.log('Service Worker: Push event received')
+// Fetch - caching strategy (stale-while-revalidate)
+self.addEventListener('fetch', (event) => {
+  const url = new URL(event.request.url)
 
-  if (!event.data) {
-    console.log('Push event but no data')
-    return
-  }
+  // Only handle GET requests from whitelisted hosts
+  if (event.request.method !== 'GET') return
+  if (HOSTNAME_WHITELIST.indexOf(url.hostname) === -1) return
+  if (url.pathname.startsWith('/api/')) return // Skip API calls
+
+  const cached = caches.match(event.request)
+  const fetched = fetch(event.request).then(resp => resp.clone())
+
+  event.respondWith(
+    Promise.race([fetched.catch(() => cached), cached])
+      .then(resp => resp || fetched)
+      .catch(() => {})
+  )
+
+  event.waitUntil(
+    Promise.all([fetched, caches.open(CACHE_NAME)])
+      .then(([response, cache]) => response.ok && cache.put(event.request, response))
+      .catch(() => {})
+  )
+})
+
+// Push Notifications
+self.addEventListener('push', (event) => {
+  if (!event.data) return
 
   let data
   try {
@@ -44,14 +71,8 @@ self.addEventListener('push', (event) => {
       cityId: data.cityId
     },
     actions: [
-      {
-        action: 'open',
-        title: 'פתח בקשות'
-      },
-      {
-        action: 'close',
-        title: 'סגור'
-      }
+      { action: 'open', title: 'פתח בקשות' },
+      { action: 'close', title: 'סגור' }
     ]
   }
 
@@ -60,29 +81,21 @@ self.addEventListener('push', (event) => {
   )
 })
 
-// Handle notification clicks
+// Notification click
 self.addEventListener('notificationclick', (event) => {
-  console.log('Notification clicked:', event.action)
-
   event.notification.close()
+  if (event.action === 'close') return
 
-  if (event.action === 'close') {
-    return
-  }
-
-  // Open the app when notification is clicked
   const urlToOpen = event.notification.data.url || '/'
 
   event.waitUntil(
     self.clients.matchAll({ type: 'window', includeUncontrolled: true })
       .then((clientList) => {
-        // Check if there's already a window open
         for (let client of clientList) {
           if (client.url === urlToOpen && 'focus' in client) {
             return client.focus()
           }
         }
-        // If not, open a new window
         if (self.clients.openWindow) {
           return self.clients.openWindow(urlToOpen)
         }
@@ -90,20 +103,15 @@ self.addEventListener('notificationclick', (event) => {
   )
 })
 
-// Handle push subscription changes
+// Push subscription change
 self.addEventListener('pushsubscriptionchange', (event) => {
-  console.log('Push subscription changed')
-
   event.waitUntil(
     self.registration.pushManager.subscribe(event.oldSubscription.options)
       .then((subscription) => {
-        // Send new subscription to server
         return fetch('/api/push/subscribe', {
           method: 'POST',
           headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify({
-            subscription: subscription.toJSON()
-          })
+          body: JSON.stringify({ subscription: subscription.toJSON() })
         })
       })
   )
