@@ -1,7 +1,7 @@
 'use client'
 
 import React, { useState, useEffect } from 'react'
-import { useParams, useRouter } from 'next/navigation'
+import { useParams, useRouter, useSearchParams } from 'next/navigation'
 import Link from 'next/link'
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card'
 import { Button } from '@/components/ui/button'
@@ -90,7 +90,11 @@ async function extractCoordinatesFromUrl(url: string): Promise<{ lat: number; ln
 export default function CityAdminPage() {
   const params = useParams()
   const router = useRouter()
+  const searchParams = useSearchParams()
   const cityId = params.cityId as string
+
+  // Get initial tab from URL query parameter
+  const urlTab = searchParams.get('tab') as 'equipment' | 'history' | 'requests' | 'reports' | 'settings' | null
 
   const [city, setCity] = useState<City | null>(null)
   const [equipment, setEquipment] = useState<Equipment[]>([])
@@ -101,7 +105,7 @@ export default function CityAdminPage() {
   const [isRedirecting, setIsRedirecting] = useState(false) // Prevent multiple redirects
   const [isBlocked, setIsBlocked] = useState(false)
   const [loading, setLoading] = useState(false)
-  const [activeTab, setActiveTab] = useState<'equipment' | 'history' | 'requests' | 'reports' | 'settings'>('equipment')
+  const [activeTab, setActiveTab] = useState<'equipment' | 'history' | 'requests' | 'reports' | 'settings'>(urlTab || 'equipment')
   const [newEquipment, setNewEquipment] = useState({ name: '', quantity: 1, equipment_status: 'working' as 'working' | 'faulty', is_consumable: false, category_id: '', image_url: '' })
   const [editingEquipment, setEditingEquipment] = useState<{ id: string; name: string; quantity: number; equipment_status: 'working' | 'faulty'; is_consumable: boolean; category_id?: string; image_url?: string } | null>(null)
   const [editCityForm, setEditCityForm] = useState({
@@ -211,6 +215,14 @@ export default function CityAdminPage() {
   // Permission helpers
   const canEdit = currentUser?.permissions === 'full_access'
   const canApprove = currentUser?.permissions === 'approve_requests' || currentUser?.permissions === 'full_access'
+
+  // Update active tab when URL changes (for navigation from push notifications)
+  useEffect(() => {
+    if (urlTab && urlTab !== activeTab) {
+      setActiveTab(urlTab)
+    }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [urlTab])
 
   useEffect(() => {
     if (isAuthenticated && cityId && currentUser) {
