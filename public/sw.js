@@ -51,16 +51,20 @@ self.addEventListener('notificationclick', (event) => {
   event.notification.close()
   if (event.action === 'close') return
 
-  const urlToOpen = event.notification.data.url || '/'
+  const urlPath = event.notification.data?.url || '/'
+  // Build full URL from origin
+  const urlToOpen = new URL(urlPath, self.location.origin).href
 
   event.waitUntil(
     self.clients.matchAll({ type: 'window', includeUncontrolled: true })
       .then((clientList) => {
+        // Try to find existing window and navigate it
         for (let client of clientList) {
-          if (client.url === urlToOpen && 'focus' in client) {
-            return client.focus()
+          if ('focus' in client && 'navigate' in client) {
+            return client.focus().then(() => client.navigate(urlToOpen))
           }
         }
+        // No existing window, open new one
         if (self.clients.openWindow) {
           return self.clients.openWindow(urlToOpen)
         }

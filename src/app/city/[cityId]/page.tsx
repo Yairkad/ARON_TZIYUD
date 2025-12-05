@@ -333,6 +333,19 @@ export default function CityPage() {
       // DON'T update equipment quantity here - wait for manager approval
       // The equipment will remain borrowed until manager approves
 
+      // Send push notification to city manager about pending return
+      const borrowRecord = userBorrows.find(b => b.id === borrowId)
+      fetch('/api/push/send', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          cityId,
+          title: 'החזרה ממתינה לאישור',
+          body: `${borrowRecord?.name || 'משתמש'} החזיר ${borrowRecord?.equipment_name || 'ציוד'}`,
+          url: `/city/${cityId}/admin?tab=history`
+        })
+      }).catch(err => console.error('Failed to send push:', err))
+
       toast.success('תמונת ההחזרה נשלחה! הציוד ממתין לאישור מנהל העיר.', { duration: 5000 })
       setReturnStatus(null)
       setSelectedStatus('working')
