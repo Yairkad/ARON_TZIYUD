@@ -24,21 +24,19 @@ self.addEventListener('push', (event) => {
     }
   }
 
+  const bodyText = data.body || 'יש בקשות חדשות ממתינות לאישור'
+
   const options = {
-    body: data.body || 'יש בקשות חדשות ממתינות לאישור',
+    body: bodyText + '\n\nלחץ על ההודעה למעבר',
     icon: data.icon || '/icon-192.png',
     badge: data.badge || '/badge-72.png',
     vibrate: [200, 100, 200],
     tag: data.tag || 'equipment-request',
-    requireInteraction: true,
+    requireInteraction: false,
     data: {
       url: data.url || '/',
       cityId: data.cityId
-    },
-    actions: [
-      { action: 'open', title: 'פתח בקשות' },
-      { action: 'close', title: 'סגור' }
-    ]
+    }
   }
 
   event.waitUntil(
@@ -46,28 +44,14 @@ self.addEventListener('push', (event) => {
   )
 })
 
-// Notification click
+// Notification click - open the target URL
 self.addEventListener('notificationclick', (event) => {
   event.notification.close()
-  if (event.action === 'close') return
 
   const urlPath = event.notification.data?.url || '/'
-  // Build full URL from origin
   const urlToOpen = new URL(urlPath, self.location.origin).href
 
   event.waitUntil(
-    self.clients.matchAll({ type: 'window', includeUncontrolled: true })
-      .then((clientList) => {
-        // Try to find existing window and navigate it
-        for (let client of clientList) {
-          if ('focus' in client && 'navigate' in client) {
-            return client.focus().then(() => client.navigate(urlToOpen))
-          }
-        }
-        // No existing window, open new one
-        if (self.clients.openWindow) {
-          return self.clients.openWindow(urlToOpen)
-        }
-      })
+    self.clients.openWindow(urlToOpen)
   )
 })

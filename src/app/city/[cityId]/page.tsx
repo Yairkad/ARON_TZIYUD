@@ -335,16 +335,32 @@ export default function CityPage() {
 
       // Send push notification to city manager about pending return
       const borrowRecord = userBorrows.find(b => b.id === borrowId)
+      const pushBody = `${borrowRecord?.name || 'משתמש'} החזיר ${borrowRecord?.equipment_name || 'ציוד'}`
+      const pushUrl = `/city/${cityId}/admin?tab=history`
+
+      // Send to city manager
       fetch('/api/push/send', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
           cityId,
           title: 'החזרה ממתינה לאישור',
-          body: `${borrowRecord?.name || 'משתמש'} החזיר ${borrowRecord?.equipment_name || 'ציוד'}`,
-          url: `/city/${cityId}/admin?tab=history`
+          body: pushBody,
+          url: pushUrl
         })
-      }).catch(err => console.error('Failed to send push:', err))
+      }).catch(err => console.error('Failed to send push to city manager:', err))
+
+      // Send to super admins subscribed to this city
+      fetch('/api/push/send-to-city-subscribers', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          cityId,
+          title: 'החזרה ממתינה לאישור',
+          body: pushBody,
+          url: pushUrl
+        })
+      }).catch(err => console.error('Failed to send push to super admins:', err))
 
       toast.success('תמונת ההחזרה נשלחה! הציוד ממתין לאישור מנהל העיר.', { duration: 5000 })
       setReturnStatus(null)
