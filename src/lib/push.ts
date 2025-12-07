@@ -17,14 +17,64 @@ function urlBase64ToUint8Array(base64String: string): Uint8Array {
   return outputArray
 }
 
+// Detect if running on iOS
+function isIOS(): boolean {
+  return /iPad|iPhone|iPod/.test(navigator.userAgent) ||
+    (navigator.platform === 'MacIntel' && navigator.maxTouchPoints > 1)
+}
+
+// Detect if running as installed PWA (standalone mode)
+function isStandalone(): boolean {
+  return window.matchMedia('(display-mode: standalone)').matches ||
+    (window.navigator as any).standalone === true
+}
+
 // Check if push notifications are supported
 export function isPushSupported(): boolean {
-  return 'serviceWorker' in navigator && 'PushManager' in window && 'Notification' in window
+  const hasAPIs = 'serviceWorker' in navigator && 'PushManager' in window && 'Notification' in window
+
+  // Log iOS-specific info for debugging
+  if (isIOS()) {
+    console.log('📱 iOS detected:', {
+      isStandalone: isStandalone(),
+      hasServiceWorker: 'serviceWorker' in navigator,
+      hasPushManager: 'PushManager' in window,
+      hasNotification: 'Notification' in window,
+      notificationPermission: 'Notification' in window ? Notification.permission : 'N/A'
+    })
+
+    // On iOS, push only works in standalone PWA mode
+    if (!isStandalone()) {
+      console.log('📱 iOS: App must be installed as PWA (Add to Home Screen) for push notifications')
+      return false
+    }
+  }
+
+  return hasAPIs
 }
 
 // Check if user has granted notification permission
 export function hasNotificationPermission(): boolean {
   return Notification.permission === 'granted'
+}
+
+// Get reason why push is not supported (for user-friendly messages)
+export function getPushNotSupportedReason(): string | null {
+  if (!('serviceWorker' in navigator)) {
+    return 'הדפדפן לא תומך ב-Service Workers'
+  }
+  if (!('PushManager' in window)) {
+    return 'הדפדפן לא תומך בהתראות Push'
+  }
+  if (!('Notification' in window)) {
+    return 'הדפדפן לא תומך בהתראות'
+  }
+
+  if (isIOS() && !isStandalone()) {
+    return 'באייפון יש להתקין את האפליקציה (הוסף למסך הבית מספארי) לפני הפעלת התראות'
+  }
+
+  return null
 }
 
 // Request notification permission from user

@@ -17,7 +17,8 @@ import {
   requestNotificationPermission,
   subscribeToPush,
   unsubscribeFromPush,
-  isSubscribed as checkPushSubscribed
+  isSubscribed as checkPushSubscribed,
+  getPushNotSupportedReason
 } from '@/lib/push'
 
 export default function SuperAdminPage() {
@@ -102,6 +103,7 @@ export default function SuperAdminPage() {
   // Push notifications state
   const [pushEnabled, setPushEnabled] = useState(false)
   const [pushSupported, setPushSupported] = useState(false)
+  const [pushNotSupportedReason, setPushNotSupportedReason] = useState<string | null>(null)
   const [enablingPush, setEnablingPush] = useState(false)
 
   // Reports State
@@ -193,10 +195,14 @@ export default function SuperAdminPage() {
         console.log('✅ User is authenticated as super admin')
 
         // Check push notification status
-        if (isPushSupported()) {
-          setPushSupported(true)
+        const pushOk = isPushSupported()
+        setPushSupported(pushOk)
+        if (pushOk) {
           const subscribed = await checkPushSubscribed()
           setPushEnabled(subscribed)
+        } else {
+          const reason = getPushNotSupportedReason()
+          setPushNotSupportedReason(reason)
         }
       } else {
         setIsAuthenticated(false)
@@ -1472,7 +1478,7 @@ export default function SuperAdminPage() {
                   <span className="text-2xl">🔑</span>
                   <span className="text-gray-700 text-base sm:text-lg font-medium">שינוי סיסמה</span>
                 </button>
-                {pushSupported && (
+                {pushSupported ? (
                   <button
                     onClick={handleTogglePush}
                     disabled={enablingPush}
@@ -1488,7 +1494,20 @@ export default function SuperAdminPage() {
                       <div className={`absolute top-1 w-5 h-5 rounded-full bg-white shadow transition-transform ${pushEnabled ? 'right-1' : 'left-1'}`} />
                     </div>
                   </button>
-                )}
+                ) : pushNotSupportedReason ? (
+                  <button
+                    onClick={() => toast.error(pushNotSupportedReason, { duration: 5000 })}
+                    className="w-full flex items-center justify-between p-4 rounded-xl hover:bg-orange-50 transition-colors text-right"
+                  >
+                    <div className="flex items-center gap-4">
+                      <span className="text-2xl">🔕</span>
+                      <span className="text-orange-600 text-base sm:text-lg font-medium">
+                        התראות לא נתמכות
+                      </span>
+                    </div>
+                    <span className="text-orange-400 text-sm">לחץ לפרטים</span>
+                  </button>
+                ) : null}
                 <div className="border-t border-gray-200 my-3" />
                 <button
                   onClick={async () => {

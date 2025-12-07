@@ -20,7 +20,8 @@ import {
   requestNotificationPermission,
   subscribeToPush,
   unsubscribeFromPush,
-  isSubscribed
+  isSubscribed,
+  getPushNotSupportedReason
 } from '@/lib/push'
 import toast from 'react-hot-toast'
 import { VERSION } from '@/lib/version'
@@ -138,6 +139,7 @@ export default function CityAdminPage() {
   const [showRequestsNotification, setShowRequestsNotification] = useState(false)
   const [pushEnabled, setPushEnabled] = useState(false)
   const [pushSupported, setPushSupported] = useState(false)
+  const [pushNotSupportedReason, setPushNotSupportedReason] = useState<string | null>(null)
   const [enablingPush, setEnablingPush] = useState(false)
   const [isCityDetailsExpanded, setIsCityDetailsExpanded] = useState(false)
   const [equipmentSearchQuery, setEquipmentSearchQuery] = useState('')
@@ -310,6 +312,12 @@ export default function CityAdminPage() {
     const checkPushStatus = async () => {
       const supported = isPushSupported()
       setPushSupported(supported)
+
+      // Get the reason if not supported (for iOS message)
+      if (!supported) {
+        const reason = getPushNotSupportedReason()
+        setPushNotSupportedReason(reason)
+      }
 
       if (supported && isAuthenticated) {
         const subscribed = await isSubscribed()
@@ -1341,20 +1349,31 @@ export default function CityAdminPage() {
                   📖 מדריך
                 </Button>
               </Link>
-              {pushSupported && city?.request_mode === 'request' && city?.enable_push_notifications && (
-                <Button
-                  onClick={handleTogglePushNotifications}
-                  disabled={enablingPush}
-                  variant="outline"
-                  className={`border-2 font-semibold px-4 py-2 rounded-xl transition-all duration-200 hover:scale-105 ${
-                    pushEnabled
-                      ? 'border-green-500 text-green-600 hover:bg-green-50'
-                      : 'border-gray-400 text-gray-600 hover:bg-gray-50'
-                  }`}
-                  title={pushEnabled ? 'כבה התראות' : 'הפעל התראות'}
-                >
-                  {enablingPush ? '⏳' : pushEnabled ? <Bell className="h-5 w-5" /> : <BellOff className="h-5 w-5" />}
-                </Button>
+              {city?.request_mode === 'request' && city?.enable_push_notifications && (
+                pushSupported ? (
+                  <Button
+                    onClick={handleTogglePushNotifications}
+                    disabled={enablingPush}
+                    variant="outline"
+                    className={`border-2 font-semibold px-4 py-2 rounded-xl transition-all duration-200 hover:scale-105 ${
+                      pushEnabled
+                        ? 'border-green-500 text-green-600 hover:bg-green-50'
+                        : 'border-gray-400 text-gray-600 hover:bg-gray-50'
+                    }`}
+                    title={pushEnabled ? 'כבה התראות' : 'הפעל התראות'}
+                  >
+                    {enablingPush ? '⏳' : pushEnabled ? <Bell className="h-5 w-5" /> : <BellOff className="h-5 w-5" />}
+                  </Button>
+                ) : pushNotSupportedReason ? (
+                  <Button
+                    onClick={() => toast.error(pushNotSupportedReason, { duration: 5000 })}
+                    variant="outline"
+                    className="border-2 border-orange-400 text-orange-600 font-semibold px-4 py-2 rounded-xl"
+                    title={pushNotSupportedReason}
+                  >
+                    <BellOff className="h-5 w-5" />
+                  </Button>
+                ) : null
               )}
               <Button
                 onClick={() => setVolunteerViewMode(true)}
@@ -1472,22 +1491,32 @@ export default function CityAdminPage() {
                 📖
               </button>
             </Link>
-            {pushSupported && city?.request_mode === 'request' && city?.enable_push_notifications && (
-              <button
-                onClick={handleTogglePushNotifications}
-                disabled={enablingPush}
-                className={`w-11 h-11 rounded-xl flex items-center justify-center text-xl transition-all relative ${
-                  pushEnabled
-                    ? 'bg-green-100 hover:bg-green-200 text-green-600'
-                    : 'bg-gray-100 hover:bg-gray-200 text-gray-400'
-                }`}
-                title={pushEnabled ? 'התראות פעילות' : 'הפעל התראות'}
-              >
-                {enablingPush ? '⏳' : pushEnabled ? '🔔' : '🔕'}
-                {pushEnabled && (
-                  <span className="absolute -top-1 -right-1 w-3 h-3 bg-green-500 rounded-full border-2 border-white" />
-                )}
-              </button>
+            {city?.request_mode === 'request' && city?.enable_push_notifications && (
+              pushSupported ? (
+                <button
+                  onClick={handleTogglePushNotifications}
+                  disabled={enablingPush}
+                  className={`w-11 h-11 rounded-xl flex items-center justify-center text-xl transition-all relative ${
+                    pushEnabled
+                      ? 'bg-green-100 hover:bg-green-200 text-green-600'
+                      : 'bg-gray-100 hover:bg-gray-200 text-gray-400'
+                  }`}
+                  title={pushEnabled ? 'התראות פעילות' : 'הפעל התראות'}
+                >
+                  {enablingPush ? '⏳' : pushEnabled ? '🔔' : '🔕'}
+                  {pushEnabled && (
+                    <span className="absolute -top-1 -right-1 w-3 h-3 bg-green-500 rounded-full border-2 border-white" />
+                  )}
+                </button>
+              ) : pushNotSupportedReason ? (
+                <button
+                  onClick={() => toast.error(pushNotSupportedReason, { duration: 5000 })}
+                  className="w-11 h-11 rounded-xl bg-orange-100 text-orange-500 flex items-center justify-center text-xl"
+                  title={pushNotSupportedReason}
+                >
+                  🔕
+                </button>
+              ) : null
             )}
             <button
               onClick={() => setVolunteerViewMode(true)}
