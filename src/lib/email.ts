@@ -119,7 +119,7 @@ const headerVariants: Record<HeaderVariant, string> = {
 
 // Helper to create styled elements
 const styled = {
-  container: (content: string) => `<div style="${inlineStyles.container}">${content}</div>`,
+  container: (content: string) => `<div style="${inlineStyles.container}" class="container">${content}</div>`,
 
   // Modern header with icon
   header: (title: string, emoji?: string, variant: HeaderVariant = 'primary', subtitle?: string) => `
@@ -248,8 +248,18 @@ async function sendEmail(
         <head>
           <meta charset="UTF-8">
           <meta name="viewport" content="width=device-width, initial-scale=1.0">
+          <meta name="color-scheme" content="light only">
+          <meta name="supported-color-schemes" content="light only">
+          <style>
+            :root { color-scheme: light only; }
+            @media (prefers-color-scheme: dark) {
+              body, .body { background-color: #f1f5f9 !important; }
+              .container { background-color: #ffffff !important; }
+              * { color: inherit !important; }
+            }
+          </style>
         </head>
-        <body style="${inlineStyles.body}">
+        <body style="${inlineStyles.body}" class="body">
           ${html}
         </body>
         </html>
