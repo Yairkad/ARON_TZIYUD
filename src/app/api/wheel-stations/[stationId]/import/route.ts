@@ -17,13 +17,50 @@ interface RouteParams {
 }
 
 interface WheelImportData {
-  wheel_number: number
+  wheel_number: string | number  // Can be alphanumeric like "A23" or numeric like 15
   rim_size: string
   bolt_count: number
   bolt_spacing: number
   category?: string
-  is_donut?: boolean
+  is_donut?: boolean | string  // Can be "כן"/"לא" or true/false
   notes?: string
+}
+
+// Map Hebrew column names to English
+const hebrewToEnglishColumns: Record<string, string> = {
+  'מספר_גלגל': 'wheel_number',
+  'מספר גלגל': 'wheel_number',
+  'גודל_ג\'אנט': 'rim_size',
+  'גודל ג\'אנט': 'rim_size',
+  'גודל_גאנט': 'rim_size',
+  'גודל גאנט': 'rim_size',
+  'כמות_ברגים': 'bolt_count',
+  'כמות ברגים': 'bolt_count',
+  'מרווח_ברגים': 'bolt_spacing',
+  'מרווח ברגים': 'bolt_spacing',
+  'קטגוריה': 'category',
+  'דונאט': 'is_donut',
+  'גלגל_דונאט': 'is_donut',
+  'גלגל דונאט': 'is_donut',
+  'הערות': 'notes',
+}
+
+// Convert Hebrew column names to English and normalize is_donut values
+function normalizeWheelData(wheel: Record<string, unknown>): WheelImportData {
+  const normalized: Record<string, unknown> = {}
+
+  for (const [key, value] of Object.entries(wheel)) {
+    const englishKey = hebrewToEnglishColumns[key] || key
+    normalized[englishKey] = value
+  }
+
+  // Convert is_donut from Hebrew "כן"/"לא" to boolean
+  if (normalized.is_donut !== undefined) {
+    const val = String(normalized.is_donut).toLowerCase().trim()
+    normalized.is_donut = val === 'כן' || val === 'true' || val === '1' || val === 'yes'
+  }
+
+  return normalized as WheelImportData
 }
 
 // Helper to verify station manager or super admin
@@ -90,26 +127,29 @@ export async function POST(request: NextRequest, { params }: RouteParams) {
     }
 
     const body = await request.json()
-    const { wheels, replace_existing } = body as { wheels: WheelImportData[]; replace_existing?: boolean }
+    const { wheels: rawWheels, replace_existing } = body as { wheels: Record<string, unknown>[]; replace_existing?: boolean }
 
-    if (!wheels || !Array.isArray(wheels) || wheels.length === 0) {
+    if (!rawWheels || !Array.isArray(rawWheels) || rawWheels.length === 0) {
       return NextResponse.json({ error: 'No wheels data provided' }, { status: 400 })
     }
+
+    // Normalize Hebrew column names to English
+    const wheels = rawWheels.map(normalizeWheelData)
 
     // Validate each wheel
     const validationErrors: string[] = []
     wheels.forEach((wheel, index) => {
       if (!wheel.wheel_number) {
-        validationErrors.push(`Row ${index + 1}: Missing wheel number`)
+        validationErrors.push(`שורה ${index + 1}: חסר מספר גלגל`)
       }
       if (!wheel.rim_size) {
-        validationErrors.push(`Row ${index + 1}: Missing rim size`)
+        validationErrors.push(`שורה ${index + 1}: חסר גודל ג'אנט`)
       }
       if (!wheel.bolt_count) {
-        validationErrors.push(`Row ${index + 1}: Missing bolt count`)
+        validationErrors.push(`שורה ${index + 1}: חסר כמות ברגים`)
       }
       if (!wheel.bolt_spacing) {
-        validationErrors.push(`Row ${index + 1}: Missing bolt spacing`)
+        validationErrors.push(`שורה ${index + 1}: חסר מרווח ברגים`)
       }
     })
 
@@ -146,7 +186,7 @@ export async function POST(request: NextRequest, { params }: RouteParams) {
     // Prepare wheels for insert
     const wheelsToInsert = wheels.map(wheel => ({
       station_id: stationId,
-      wheel_number: wheel.wheel_number,
+      wheel_number: String(wheel.wheel_number), // Convert to string (supports alphanumeric like "A23")
       rim_size: String(wheel.rim_size).replace('"', ''), // Remove " if present
       bolt_count: wheel.bolt_count,
       bolt_spacing: wheel.bolt_spacing,
