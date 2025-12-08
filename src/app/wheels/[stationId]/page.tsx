@@ -1,8 +1,9 @@
 'use client'
 
-import { useState, useEffect, use } from 'react'
+import { useState, useEffect, use, useRef } from 'react'
 import Link from 'next/link'
 import toast, { Toaster } from 'react-hot-toast'
+import * as XLSX from 'xlsx'
 
 interface Wheel {
   id: string
@@ -179,6 +180,11 @@ export default function StationPage({ params }: { params: Promise<{ stationId: s
   // Edit station details
   const [showEditDetailsModal, setShowEditDetailsModal] = useState(false)
   const [editAddress, setEditAddress] = useState('')
+
+  // Excel import/export
+  const fileInputRef = useRef<HTMLInputElement>(null)
+  const [uploadLoading, setUploadLoading] = useState(false)
+  const [showExcelModal, setShowExcelModal] = useState(false)
 
   const fetchStation = async () => {
     try {
@@ -467,6 +473,118 @@ export default function StationPage({ params }: { params: Promise<{ stationId: s
     }
   }
 
+  // Excel upload handler
+  const handleExcelUpload = async (event: React.ChangeEvent<HTMLInputElement>) => {
+    const file = event.target.files?.[0]
+    if (!file) return
+
+    // Clear the input so the same file can be selected again
+    event.target.value = ''
+
+    setUploadLoading(true)
+    try {
+      const reader = new FileReader()
+      reader.onload = async (e) => {
+        try {
+          const data = e.target?.result
+          const workbook = XLSX.read(data, { type: 'binary' })
+          const sheetName = workbook.SheetNames[0]
+          const worksheet = workbook.Sheets[sheetName]
+          const jsonData = XLSX.utils.sheet_to_json(worksheet)
+
+          if (jsonData.length === 0) {
+            toast.error('הקובץ ריק או לא תקין')
+            setUploadLoading(false)
+            return
+          }
+
+          // Send to import API
+          const response = await fetch(`/api/wheel-stations/${stationId}/import`, {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({
+              wheels: jsonData,
+              manager_phone: currentManager?.phone,
+              manager_password: sessionPassword
+            })
+          })
+
+          const result = await response.json()
+
+          if (!response.ok) {
+            toast.error(result.error || 'שגיאה בייבוא')
+            return
+          }
+
+          await fetchStation()
+          toast.success(`נוספו ${result.imported} גלגלים בהצלחה!`)
+          if (result.errors && result.errors.length > 0) {
+            toast.error(`${result.errors.length} שורות נכשלו`)
+          }
+        } catch (err) {
+          console.error('Excel parse error:', err)
+          toast.error('שגיאה בקריאת הקובץ')
+        } finally {
+          setUploadLoading(false)
+        }
+      }
+      reader.readAsBinaryString(file)
+    } catch {
+      toast.error('שגיאה בטעינת הקובץ')
+      setUploadLoading(false)
+    }
+  }
+
+  // Excel export handler
+  const handleExportExcel = () => {
+    if (!station || !station.wheels.length) {
+      toast.error('אין גלגלים לייצוא')
+      return
+    }
+
+    // Prepare data with Hebrew headers
+    const exportData = station.wheels.map(wheel => ({
+      'מספר גלגל': wheel.wheel_number,
+      'גודל ג\'אנט': wheel.rim_size,
+      'כמות ברגים': wheel.bolt_count,
+      'מרווח ברגים': wheel.bolt_spacing,
+      'קטגוריה': wheel.category || '',
+      'דונאט': wheel.is_donut ? 'כן' : 'לא',
+      'הערות': wheel.notes || '',
+      'זמין': wheel.is_available ? 'כן' : 'לא',
+      'שם שואל': wheel.current_borrow?.borrower_name || '',
+      'טלפון שואל': wheel.current_borrow?.borrower_phone || '',
+    }))
+
+    // Create workbook
+    const wb = XLSX.utils.book_new()
+    const ws = XLSX.utils.json_to_sheet(exportData)
+
+    // Set column widths
+    ws['!cols'] = [
+      { wch: 12 }, // מספר גלגל
+      { wch: 12 }, // גודל ג'אנט
+      { wch: 12 }, // כמות ברגים
+      { wch: 14 }, // מרווח ברגים
+      { wch: 25 }, // קטגוריה
+      { wch: 8 },  // דונאט
+      { wch: 25 }, // הערות
+      { wch: 8 },  // זמין
+      { wch: 20 }, // שם שואל
+      { wch: 15 }, // טלפון שואל
+    ]
+
+    XLSX.utils.book_append_sheet(wb, ws, 'גלגלים')
+
+    // Generate filename with station name and date
+    const date = new Date().toISOString().split('T')[0]
+    const filename = `wheels_${station.name.replace(/\s/g, '_')}_${date}.xlsx`
+
+    XLSX.writeFile(wb, filename)
+    toast.success('הקובץ הורד בהצלחה!')
+    setShowExcelModal(false)
+  }
+
   const addContact = () => {
     if (contacts.length >= 4) {
       toast.error('ניתן להוסיף עד 4 אנשי קשר')
@@ -639,7 +757,20 @@ export default function StationPage({ params }: { params: Promise<{ stationId: s
           {isManager ? (
             <div style={styles.managerActions} className="station-manager-actions">
               <button style={styles.addBtn} className="station-manager-btn" onClick={() => setShowAddWheelModal(true)}>➕ <span className="btn-text">הוסף גלגל</span></button>
-              <a href="/wheels-template.html" target="_blank" style={styles.templateBtn} className="station-manager-btn">📥 <span className="btn-text">תבנית Excel</span></a>
+              <input
+                type="file"
+                ref={fileInputRef}
+                accept=".xlsx,.xls"
+                style={{ display: 'none' }}
+                onChange={handleExcelUpload}
+              />
+              <button
+                style={styles.excelBtn}
+                className="station-manager-btn"
+                onClick={() => setShowExcelModal(true)}
+              >
+                📊 <span className="btn-text">Excel</span>
+              </button>
               <button style={styles.editContactsBtn} className="station-manager-btn" onClick={() => { setEditAddress(station.address || ''); setShowEditDetailsModal(true) }}>⚙️ <span className="btn-text">ערוך פרטים</span></button>
               <button style={styles.logoutBtn} className="station-manager-btn" onClick={handleLogout}>🚪 <span className="btn-text">יציאה</span></button>
             </div>
@@ -1349,6 +1480,58 @@ export default function StationPage({ params }: { params: Promise<{ stationId: s
             </div>
 
             <button style={{...styles.cancelBtn, width: '100%'}} onClick={() => setShowEditDetailsModal(false)}>סגור</button>
+          </div>
+        </div>
+      )}
+
+      {/* Excel Import/Export Modal */}
+      {showExcelModal && (
+        <div style={styles.modalOverlay} onClick={() => setShowExcelModal(false)}>
+          <div style={{...styles.modal, maxWidth: '400px', textAlign: 'center'}} onClick={e => e.stopPropagation()}>
+            <h3 style={styles.modalTitle}>📊 ייבוא / ייצוא Excel</h3>
+            <p style={styles.modalSubtitle}>בחר את הפעולה הרצויה</p>
+
+            <div style={{display: 'flex', flexDirection: 'column', gap: '15px', marginTop: '20px'}}>
+              <button
+                style={styles.excelImportBtn}
+                onClick={() => {
+                  setShowExcelModal(false)
+                  fileInputRef.current?.click()
+                }}
+                disabled={uploadLoading}
+              >
+                📤 {uploadLoading ? 'מעלה...' : 'ייבוא מקובץ Excel'}
+                <span style={{display: 'block', fontSize: '0.8rem', marginTop: '5px', opacity: 0.8}}>
+                  העלה קובץ Excel להוספת גלגלים
+                </span>
+              </button>
+
+              <button
+                style={styles.excelExportBtn}
+                onClick={handleExportExcel}
+              >
+                📥 ייצוא לקובץ Excel
+                <span style={{display: 'block', fontSize: '0.8rem', marginTop: '5px', opacity: 0.8}}>
+                  הורד את כל הגלגלים לקובץ
+                </span>
+              </button>
+
+              <a
+                href="/wheels-template.html"
+                target="_blank"
+                style={styles.excelTemplateBtn}
+                onClick={() => setShowExcelModal(false)}
+              >
+                📋 הורד תבנית ריקה
+                <span style={{display: 'block', fontSize: '0.8rem', marginTop: '5px', opacity: 0.8}}>
+                  קובץ עם כותרות בלבד להעתקה
+                </span>
+              </a>
+            </div>
+
+            <button style={{...styles.cancelBtn, width: '100%', marginTop: '20px'}} onClick={() => setShowExcelModal(false)}>
+              סגור
+            </button>
           </div>
         </div>
       )}
@@ -2098,5 +2281,51 @@ const styles: { [key: string]: React.CSSProperties } = {
     cursor: 'pointer',
     fontWeight: 'bold',
     fontSize: '1rem',
+  },
+  // Excel button styles
+  excelBtn: {
+    background: 'linear-gradient(135deg, #059669, #047857)',
+    color: 'white',
+    border: 'none',
+    padding: '8px 16px',
+    borderRadius: '8px',
+    cursor: 'pointer',
+    fontWeight: 'bold',
+    fontSize: '0.85rem',
+  },
+  excelImportBtn: {
+    background: 'linear-gradient(135deg, #3b82f6, #2563eb)',
+    color: 'white',
+    border: 'none',
+    padding: '20px',
+    borderRadius: '12px',
+    cursor: 'pointer',
+    fontWeight: 'bold',
+    fontSize: '1.1rem',
+    textAlign: 'center' as const,
+  },
+  excelExportBtn: {
+    background: 'linear-gradient(135deg, #10b981, #059669)',
+    color: 'white',
+    border: 'none',
+    padding: '20px',
+    borderRadius: '12px',
+    cursor: 'pointer',
+    fontWeight: 'bold',
+    fontSize: '1.1rem',
+    textAlign: 'center' as const,
+  },
+  excelTemplateBtn: {
+    background: 'linear-gradient(135deg, #8b5cf6, #7c3aed)',
+    color: 'white',
+    border: 'none',
+    padding: '20px',
+    borderRadius: '12px',
+    cursor: 'pointer',
+    fontWeight: 'bold',
+    fontSize: '1.1rem',
+    textAlign: 'center' as const,
+    textDecoration: 'none',
+    display: 'block',
   },
 }
