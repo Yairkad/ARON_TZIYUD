@@ -60,7 +60,7 @@ function normalizeWheelData(wheel: Record<string, unknown>): WheelImportData {
     normalized.is_donut = val === 'כן' || val === 'true' || val === '1' || val === 'yes'
   }
 
-  return normalized as WheelImportData
+  return normalized as unknown as WheelImportData
 }
 
 // Helper to verify station manager or super admin
