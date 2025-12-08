@@ -639,6 +639,7 @@ export default function StationPage({ params }: { params: Promise<{ stationId: s
           {isManager ? (
             <div style={styles.managerActions} className="station-manager-actions">
               <button style={styles.addBtn} className="station-manager-btn" onClick={() => setShowAddWheelModal(true)}>➕ <span className="btn-text">הוסף גלגל</span></button>
+              <a href="/wheels-template.html" target="_blank" style={styles.templateBtn} className="station-manager-btn">📥 <span className="btn-text">תבנית Excel</span></a>
               <button style={styles.editContactsBtn} className="station-manager-btn" onClick={() => { setEditAddress(station.address || ''); setShowEditDetailsModal(true) }}>⚙️ <span className="btn-text">ערוך פרטים</span></button>
               <button style={styles.logoutBtn} className="station-manager-btn" onClick={handleLogout}>🚪 <span className="btn-text">יציאה</span></button>
             </div>
@@ -1779,6 +1780,20 @@ const styles: { [key: string]: React.CSSProperties } = {
     cursor: 'pointer',
     fontWeight: 'bold',
     fontSize: '0.85rem',
+  },
+  templateBtn: {
+    background: 'linear-gradient(135deg, #8b5cf6, #7c3aed)',
+    color: 'white',
+    border: 'none',
+    padding: '8px 16px',
+    borderRadius: '8px',
+    cursor: 'pointer',
+    fontWeight: 'bold',
+    fontSize: '0.85rem',
+    textDecoration: 'none',
+    display: 'inline-flex',
+    alignItems: 'center',
+    gap: '4px',
   },
   editContactsBtn: {
     background: '#3b82f6',

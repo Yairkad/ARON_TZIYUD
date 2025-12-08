@@ -370,27 +370,10 @@ export default function WheelsAdminPage() {
         <p style={styles.subtitle}>{stations.length} תחנות במערכת</p>
       </header>
 
-      {/* Action Buttons */}
-      <div style={{ display: 'flex', gap: '12px', flexWrap: 'wrap', marginBottom: '20px' }}>
-        <button style={styles.addStationBtn} className="admin-add-btn" onClick={() => { resetForm(); setShowAddStation(true) }}>
-          ➕ הוסף תחנה חדשה
-        </button>
-        <a
-          href="/wheels-template.html"
-          target="_blank"
-          style={{
-            ...styles.addStationBtn,
-            background: 'linear-gradient(135deg, #3b82f6, #2563eb)',
-            textDecoration: 'none',
-            display: 'inline-flex',
-            alignItems: 'center',
-            justifyContent: 'center'
-          }}
-          className="admin-add-btn"
-        >
-          📥 תבנית Excel להעלאה
-        </a>
-      </div>
+      {/* Add Station Button */}
+      <button style={styles.addStationBtn} className="admin-add-btn" onClick={() => { resetForm(); setShowAddStation(true) }}>
+        ➕ הוסף תחנה חדשה
+      </button>
 
       {/* Stations List */}
       {loading ? (
@@ -668,8 +651,7 @@ const styles: { [key: string]: React.CSSProperties } = {
   },
   // Add button
   addStationBtn: {
-    flex: 1,
-    minWidth: '200px',
+    width: '100%',
     background: 'linear-gradient(135deg, #10b981, #059669)',
     color: 'white',
     border: 'none',
@@ -678,6 +660,7 @@ const styles: { [key: string]: React.CSSProperties } = {
     cursor: 'pointer',
     fontWeight: 'bold',
     fontSize: '1rem',
+    marginBottom: '20px',
   },
   loading: {
     textAlign: 'center',
