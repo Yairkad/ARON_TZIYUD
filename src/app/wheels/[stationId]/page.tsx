@@ -122,6 +122,10 @@ export default function StationPage({ params }: { params: Promise<{ stationId: s
 
   // Form validation errors (highlight missing fields)
   const [wheelFormErrors, setWheelFormErrors] = useState<string[]>([])
+  const [showCustomCategory, setShowCustomCategory] = useState(false)
+
+  // Predefined categories
+  const predefinedCategories = ['מכוניות גרמניות', 'מכוניות צרפתיות', 'מכוניות יפניות וקוראניות']
 
   // Filters
   const [rimSizeFilter, setRimSizeFilter] = useState('')
@@ -387,6 +391,7 @@ export default function StationPage({ params }: { params: Promise<{ stationId: s
       }
       await fetchStation()
       setShowAddWheelModal(false)
+      setShowCustomCategory(false)
       setWheelForm({
         wheel_number: '',
         rim_size: '',
@@ -1051,7 +1056,7 @@ export default function StationPage({ params }: { params: Promise<{ stationId: s
 
       {/* Add Wheel Modal */}
       {showAddWheelModal && (
-        <div style={styles.modalOverlay} onClick={() => setShowAddWheelModal(false)}>
+        <div style={styles.modalOverlay} onClick={() => { setShowAddWheelModal(false); setShowCustomCategory(false) }}>
           <div style={styles.modal} onClick={e => e.stopPropagation()}>
             <h3 style={styles.modalTitle}>➕ הוספת גלגל חדש</h3>
             <div style={styles.formRow}>
@@ -1102,16 +1107,44 @@ export default function StationPage({ params }: { params: Promise<{ stationId: s
             </div>
             <div style={styles.formGroup}>
               <label style={styles.label}>קטגוריה</label>
-              <select
-                value={wheelForm.category}
-                onChange={e => setWheelForm({...wheelForm, category: e.target.value})}
-                style={styles.input}
-              >
-                <option value="">ללא קטגוריה</option>
-                <option value="מכוניות גרמניות">מכוניות גרמניות</option>
-                <option value="מכוניות צרפתיות">מכוניות צרפתיות</option>
-                <option value="מכוניות יפניות וקוראניות">מכוניות יפניות וקוראניות</option>
-              </select>
+              {!showCustomCategory ? (
+                <select
+                  value={predefinedCategories.includes(wheelForm.category) ? wheelForm.category : ''}
+                  onChange={e => {
+                    if (e.target.value === '__custom__') {
+                      setShowCustomCategory(true)
+                      setWheelForm({...wheelForm, category: ''})
+                    } else {
+                      setWheelForm({...wheelForm, category: e.target.value})
+                    }
+                  }}
+                  style={styles.input}
+                >
+                  <option value="">ללא קטגוריה</option>
+                  {predefinedCategories.map(cat => (
+                    <option key={cat} value={cat}>{cat}</option>
+                  ))}
+                  <option value="__custom__">➕ קטגוריה אחרת...</option>
+                </select>
+              ) : (
+                <div style={{ display: 'flex', gap: '8px', alignItems: 'center' }}>
+                  <input
+                    type="text"
+                    placeholder="הזן קטגוריה..."
+                    value={wheelForm.category}
+                    onChange={e => setWheelForm({...wheelForm, category: e.target.value})}
+                    style={{ ...styles.input, flex: 1 }}
+                    autoFocus
+                  />
+                  <button
+                    type="button"
+                    onClick={() => { setShowCustomCategory(false); setWheelForm({...wheelForm, category: ''}) }}
+                    style={{ ...styles.smallBtn, background: '#4a5568' }}
+                  >
+                    ✕
+                  </button>
+                </div>
+              )}
             </div>
             <div style={styles.checkboxGroup}>
               <input
