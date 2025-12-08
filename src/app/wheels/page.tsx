@@ -174,7 +174,8 @@ export default function WheelStationsPage() {
             font-size: 1.8rem !important;
           }
           .wheels-header-icon {
-            font-size: 3rem !important;
+            width: 90px !important;
+            height: 90px !important;
           }
           .wheels-filter-grid {
             grid-template-columns: 1fr !important;
@@ -206,7 +207,12 @@ export default function WheelStationsPage() {
         }}
       />
       <header style={styles.header}>
-        <div style={styles.headerIcon} className="wheels-header-icon">⚫</div>
+        <img
+          src="/logo.wheels.png"
+          alt="לוגו גלגלים"
+          style={styles.headerLogo}
+          className="wheels-header-icon"
+        />
         <h1 style={styles.title} className="wheels-header-title">תחנות השאלת גלגלים</h1>
         <p style={styles.subtitle}>בחר תחנה כדי לראות את המלאי הזמין</p>
 
@@ -419,6 +425,15 @@ const styles: { [key: string]: React.CSSProperties } = {
   headerIcon: {
     fontSize: '4rem',
     marginBottom: '20px',
+  },
+  headerLogo: {
+    width: '120px',
+    height: '120px',
+    borderRadius: '50%',
+    objectFit: 'cover',
+    marginBottom: '20px',
+    border: '3px solid #f59e0b',
+    boxShadow: '0 8px 20px rgba(0,0,0,0.3)',
   },
   title: {
     fontSize: '2.5rem',
