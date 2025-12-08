@@ -144,7 +144,11 @@ export default function WheelStationsPage() {
     return (
       <div style={styles.container}>
         <div style={styles.loading}>
-          <div style={styles.spinner}></div>
+          <img
+            src="/logo.wheels.png"
+            alt="טוען..."
+            style={styles.loadingLogo}
+          />
           <p>טוען תחנות...</p>
         </div>
       </div>
@@ -165,6 +169,10 @@ export default function WheelStationsPage() {
   return (
     <div style={styles.container}>
       <style>{`
+        @keyframes pulse {
+          0%, 100% { opacity: 1; transform: scale(1); }
+          50% { opacity: 0.7; transform: scale(0.95); }
+        }
         @media (max-width: 600px) {
           .wheels-search-btn {
             padding: 12px 20px !important;
@@ -432,8 +440,19 @@ const styles: { [key: string]: React.CSSProperties } = {
     borderRadius: '50%',
     objectFit: 'cover',
     marginBottom: '20px',
-    border: '3px solid #f59e0b',
+    border: '3px solid #6b7280',
     boxShadow: '0 8px 20px rgba(0,0,0,0.3)',
+    display: 'block',
+    margin: '0 auto 20px',
+  },
+  loadingLogo: {
+    width: '100px',
+    height: '100px',
+    borderRadius: '50%',
+    objectFit: 'cover',
+    marginBottom: '20px',
+    border: '3px solid #6b7280',
+    animation: 'pulse 1.5s ease-in-out infinite',
   },
   title: {
     fontSize: '2.5rem',
