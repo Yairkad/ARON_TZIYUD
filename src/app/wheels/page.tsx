@@ -32,7 +32,7 @@ interface SearchResult {
   }
   wheels: {
     id: string
-    wheel_number: number
+    wheel_number: string
     rim_size: string
     bolt_count: number
     bolt_spacing: number

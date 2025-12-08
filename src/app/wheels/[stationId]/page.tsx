@@ -6,7 +6,7 @@ import toast, { Toaster } from 'react-hot-toast'
 
 interface Wheel {
   id: string
-  wheel_number: number
+  wheel_number: string
   rim_size: string
   bolt_count: number
   bolt_spacing: number
@@ -119,6 +119,9 @@ export default function StationPage({ params }: { params: Promise<{ stationId: s
     is_donut: false,
     notes: ''
   })
+
+  // Form validation errors (highlight missing fields)
+  const [wheelFormErrors, setWheelFormErrors] = useState<string[]>([])
 
   // Filters
   const [rimSizeFilter, setRimSizeFilter] = useState('')
@@ -314,9 +317,14 @@ export default function StationPage({ params }: { params: Promise<{ stationId: s
 
   // Return wheel
   const handleReturn = async (wheel: Wheel) => {
+    const borrowInfo = wheel.current_borrow
+    const depositInfo = borrowInfo?.deposit_type && borrowInfo.deposit_type !== 'none'
+      ? `\n\n⚠️ תזכורת: יש להחזיר פיקדון!\nסוג: ${borrowInfo.deposit_type === 'cash' ? 'מזומן' : borrowInfo.deposit_type === 'credit_card' ? 'כרטיס אשראי' : borrowInfo.deposit_type === 'id' ? 'תעודת זהות' : borrowInfo.deposit_type}${borrowInfo.deposit_details ? `\nפרטים: ${borrowInfo.deposit_details}` : ''}`
+      : ''
+
     showConfirm({
       title: '📥 החזרת גלגל',
-      message: `להחזיר את גלגל #${wheel.wheel_number}?`,
+      message: `להחזיר את גלגל #${wheel.wheel_number}?${depositInfo}`,
       confirmText: 'החזר',
       variant: 'info',
       onConfirm: async () => {
@@ -345,17 +353,24 @@ export default function StationPage({ params }: { params: Promise<{ stationId: s
 
   // Add wheel
   const handleAddWheel = async () => {
-    if (!wheelForm.wheel_number || !wheelForm.rim_size || !wheelForm.bolt_spacing) {
-      toast.error('נא למלא מספר גלגל, גודל ג\'אנט ומרווח ברגים')
+    // Validate required fields and highlight missing ones
+    const errors: string[] = []
+    if (!wheelForm.wheel_number) errors.push('wheel_number')
+    if (!wheelForm.rim_size) errors.push('rim_size')
+    if (!wheelForm.bolt_spacing) errors.push('bolt_spacing')
+
+    if (errors.length > 0) {
+      setWheelFormErrors(errors)
       return
     }
+    setWheelFormErrors([])
     setActionLoading(true)
     try {
       const response = await fetch(`/api/wheel-stations/${stationId}/wheels`, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
-          wheel_number: parseInt(wheelForm.wheel_number),
+          wheel_number: wheelForm.wheel_number,
           rim_size: wheelForm.rim_size,
           bolt_count: parseInt(wheelForm.bolt_count),
           bolt_spacing: parseFloat(wheelForm.bolt_spacing),
@@ -1043,10 +1058,11 @@ export default function StationPage({ params }: { params: Promise<{ stationId: s
               <div style={styles.formGroup}>
                 <label style={styles.label}>מספר גלגל *</label>
                 <input
-                  type="number"
+                  type="text"
+                  placeholder="A23, 15, וכו'"
                   value={wheelForm.wheel_number}
-                  onChange={e => setWheelForm({...wheelForm, wheel_number: e.target.value})}
-                  style={styles.input}
+                  onChange={e => { setWheelForm({...wheelForm, wheel_number: e.target.value}); setWheelFormErrors(wheelFormErrors.filter(e => e !== 'wheel_number')) }}
+                  style={{...styles.input, ...(wheelFormErrors.includes('wheel_number') ? styles.inputError : {})}}
                 />
               </div>
               <div style={styles.formGroup}>
@@ -1055,8 +1071,8 @@ export default function StationPage({ params }: { params: Promise<{ stationId: s
                   type="text"
                   placeholder='14", 15", 16"'
                   value={wheelForm.rim_size}
-                  onChange={e => setWheelForm({...wheelForm, rim_size: e.target.value})}
-                  style={styles.input}
+                  onChange={e => { setWheelForm({...wheelForm, rim_size: e.target.value}); setWheelFormErrors(wheelFormErrors.filter(e => e !== 'rim_size')) }}
+                  style={{...styles.input, ...(wheelFormErrors.includes('rim_size') ? styles.inputError : {})}}
                 />
               </div>
             </div>
@@ -1079,8 +1095,8 @@ export default function StationPage({ params }: { params: Promise<{ stationId: s
                   type="text"
                   placeholder="100, 108, 114.3"
                   value={wheelForm.bolt_spacing}
-                  onChange={e => setWheelForm({...wheelForm, bolt_spacing: e.target.value})}
-                  style={styles.input}
+                  onChange={e => { setWheelForm({...wheelForm, bolt_spacing: e.target.value}); setWheelFormErrors(wheelFormErrors.filter(e => e !== 'bolt_spacing')) }}
+                  style={{...styles.input, ...(wheelFormErrors.includes('bolt_spacing') ? styles.inputError : {})}}
                 />
               </div>
             </div>
@@ -1314,7 +1330,7 @@ export default function StationPage({ params }: { params: Promise<{ stationId: s
             }}>
               {confirmDialogData.title}
             </h3>
-            <p style={styles.confirmMessage}>{confirmDialogData.message}</p>
+            <p style={{...styles.confirmMessage, whiteSpace: 'pre-line'}}>{confirmDialogData.message}</p>
             <div style={styles.confirmButtons}>
               <button style={styles.cancelBtn} onClick={closeConfirmDialog}>
                 {confirmDialogData.cancelText || 'ביטול'}
@@ -1885,6 +1901,10 @@ const styles: { [key: string]: React.CSSProperties } = {
     background: '#2d3748',
     color: 'white',
     fontSize: '0.95rem',
+  },
+  inputError: {
+    border: '2px solid #ef4444',
+    background: 'rgba(239, 68, 68, 0.15)',
   },
   inputSmall: {
     flex: 1,
