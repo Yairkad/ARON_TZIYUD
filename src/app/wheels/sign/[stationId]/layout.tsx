@@ -19,11 +19,5 @@ export default function SignLayout({
 }: {
   children: React.ReactNode
 }) {
-  return (
-    <>
-      <link rel="icon" href="/logo.wheels.png" />
-      <link rel="apple-touch-icon" href="/logo.wheels.png" />
-      {children}
-    </>
-  )
+  return children
 }
