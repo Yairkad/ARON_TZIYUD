@@ -116,6 +116,12 @@ export default function StationPage({ params }: { params: Promise<{ stationId: s
   const [showChangePasswordModal, setShowChangePasswordModal] = useState(false)
   const [passwordForm, setPasswordForm] = useState({ current: '', new: '', confirm: '' })
 
+  // Password visibility toggles
+  const [showLoginPassword, setShowLoginPassword] = useState(false)
+  const [showCurrentPassword, setShowCurrentPassword] = useState(false)
+  const [showNewPassword, setShowNewPassword] = useState(false)
+  const [showConfirmPassword, setShowConfirmPassword] = useState(false)
+
   // Confirm dialog state
   const [showConfirmDialog, setShowConfirmDialog] = useState(false)
   const [confirmDialogData, setConfirmDialogData] = useState<{
@@ -1614,14 +1620,34 @@ ${signFormUrl}
             </div>
             <div style={styles.formGroup}>
               <label style={styles.label}>סיסמת תחנה</label>
-              <input
-                type="password"
-                placeholder="סיסמא"
-                value={loginPassword}
-                onChange={e => setLoginPassword(e.target.value)}
-                style={styles.input}
-                onKeyDown={e => e.key === 'Enter' && handleLogin()}
-              />
+              <div style={{ position: 'relative' }}>
+                <input
+                  type={showLoginPassword ? 'text' : 'password'}
+                  placeholder="סיסמא"
+                  value={loginPassword}
+                  onChange={e => setLoginPassword(e.target.value)}
+                  style={{...styles.input, paddingLeft: '40px'}}
+                  onKeyDown={e => e.key === 'Enter' && handleLogin()}
+                />
+                <button
+                  type="button"
+                  onClick={() => setShowLoginPassword(!showLoginPassword)}
+                  style={{
+                    position: 'absolute',
+                    left: '10px',
+                    top: '50%',
+                    transform: 'translateY(-50%)',
+                    background: 'none',
+                    border: 'none',
+                    cursor: 'pointer',
+                    padding: '4px',
+                    fontSize: '16px',
+                    opacity: 0.7,
+                  }}
+                >
+                  {showLoginPassword ? '🙈' : '👁️'}
+                </button>
+              </div>
             </div>
             {loginError && <div style={styles.errorText}>{loginError}</div>}
             <div style={styles.modalButtons}>
@@ -1970,31 +1996,91 @@ ${signFormUrl}
               <p style={{fontSize: '0.85rem', color: '#a0aec0', margin: '0 0 12px'}}>הסיסמה משותפת לכל מנהלי התחנה</p>
               <div style={styles.formGroup}>
                 <label style={styles.label}>סיסמה נוכחית</label>
-                <input
-                  type="password"
-                  value={passwordForm.current}
-                  onChange={e => setPasswordForm({...passwordForm, current: e.target.value})}
-                  style={styles.input}
-                />
+                <div style={{ position: 'relative' }}>
+                  <input
+                    type={showCurrentPassword ? 'text' : 'password'}
+                    value={passwordForm.current}
+                    onChange={e => setPasswordForm({...passwordForm, current: e.target.value})}
+                    style={{...styles.input, paddingLeft: '40px'}}
+                  />
+                  <button
+                    type="button"
+                    onClick={() => setShowCurrentPassword(!showCurrentPassword)}
+                    style={{
+                      position: 'absolute',
+                      left: '10px',
+                      top: '50%',
+                      transform: 'translateY(-50%)',
+                      background: 'none',
+                      border: 'none',
+                      cursor: 'pointer',
+                      padding: '4px',
+                      fontSize: '16px',
+                      opacity: 0.7,
+                    }}
+                  >
+                    {showCurrentPassword ? '🙈' : '👁️'}
+                  </button>
+                </div>
               </div>
               <div style={{display: 'flex', gap: '10px', flexWrap: 'wrap'}}>
                 <div style={{...styles.formGroup, flex: 1, minWidth: '120px'}}>
                   <label style={styles.label}>סיסמה חדשה</label>
-                  <input
-                    type="password"
-                    value={passwordForm.new}
-                    onChange={e => setPasswordForm({...passwordForm, new: e.target.value})}
-                    style={styles.input}
-                  />
+                  <div style={{ position: 'relative' }}>
+                    <input
+                      type={showNewPassword ? 'text' : 'password'}
+                      value={passwordForm.new}
+                      onChange={e => setPasswordForm({...passwordForm, new: e.target.value})}
+                      style={{...styles.input, paddingLeft: '40px'}}
+                    />
+                    <button
+                      type="button"
+                      onClick={() => setShowNewPassword(!showNewPassword)}
+                      style={{
+                        position: 'absolute',
+                        left: '10px',
+                        top: '50%',
+                        transform: 'translateY(-50%)',
+                        background: 'none',
+                        border: 'none',
+                        cursor: 'pointer',
+                        padding: '4px',
+                        fontSize: '16px',
+                        opacity: 0.7,
+                      }}
+                    >
+                      {showNewPassword ? '🙈' : '👁️'}
+                    </button>
+                  </div>
                 </div>
                 <div style={{...styles.formGroup, flex: 1, minWidth: '120px'}}>
                   <label style={styles.label}>אימות</label>
-                  <input
-                    type="password"
-                    value={passwordForm.confirm}
-                    onChange={e => setPasswordForm({...passwordForm, confirm: e.target.value})}
-                    style={styles.input}
-                  />
+                  <div style={{ position: 'relative' }}>
+                    <input
+                      type={showConfirmPassword ? 'text' : 'password'}
+                      value={passwordForm.confirm}
+                      onChange={e => setPasswordForm({...passwordForm, confirm: e.target.value})}
+                      style={{...styles.input, paddingLeft: '40px'}}
+                    />
+                    <button
+                      type="button"
+                      onClick={() => setShowConfirmPassword(!showConfirmPassword)}
+                      style={{
+                        position: 'absolute',
+                        left: '10px',
+                        top: '50%',
+                        transform: 'translateY(-50%)',
+                        background: 'none',
+                        border: 'none',
+                        cursor: 'pointer',
+                        padding: '4px',
+                        fontSize: '16px',
+                        opacity: 0.7,
+                      }}
+                    >
+                      {showConfirmPassword ? '🙈' : '👁️'}
+                    </button>
+                  </div>
                 </div>
               </div>
               <button style={{...styles.smallBtn, background: '#f59e0b', color: '#000'}} onClick={handleChangePassword} disabled={actionLoading}>

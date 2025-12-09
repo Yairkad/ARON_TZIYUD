@@ -37,6 +37,7 @@ export default function WheelsAdminPage() {
   const [isAuthenticated, setIsAuthenticated] = useState(false)
   const [password, setPassword] = useState('')
   const [passwordError, setPasswordError] = useState('')
+  const [showPassword, setShowPassword] = useState(false)
 
   const [stations, setStations] = useState<Station[]>([])
   const [cities, setCities] = useState<City[]>([])
@@ -280,14 +281,34 @@ export default function WheelsAdminPage() {
         <div style={styles.loginBox}>
           <h1 style={styles.loginTitle}>🔐 ניהול תחנות גלגלים</h1>
           <p style={styles.loginSubtitle}>הזן סיסמת מנהל</p>
-          <input
-            type="password"
-            placeholder="סיסמא"
-            value={password}
-            onChange={e => setPassword(e.target.value)}
-            onKeyDown={e => e.key === 'Enter' && handleLogin()}
-            style={styles.input}
-          />
+          <div style={{ position: 'relative' }}>
+            <input
+              type={showPassword ? 'text' : 'password'}
+              placeholder="סיסמא"
+              value={password}
+              onChange={e => setPassword(e.target.value)}
+              onKeyDown={e => e.key === 'Enter' && handleLogin()}
+              style={{...styles.input, paddingLeft: '40px'}}
+            />
+            <button
+              type="button"
+              onClick={() => setShowPassword(!showPassword)}
+              style={{
+                position: 'absolute',
+                left: '10px',
+                top: '50%',
+                transform: 'translateY(-50%)',
+                background: 'none',
+                border: 'none',
+                cursor: 'pointer',
+                padding: '4px',
+                fontSize: '16px',
+                opacity: 0.7,
+              }}
+            >
+              {showPassword ? '🙈' : '👁️'}
+            </button>
+          </div>
           {passwordError && <div style={styles.errorText}>{passwordError}</div>}
           <button style={styles.loginBtn} onClick={handleLogin}>כניסה</button>
           <Link href="/wheels" style={styles.backLink}>← חזרה לרשימת התחנות</Link>
