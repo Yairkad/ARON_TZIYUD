@@ -835,6 +835,38 @@ ${signFormUrl}
             width: 100% !important;
             justify-content: center !important;
           }
+          /* Responsive table - convert to cards on mobile */
+          .tracking-table-container table {
+            display: none !important;
+          }
+          .tracking-table-container .mobile-cards {
+            display: flex !important;
+          }
+          .tracking-filter-tabs {
+            flex-wrap: wrap !important;
+            gap: 6px !important;
+          }
+          .tracking-filter-btn {
+            padding: 8px 12px !important;
+            font-size: 0.8rem !important;
+          }
+          .tracking-stats {
+            flex-wrap: wrap !important;
+            gap: 10px !important;
+          }
+          .tracking-stat {
+            flex: 1 !important;
+            min-width: 90px !important;
+            padding: 12px !important;
+          }
+          .tracking-stat-value {
+            font-size: 1.3rem !important;
+          }
+        }
+        @media (min-width: 601px) {
+          .tracking-table-container .mobile-cards {
+            display: none !important;
+          }
         }
       `}</style>
       <Toaster
@@ -934,43 +966,47 @@ ${signFormUrl}
       {activeTab === 'tracking' && isManager && (
         <div style={styles.trackingSection}>
           {/* Tracking Stats */}
-          <div style={styles.trackingStats}>
-            <div style={styles.trackingStat}>
-              <div style={{...styles.trackingStatValue, color: '#ec4899'}}>{borrowStats.pending}</div>
+          <div style={styles.trackingStats} className="tracking-stats">
+            <div style={styles.trackingStat} className="tracking-stat">
+              <div style={{...styles.trackingStatValue, color: '#ec4899'}} className="tracking-stat-value">{borrowStats.pending}</div>
               <div style={styles.trackingStatLabel}>ממתינים לאישור</div>
             </div>
-            <div style={styles.trackingStat}>
-              <div style={{...styles.trackingStatValue, color: '#10b981'}}>{borrowStats.totalBorrowed}</div>
+            <div style={styles.trackingStat} className="tracking-stat">
+              <div style={{...styles.trackingStatValue, color: '#10b981'}} className="tracking-stat-value">{borrowStats.totalBorrowed}</div>
               <div style={styles.trackingStatLabel}>מושאלים</div>
             </div>
-            <div style={styles.trackingStat}>
-              <div style={{...styles.trackingStatValue, color: '#8b5cf6'}}>{borrowStats.totalReturned}</div>
+            <div style={styles.trackingStat} className="tracking-stat">
+              <div style={{...styles.trackingStatValue, color: '#8b5cf6'}} className="tracking-stat-value">{borrowStats.totalReturned}</div>
               <div style={styles.trackingStatLabel}>הוחזרו</div>
             </div>
           </div>
 
           {/* Filter tabs */}
-          <div style={styles.trackingFilterTabs}>
+          <div style={styles.trackingFilterTabs} className="tracking-filter-tabs">
             <button
               style={{...styles.trackingFilterBtn, ...(borrowFilter === 'all' ? styles.trackingFilterBtnActive : {})}}
+              className="tracking-filter-btn"
               onClick={() => setBorrowFilter('all')}
             >
               הכל
             </button>
             <button
               style={{...styles.trackingFilterBtn, ...(borrowFilter === 'pending' ? styles.trackingFilterBtnActive : {}), ...(borrowStats.pending > 0 ? styles.trackingFilterBtnPending : {})}}
+              className="tracking-filter-btn"
               onClick={() => setBorrowFilter('pending')}
             >
               ממתינים ({borrowStats.pending})
             </button>
             <button
               style={{...styles.trackingFilterBtn, ...(borrowFilter === 'borrowed' ? styles.trackingFilterBtnActive : {})}}
+              className="tracking-filter-btn"
               onClick={() => setBorrowFilter('borrowed')}
             >
               מושאלים
             </button>
             <button
               style={{...styles.trackingFilterBtn, ...(borrowFilter === 'returned' ? styles.trackingFilterBtnActive : {})}}
+              className="tracking-filter-btn"
               onClick={() => setBorrowFilter('returned')}
             >
               הוחזרו
@@ -981,7 +1017,8 @@ ${signFormUrl}
           {borrowsLoading ? (
             <div style={styles.loading}>טוען...</div>
           ) : (
-            <div style={styles.trackingTableWrapper}>
+            <div style={styles.trackingTableWrapper} className="tracking-table-container">
+              {/* Desktop Table */}
               <table style={styles.trackingTable}>
                 <thead>
                   <tr>
@@ -1095,6 +1132,115 @@ ${signFormUrl}
                   )}
                 </tbody>
               </table>
+
+              {/* Mobile Cards */}
+              <div className="mobile-cards" style={{display: 'none', flexDirection: 'column', gap: '12px'}}>
+                {borrows.length === 0 ? (
+                  <div style={styles.emptyState}>
+                    <div style={styles.emptyIcon}>📋</div>
+                    <div style={styles.emptyTitle}>אין רשומות להצגה</div>
+                    <div style={styles.emptyText}>כשתהיינה השאלות או החזרות, הן יופיעו כאן</div>
+                  </div>
+                ) : borrows.map(borrow => {
+                  const isOverdue = borrow.status === 'borrowed' && !borrow.is_signed &&
+                    borrow.created_at && (Date.now() - new Date(borrow.created_at).getTime() > 24 * 60 * 60 * 1000)
+                  return (
+                    <div key={borrow.id} style={styles.mobileCard}>
+                      <div style={styles.mobileCardHeader}>
+                        <div>
+                          <div style={styles.borrowerNameCell}>{borrow.borrower_name}</div>
+                          <div style={styles.borrowerInfoCell}>{borrow.borrower_phone}</div>
+                        </div>
+                        <div>
+                          {borrow.status === 'pending' ? (
+                            <span style={styles.statusPending}>🔔 ממתין</span>
+                          ) : borrow.status === 'returned' ? (
+                            <span style={styles.statusReturned}>🔙 הוחזר</span>
+                          ) : borrow.status === 'rejected' ? (
+                            <span style={styles.statusOverdue}>❌ נדחה</span>
+                          ) : borrow.is_signed ? (
+                            <span style={styles.statusSigned}>✅ חתום</span>
+                          ) : isOverdue ? (
+                            <span style={styles.statusOverdue}>⚠️ לא חתום</span>
+                          ) : (
+                            <span style={styles.statusWaiting}>📝 מושאל</span>
+                          )}
+                        </div>
+                      </div>
+                      <div style={styles.mobileCardBody}>
+                        <div style={styles.mobileCardRow}>
+                          <span style={{color: '#9ca3af'}}>גלגל:</span>
+                          <span>{borrow.wheels?.wheel_number || '-'}</span>
+                        </div>
+                        <div style={styles.mobileCardRow}>
+                          <span style={{color: '#9ca3af'}}>תאריך:</span>
+                          <span>{new Date(borrow.borrow_date || borrow.created_at).toLocaleDateString('he-IL')}</span>
+                        </div>
+                        <div style={styles.mobileCardRow}>
+                          <span style={{color: '#9ca3af'}}>פיקדון:</span>
+                          <span style={{
+                            ...styles.depositBadge,
+                            ...(borrow.deposit_type === 'cash' || borrow.deposit_type === 'bit' ? styles.depositBadgeMoney :
+                                borrow.deposit_type === 'id' || borrow.deposit_type === 'license' ? styles.depositBadgeDoc : {})
+                          }}>
+                            {borrow.deposit_type === 'cash' ? '₪500 מזומן' :
+                             borrow.deposit_type === 'bit' ? '₪500 ביט' :
+                             borrow.deposit_type === 'id' ? 'ת.ז.' :
+                             borrow.deposit_type === 'license' ? 'רישיון' : '-'}
+                          </span>
+                        </div>
+                        {borrow.vehicle_model && (
+                          <div style={styles.mobileCardRow}>
+                            <span style={{color: '#9ca3af'}}>רכב:</span>
+                            <span>{borrow.vehicle_model}</span>
+                          </div>
+                        )}
+                      </div>
+                      <div style={styles.mobileCardActions}>
+                        {borrow.status === 'pending' && (
+                          <>
+                            <button
+                              style={{...styles.approveBtn, flex: 1}}
+                              onClick={() => handleBorrowAction(borrow.id, 'approve')}
+                              disabled={approvalLoading === borrow.id}
+                            >
+                              {approvalLoading === borrow.id ? '...' : '✅ אשר'}
+                            </button>
+                            <button
+                              style={styles.rejectBtn}
+                              onClick={() => handleBorrowAction(borrow.id, 'reject')}
+                              disabled={approvalLoading === borrow.id}
+                            >
+                              ❌
+                            </button>
+                          </>
+                        )}
+                        {borrow.status === 'borrowed' && !borrow.is_signed && (
+                          <a
+                            href={generateWhatsAppLink(borrow.borrower_name, borrow.borrower_phone)}
+                            target="_blank"
+                            rel="noopener noreferrer"
+                            style={{...styles.whatsappBtn, flex: 1, textAlign: 'center'}}
+                          >
+                            📱 שלח טופס
+                          </a>
+                        )}
+                        {borrow.status === 'borrowed' && (
+                          <button
+                            style={{...styles.returnBtnSmall, flex: 1}}
+                            onClick={() => {
+                              const wheel = station?.wheels.find(w => w.id === borrow.wheel_id)
+                              if (wheel) handleReturn(wheel)
+                            }}
+                          >
+                            🔙 החזר
+                          </button>
+                        )}
+                      </div>
+                    </div>
+                  )
+                })}
+              </div>
             </div>
           )}
 
@@ -2958,5 +3104,38 @@ const styles: { [key: string]: React.CSSProperties } = {
   emptyText: {
     fontSize: '0.95rem',
     color: '#9ca3af',
+  },
+  // Mobile card styles for tracking
+  mobileCard: {
+    background: 'rgba(255,255,255,0.05)',
+    borderRadius: '12px',
+    padding: '16px',
+    border: '1px solid #4b5563',
+  },
+  mobileCardHeader: {
+    display: 'flex',
+    justifyContent: 'space-between',
+    alignItems: 'flex-start',
+    marginBottom: '12px',
+    paddingBottom: '12px',
+    borderBottom: '1px solid #4b5563',
+  },
+  mobileCardBody: {
+    display: 'flex',
+    flexDirection: 'column',
+    gap: '8px',
+    marginBottom: '12px',
+  },
+  mobileCardRow: {
+    display: 'flex',
+    justifyContent: 'space-between',
+    alignItems: 'center',
+    fontSize: '0.9rem',
+  },
+  mobileCardActions: {
+    display: 'flex',
+    gap: '8px',
+    paddingTop: '12px',
+    borderTop: '1px solid #4b5563',
   },
 }

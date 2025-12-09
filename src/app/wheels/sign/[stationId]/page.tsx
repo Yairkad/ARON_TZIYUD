@@ -1,7 +1,6 @@
 'use client'
 
 import { useState, useEffect, useRef, use } from 'react'
-import Image from 'next/image'
 import Link from 'next/link'
 import toast, { Toaster } from 'react-hot-toast'
 
@@ -268,9 +267,6 @@ export default function SignFormPage({ params }: { params: Promise<{ stationId: 
           <div style={styles.warningBox}>
             <strong>לאחר אישור המנהל, יש להחזיר את הצמיג תוך 72 שעות!</strong>
           </div>
-          <Link href="/wheels" style={styles.backBtn}>
-            חזרה לדף הראשי
-          </Link>
         </div>
       </div>
     )
@@ -286,17 +282,6 @@ export default function SignFormPage({ params }: { params: Promise<{ stationId: 
     <div style={styles.container}>
       <Toaster position="top-center" />
       <div style={styles.card}>
-        {/* Logo */}
-        <div style={styles.logoContainer}>
-          <Image
-            src="/yedidim-logo.png"
-            alt="ידידים סיוע בדרכים"
-            width={200}
-            height={80}
-            style={{ objectFit: 'contain' }}
-          />
-        </div>
-
         <h1 style={styles.title}>🛞 השאלת צמיג - {station.name}</h1>
         <p style={styles.subtitle}>טופס להשאלת גלגל מתחנת השאלת צמיגים</p>
 
@@ -391,8 +376,7 @@ export default function SignFormPage({ params }: { params: Promise<{ stationId: 
             <option value="">בחר צמיג...</option>
             {wheels.map(wheel => (
               <option key={wheel.id} value={wheel.id}>
-                {wheel.wheel_number} - {wheel.rim_size}" | {wheel.bolt_count}×{wheel.bolt_spacing}
-                {wheel.is_donut ? ' | דונאט' : ''} | זמין ✅
+                {wheel.wheel_number}
               </option>
             ))}
           </select>
