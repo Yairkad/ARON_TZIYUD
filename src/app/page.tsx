@@ -74,6 +74,27 @@ export default function HomePage() {
     router.push(`/city/${city.id}`)
   }
 
+  // Show loading screen while fetching data
+  if (loading) {
+    return (
+      <div className="min-h-screen bg-gradient-to-br from-slate-900 to-blue-900 flex flex-col items-center justify-center">
+        <style>{`
+          @keyframes pulse {
+            0%, 100% { opacity: 1; transform: scale(1); }
+            50% { opacity: 0.7; transform: scale(0.95); }
+          }
+        `}</style>
+        <img
+          src="/favicon.png"
+          alt="טוען..."
+          className="w-24 h-24 rounded-full object-cover border-3 border-blue-400 shadow-lg mb-4"
+          style={{ animation: 'pulse 1.5s ease-in-out infinite' }}
+        />
+        <p className="text-white text-lg">טוען...</p>
+      </div>
+    )
+  }
+
   return (
     <div className="min-h-screen content-wrapper flex flex-col items-center justify-center p-4 pt-16 sm:pt-4 relative">
       {/* Admin Login Button - Only show when not logged in as admin */}
@@ -138,11 +159,7 @@ export default function HomePage() {
                   />
                 </div>
 
-                {loading ? (
-                  <div className="text-center py-8">
-                    <p className="text-gray-500">⏳ טוען ערים...</p>
-                  </div>
-                ) : cities.length === 0 ? (
+                {cities.length === 0 ? (
                   <div className="text-center py-8">
                     <p className="text-gray-500">אין ערים זמינות כרגע</p>
                   </div>
@@ -273,7 +290,7 @@ export default function HomePage() {
               </Link>
             </p>
             <p className="text-gray-300 text-[10px] mt-2">
-              גירסה 1.5.0
+              גירסה 1.5.1
             </p>
           </div>
         </div>
