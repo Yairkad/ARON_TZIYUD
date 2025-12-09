@@ -236,7 +236,7 @@ export default function SignFormPage({ params }: { params: Promise<{ stationId: 
     return (
       <div style={styles.container}>
         <div style={styles.loading}>
-          <div style={styles.spinner}></div>
+          <div style={styles.spinnerEmoji}>🛞</div>
           <p>טוען טופס...</p>
         </div>
       </div>
@@ -517,9 +517,9 @@ export default function SignFormPage({ params }: { params: Promise<{ stationId: 
               onMouseMove={draw}
               onMouseUp={stopDrawing}
               onMouseLeave={stopDrawing}
-              onTouchStart={(e) => { e.stopPropagation(); startDrawing(e) }}
-              onTouchMove={(e) => { e.stopPropagation(); draw(e) }}
-              onTouchEnd={(e) => { e.stopPropagation(); stopDrawing() }}
+              onTouchStart={(e) => { e.preventDefault(); e.stopPropagation(); startDrawing(e) }}
+              onTouchMove={(e) => { e.preventDefault(); e.stopPropagation(); draw(e) }}
+              onTouchEnd={(e) => { e.preventDefault(); e.stopPropagation(); stopDrawing() }}
             />
           </div>
           <button
@@ -570,6 +570,10 @@ const styles: { [key: string]: React.CSSProperties } = {
     border: '4px solid rgba(0,0,0,0.1)',
     borderTopColor: '#f59e0b',
     borderRadius: '50%',
+    animation: 'spin 1s linear infinite',
+  },
+  spinnerEmoji: {
+    fontSize: '48px',
     animation: 'spin 1s linear infinite',
   },
   error: {
