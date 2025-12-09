@@ -1084,8 +1084,12 @@ ${signFormUrl}
                   })}
                   {borrows.length === 0 && (
                     <tr>
-                      <td colSpan={5} style={{...styles.trackingTd, textAlign: 'center', color: '#9ca3af'}}>
-                        אין רשומות להצגה
+                      <td colSpan={5} style={{padding: '40px'}}>
+                        <div style={styles.emptyState}>
+                          <div style={styles.emptyIcon}>📋</div>
+                          <div style={styles.emptyTitle}>אין רשומות להצגה</div>
+                          <div style={styles.emptyText}>כשתהיינה השאלות או החזרות, הן יופיעו כאן</div>
+                        </div>
                       </td>
                     </tr>
                   )}
@@ -1244,6 +1248,13 @@ ${signFormUrl}
       {/* Wheels Grid (Cards View) */}
       {viewMode === 'cards' && (
         <div style={styles.grid} className="station-grid">
+          {filteredWheels.length === 0 && (
+            <div style={styles.emptyStateCard}>
+              <div style={styles.emptyIcon}>🛞</div>
+              <div style={styles.emptyTitle}>לא נמצאו גלגלים</div>
+              <div style={styles.emptyText}>נסה לשנות את הסינון או להוסיף גלגלים חדשים</div>
+            </div>
+          )}
           {filteredWheels.map(wheel => (
             <div
               key={wheel.id}
@@ -1338,6 +1349,17 @@ ${signFormUrl}
               </tr>
             </thead>
             <tbody>
+              {filteredWheels.length === 0 && (
+                <tr>
+                  <td colSpan={7} style={{padding: '40px'}}>
+                    <div style={styles.emptyState}>
+                      <div style={styles.emptyIcon}>🛞</div>
+                      <div style={styles.emptyTitle}>לא נמצאו גלגלים</div>
+                      <div style={styles.emptyText}>נסה לשנות את הסינון או להוסיף גלגלים חדשים</div>
+                    </div>
+                  </td>
+                </tr>
+              )}
               {filteredWheels.map(wheel => (
                 <tr key={wheel.id} id={`wheel-${wheel.wheel_number}`} style={{...(wheel.is_available ? {} : styles.rowTaken), transition: 'box-shadow 0.3s ease'}}>
                   <td style={styles.td}><strong>{wheel.wheel_number}</strong></td>
@@ -2900,5 +2922,41 @@ const styles: { [key: string]: React.CSSProperties } = {
     color: 'white',
     border: 'none',
     cursor: 'pointer',
+  },
+  // Empty state styles
+  emptyState: {
+    display: 'flex',
+    flexDirection: 'column',
+    alignItems: 'center',
+    justifyContent: 'center',
+    padding: '40px 20px',
+    textAlign: 'center',
+  },
+  emptyStateCard: {
+    display: 'flex',
+    flexDirection: 'column',
+    alignItems: 'center',
+    justifyContent: 'center',
+    padding: '60px 20px',
+    textAlign: 'center',
+    background: 'rgba(255,255,255,0.05)',
+    borderRadius: '16px',
+    border: '2px dashed #4b5563',
+    gridColumn: '1 / -1',
+  },
+  emptyIcon: {
+    fontSize: '64px',
+    marginBottom: '16px',
+    opacity: 0.7,
+  },
+  emptyTitle: {
+    fontSize: '1.2rem',
+    fontWeight: 600,
+    color: '#f3f4f6',
+    marginBottom: '8px',
+  },
+  emptyText: {
+    fontSize: '0.95rem',
+    color: '#9ca3af',
   },
 }
