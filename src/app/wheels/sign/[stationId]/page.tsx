@@ -2,6 +2,7 @@
 
 import { useState, useEffect, useRef, use } from 'react'
 import Link from 'next/link'
+import toast, { Toaster } from 'react-hot-toast'
 
 interface Wheel {
   id: string
@@ -41,6 +42,13 @@ export default function SignFormPage({ params }: { params: Promise<{ stationId: 
   const [notes, setNotes] = useState('')
   const [agreedTerms, setAgreedTerms] = useState(false)
 
+  // Validation errors
+  const [fieldErrors, setFieldErrors] = useState<string[]>([])
+
+  // Terms scroll tracking
+  const termsRef = useRef<HTMLDivElement>(null)
+  const [canAgreeTerms, setCanAgreeTerms] = useState(false)
+
   // Signature canvas
   const canvasRef = useRef<HTMLCanvasElement>(null)
   const [isDrawing, setIsDrawing] = useState(false)
@@ -66,7 +74,7 @@ export default function SignFormPage({ params }: { params: Promise<{ stationId: 
       canvas.height = 150
       const ctx = canvas.getContext('2d')
       if (ctx) {
-        ctx.strokeStyle = '#10b981'
+        ctx.strokeStyle = '#3b82f6'
         ctx.lineWidth = 3
         ctx.lineCap = 'round'
         ctx.lineJoin = 'round'
@@ -77,6 +85,16 @@ export default function SignFormPage({ params }: { params: Promise<{ stationId: 
     window.addEventListener('resize', resizeCanvas)
     return () => window.removeEventListener('resize', resizeCanvas)
   }, [loading])
+
+  // Track terms scroll to enable checkbox
+  const handleTermsScroll = () => {
+    const termsEl = termsRef.current
+    if (!termsEl) return
+    const isAtBottom = termsEl.scrollHeight - termsEl.scrollTop <= termsEl.clientHeight + 20
+    if (isAtBottom && !canAgreeTerms) {
+      setCanAgreeTerms(true)
+    }
+  }
 
   const fetchStationData = async () => {
     try {
@@ -154,51 +172,30 @@ export default function SignFormPage({ params }: { params: Promise<{ stationId: 
   }
 
   const handleSubmit = async () => {
-    // Validation
-    if (!firstName.trim()) {
-      alert('נא למלא שם פרטי')
-      return
-    }
-    if (!lastName.trim()) {
-      alert('נא למלא שם משפחה')
-      return
-    }
-    if (!idNumber.trim() || idNumber.length < 9) {
-      alert('נא למלא תעודת זהות (9 ספרות)')
-      return
-    }
-    if (!phone.trim()) {
-      alert('נא למלא מספר טלפון')
-      return
-    }
-    if (!address.trim()) {
-      alert('נא למלא כתובת מגורים')
-      return
-    }
-    if (!selectedWheelId) {
-      alert('נא לבחור צמיג')
-      return
-    }
-    if (!vehicleModel.trim()) {
-      alert('נא למלא דגם הרכב')
-      return
-    }
-    if (!depositType) {
-      alert('נא לבחור אופן תשלום פיקדון')
-      return
-    }
-    if (!hasSigned) {
-      alert('נא לחתום על הטופס')
-      return
-    }
-    if (!agreedTerms) {
-      alert('נא לאשר את תנאי ההשאלה')
+    // Validation - collect all errors
+    const errors: string[] = []
+
+    if (!firstName.trim()) errors.push('firstName')
+    if (!lastName.trim()) errors.push('lastName')
+    if (!idNumber.trim() || idNumber.length < 9) errors.push('idNumber')
+    if (!phone.trim()) errors.push('phone')
+    if (!address.trim()) errors.push('address')
+    if (!selectedWheelId) errors.push('wheelId')
+    if (!vehicleModel.trim()) errors.push('vehicleModel')
+    if (!depositType) errors.push('depositType')
+    if (!hasSigned) errors.push('signature')
+    if (!agreedTerms) errors.push('terms')
+
+    setFieldErrors(errors)
+
+    if (errors.length > 0) {
+      toast.error('נא למלא את כל השדות המסומנים')
       return
     }
 
     const signatureData = getSignatureData()
     if (!signatureData) {
-      alert('נא לחתום על הטופס')
+      toast.error('נא לחתום על הטופס')
       return
     }
 
@@ -229,7 +226,7 @@ export default function SignFormPage({ params }: { params: Promise<{ stationId: 
 
       setSubmitted(true)
     } catch (err) {
-      alert(err instanceof Error ? err.message : 'שגיאה בשליחת הטופס')
+      toast.error(err instanceof Error ? err.message : 'שגיאה בשליחת הטופס')
     } finally {
       setSubmitting(false)
     }
@@ -278,8 +275,15 @@ export default function SignFormPage({ params }: { params: Promise<{ stationId: 
     )
   }
 
+  // Helper for input style with error
+  const getInputStyle = (fieldName: string) => ({
+    ...styles.input,
+    ...(fieldErrors.includes(fieldName) ? styles.inputError : {})
+  })
+
   return (
     <div style={styles.container}>
+      <Toaster position="top-center" />
       <div style={styles.card}>
         <h1 style={styles.title}>🛞 השאלת צמיג - {station.name}</h1>
         <p style={styles.subtitle}>טופס להשאלת גלגל מתחנת השאלת צמיגים</p>
@@ -301,9 +305,9 @@ export default function SignFormPage({ params }: { params: Promise<{ stationId: 
             <input
               type="text"
               value={firstName}
-              onChange={e => setFirstName(e.target.value)}
+              onChange={e => { setFirstName(e.target.value); setFieldErrors(f => f.filter(x => x !== 'firstName')) }}
               placeholder="ישראל"
-              style={styles.input}
+              style={getInputStyle('firstName')}
             />
           </div>
           <div style={styles.formGroup}>
@@ -311,9 +315,9 @@ export default function SignFormPage({ params }: { params: Promise<{ stationId: 
             <input
               type="text"
               value={lastName}
-              onChange={e => setLastName(e.target.value)}
+              onChange={e => { setLastName(e.target.value); setFieldErrors(f => f.filter(x => x !== 'lastName')) }}
               placeholder="ישראלי"
-              style={styles.input}
+              style={getInputStyle('lastName')}
             />
           </div>
         </div>
@@ -323,10 +327,10 @@ export default function SignFormPage({ params }: { params: Promise<{ stationId: 
           <input
             type="text"
             value={idNumber}
-            onChange={e => setIdNumber(e.target.value)}
+            onChange={e => { setIdNumber(e.target.value); setFieldErrors(f => f.filter(x => x !== 'idNumber')) }}
             placeholder="123456789"
             maxLength={9}
-            style={styles.input}
+            style={getInputStyle('idNumber')}
           />
         </div>
 
@@ -335,9 +339,9 @@ export default function SignFormPage({ params }: { params: Promise<{ stationId: 
           <input
             type="tel"
             value={phone}
-            onChange={e => setPhone(e.target.value)}
+            onChange={e => { setPhone(e.target.value); setFieldErrors(f => f.filter(x => x !== 'phone')) }}
             placeholder="050-1234567"
-            style={styles.input}
+            style={getInputStyle('phone')}
           />
         </div>
 
@@ -346,9 +350,9 @@ export default function SignFormPage({ params }: { params: Promise<{ stationId: 
           <input
             type="text"
             value={address}
-            onChange={e => setAddress(e.target.value)}
+            onChange={e => { setAddress(e.target.value); setFieldErrors(f => f.filter(x => x !== 'address')) }}
             placeholder="רחוב הרצל 1, ירושלים"
-            style={styles.input}
+            style={getInputStyle('address')}
           />
         </div>
 
@@ -369,8 +373,8 @@ export default function SignFormPage({ params }: { params: Promise<{ stationId: 
           <label style={styles.label}>מספר צמיג <span style={styles.required}>*</span></label>
           <select
             value={selectedWheelId}
-            onChange={e => setSelectedWheelId(e.target.value)}
-            style={styles.input}
+            onChange={e => { setSelectedWheelId(e.target.value); setFieldErrors(f => f.filter(x => x !== 'wheelId')) }}
+            style={getInputStyle('wheelId')}
           >
             <option value="">בחר צמיג...</option>
             {wheels.map(wheel => (
@@ -388,9 +392,9 @@ export default function SignFormPage({ params }: { params: Promise<{ stationId: 
           <input
             type="text"
             value={vehicleModel}
-            onChange={e => setVehicleModel(e.target.value)}
+            onChange={e => { setVehicleModel(e.target.value); setFieldErrors(f => f.filter(x => x !== 'vehicleModel')) }}
             placeholder="יונדאי i25"
-            style={styles.input}
+            style={getInputStyle('vehicleModel')}
           />
         </div>
 
@@ -399,14 +403,17 @@ export default function SignFormPage({ params }: { params: Promise<{ stationId: 
 
         <div style={styles.formGroup}>
           <label style={styles.label}>אופן תשלום הפיקדון <span style={styles.required}>*</span></label>
-          <div style={styles.radioGroup}>
+          <div style={{
+            ...styles.radioGroup,
+            ...(fieldErrors.includes('depositType') ? styles.radioGroupError : {})
+          }}>
             <label style={styles.radioOption}>
               <input
                 type="radio"
                 name="deposit"
                 value="cash"
                 checked={depositType === 'cash'}
-                onChange={e => setDepositType(e.target.value)}
+                onChange={e => { setDepositType(e.target.value); setFieldErrors(f => f.filter(x => x !== 'depositType')) }}
               />
               <span>₪500 מזומן</span>
             </label>
@@ -416,7 +423,7 @@ export default function SignFormPage({ params }: { params: Promise<{ stationId: 
                 name="deposit"
                 value="bit"
                 checked={depositType === 'bit'}
-                onChange={e => setDepositType(e.target.value)}
+                onChange={e => { setDepositType(e.target.value); setFieldErrors(f => f.filter(x => x !== 'depositType')) }}
               />
               <span>₪500 בביט ל-050-3044088</span>
             </label>
@@ -426,7 +433,7 @@ export default function SignFormPage({ params }: { params: Promise<{ stationId: 
                 name="deposit"
                 value="id"
                 checked={depositType === 'id'}
-                onChange={e => setDepositType(e.target.value)}
+                onChange={e => { setDepositType(e.target.value); setFieldErrors(f => f.filter(x => x !== 'depositType')) }}
               />
               <span>פיקדון תעודת זהות (באישור מנהל)</span>
             </label>
@@ -436,7 +443,7 @@ export default function SignFormPage({ params }: { params: Promise<{ stationId: 
                 name="deposit"
                 value="license"
                 checked={depositType === 'license'}
-                onChange={e => setDepositType(e.target.value)}
+                onChange={e => { setDepositType(e.target.value); setFieldErrors(f => f.filter(x => x !== 'depositType')) }}
               />
               <span>פיקדון רישיון נהיגה (באישור מנהל)</span>
             </label>
@@ -457,7 +464,14 @@ export default function SignFormPage({ params }: { params: Promise<{ stationId: 
         {/* Terms Section */}
         <div style={styles.sectionTitle}>תנאי השאלה והתחייבות</div>
 
-        <div style={styles.terms}>
+        <div
+          ref={termsRef}
+          style={{
+            ...styles.terms,
+            ...(fieldErrors.includes('terms') ? styles.termsError : {})
+          }}
+          onScroll={handleTermsScroll}
+        >
           <p><strong>תקנון השאלת גלגל:</strong></p>
           <ol style={styles.termsList}>
             <li>הפונה מתחייב להחזיר את הצמיג בתוך <strong>72 שעות</strong>, ולהשאיר כפקדון 500 ש"ח במזומן או בביט למספר 050-3044088.</li>
@@ -466,13 +480,21 @@ export default function SignFormPage({ params }: { params: Promise<{ stationId: 
             <li>במקרים חריגים ניתן להאריך את זמן ההשאלה עד 5 ימים, באישור מנהל התחנה או סג"מ התחנה.</li>
             <li>במקרים חריגים (באישור מנהל/סג"מ התחנה) ניתן להפקיד כערבון תעודה מזהה במקום פקדון כספי.</li>
           </ol>
+          {!canAgreeTerms && (
+            <p style={styles.scrollHint}>👇 גלול למטה כדי להמשיך</p>
+          )}
         </div>
 
-        <label style={styles.checkboxRow}>
+        <label style={{
+          ...styles.checkboxRow,
+          ...(fieldErrors.includes('terms') ? styles.checkboxRowError : {}),
+          ...(!canAgreeTerms ? styles.checkboxDisabled : {})
+        }}>
           <input
             type="checkbox"
             checked={agreedTerms}
-            onChange={e => setAgreedTerms(e.target.checked)}
+            disabled={!canAgreeTerms}
+            onChange={e => { setAgreedTerms(e.target.checked); setFieldErrors(f => f.filter(x => x !== 'terms')) }}
           />
           <span>קראתי את התנאים ואני מסכים/ה להם <span style={styles.required}>*</span></span>
         </label>
@@ -482,7 +504,8 @@ export default function SignFormPage({ params }: { params: Promise<{ stationId: 
           <label style={styles.label}>חתימה <span style={styles.required}>*</span></label>
           <div style={{
             ...styles.signatureContainer,
-            ...(hasSigned ? styles.signatureSigned : {})
+            ...(hasSigned ? styles.signatureSigned : {}),
+            ...(fieldErrors.includes('signature') ? styles.signatureError : {})
           }}>
             {!hasSigned && (
               <span style={styles.signaturePlaceholder}>חתמו כאן עם האצבע</span>
@@ -494,9 +517,9 @@ export default function SignFormPage({ params }: { params: Promise<{ stationId: 
               onMouseMove={draw}
               onMouseUp={stopDrawing}
               onMouseLeave={stopDrawing}
-              onTouchStart={startDrawing}
-              onTouchMove={draw}
-              onTouchEnd={stopDrawing}
+              onTouchStart={(e) => { e.stopPropagation(); startDrawing(e) }}
+              onTouchMove={(e) => { e.stopPropagation(); draw(e) }}
+              onTouchEnd={(e) => { e.stopPropagation(); stopDrawing() }}
             />
           </div>
           <button
@@ -527,7 +550,7 @@ export default function SignFormPage({ params }: { params: Promise<{ stationId: 
 const styles: { [key: string]: React.CSSProperties } = {
   container: {
     minHeight: '100vh',
-    background: '#1f2937',
+    background: '#f3f4f6',
     padding: '20px',
     fontFamily: "'Segoe UI', Tahoma, Geneva, Verdana, sans-serif",
     direction: 'rtl',
@@ -538,13 +561,13 @@ const styles: { [key: string]: React.CSSProperties } = {
     alignItems: 'center',
     justifyContent: 'center',
     height: '50vh',
-    color: '#fff',
+    color: '#374151',
     gap: '20px',
   },
   spinner: {
     width: '40px',
     height: '40px',
-    border: '4px solid rgba(255,255,255,0.1)',
+    border: '4px solid rgba(0,0,0,0.1)',
     borderTopColor: '#f59e0b',
     borderRadius: '50%',
     animation: 'spin 1s linear infinite',
@@ -552,52 +575,53 @@ const styles: { [key: string]: React.CSSProperties } = {
   error: {
     textAlign: 'center',
     padding: '40px',
-    color: '#fff',
+    color: '#374151',
   },
   backLink: {
-    color: '#60a5fa',
+    color: '#3b82f6',
     textDecoration: 'none',
     marginTop: '20px',
     display: 'inline-block',
   },
   card: {
-    background: '#374151',
+    background: '#fff',
     borderRadius: '12px',
     padding: '20px',
     maxWidth: '600px',
     margin: '0 auto',
+    boxShadow: '0 1px 3px rgba(0,0,0,0.1)',
   },
   title: {
-    color: '#f59e0b',
+    color: '#1f2937',
     fontSize: '1.5rem',
     marginBottom: '5px',
   },
   subtitle: {
-    color: '#9ca3af',
+    color: '#6b7280',
     fontSize: '0.9rem',
     marginBottom: '20px',
   },
   infoBox: {
-    background: '#1e3a5f',
-    border: '1px solid #3b82f6',
+    background: '#eff6ff',
+    border: '1px solid #bfdbfe',
     borderRadius: '8px',
     padding: '15px',
     marginBottom: '20px',
-    color: '#93c5fd',
+    color: '#1e40af',
     fontSize: '0.9rem',
     lineHeight: 1.6,
   },
   link: {
-    color: '#60a5fa',
+    color: '#3b82f6',
   },
   sectionTitle: {
-    color: '#60a5fa',
+    color: '#1f2937',
     fontSize: '1rem',
     fontWeight: 600,
     marginTop: '20px',
     marginBottom: '15px',
     paddingBottom: '8px',
-    borderBottom: '1px solid #4b5563',
+    borderBottom: '1px solid #e5e7eb',
   },
   formRow: {
     display: 'grid',
@@ -609,9 +633,10 @@ const styles: { [key: string]: React.CSSProperties } = {
   },
   label: {
     display: 'block',
-    color: '#9ca3af',
+    color: '#374151',
     fontSize: '0.9rem',
     marginBottom: '5px',
+    fontWeight: 500,
   },
   required: {
     color: '#ef4444',
@@ -620,18 +645,22 @@ const styles: { [key: string]: React.CSSProperties } = {
     width: '100%',
     padding: '12px',
     borderRadius: '8px',
-    border: '1px solid #4b5563',
-    background: '#1f2937',
-    color: '#fff',
+    border: '1px solid #d1d5db',
+    background: '#fff',
+    color: '#1f2937',
     fontSize: '1rem',
+  },
+  inputError: {
+    borderColor: '#ef4444',
+    borderWidth: '2px',
   },
   textarea: {
     width: '100%',
     padding: '12px',
     borderRadius: '8px',
-    border: '1px solid #4b5563',
-    background: '#1f2937',
-    color: '#fff',
+    border: '1px solid #d1d5db',
+    background: '#fff',
+    color: '#1f2937',
     fontSize: '1rem',
     resize: 'vertical',
   },
@@ -645,29 +674,46 @@ const styles: { [key: string]: React.CSSProperties } = {
     flexDirection: 'column',
     gap: '10px',
   },
+  radioGroupError: {
+    padding: '10px',
+    borderRadius: '8px',
+    border: '2px solid #ef4444',
+  },
   radioOption: {
     display: 'flex',
     alignItems: 'center',
     gap: '10px',
     padding: '10px',
-    background: '#1f2937',
+    background: '#f9fafb',
     borderRadius: '8px',
     cursor: 'pointer',
-    color: '#fff',
+    color: '#1f2937',
+    border: '1px solid #e5e7eb',
   },
   terms: {
-    background: '#1f2937',
+    background: '#f9fafb',
     borderRadius: '8px',
     padding: '15px',
     marginBottom: '15px',
     maxHeight: '200px',
     overflowY: 'auto',
-    color: '#d1d5db',
+    color: '#374151',
     fontSize: '0.9rem',
+    border: '1px solid #e5e7eb',
+  },
+  termsError: {
+    borderColor: '#ef4444',
+    borderWidth: '2px',
   },
   termsList: {
     paddingRight: '20px',
     marginTop: '10px',
+  },
+  scrollHint: {
+    color: '#f59e0b',
+    textAlign: 'center',
+    marginTop: '10px',
+    fontWeight: 500,
   },
   checkboxRow: {
     display: 'flex',
@@ -675,7 +721,14 @@ const styles: { [key: string]: React.CSSProperties } = {
     gap: '10px',
     marginBottom: '20px',
     cursor: 'pointer',
-    color: '#fff',
+    color: '#1f2937',
+  },
+  checkboxRowError: {
+    color: '#ef4444',
+  },
+  checkboxDisabled: {
+    opacity: 0.5,
+    cursor: 'not-allowed',
   },
   signatureContainer: {
     background: '#fff',
@@ -690,11 +743,15 @@ const styles: { [key: string]: React.CSSProperties } = {
   },
   signatureSigned: {
     borderStyle: 'solid',
-    borderColor: '#10b981',
-    background: '#f0fdf4',
+    borderColor: '#3b82f6',
+    background: '#fff',
+  },
+  signatureError: {
+    borderColor: '#ef4444',
+    borderWidth: '2px',
   },
   signaturePlaceholder: {
-    color: '#6b7280',
+    color: '#9ca3af',
     position: 'absolute',
     pointerEvents: 'none',
   },
@@ -709,8 +766,8 @@ const styles: { [key: string]: React.CSSProperties } = {
   clearBtn: {
     marginTop: '10px',
     padding: '8px 16px',
-    background: '#4b5563',
-    color: '#fff',
+    background: '#e5e7eb',
+    color: '#374151',
     border: 'none',
     borderRadius: '6px',
     cursor: 'pointer',
@@ -737,30 +794,32 @@ const styles: { [key: string]: React.CSSProperties } = {
     maxWidth: '400px',
     margin: '50px auto',
     textAlign: 'center',
-    background: '#374151',
+    background: '#fff',
     borderRadius: '12px',
     padding: '30px',
+    boxShadow: '0 1px 3px rgba(0,0,0,0.1)',
   },
   successIcon: {
     fontSize: '60px',
     marginBottom: '20px',
   },
   successTitle: {
-    color: '#fff',
+    color: '#1f2937',
     fontSize: '1.3rem',
     marginBottom: '15px',
   },
   successText: {
-    color: '#9ca3af',
+    color: '#6b7280',
     marginBottom: '20px',
     lineHeight: 1.6,
   },
   warningBox: {
-    background: 'rgba(245, 158, 11, 0.2)',
-    color: '#f59e0b',
+    background: '#fffbeb',
+    color: '#b45309',
     padding: '15px',
     borderRadius: '8px',
     marginBottom: '20px',
+    border: '1px solid #fcd34d',
   },
   backBtn: {
     display: 'inline-block',

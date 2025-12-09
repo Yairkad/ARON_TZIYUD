@@ -1367,8 +1367,8 @@ ${signFormUrl}
       </>
       )}
 
-      {/* Contact Cards */}
-      {station.wheel_station_managers.length > 0 && (
+      {/* Contact Cards - only show in wheels tab */}
+      {activeTab === 'wheels' && station.wheel_station_managers.length > 0 && (
         <div style={styles.contacts}>
           <h3 style={styles.contactsTitle}>👥 אנשי קשר</h3>
           <div style={styles.contactsGrid}>
