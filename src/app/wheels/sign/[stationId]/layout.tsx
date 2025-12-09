@@ -4,8 +4,8 @@ export const metadata: Metadata = {
   title: 'טופס השאלת גלגל - ידידים',
   description: 'טופס להשאלת גלגל מתחנת השאלת צמיגים של ידידים סיוע בדרכים',
   icons: {
-    icon: '/yedidim-logo.png',
-    apple: '/yedidim-logo.png',
+    icon: '/logo.wheels.png',
+    apple: '/logo.wheels.png',
   },
   openGraph: {
     title: 'טופס השאלת גלגל - ידידים',
@@ -19,5 +19,11 @@ export default function SignLayout({
 }: {
   children: React.ReactNode
 }) {
-  return children
+  return (
+    <>
+      <link rel="icon" href="/logo.wheels.png" />
+      <link rel="apple-touch-icon" href="/logo.wheels.png" />
+      {children}
+    </>
+  )
 }
