@@ -16,12 +16,44 @@ interface Wheel {
   notes: string | null
   is_available: boolean
   current_borrow?: {
+    id: string
     borrower_name: string
     borrower_phone: string
+    borrower_id_number?: string
+    borrower_address?: string
+    vehicle_model?: string
     borrow_date: string
     expected_return_date?: string
     deposit_type?: string
     deposit_details?: string
+    is_signed?: boolean
+    signed_at?: string
+  }
+}
+
+interface BorrowRecord {
+  id: string
+  wheel_id: string
+  borrower_name: string
+  borrower_phone: string
+  borrower_id_number?: string
+  borrower_address?: string
+  vehicle_model?: string
+  borrow_date: string
+  expected_return_date?: string
+  actual_return_date?: string
+  deposit_type?: string
+  deposit_details?: string
+  notes?: string
+  status: string
+  is_signed: boolean
+  signed_at?: string
+  created_at: string
+  wheels?: {
+    wheel_number: string
+    rim_size: string
+    bolt_count: number
+    bolt_spacing: number
   }
 }
 
@@ -63,6 +95,7 @@ interface WheelForm {
 }
 
 type ViewMode = 'cards' | 'table'
+type PageTab = 'wheels' | 'tracking'
 
 export default function StationPage({ params }: { params: Promise<{ stationId: string }> }) {
   const { stationId } = use(params)
@@ -185,6 +218,86 @@ export default function StationPage({ params }: { params: Promise<{ stationId: s
   const fileInputRef = useRef<HTMLInputElement>(null)
   const [uploadLoading, setUploadLoading] = useState(false)
   const [showExcelModal, setShowExcelModal] = useState(false)
+
+  // Tracking tab
+  const [activeTab, setActiveTab] = useState<PageTab>('wheels')
+  const [borrows, setBorrows] = useState<BorrowRecord[]>([])
+  const [borrowStats, setBorrowStats] = useState({ pending: 0, totalBorrowed: 0, totalReturned: 0, waitingSignature: 0, signed: 0 })
+  const [borrowsLoading, setBorrowsLoading] = useState(false)
+  const [borrowFilter, setBorrowFilter] = useState<'all' | 'pending' | 'borrowed' | 'returned'>('all')
+  const [approvalLoading, setApprovalLoading] = useState<string | null>(null)
+
+  const fetchBorrows = async () => {
+    setBorrowsLoading(true)
+    try {
+      const status = borrowFilter === 'all' ? '' : borrowFilter
+      const response = await fetch(`/api/wheel-stations/${stationId}/borrows${status ? `?status=${status}` : ''}`)
+      if (!response.ok) throw new Error('Failed to fetch borrows')
+      const data = await response.json()
+      setBorrows(data.borrows || [])
+      setBorrowStats(data.stats || { pending: 0, totalBorrowed: 0, totalReturned: 0, waitingSignature: 0, signed: 0 })
+    } catch (err) {
+      console.error('Error fetching borrows:', err)
+    } finally {
+      setBorrowsLoading(false)
+    }
+  }
+
+  // Fetch borrows when tab changes or filter changes
+  useEffect(() => {
+    if (activeTab === 'tracking' && isManager) {
+      fetchBorrows()
+    }
+  }, [activeTab, borrowFilter, isManager])
+
+  // Approve or reject pending borrow request
+  const handleBorrowAction = async (borrowId: string, action: 'approve' | 'reject') => {
+    if (!currentManager) return
+    setApprovalLoading(borrowId)
+    try {
+      const response = await fetch(`/api/wheel-stations/${stationId}/borrows/${borrowId}`, {
+        method: 'PUT',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          manager_phone: currentManager.phone,
+          manager_password: sessionPassword,
+          action
+        })
+      })
+      const data = await response.json()
+      if (!response.ok) {
+        toast.error(data.error || 'שגיאה בביצוע הפעולה')
+        return
+      }
+      toast.success(action === 'approve' ? 'הבקשה אושרה!' : 'הבקשה נדחתה')
+      fetchBorrows()
+      fetchStation() // Refresh wheel availability
+    } catch {
+      toast.error('שגיאה בביצוע הפעולה')
+    } finally {
+      setApprovalLoading(null)
+    }
+  }
+
+  // Generate WhatsApp link for sign form
+  const generateWhatsAppLink = (borrowerName: string, borrowerPhone: string) => {
+    const signFormUrl = `${window.location.origin}/wheels/sign/${stationId}`
+    const message = `שלום ${borrowerName}! 👋
+
+קיבלת גלגל חילוף מתחנת ${station?.name || 'ידידים'}.
+
+📝 נא למלא ולחתום על טופס ההתחייבות:
+${signFormUrl}
+
+🔄 יש להחזיר את הגלגל תוך 72 שעות לתחנה.
+
+תודה רבה! 🙏
+ידידים - סיוע בדרכים`
+
+    const cleanPhone = borrowerPhone.replace(/\D/g, '')
+    const israelPhone = cleanPhone.startsWith('0') ? '972' + cleanPhone.slice(1) : cleanPhone
+    return `https://wa.me/${israelPhone}?text=${encodeURIComponent(message)}`
+  }
 
   const fetchStation = async () => {
     try {
@@ -799,6 +912,217 @@ export default function StationPage({ params }: { params: Promise<{ stationId: s
         </div>
       </div>
 
+      {/* Tab Navigation - only show tracking tab for managers */}
+      {isManager && (
+        <div style={styles.tabNav}>
+          <button
+            style={{...styles.tabBtn, ...(activeTab === 'wheels' ? styles.tabBtnActive : {})}}
+            onClick={() => setActiveTab('wheels')}
+          >
+            🛞 מלאי גלגלים
+          </button>
+          <button
+            style={{...styles.tabBtn, ...(activeTab === 'tracking' ? styles.tabBtnActive : {})}}
+            onClick={() => setActiveTab('tracking')}
+          >
+            📊 מעקב השאלות
+          </button>
+        </div>
+      )}
+
+      {/* Tracking Tab Content */}
+      {activeTab === 'tracking' && isManager && (
+        <div style={styles.trackingSection}>
+          {/* Tracking Stats */}
+          <div style={styles.trackingStats}>
+            <div style={styles.trackingStat}>
+              <div style={{...styles.trackingStatValue, color: '#ec4899'}}>{borrowStats.pending}</div>
+              <div style={styles.trackingStatLabel}>ממתינים לאישור</div>
+            </div>
+            <div style={styles.trackingStat}>
+              <div style={{...styles.trackingStatValue, color: '#10b981'}}>{borrowStats.totalBorrowed}</div>
+              <div style={styles.trackingStatLabel}>מושאלים</div>
+            </div>
+            <div style={styles.trackingStat}>
+              <div style={{...styles.trackingStatValue, color: '#8b5cf6'}}>{borrowStats.totalReturned}</div>
+              <div style={styles.trackingStatLabel}>הוחזרו</div>
+            </div>
+          </div>
+
+          {/* Filter tabs */}
+          <div style={styles.trackingFilterTabs}>
+            <button
+              style={{...styles.trackingFilterBtn, ...(borrowFilter === 'all' ? styles.trackingFilterBtnActive : {})}}
+              onClick={() => setBorrowFilter('all')}
+            >
+              הכל
+            </button>
+            <button
+              style={{...styles.trackingFilterBtn, ...(borrowFilter === 'pending' ? styles.trackingFilterBtnActive : {}), ...(borrowStats.pending > 0 ? styles.trackingFilterBtnPending : {})}}
+              onClick={() => setBorrowFilter('pending')}
+            >
+              ממתינים ({borrowStats.pending})
+            </button>
+            <button
+              style={{...styles.trackingFilterBtn, ...(borrowFilter === 'borrowed' ? styles.trackingFilterBtnActive : {})}}
+              onClick={() => setBorrowFilter('borrowed')}
+            >
+              מושאלים
+            </button>
+            <button
+              style={{...styles.trackingFilterBtn, ...(borrowFilter === 'returned' ? styles.trackingFilterBtnActive : {})}}
+              onClick={() => setBorrowFilter('returned')}
+            >
+              הוחזרו
+            </button>
+          </div>
+
+          {/* Borrows Table */}
+          {borrowsLoading ? (
+            <div style={styles.loading}>טוען...</div>
+          ) : (
+            <div style={styles.trackingTableWrapper}>
+              <table style={styles.trackingTable}>
+                <thead>
+                  <tr>
+                    <th style={styles.trackingTh}>פונה</th>
+                    <th style={styles.trackingTh}>גלגל</th>
+                    <th style={styles.trackingTh}>פיקדון</th>
+                    <th style={styles.trackingTh}>סטטוס</th>
+                    <th style={styles.trackingTh}>פעולות</th>
+                  </tr>
+                </thead>
+                <tbody>
+                  {borrows.map(borrow => {
+                    const isOverdue = borrow.status === 'borrowed' && !borrow.is_signed &&
+                      borrow.created_at && (Date.now() - new Date(borrow.created_at).getTime() > 24 * 60 * 60 * 1000)
+                    return (
+                      <tr key={borrow.id}>
+                        <td style={styles.trackingTd}>
+                          <div style={styles.borrowerNameCell}>{borrow.borrower_name}</div>
+                          <div style={styles.borrowerInfoCell}>{borrow.borrower_phone}</div>
+                          <div style={styles.borrowerInfoCell}>
+                            {new Date(borrow.borrow_date || borrow.created_at).toLocaleDateString('he-IL')}
+                          </div>
+                        </td>
+                        <td style={styles.trackingTd}>
+                          <div>{borrow.wheels?.wheel_number || '-'}</div>
+                          {borrow.vehicle_model && (
+                            <div style={styles.borrowerInfoCell}>{borrow.vehicle_model}</div>
+                          )}
+                        </td>
+                        <td style={styles.trackingTd}>
+                          <span style={{
+                            ...styles.depositBadge,
+                            ...(borrow.deposit_type === 'cash' || borrow.deposit_type === 'bit' ? styles.depositBadgeMoney :
+                                borrow.deposit_type === 'id' || borrow.deposit_type === 'license' ? styles.depositBadgeDoc : {})
+                          }}>
+                            {borrow.deposit_type === 'cash' ? '₪500 מזומן' :
+                             borrow.deposit_type === 'bit' ? '₪500 ביט' :
+                             borrow.deposit_type === 'id' ? 'ת.ז.' :
+                             borrow.deposit_type === 'license' ? 'רישיון' : '-'}
+                          </span>
+                        </td>
+                        <td style={styles.trackingTd}>
+                          {borrow.status === 'pending' ? (
+                            <span style={styles.statusPending}>🔔 ממתין לאישור</span>
+                          ) : borrow.status === 'returned' ? (
+                            <span style={styles.statusReturned}>🔙 הוחזר</span>
+                          ) : borrow.status === 'rejected' ? (
+                            <span style={styles.statusOverdue}>❌ נדחה</span>
+                          ) : borrow.is_signed ? (
+                            <span style={styles.statusSigned}>✅ מושאל (חתום)</span>
+                          ) : isOverdue ? (
+                            <span style={styles.statusOverdue}>⚠️ מושאל (לא חתום)</span>
+                          ) : (
+                            <span style={styles.statusWaiting}>📝 מושאל</span>
+                          )}
+                        </td>
+                        <td style={styles.trackingTd}>
+                          {borrow.status === 'pending' && (
+                            <div style={styles.actionButtons}>
+                              <button
+                                style={styles.approveBtn}
+                                onClick={() => handleBorrowAction(borrow.id, 'approve')}
+                                disabled={approvalLoading === borrow.id}
+                              >
+                                {approvalLoading === borrow.id ? '...' : '✅ אשר'}
+                              </button>
+                              <button
+                                style={styles.rejectBtn}
+                                onClick={() => handleBorrowAction(borrow.id, 'reject')}
+                                disabled={approvalLoading === borrow.id}
+                              >
+                                ❌
+                              </button>
+                            </div>
+                          )}
+                          {borrow.status === 'borrowed' && !borrow.is_signed && (
+                            <a
+                              href={generateWhatsAppLink(borrow.borrower_name, borrow.borrower_phone)}
+                              target="_blank"
+                              rel="noopener noreferrer"
+                              style={styles.whatsappBtn}
+                            >
+                              📱 שלח טופס
+                            </a>
+                          )}
+                          {borrow.status === 'borrowed' && (
+                            <button
+                              style={styles.returnBtnSmall}
+                              onClick={() => {
+                                const wheel = station?.wheels.find(w => w.id === borrow.wheel_id)
+                                if (wheel) handleReturn(wheel)
+                              }}
+                            >
+                              🔙 החזר
+                            </button>
+                          )}
+                        </td>
+                      </tr>
+                    )
+                  })}
+                  {borrows.length === 0 && (
+                    <tr>
+                      <td colSpan={5} style={{...styles.trackingTd, textAlign: 'center', color: '#9ca3af'}}>
+                        אין רשומות להצגה
+                      </td>
+                    </tr>
+                  )}
+                </tbody>
+              </table>
+            </div>
+          )}
+
+          {/* WhatsApp Link for new borrowers */}
+          <div style={styles.whatsappLinkBox}>
+            <h4 style={styles.whatsappLinkTitle}>🔗 קישור לטופס חתימה</h4>
+            <p style={styles.whatsappLinkDesc}>שלח את הקישור הזה לפונים שצריכים לחתום על טופס:</p>
+            <div style={styles.whatsappLinkInput}>
+              <input
+                type="text"
+                readOnly
+                value={typeof window !== 'undefined' ? `${window.location.origin}/wheels/sign/${stationId}` : ''}
+                style={styles.linkInput}
+                onClick={e => (e.target as HTMLInputElement).select()}
+              />
+              <button
+                style={styles.copyBtn}
+                onClick={() => {
+                  navigator.clipboard.writeText(`${window.location.origin}/wheels/sign/${stationId}`)
+                  toast.success('הקישור הועתק!')
+                }}
+              >
+                📋 העתק
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* Wheels Tab Content */}
+      {activeTab === 'wheels' && (
+        <>
       {/* Filters */}
       <div style={styles.filters}>
         <div style={styles.filtersHeader}>
@@ -1039,6 +1363,8 @@ export default function StationPage({ params }: { params: Promise<{ stationId: s
             </tbody>
           </table>
         </div>
+      )}
+      </>
       )}
 
       {/* Contact Cards */}
@@ -2327,5 +2653,252 @@ const styles: { [key: string]: React.CSSProperties } = {
     textAlign: 'center' as const,
     textDecoration: 'none',
     display: 'block',
+  },
+  // Tab navigation
+  tabNav: {
+    display: 'flex',
+    gap: '10px',
+    marginBottom: '20px',
+    background: 'rgba(255,255,255,0.05)',
+    padding: '8px',
+    borderRadius: '12px',
+  },
+  tabBtn: {
+    flex: 1,
+    padding: '12px 20px',
+    border: 'none',
+    borderRadius: '8px',
+    cursor: 'pointer',
+    fontWeight: 'bold',
+    fontSize: '0.95rem',
+    background: 'transparent',
+    color: '#a0aec0',
+    transition: 'all 0.2s',
+  },
+  tabBtnActive: {
+    background: '#f59e0b',
+    color: '#000',
+  },
+  // Tracking section
+  trackingSection: {
+    marginBottom: '20px',
+  },
+  trackingStats: {
+    display: 'flex',
+    gap: '12px',
+    marginBottom: '20px',
+    flexWrap: 'wrap',
+  },
+  trackingStat: {
+    flex: 1,
+    minWidth: '100px',
+    background: 'rgba(255,255,255,0.05)',
+    padding: '15px',
+    borderRadius: '12px',
+    textAlign: 'center',
+  },
+  trackingStatValue: {
+    fontSize: '1.8rem',
+    fontWeight: 'bold',
+  },
+  trackingStatLabel: {
+    color: '#a0aec0',
+    fontSize: '0.8rem',
+    marginTop: '5px',
+  },
+  trackingFilterTabs: {
+    display: 'flex',
+    gap: '8px',
+    marginBottom: '15px',
+    flexWrap: 'wrap',
+  },
+  trackingFilterBtn: {
+    padding: '8px 16px',
+    borderRadius: '20px',
+    border: 'none',
+    fontSize: '0.9rem',
+    cursor: 'pointer',
+    background: '#4b5563',
+    color: '#d1d5db',
+  },
+  trackingFilterBtnActive: {
+    background: '#3b82f6',
+    color: 'white',
+  },
+  trackingFilterBtnPending: {
+    background: '#ec4899',
+    color: 'white',
+  },
+  trackingTableWrapper: {
+    overflowX: 'auto',
+    marginBottom: '20px',
+  },
+  trackingTable: {
+    width: '100%',
+    borderCollapse: 'collapse',
+    minWidth: '500px',
+  },
+  trackingTh: {
+    background: '#4b5563',
+    color: '#d1d5db',
+    padding: '12px 8px',
+    textAlign: 'right',
+    fontSize: '0.85rem',
+  },
+  trackingTd: {
+    padding: '12px 8px',
+    borderBottom: '1px solid #4b5563',
+    color: 'white',
+    fontSize: '0.9rem',
+  },
+  borrowerNameCell: {
+    fontWeight: 'bold',
+    color: '#fff',
+  },
+  borrowerInfoCell: {
+    color: '#9ca3af',
+    fontSize: '0.8rem',
+  },
+  depositBadge: {
+    padding: '4px 10px',
+    borderRadius: '20px',
+    fontSize: '0.8rem',
+    fontWeight: 600,
+    background: '#4b5563',
+    color: '#d1d5db',
+  },
+  depositBadgeMoney: {
+    background: '#d1fae5',
+    color: '#065f46',
+  },
+  depositBadgeDoc: {
+    background: '#fef3c7',
+    color: '#92400e',
+  },
+  statusWaiting: {
+    padding: '4px 10px',
+    borderRadius: '20px',
+    fontSize: '0.8rem',
+    fontWeight: 600,
+    background: '#fef3c7',
+    color: '#92400e',
+  },
+  statusPending: {
+    padding: '4px 10px',
+    borderRadius: '20px',
+    fontSize: '0.8rem',
+    fontWeight: 600,
+    background: '#fce7f3',
+    color: '#be185d',
+  },
+  statusSigned: {
+    padding: '4px 10px',
+    borderRadius: '20px',
+    fontSize: '0.8rem',
+    fontWeight: 600,
+    background: '#d1fae5',
+    color: '#065f46',
+  },
+  statusReturned: {
+    padding: '4px 10px',
+    borderRadius: '20px',
+    fontSize: '0.8rem',
+    fontWeight: 600,
+    background: '#e0e7ff',
+    color: '#3730a3',
+  },
+  statusOverdue: {
+    padding: '4px 10px',
+    borderRadius: '20px',
+    fontSize: '0.8rem',
+    fontWeight: 600,
+    background: '#fee2e2',
+    color: '#991b1b',
+  },
+  whatsappBtn: {
+    padding: '6px 12px',
+    borderRadius: '8px',
+    fontSize: '0.8rem',
+    fontWeight: 600,
+    background: '#25d366',
+    color: 'white',
+    textDecoration: 'none',
+    display: 'inline-block',
+  },
+  returnBtnSmall: {
+    padding: '6px 12px',
+    borderRadius: '8px',
+    fontSize: '0.8rem',
+    fontWeight: 600,
+    background: '#3b82f6',
+    color: 'white',
+    border: 'none',
+    cursor: 'pointer',
+  },
+  whatsappLinkBox: {
+    background: 'rgba(37, 211, 102, 0.1)',
+    border: '1px solid #25d366',
+    borderRadius: '12px',
+    padding: '20px',
+    marginTop: '20px',
+  },
+  whatsappLinkTitle: {
+    color: '#25d366',
+    fontSize: '1rem',
+    margin: '0 0 8px 0',
+  },
+  whatsappLinkDesc: {
+    color: '#9ca3af',
+    fontSize: '0.9rem',
+    marginBottom: '12px',
+  },
+  whatsappLinkInput: {
+    display: 'flex',
+    gap: '10px',
+    flexWrap: 'wrap',
+  },
+  linkInput: {
+    flex: 1,
+    minWidth: '200px',
+    padding: '10px 12px',
+    borderRadius: '8px',
+    border: '1px solid #4b5563',
+    background: '#2d3748',
+    color: 'white',
+    fontSize: '0.9rem',
+  },
+  copyBtn: {
+    padding: '10px 16px',
+    borderRadius: '8px',
+    border: 'none',
+    background: '#25d366',
+    color: 'white',
+    cursor: 'pointer',
+    fontWeight: 'bold',
+    fontSize: '0.9rem',
+  },
+  actionButtons: {
+    display: 'flex',
+    gap: '6px',
+  },
+  approveBtn: {
+    padding: '6px 12px',
+    borderRadius: '8px',
+    fontSize: '0.8rem',
+    fontWeight: 600,
+    background: '#10b981',
+    color: 'white',
+    border: 'none',
+    cursor: 'pointer',
+  },
+  rejectBtn: {
+    padding: '6px 10px',
+    borderRadius: '8px',
+    fontSize: '0.8rem',
+    fontWeight: 600,
+    background: '#ef4444',
+    color: 'white',
+    border: 'none',
+    cursor: 'pointer',
   },
 }

@@ -92,19 +92,25 @@ export async function GET(request: NextRequest, { params }: RouteParams) {
     // Get active borrows to show borrower info
     const { data: activeBorrows } = await supabase
       .from('wheel_borrows')
-      .select('wheel_id, borrower_name, borrower_phone, borrow_date, expected_return_date, deposit_type, deposit_details')
+      .select('id, wheel_id, borrower_name, borrower_phone, borrower_id_number, borrower_address, vehicle_model, borrow_date, expected_return_date, deposit_type, deposit_details, signature_data, signed_at')
       .eq('station_id', stationId)
       .eq('status', 'borrowed')
 
     // Map borrows to wheels
     const borrowMap = new Map(
       activeBorrows?.map(b => [b.wheel_id, {
+        id: b.id,
         borrower_name: b.borrower_name,
         borrower_phone: b.borrower_phone,
+        borrower_id_number: b.borrower_id_number,
+        borrower_address: b.borrower_address,
+        vehicle_model: b.vehicle_model,
         borrow_date: b.borrow_date,
         expected_return_date: b.expected_return_date,
         deposit_type: b.deposit_type,
-        deposit_details: b.deposit_details
+        deposit_details: b.deposit_details,
+        is_signed: !!b.signature_data,
+        signed_at: b.signed_at
       }]) || []
     )
 
