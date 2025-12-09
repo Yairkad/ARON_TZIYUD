@@ -158,6 +158,9 @@ export default function StationPage({ params }: { params: Promise<{ stationId: s
   const [wheelFormErrors, setWheelFormErrors] = useState<string[]>([])
   const [showCustomCategory, setShowCustomCategory] = useState(false)
 
+  // Mobile tracking cards collapsed state (collapsed by default)
+  const [mobileCardsCollapsed, setMobileCardsCollapsed] = useState(true)
+
   // Predefined categories
   const predefinedCategories = ['מכוניות גרמניות', 'מכוניות צרפתיות', 'מכוניות יפניות וקוראניות']
 
@@ -1135,6 +1138,27 @@ ${signFormUrl}
 
               {/* Mobile Cards */}
               <div className="mobile-cards" style={{display: 'none', flexDirection: 'column', gap: '12px'}}>
+                {/* Collapse/Expand button */}
+                {borrows.length > 0 && (
+                  <button
+                    onClick={() => setMobileCardsCollapsed(!mobileCardsCollapsed)}
+                    style={{
+                      background: 'rgba(255,255,255,0.1)',
+                      border: '1px solid #4b5563',
+                      borderRadius: '8px',
+                      padding: '10px 16px',
+                      color: '#9ca3af',
+                      cursor: 'pointer',
+                      display: 'flex',
+                      alignItems: 'center',
+                      justifyContent: 'center',
+                      gap: '8px',
+                      fontSize: '14px',
+                    }}
+                  >
+                    {mobileCardsCollapsed ? '📖 הצג פרטים מלאים' : '📕 צמצם תצוגה'}
+                  </button>
+                )}
                 {borrows.length === 0 ? (
                   <div style={styles.emptyState}>
                     <div style={styles.emptyIcon}>📋</div>
@@ -1149,9 +1173,10 @@ ${signFormUrl}
                       <div style={styles.mobileCardHeader}>
                         <div>
                           <div style={styles.borrowerNameCell}>{borrow.borrower_name}</div>
-                          <div style={styles.borrowerInfoCell}>{borrow.borrower_phone}</div>
+                          {!mobileCardsCollapsed && <div style={styles.borrowerInfoCell}>{borrow.borrower_phone}</div>}
                         </div>
-                        <div>
+                        <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
+                          {mobileCardsCollapsed && <span style={{color: '#9ca3af', fontSize: '12px'}}>{borrow.wheels?.wheel_number || '-'}</span>}
                           {borrow.status === 'pending' ? (
                             <span style={styles.statusPending}>🔔 ממתין</span>
                           ) : borrow.status === 'returned' ? (
@@ -1167,76 +1192,80 @@ ${signFormUrl}
                           )}
                         </div>
                       </div>
-                      <div style={styles.mobileCardBody}>
-                        <div style={styles.mobileCardRow}>
-                          <span style={{color: '#9ca3af'}}>גלגל:</span>
-                          <span>{borrow.wheels?.wheel_number || '-'}</span>
-                        </div>
-                        <div style={styles.mobileCardRow}>
-                          <span style={{color: '#9ca3af'}}>תאריך:</span>
-                          <span>{new Date(borrow.borrow_date || borrow.created_at).toLocaleDateString('he-IL')}</span>
-                        </div>
-                        <div style={styles.mobileCardRow}>
-                          <span style={{color: '#9ca3af'}}>פיקדון:</span>
-                          <span style={{
-                            ...styles.depositBadge,
-                            ...(borrow.deposit_type === 'cash' || borrow.deposit_type === 'bit' ? styles.depositBadgeMoney :
-                                borrow.deposit_type === 'id' || borrow.deposit_type === 'license' ? styles.depositBadgeDoc : {})
-                          }}>
-                            {borrow.deposit_type === 'cash' ? '₪500 מזומן' :
-                             borrow.deposit_type === 'bit' ? '₪500 ביט' :
-                             borrow.deposit_type === 'id' ? 'ת.ז.' :
-                             borrow.deposit_type === 'license' ? 'רישיון' : '-'}
-                          </span>
-                        </div>
-                        {borrow.vehicle_model && (
-                          <div style={styles.mobileCardRow}>
-                            <span style={{color: '#9ca3af'}}>רכב:</span>
-                            <span>{borrow.vehicle_model}</span>
+                      {!mobileCardsCollapsed && (
+                        <>
+                          <div style={styles.mobileCardBody}>
+                            <div style={styles.mobileCardRow}>
+                              <span style={{color: '#9ca3af'}}>גלגל:</span>
+                              <span>{borrow.wheels?.wheel_number || '-'}</span>
+                            </div>
+                            <div style={styles.mobileCardRow}>
+                              <span style={{color: '#9ca3af'}}>תאריך:</span>
+                              <span>{new Date(borrow.borrow_date || borrow.created_at).toLocaleDateString('he-IL')}</span>
+                            </div>
+                            <div style={styles.mobileCardRow}>
+                              <span style={{color: '#9ca3af'}}>פיקדון:</span>
+                              <span style={{
+                                ...styles.depositBadge,
+                                ...(borrow.deposit_type === 'cash' || borrow.deposit_type === 'bit' ? styles.depositBadgeMoney :
+                                    borrow.deposit_type === 'id' || borrow.deposit_type === 'license' ? styles.depositBadgeDoc : {})
+                              }}>
+                                {borrow.deposit_type === 'cash' ? '₪500 מזומן' :
+                                 borrow.deposit_type === 'bit' ? '₪500 ביט' :
+                                 borrow.deposit_type === 'id' ? 'ת.ז.' :
+                                 borrow.deposit_type === 'license' ? 'רישיון' : '-'}
+                              </span>
+                            </div>
+                            {borrow.vehicle_model && (
+                              <div style={styles.mobileCardRow}>
+                                <span style={{color: '#9ca3af'}}>רכב:</span>
+                                <span>{borrow.vehicle_model}</span>
+                              </div>
+                            )}
                           </div>
-                        )}
-                      </div>
-                      <div style={styles.mobileCardActions}>
-                        {borrow.status === 'pending' && (
-                          <>
-                            <button
-                              style={{...styles.approveBtn, flex: 1}}
-                              onClick={() => handleBorrowAction(borrow.id, 'approve')}
-                              disabled={approvalLoading === borrow.id}
-                            >
-                              {approvalLoading === borrow.id ? '...' : '✅ אשר'}
-                            </button>
-                            <button
-                              style={styles.rejectBtn}
-                              onClick={() => handleBorrowAction(borrow.id, 'reject')}
-                              disabled={approvalLoading === borrow.id}
-                            >
-                              ❌
-                            </button>
-                          </>
-                        )}
-                        {borrow.status === 'borrowed' && !borrow.is_signed && (
-                          <a
-                            href={generateWhatsAppLink(borrow.borrower_name, borrow.borrower_phone)}
-                            target="_blank"
-                            rel="noopener noreferrer"
-                            style={{...styles.whatsappBtn, flex: 1, textAlign: 'center'}}
-                          >
-                            📱 שלח טופס
-                          </a>
-                        )}
-                        {borrow.status === 'borrowed' && (
-                          <button
-                            style={{...styles.returnBtnSmall, flex: 1}}
-                            onClick={() => {
-                              const wheel = station?.wheels.find(w => w.id === borrow.wheel_id)
-                              if (wheel) handleReturn(wheel)
-                            }}
-                          >
-                            🔙 החזר
-                          </button>
-                        )}
-                      </div>
+                          <div style={styles.mobileCardActions}>
+                            {borrow.status === 'pending' && (
+                              <>
+                                <button
+                                  style={{...styles.approveBtn, flex: 1}}
+                                  onClick={() => handleBorrowAction(borrow.id, 'approve')}
+                                  disabled={approvalLoading === borrow.id}
+                                >
+                                  {approvalLoading === borrow.id ? '...' : '✅ אשר'}
+                                </button>
+                                <button
+                                  style={styles.rejectBtn}
+                                  onClick={() => handleBorrowAction(borrow.id, 'reject')}
+                                  disabled={approvalLoading === borrow.id}
+                                >
+                                  ❌
+                                </button>
+                              </>
+                            )}
+                            {borrow.status === 'borrowed' && !borrow.is_signed && (
+                              <a
+                                href={generateWhatsAppLink(borrow.borrower_name, borrow.borrower_phone)}
+                                target="_blank"
+                                rel="noopener noreferrer"
+                                style={{...styles.whatsappBtn, flex: 1, textAlign: 'center'}}
+                              >
+                                📱 שלח טופס
+                              </a>
+                            )}
+                            {borrow.status === 'borrowed' && (
+                              <button
+                                style={{...styles.returnBtnSmall, flex: 1}}
+                                onClick={() => {
+                                  const wheel = station?.wheels.find(w => w.id === borrow.wheel_id)
+                                  if (wheel) handleReturn(wheel)
+                                }}
+                              >
+                                🔙 החזר
+                              </button>
+                            )}
+                          </div>
+                        </>
+                      )}
                     </div>
                   )
                 })}

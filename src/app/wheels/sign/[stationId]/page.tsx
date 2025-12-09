@@ -282,8 +282,16 @@ export default function SignFormPage({ params }: { params: Promise<{ stationId: 
     <div style={styles.container}>
       <Toaster position="top-center" />
       <div style={styles.card}>
-        <h1 style={styles.title}>🛞 השאלת צמיג - {station.name}</h1>
-        <p style={styles.subtitle}>טופס להשאלת גלגל מתחנת השאלת צמיגים</p>
+        {/* Yedidim Logo */}
+        <div style={{ textAlign: 'center', marginBottom: '16px' }}>
+          <img
+            src="/yedidim-logo.png"
+            alt="ידידים סיוע בדרכים"
+            style={{ height: '60px', width: 'auto' }}
+          />
+        </div>
+        <h1 style={{...styles.title, textAlign: 'center'}}>השאלת צמיג - {station.name}</h1>
+        <p style={{...styles.subtitle, textAlign: 'center'}}>טופס להשאלת גלגל מתחנת השאלת צמיגים</p>
 
         {/* Intro text */}
         <div style={styles.infoBox}>
@@ -767,6 +775,7 @@ const styles: { [key: string]: React.CSSProperties } = {
     width: '100%',
     height: '100%',
     cursor: 'crosshair',
+    touchAction: 'none',
   },
   clearBtn: {
     marginTop: '10px',
