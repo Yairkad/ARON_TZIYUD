@@ -1,6 +1,7 @@
 'use client'
 
 import { useState, useEffect, useRef, use } from 'react'
+import Image from 'next/image'
 import Link from 'next/link'
 import toast, { Toaster } from 'react-hot-toast'
 
@@ -285,6 +286,17 @@ export default function SignFormPage({ params }: { params: Promise<{ stationId: 
     <div style={styles.container}>
       <Toaster position="top-center" />
       <div style={styles.card}>
+        {/* Logo */}
+        <div style={styles.logoContainer}>
+          <Image
+            src="/yedidim-logo.png"
+            alt="ידידים סיוע בדרכים"
+            width={200}
+            height={80}
+            style={{ objectFit: 'contain' }}
+          />
+        </div>
+
         <h1 style={styles.title}>🛞 השאלת צמיג - {station.name}</h1>
         <p style={styles.subtitle}>טופס להשאלת גלגל מתחנת השאלת צמיגים</p>
 
@@ -594,6 +606,11 @@ const styles: { [key: string]: React.CSSProperties } = {
     maxWidth: '600px',
     margin: '0 auto',
     boxShadow: '0 1px 3px rgba(0,0,0,0.1)',
+  },
+  logoContainer: {
+    display: 'flex',
+    justifyContent: 'center',
+    marginBottom: '15px',
   },
   title: {
     color: '#1f2937',
