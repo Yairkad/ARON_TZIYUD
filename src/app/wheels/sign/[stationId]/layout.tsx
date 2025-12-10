@@ -2,14 +2,14 @@ import type { Metadata } from 'next'
 
 export const metadata: Metadata = {
   title: 'טופס השאלת גלגל - ידידים',
-  description: 'טופס להשאלת גלגל מתחנת השאלת צמיגים של ידידים סיוע בדרכים',
+  description: 'טופס להשאלת גלגל מתחנת השאלת גלגלים של ידידים סיוע בדרכים',
   icons: {
     icon: '/yedidim-logo.png',
     apple: '/yedidim-logo.png',
   },
   openGraph: {
     title: 'טופס השאלת גלגל - ידידים',
-    description: 'טופס להשאלת גלגל מתחנת השאלת צמיגים של ידידים סיוע בדרכים',
+    description: 'טופס להשאלת גלגל מתחנת השאלת גלגלים של ידידים סיוע בדרכים',
     type: 'website',
     images: ['/yedidim-logo.png'],
   },

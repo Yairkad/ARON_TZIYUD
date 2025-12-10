@@ -277,7 +277,7 @@ export default function SignFormPage({ params }: { params: Promise<{ stationId: 
             <strong>הבקשה ממתינה לאישור מנהל התחנה.</strong>
           </p>
           <div style={styles.warningBox}>
-            <strong>לאחר אישור המנהל, יש להחזיר את הצמיג תוך 72 שעות!</strong>
+            <strong>לאחר אישור המנהל, יש להחזיר את הגלגל תוך 72 שעות!</strong>
           </div>
         </div>
       </div>
@@ -302,13 +302,13 @@ export default function SignFormPage({ params }: { params: Promise<{ stationId: 
             style={{ height: '60px', width: 'auto', display: 'block' }}
           />
         </div>
-        <h1 style={{...styles.title, textAlign: 'center'}}>השאלת צמיג - {station.name}</h1>
-        <p style={{...styles.subtitle, textAlign: 'center'}}>טופס להשאלת גלגל מתחנת השאלת צמיגים</p>
+        <h1 style={{...styles.title, textAlign: 'center'}}>השאלת גלגל - {station.name}</h1>
+        <p style={{...styles.subtitle, textAlign: 'center'}}>טופס להשאלת גלגל מתחנת השאלת גלגלים</p>
 
         {/* Intro text */}
         <div style={styles.infoBox}>
-          <p>עמותת ידידים סיוע בדרכים סניף ירושלים מאפשרת לשאול צמיגים לפרק זמן מוגבל על מנת לעזור במקרים בהם אין פנצ'ריות פתוחות, ולא ניתן לבצע תיקון זמני.</p>
-          <p style={{ marginTop: '10px' }}>אנו מבקשים להחזיר את הצמיג בהקדם האפשרי ועד 72 שעות ממועד ההשאלה, על מנת שנוכל להמשיך ולסייע לאנשים נוספים.</p>
+          <p>עמותת ידידים סיוע בדרכים סניף ירושלים מאפשרת לשאול גלגלים לפרק זמן מוגבל על מנת לעזור במקרים בהם אין פנצ'ריות פתוחות, ולא ניתן לבצע תיקון זמני.</p>
+          <p style={{ marginTop: '10px' }}>אנו מבקשים להחזיר את הגלגל בהקדם האפשרי ועד 72 שעות ממועד ההשאלה, על מנת שנוכל להמשיך ולסייע לאנשים נוספים.</p>
           <p style={{ marginTop: '10px' }}>ארגון ידידים פועל בהתנדבות מלאה, ותרומות עוזרות לארגון ברכישת ציוד - <a href="https://yedidim-il.org" target="_blank" rel="noopener noreferrer" style={styles.link}>ניתן לתרום כאן</a></p>
           <p style={{ marginTop: '10px' }}>להצטרפות למעצמה - פנו להנהלת הסניף או <a href="https://yedidim-il.org" target="_blank" rel="noopener noreferrer" style={styles.link}>בקישור זה</a></p>
         </div>
@@ -387,16 +387,16 @@ export default function SignFormPage({ params }: { params: Promise<{ stationId: 
         </div>
 
         <div style={styles.formGroup}>
-          <label style={styles.label}>בחר צמיג <span style={styles.required}>*</span></label>
+          <label style={styles.label}>בחר גלגל <span style={styles.required}>*</span></label>
           <select
             value={selectedWheelId}
             onChange={e => { setSelectedWheelId(e.target.value); setFieldErrors(f => f.filter(x => x !== 'wheelId')) }}
             style={getInputStyle('wheelId')}
           >
-            <option value="">-- בחר צמיג --</option>
+            <option value="">-- בחר גלגל --</option>
             {wheels.map(wheel => (
               <option key={wheel.id} value={wheel.id}>
-                צמיג #{wheel.wheel_number} ┃ {wheel.bolt_count}×{wheel.bolt_spacing} ┃ "{wheel.rim_size}{wheel.is_donut ? ' ┃ דונאט 🍩' : ''}
+                גלגל #{wheel.wheel_number} ┃ {wheel.bolt_count}×{wheel.bolt_spacing} ┃ "{wheel.rim_size}{wheel.is_donut ? ' ┃ דונאט' : ''}
               </option>
             ))}
           </select>
@@ -408,13 +408,13 @@ export default function SignFormPage({ params }: { params: Promise<{ stationId: 
               <div style={{ display: 'flex', flexWrap: 'wrap', gap: '6px', marginTop: '8px' }}>
                 <span style={styles.badge}>{wheel.bolt_count}×{wheel.bolt_spacing}</span>
                 <span style={styles.badge}>"{wheel.rim_size}</span>
-                {wheel.is_donut && <span style={{...styles.badge, background: '#fef3c7', color: '#92400e'}}>🍩 דונאט</span>}
+                {wheel.is_donut && <span style={{...styles.badge, background: '#fef3c7', color: '#92400e'}}>דונאט</span>}
                 {wheel.notes && <span style={{...styles.badge, background: '#f3f4f6', color: '#374151'}}>{wheel.notes}</span>}
               </div>
             )
           })()}
           {wheels.length === 0 && (
-            <p style={{ ...styles.helpText, color: '#ef4444' }}>אין צמיגים זמינים כרגע בתחנה זו</p>
+            <p style={{ ...styles.helpText, color: '#ef4444' }}>אין גלגלים זמינים כרגע בתחנה זו</p>
           )}
         </div>
 
@@ -587,8 +587,8 @@ export default function SignFormPage({ params }: { params: Promise<{ stationId: 
         >
           <p><strong>תקנון השאלת גלגל:</strong></p>
           <ol style={styles.termsList}>
-            <li>הפונה מתחייב להחזיר את הצמיג בתוך <strong>72 שעות</strong>, ולהשאיר כפקדון {station.deposit_amount || 200} ש"ח באמצעי התשלום הזמין.</li>
-            <li>הפונה יקבל חזרה את הפקדון בעת החזרת הצמיג. במידה והצמיג לא יוחזר בתוך 72 שעות, סכום הכסף יועבר כתרומה לידידים.</li>
+            <li>הפונה מתחייב להחזיר את הגלגל בתוך <strong>72 שעות</strong>, ולהשאיר כפקדון {station.deposit_amount || 200} ש"ח באמצעי התשלום הזמין.</li>
+            <li>הפונה יקבל חזרה את הפקדון בעת החזרת הגלגל. במידה והגלגל לא יוחזר בתוך 72 שעות, סכום הכסף יועבר כתרומה לידידים.</li>
             <li><strong>הפונה מבין שזהו תיקון חירום בלבד!</strong> והגלגל עשוי להיות במידה מעט שונה/לפגוע ביציבות הרכב ולכן מתחייב לא לנהוג במהירות מעל 80 קמ"ש וכן שלא תהיה לו שום תלונה על הסיוע שקיבל.</li>
             <li>במקרים חריגים ניתן להאריך את זמן ההשאלה עד 5 ימים, באישור מנהל התחנה או סג"מ התחנה.</li>
             <li>במקרים חריגים (באישור מנהל/סג"מ התחנה) ניתן להפקיד כערבון תעודה מזהה במקום פקדון כספי.</li>

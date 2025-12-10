@@ -1458,7 +1458,7 @@ ${signFormUrl}
             {/* Tire Size Filter */}
             <div style={{marginTop: '12px', padding: '12px', background: 'rgba(59, 130, 246, 0.1)', borderRadius: '8px', border: '1px dashed #3b82f6'}}>
               <label style={{...styles.filterLabel, marginBottom: '8px', display: 'block', color: '#3b82f6'}}>
-                🛞 חיפוש לפי מידת צמיג (מחפש במספר גלגל והערות)
+                🛞 חיפוש לפי מידת גלגל (מחפש במספר גלגל והערות)
               </label>
               <div style={{display: 'flex', gap: '8px', alignItems: 'center', flexWrap: 'wrap'}}>
                 <input
@@ -1625,7 +1625,7 @@ ${signFormUrl}
                   <td style={styles.td}>{wheel.category || '-'}</td>
                   <td style={styles.td}>
                     {wheel.is_donut ? (
-                      <span style={styles.donutTag}>🍩 דונאט</span>
+                      <span style={styles.donutTag}>דונאט</span>
                     ) : 'מלא'}
                   </td>
                   <td style={{...styles.td, color: '#a0aec0'}}>{wheel.notes || ''}</td>

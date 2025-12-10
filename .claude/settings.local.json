@@ -22,7 +22,8 @@
       "Bash(cat:*)",
       "Bash(git -C \"c:\\Users\\יאיר קדוש\\ARON_TZIYUD\" add -A)",
       "Bash(git -C \"c:\\Users\\יאיר קדוש\\ARON_TZIYUD\" commit -m \"$(cat <<''EOF''\nFix: Remove duplicate unused contacts edit modal\n\nThe edit contacts modal was duplicated - contacts editing is already\navailable in the Edit Details Modal. Removed the unused standalone\nmodal that was never opened.\n\nThe floating contact button correctly opens the view-only contacts\nmodal with call/WhatsApp buttons.\n\n🤖 Generated with [Claude Code](https://claude.com/claude-code)\n\nCo-Authored-By: Claude <noreply@anthropic.com>\nEOF\n)\")",
-      "Bash(git -C \"c:\\Users\\יאיר קדוש\\ARON_TZIYUD\" commit -m \"$(cat <<''EOF''\nHide floating contact button when logged in as manager\n\nThe floating contact button is now only visible to public users.\nManagers already have contact info in the settings modal.\n\n🤖 Generated with [Claude Code](https://claude.com/claude-code)\n\nCo-Authored-By: Claude <noreply@anthropic.com>\nEOF\n)\")"
+      "Bash(git -C \"c:\\Users\\יאיר קדוש\\ARON_TZIYUD\" commit -m \"$(cat <<''EOF''\nHide floating contact button when logged in as manager\n\nThe floating contact button is now only visible to public users.\nManagers already have contact info in the settings modal.\n\n🤖 Generated with [Claude Code](https://claude.com/claude-code)\n\nCo-Authored-By: Claude <noreply@anthropic.com>\nEOF\n)\")",
+      "Bash(git -C \"c:\\Users\\יאיר קדוש\\ARON_TZIYUD\" commit -m \"$(cat <<''EOF''\nTerminology: Changed \"צמיג\" to \"גלגל\" + removed donut emoji\n\n1. Sign form - all instances of \"צמיג\" changed to \"גלגל\":\n   - Title, intro text, wheel selection, terms\n   - \"השאלת צמיג\" -> \"השאלת גלגל\"\n   - \"צמיגים\" -> \"גלגלים\"\n\n2. Station page - fixed search label text\n\n3. Removed 🍩 emoji from donut tags (kept text \"דונאט\")\n\n🤖 Generated with [Claude Code](https://claude.com/claude-code)\n\nCo-Authored-By: Claude <noreply@anthropic.com>\nEOF\n)\")"
     ],
     "deny": [],
     "ask": []
