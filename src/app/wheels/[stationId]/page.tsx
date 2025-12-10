@@ -4,6 +4,7 @@ import { useState, useEffect, use, useRef } from 'react'
 import Link from 'next/link'
 import toast, { Toaster } from 'react-hot-toast'
 import * as XLSX from 'xlsx'
+import { isPushSupported, requestNotificationPermission, registerServiceWorker, getPushNotSupportedReason } from '@/lib/push'
 
 interface Wheel {
   id: string
@@ -249,6 +250,11 @@ export default function StationPage({ params }: { params: Promise<{ stationId: s
   const [borrowFilter, setBorrowFilter] = useState<'all' | 'pending' | 'borrowed' | 'returned'>('all')
   const [approvalLoading, setApprovalLoading] = useState<string | null>(null)
 
+  // Push notifications
+  const [pushSupported, setPushSupported] = useState(false)
+  const [pushEnabled, setPushEnabled] = useState(false)
+  const [enablingPush, setEnablingPush] = useState(false)
+
   const fetchBorrows = async () => {
     setBorrowsLoading(true)
     try {
@@ -271,6 +277,127 @@ export default function StationPage({ params }: { params: Promise<{ stationId: s
       fetchBorrows()
     }
   }, [activeTab, borrowFilter, isManager])
+
+  // Check push notification support and status
+  useEffect(() => {
+    if (isManager && currentManager) {
+      const checkPush = async () => {
+        const supported = isPushSupported()
+        setPushSupported(supported)
+
+        if (supported) {
+          // Check if already subscribed
+          try {
+            const response = await fetch(`/api/wheel-stations/${stationId}/push/subscribe?manager_phone=${encodeURIComponent(currentManager.phone)}`)
+            const data = await response.json()
+            setPushEnabled(data.subscribed)
+          } catch (err) {
+            console.error('Error checking push status:', err)
+          }
+        }
+      }
+      checkPush()
+    }
+  }, [isManager, currentManager, stationId])
+
+  // Toggle push notifications
+  const handleTogglePush = async () => {
+    if (!currentManager) return
+    setEnablingPush(true)
+
+    try {
+      if (pushEnabled) {
+        // Unsubscribe
+        const registration = await navigator.serviceWorker.ready
+        const subscription = await registration.pushManager.getSubscription()
+
+        if (subscription) {
+          await fetch(`/api/wheel-stations/${stationId}/push/subscribe`, {
+            method: 'DELETE',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({
+              endpoint: subscription.endpoint,
+              manager_phone: currentManager.phone,
+              manager_password: sessionPassword
+            })
+          })
+          await subscription.unsubscribe()
+        }
+
+        setPushEnabled(false)
+        toast.success('התראות כובו')
+      } else {
+        // Subscribe
+        const notSupported = getPushNotSupportedReason()
+        if (notSupported) {
+          toast.error(notSupported, { duration: 5000 })
+          setEnablingPush(false)
+          return
+        }
+
+        const granted = await requestNotificationPermission()
+        if (!granted) {
+          if (Notification?.permission === 'denied') {
+            toast.error('התראות חסומות בדפדפן - יש לאפשר בהגדרות', { duration: 5000 })
+          } else {
+            toast.error('נדרשת הרשאה כדי להפעיל התראות', { duration: 5000 })
+          }
+          setEnablingPush(false)
+          return
+        }
+
+        const registration = await registerServiceWorker()
+        const vapidPublicKey = process.env.NEXT_PUBLIC_VAPID_PUBLIC_KEY
+
+        if (!vapidPublicKey) {
+          toast.error('התראות לא מוגדרות במערכת')
+          setEnablingPush(false)
+          return
+        }
+
+        // Convert VAPID key
+        const urlBase64ToUint8Array = (base64String: string) => {
+          const padding = '='.repeat((4 - (base64String.length % 4)) % 4)
+          const base64 = (base64String + padding).replace(/-/g, '+').replace(/_/g, '/')
+          const rawData = window.atob(base64)
+          const outputArray = new Uint8Array(rawData.length)
+          for (let i = 0; i < rawData.length; ++i) {
+            outputArray[i] = rawData.charCodeAt(i)
+          }
+          return outputArray
+        }
+
+        const subscription = await registration.pushManager.subscribe({
+          userVisibleOnly: true,
+          applicationServerKey: urlBase64ToUint8Array(vapidPublicKey)
+        })
+
+        // Save to server
+        const response = await fetch(`/api/wheel-stations/${stationId}/push/subscribe`, {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({
+            subscription: subscription.toJSON(),
+            manager_phone: currentManager.phone,
+            manager_password: sessionPassword,
+            userAgent: navigator.userAgent
+          })
+        })
+
+        if (!response.ok) {
+          throw new Error('Failed to save subscription')
+        }
+
+        setPushEnabled(true)
+        toast.success('התראות הופעלו! תקבל התראה בכל בקשה חדשה')
+      }
+    } catch (error) {
+      console.error('Error toggling push:', error)
+      toast.error('שגיאה בהפעלת התראות')
+    } finally {
+      setEnablingPush(false)
+    }
+  }
 
   // Approve or reject pending borrow request
   const handleBorrowAction = async (borrowId: string, action: 'approve' | 'reject') => {
@@ -2271,6 +2398,31 @@ ${signFormUrl}
               <button style={{...styles.smallBtn, background: '#f59e0b', color: '#000'}} onClick={handleChangePassword} disabled={actionLoading}>
                 {actionLoading ? 'שומר...' : 'שנה סיסמה'}
               </button>
+            </div>
+
+            {/* Section: Push Notifications */}
+            <div style={{marginBottom: '20px', padding: '15px', background: 'rgba(255,255,255,0.05)', borderRadius: '10px'}}>
+              <h4 style={{margin: '0 0 12px', color: '#f59e0b', fontSize: '1rem'}}>🔔 התראות</h4>
+              <p style={{fontSize: '0.85rem', color: '#a0aec0', margin: '0 0 12px'}}>
+                קבל התראה קופצת בכל בקשת השאלה חדשה
+              </p>
+              {pushSupported ? (
+                <button
+                  style={{
+                    ...styles.smallBtn,
+                    background: pushEnabled ? '#ef4444' : '#22c55e',
+                    width: '100%'
+                  }}
+                  onClick={handleTogglePush}
+                  disabled={enablingPush}
+                >
+                  {enablingPush ? 'מעדכן...' : pushEnabled ? '🔕 כבה התראות' : '🔔 הפעל התראות'}
+                </button>
+              ) : (
+                <p style={{fontSize: '0.8rem', color: '#9ca3af', fontStyle: 'italic'}}>
+                  {getPushNotSupportedReason() || 'התראות לא נתמכות בדפדפן זה'}
+                </p>
+              )}
             </div>
 
             <button style={{...styles.cancelBtn, width: '100%'}} onClick={() => setShowEditDetailsModal(false)}>סגור</button>

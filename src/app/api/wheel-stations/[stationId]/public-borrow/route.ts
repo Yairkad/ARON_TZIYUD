@@ -126,6 +126,23 @@ export async function POST(request: NextRequest, { params }: RouteParams) {
     // Note: Wheel availability is NOT updated here
     // Manager must approve the request to mark wheel as borrowed
 
+    // Send push notification to station managers
+    try {
+      const baseUrl = process.env.NEXT_PUBLIC_APP_URL || request.nextUrl.origin
+      await fetch(`${baseUrl}/api/wheel-stations/${stationId}/push/send`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          title: `🛞 בקשת השאלה חדשה - ${station.name}`,
+          body: `${borrower_name} מבקש להשאיל גלגל #${wheel.wheel_number}`,
+          url: `/wheels/${stationId}`
+        })
+      })
+    } catch (pushError) {
+      // Don't fail the request if push fails
+      console.error('Error sending push notification:', pushError)
+    }
+
     return NextResponse.json({
       success: true,
       pending: true,
