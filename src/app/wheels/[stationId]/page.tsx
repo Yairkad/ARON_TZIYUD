@@ -809,10 +809,10 @@ ${signFormUrl}
           'מספר גלגל': borrow.wheels?.wheel_number || '',
           'תאריך השאלה': borrow.borrow_date ? new Date(borrow.borrow_date).toLocaleDateString('he-IL') : '',
           'תאריך החזרה': borrow.actual_return_date ? new Date(borrow.actual_return_date).toLocaleDateString('he-IL') : '',
-          'סוג פיקדון': borrow.deposit_type === 'cash' ? `₪${station.deposit_amount || 200} מזומן` :
-                        borrow.deposit_type === 'bit' ? `₪${station.deposit_amount || 200} ביט` :
-                        borrow.deposit_type === 'paybox' ? `₪${station.deposit_amount || 200} פייבוקס` :
-                        borrow.deposit_type === 'bank_transfer' ? `₪${station.deposit_amount || 200} העברה` :
+          'סוג פיקדון': borrow.deposit_type === 'cash' ? `₪${station?.deposit_amount || 200} מזומן` :
+                        borrow.deposit_type === 'bit' ? `₪${station?.deposit_amount || 200} ביט` :
+                        borrow.deposit_type === 'paybox' ? `₪${station?.deposit_amount || 200} פייבוקס` :
+                        borrow.deposit_type === 'bank_transfer' ? `₪${station?.deposit_amount || 200} העברה` :
                         borrow.deposit_type === 'id' ? 'ת.ז.' :
                         borrow.deposit_type === 'license' ? 'רישיון' : '',
           'סטטוס': borrow.status === 'pending' ? 'ממתין' :
