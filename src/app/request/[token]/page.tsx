@@ -13,8 +13,6 @@ export default function RequestPage({ params }: { params: Promise<{ token: strin
   const [loading, setLoading] = useState(true)
   const [error, setError] = useState('')
   const [request, setRequest] = useState<EquipmentRequestWithItems | null>(null)
-  const [confirmingPickup, setConfirmingPickup] = useState(false)
-  const [pickupConfirmed, setPickupConfirmed] = useState(false)
 
   // Confirmation Modal State
   const [confirmModal, setConfirmModal] = useState<{
@@ -58,16 +56,16 @@ export default function RequestPage({ params }: { params: Promise<{ token: strin
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [])
 
-  // Auto-refresh every 10 seconds when status is pending (but not if pickup confirmed)
+  // Auto-refresh every 10 seconds when status is pending
   useEffect(() => {
-    if (request?.status === 'pending' && !pickupConfirmed) {
+    if (request?.status === 'pending') {
       const interval = setInterval(() => {
         verifyToken()
       }, 10000)
 
       return () => clearInterval(interval)
     }
-  }, [request?.status, pickupConfirmed])
+  }, [request?.status])
 
   const verifyToken = async () => {
     setLoading(true)
@@ -122,48 +120,6 @@ export default function RequestPage({ params }: { params: Promise<{ token: strin
       picked_up: 'bg-blue-100 text-blue-800'
     }
     return colorMap[status] || 'bg-gray-100 text-gray-800'
-  }
-
-  const handleConfirmPickup = async () => {
-    showConfirmModal({
-      title: 'אישור לקיחת ציוד',
-      message: 'האם אתה בטוח שלקחת את הציוד? פעולה זו תעדכן את המלאי ותיצור רשומת השאלה.',
-      icon: '📦',
-      confirmText: 'לקחתי',
-      confirmColor: 'green',
-      onConfirm: async () => {
-        setConfirmModal(prev => prev ? { ...prev, loading: true } : null)
-        setConfirmingPickup(true)
-        setPickupConfirmed(true)
-
-        try {
-          const response = await fetch('/api/requests/confirm-pickup', {
-            method: 'POST',
-            headers: { 'Content-Type': 'application/json' },
-            body: JSON.stringify({ token: resolvedParams.token })
-          })
-
-          const data = await response.json()
-
-          if (!response.ok) {
-            toast.error(data.error || 'שגיאה באישור לקיחת הציוד')
-            setConfirmingPickup(false)
-            setPickupConfirmed(false)
-            closeConfirmModal()
-            return
-          }
-
-          closeConfirmModal()
-          router.push(`/city/${data.city_id}?tab=return`)
-        } catch (error) {
-          console.error('Confirm pickup error:', error)
-          toast.error('שגיאה באישור לקיחת הציוד')
-          setConfirmingPickup(false)
-          setPickupConfirmed(false)
-          closeConfirmModal()
-        }
-      }
-    })
   }
 
   if (loading) {
@@ -295,135 +251,120 @@ export default function RequestPage({ params }: { params: Promise<{ token: strin
           </div>
         </div>
 
-        {/* Approved Section */}
-        {request.status === 'approved' && (
+        {/* Approved/Picked Up Section - Equipment is now borrowed immediately on approval */}
+        {(request.status === 'approved' || request.status === 'picked_up') && (
           <div className="bg-green-50 border-2 border-green-200 rounded-lg shadow-lg p-6 mb-6">
-            {confirmingPickup ? (
-              <div className="text-center py-8">
-                <div className="animate-spin rounded-full h-16 w-16 border-b-4 border-blue-600 mx-auto mb-4"></div>
-                <h2 className="text-2xl font-bold text-gray-900 mb-3">
-                  מעדכן מלאי ומעבר לעמוד החזרה...
-                </h2>
-                <p className="text-gray-600">
-                  אנא המתן
+            <div className="text-center mb-6">
+              <div className="text-green-500 text-6xl mb-4">✓</div>
+              <h2 className="text-2xl font-bold text-green-900 mb-2">
+                הבקשה אושרה!
+              </h2>
+              <p className="text-green-800">
+                אושר על ידי: {request.approved_by}
+              </p>
+              <div className="mt-3 inline-block px-4 py-2 rounded-full text-sm font-semibold bg-blue-100 text-blue-800">
+                📦 הציוד נרשם כמושאל
+              </div>
+            </div>
+
+            {/* Cabinet Code */}
+            {request.city?.cabinet_code && (
+              <div className="bg-white rounded-lg p-6 mb-4">
+                <h3 className="text-lg font-bold text-gray-900 mb-3 text-center">
+                  קוד פתיחת ארון
+                </h3>
+                <div className="text-center">
+                  <p className="text-4xl font-mono font-bold text-blue-600 tracking-wider">
+                    {request.city.cabinet_code}
+                  </p>
+                </div>
+              </div>
+            )}
+
+            {/* Location Image */}
+            {request.city?.location_image && (
+              <div className="bg-white rounded-lg p-6 mb-4">
+                <h3 className="text-lg font-bold text-gray-900 mb-3 text-center">
+                  📸 תמונת הארון
+                </h3>
+                <img
+                  src={request.city.location_image}
+                  alt="מיקום הארון"
+                  className="w-full max-w-2xl mx-auto rounded-lg shadow-md border-2 border-gray-200"
+                />
+              </div>
+            )}
+
+            {/* Location Description */}
+            {request.city?.location_description && (
+              <div className="bg-white rounded-lg p-6 mb-4">
+                <h3 className="text-lg font-bold text-gray-900 mb-3 text-center">
+                  📝 הוראות מציאת הארון
+                </h3>
+                <p className="text-gray-700 whitespace-pre-wrap text-center leading-relaxed">
+                  {request.city.location_description}
                 </p>
               </div>
-            ) : (
-              <>
-                <div className="text-center mb-6">
-                  <div className="text-green-500 text-6xl mb-4">✓</div>
-                  <h2 className="text-2xl font-bold text-green-900 mb-2">
-                    הבקשה אושרה!
-                  </h2>
-                  <p className="text-green-800">
-                    אושר על ידי: {request.approved_by}
-                  </p>
-                </div>
-
-                {/* Cabinet Code */}
-                {request.city?.cabinet_code && (
-                  <div className="bg-white rounded-lg p-6 mb-4">
-                    <h3 className="text-lg font-bold text-gray-900 mb-3 text-center">
-                      קוד פתיחת ארון
-                    </h3>
-                    <div className="text-center">
-                      <p className="text-4xl font-mono font-bold text-blue-600 tracking-wider">
-                        {request.city.cabinet_code}
-                      </p>
-                    </div>
-                  </div>
-                )}
-
-                {/* Location Image */}
-                {request.city?.location_image && (
-                  <div className="bg-white rounded-lg p-6 mb-4">
-                    <h3 className="text-lg font-bold text-gray-900 mb-3 text-center">
-                      📸 תמונת הארון
-                    </h3>
-                    <img
-                      src={request.city.location_image}
-                      alt="מיקום הארון"
-                      className="w-full max-w-2xl mx-auto rounded-lg shadow-md border-2 border-gray-200"
-                    />
-                  </div>
-                )}
-
-                {/* Location Description */}
-                {request.city?.location_description && (
-                  <div className="bg-white rounded-lg p-6 mb-4">
-                    <h3 className="text-lg font-bold text-gray-900 mb-3 text-center">
-                      📝 הוראות מציאת הארון
-                    </h3>
-                    <p className="text-gray-700 whitespace-pre-wrap text-center leading-relaxed">
-                      {request.city.location_description}
-                    </p>
-                  </div>
-                )}
-
-                {/* Location Navigation Buttons */}
-                {(request.city?.token_location_url || request.city?.location_url) && (() => {
-                  const locationUrl = request.city.token_location_url || request.city.location_url || ''
-
-                  // Use coordinates from DB - prefer token coords, fall back to main coords
-                  const lat = request.city.token_lat || request.city.lat
-                  const lng = request.city.token_lng || request.city.lng
-
-                  const googleMapsUrl = lat && lng
-                    ? `https://www.google.com/maps?q=${lat},${lng}`
-                    : locationUrl
-
-                  const wazeUrl = lat && lng
-                    ? `https://www.waze.com/ul?ll=${lat},${lng}&navigate=yes&zoom=17`
-                    : locationUrl
-
-                  return (
-                    <div className="bg-white rounded-lg p-6 mb-4">
-                      <h3 className="text-lg font-bold text-gray-900 mb-4 text-center">
-                        🗺️ ניווט לארון
-                      </h3>
-                      <div className="flex justify-center gap-3">
-                        <a
-                          href={googleMapsUrl}
-                          target="_blank"
-                          rel="noopener noreferrer"
-                          className="flex items-center gap-2 bg-blue-500 hover:bg-blue-600 text-white px-6 py-3 rounded-lg font-semibold transition-colors shadow-md"
-                        >
-                          📍 Google Maps
-                        </a>
-                        <a
-                          href={wazeUrl}
-                          target="_blank"
-                          rel="noopener noreferrer"
-                          className="flex items-center gap-2 bg-cyan-500 hover:bg-cyan-600 text-white px-6 py-3 rounded-lg font-semibold transition-colors shadow-md"
-                        >
-                          🚗 Waze
-                        </a>
-                      </div>
-                    </div>
-                  )
-                })()}
-
-                {/* Confirm Pickup Button */}
-                <div className="bg-white rounded-lg p-6 mt-6 border-2 border-blue-200">
-                  <h3 className="text-lg font-bold text-gray-900 mb-3 text-center">
-                    ⚠️ חשוב - אישור לקיחת ציוד
-                  </h3>
-                  <p className="text-gray-700 text-center mb-4">
-                    לאחר שלקחת את הציוד מהארון, אנא לחץ על הכפתור למטה
-                  </p>
-                  <button
-                    onClick={handleConfirmPickup}
-                    disabled={confirmingPickup}
-                    className="w-full bg-gradient-to-r from-green-500 to-emerald-600 text-white py-4 px-6 rounded-lg font-bold text-lg hover:from-green-600 hover:to-emerald-700 disabled:opacity-50 disabled:cursor-not-allowed transition-all shadow-lg"
-                  >
-                    {confirmingPickup ? '⏳ מאשר לקיחה...' : '✓ אישור - לקחתי את הציוד'}
-                  </button>
-                  <p className="text-sm text-gray-600 text-center mt-3">
-                    פעולה זו תעדכן את המלאי ותאפשר החזרה בעתיד
-                  </p>
-                </div>
-              </>
             )}
+
+            {/* Location Navigation Buttons */}
+            {(request.city?.token_location_url || request.city?.location_url) && (() => {
+              const locationUrl = request.city.token_location_url || request.city.location_url || ''
+
+              // Use coordinates from DB - prefer token coords, fall back to main coords
+              const lat = request.city.token_lat || request.city.lat
+              const lng = request.city.token_lng || request.city.lng
+
+              const googleMapsUrl = lat && lng
+                ? `https://www.google.com/maps?q=${lat},${lng}`
+                : locationUrl
+
+              const wazeUrl = lat && lng
+                ? `https://www.waze.com/ul?ll=${lat},${lng}&navigate=yes&zoom=17`
+                : locationUrl
+
+              return (
+                <div className="bg-white rounded-lg p-6 mb-4">
+                  <h3 className="text-lg font-bold text-gray-900 mb-4 text-center">
+                    🗺️ ניווט לארון
+                  </h3>
+                  <div className="flex justify-center gap-3">
+                    <a
+                      href={googleMapsUrl}
+                      target="_blank"
+                      rel="noopener noreferrer"
+                      className="flex items-center gap-2 bg-blue-500 hover:bg-blue-600 text-white px-6 py-3 rounded-lg font-semibold transition-colors shadow-md"
+                    >
+                      📍 Google Maps
+                    </a>
+                    <a
+                      href={wazeUrl}
+                      target="_blank"
+                      rel="noopener noreferrer"
+                      className="flex items-center gap-2 bg-cyan-500 hover:bg-cyan-600 text-white px-6 py-3 rounded-lg font-semibold transition-colors shadow-md"
+                    >
+                      🚗 Waze
+                    </a>
+                  </div>
+                </div>
+              )
+            })()}
+
+            {/* Return Equipment Section */}
+            <div className="bg-white rounded-lg p-6 mt-6 border-2 border-blue-200">
+              <h3 className="text-lg font-bold text-gray-900 mb-3 text-center">
+                📋 החזרת ציוד
+              </h3>
+              <p className="text-gray-700 text-center mb-4">
+                לאחר שסיימת עם הציוד, עבור לדף החזרת ציוד לדווח על החזרה
+              </p>
+              <Button
+                onClick={() => router.push(`/city/${request.city_id}?tab=return`)}
+                className="w-full bg-gradient-to-r from-blue-500 to-indigo-600 text-white py-4 px-6 rounded-lg font-bold text-lg hover:from-blue-600 hover:to-indigo-700 transition-all shadow-lg"
+              >
+                🔄 לדף החזרת ציוד
+              </Button>
+            </div>
           </div>
         )}
 
@@ -460,26 +401,6 @@ export default function RequestPage({ params }: { params: Promise<{ token: strin
           </div>
         )}
 
-        {/* Picked Up Section */}
-        {request.status === 'picked_up' && (
-          <div className="bg-blue-50 border-2 border-blue-200 rounded-lg shadow-lg p-6 mb-6">
-            <div className="text-center">
-              <div className="text-blue-500 text-6xl mb-4">✓</div>
-              <h2 className="text-2xl font-bold text-blue-900 mb-2">
-                הציוד נלקח בהצלחה
-              </h2>
-              <p className="text-blue-800 mb-4">
-                המלאי עודכן ונוצרה רשומת השאלה
-              </p>
-              <Button
-                onClick={() => router.push(`/city/${request.city_id}?tab=return`)}
-                className="bg-blue-600 hover:bg-blue-700 text-white px-8 py-3 text-lg"
-              >
-                לדף החזרת ציוד
-              </Button>
-            </div>
-          </div>
-        )}
 
         {/* City Contact Info */}
         {request.city && (

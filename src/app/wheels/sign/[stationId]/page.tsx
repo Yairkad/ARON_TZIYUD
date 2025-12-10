@@ -12,12 +12,24 @@ interface Wheel {
   bolt_spacing: number
   is_donut: boolean
   is_available: boolean
+  notes?: string
+}
+
+interface PaymentMethods {
+  cash?: boolean
+  bit?: { enabled: boolean; phone: string }
+  paybox?: { enabled: boolean; phone: string }
+  bank_transfer?: { enabled: boolean; details: string }
+  id_deposit?: boolean
+  license_deposit?: boolean
 }
 
 interface Station {
   id: string
   name: string
   address: string
+  deposit_amount?: number
+  payment_methods?: PaymentMethods
 }
 
 export default function SignFormPage({ params }: { params: Promise<{ stationId: string }> }) {
@@ -283,11 +295,11 @@ export default function SignFormPage({ params }: { params: Promise<{ stationId: 
       <Toaster position="top-center" />
       <div style={styles.card}>
         {/* Yedidim Logo */}
-        <div style={{ textAlign: 'center', marginBottom: '16px' }}>
+        <div style={{ display: 'flex', justifyContent: 'center', marginBottom: '16px' }}>
           <img
             src="/yedidim-logo.png"
             alt="ידידים סיוע בדרכים"
-            style={{ height: '60px', width: 'auto' }}
+            style={{ height: '60px', width: 'auto', display: 'block' }}
           />
         </div>
         <h1 style={{...styles.title, textAlign: 'center'}}>השאלת צמיג - {station.name}</h1>
@@ -375,20 +387,44 @@ export default function SignFormPage({ params }: { params: Promise<{ stationId: 
         </div>
 
         <div style={styles.formGroup}>
-          <label style={styles.label}>מספר צמיג <span style={styles.required}>*</span></label>
-          <select
-            value={selectedWheelId}
-            onChange={e => { setSelectedWheelId(e.target.value); setFieldErrors(f => f.filter(x => x !== 'wheelId')) }}
-            style={getInputStyle('wheelId')}
-          >
-            <option value="">בחר צמיג...</option>
+          <label style={styles.label}>בחר צמיג <span style={styles.required}>*</span></label>
+          <div style={{
+            display: 'grid',
+            gridTemplateColumns: 'repeat(auto-fill, minmax(140px, 1fr))',
+            gap: '10px',
+            ...(fieldErrors.includes('wheelId') ? { outline: '2px solid #ef4444', borderRadius: '8px', padding: '8px' } : {})
+          }}>
             {wheels.map(wheel => (
-              <option key={wheel.id} value={wheel.id}>
-                {wheel.wheel_number}
-              </option>
+              <div
+                key={wheel.id}
+                onClick={() => { setSelectedWheelId(wheel.id); setFieldErrors(f => f.filter(x => x !== 'wheelId')) }}
+                style={{
+                  padding: '12px',
+                  borderRadius: '10px',
+                  border: selectedWheelId === wheel.id ? '2px solid #3b82f6' : '2px solid #e5e7eb',
+                  background: selectedWheelId === wheel.id ? '#eff6ff' : '#fff',
+                  cursor: 'pointer',
+                  transition: 'all 0.2s',
+                  textAlign: 'center',
+                }}
+              >
+                <div style={{ fontSize: '1.25rem', fontWeight: 'bold', color: '#1f2937', marginBottom: '4px' }}>
+                  #{wheel.wheel_number}
+                </div>
+                <div style={{ fontSize: '0.75rem', color: '#6b7280', lineHeight: '1.4' }}>
+                  <div>{wheel.rim_size}" • {wheel.bolt_count}×{wheel.bolt_spacing}</div>
+                  {wheel.is_donut && <div style={{ color: '#f59e0b' }}>🍩 דונאט</div>}
+                  {wheel.notes && <div style={{ marginTop: '4px', fontSize: '0.7rem', color: '#9ca3af' }}>{wheel.notes}</div>}
+                </div>
+              </div>
             ))}
-          </select>
-          <p style={styles.helpText}>מוצגים רק צמיגים זמינים בתחנה זו</p>
+          </div>
+          {wheels.length === 0 && (
+            <p style={{ ...styles.helpText, color: '#ef4444' }}>אין צמיגים זמינים כרגע בתחנה זו</p>
+          )}
+          {wheels.length > 0 && (
+            <p style={styles.helpText}>לחץ על הצמיג הרצוי</p>
+          )}
         </div>
 
         <div style={styles.formGroup}>
@@ -411,46 +447,128 @@ export default function SignFormPage({ params }: { params: Promise<{ stationId: 
             ...styles.radioGroup,
             ...(fieldErrors.includes('depositType') ? styles.radioGroupError : {})
           }}>
-            <label style={styles.radioOption}>
-              <input
-                type="radio"
-                name="deposit"
-                value="cash"
-                checked={depositType === 'cash'}
-                onChange={e => { setDepositType(e.target.value); setFieldErrors(f => f.filter(x => x !== 'depositType')) }}
-              />
-              <span>₪500 מזומן</span>
-            </label>
-            <label style={styles.radioOption}>
-              <input
-                type="radio"
-                name="deposit"
-                value="bit"
-                checked={depositType === 'bit'}
-                onChange={e => { setDepositType(e.target.value); setFieldErrors(f => f.filter(x => x !== 'depositType')) }}
-              />
-              <span>₪500 בביט ל-050-3044088</span>
-            </label>
-            <label style={styles.radioOption}>
-              <input
-                type="radio"
-                name="deposit"
-                value="id"
-                checked={depositType === 'id'}
-                onChange={e => { setDepositType(e.target.value); setFieldErrors(f => f.filter(x => x !== 'depositType')) }}
-              />
-              <span>פיקדון תעודת זהות (באישור מנהל)</span>
-            </label>
-            <label style={styles.radioOption}>
-              <input
-                type="radio"
-                name="deposit"
-                value="license"
-                checked={depositType === 'license'}
-                onChange={e => { setDepositType(e.target.value); setFieldErrors(f => f.filter(x => x !== 'depositType')) }}
-              />
-              <span>פיקדון רישיון נהיגה (באישור מנהל)</span>
-            </label>
+            {/* Cash */}
+            {(station.payment_methods?.cash !== false) && (
+              <label style={styles.radioOption}>
+                <input
+                  type="radio"
+                  name="deposit"
+                  value="cash"
+                  checked={depositType === 'cash'}
+                  onChange={e => { setDepositType(e.target.value); setFieldErrors(f => f.filter(x => x !== 'depositType')) }}
+                />
+                <span>💵 ₪{station.deposit_amount || 200} מזומן</span>
+              </label>
+            )}
+
+            {/* Bit */}
+            {station.payment_methods?.bit?.enabled && station.payment_methods.bit.phone && (
+              <div style={{ display: 'flex', flexDirection: 'column', gap: '8px' }}>
+                <label style={styles.radioOption}>
+                  <input
+                    type="radio"
+                    name="deposit"
+                    value="bit"
+                    checked={depositType === 'bit'}
+                    onChange={e => { setDepositType(e.target.value); setFieldErrors(f => f.filter(x => x !== 'depositType')) }}
+                  />
+                  <span>📱 ₪{station.deposit_amount || 200} בביט ל-{station.payment_methods.bit.phone}</span>
+                </label>
+                {depositType === 'bit' && (
+                  <a
+                    href={`https://www.bitpay.co.il/app/me/${station.payment_methods.bit.phone.replace(/\D/g, '')}/${station.deposit_amount || 200}`}
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    style={styles.paymentLink}
+                    onClick={(e) => {
+                      e.preventDefault()
+                      window.location.href = `bit://pay?phone=${station.payment_methods?.bit?.phone?.replace(/\D/g, '')}&amount=${station.deposit_amount || 200}`
+                      setTimeout(() => {
+                        window.open(`https://www.bitpay.co.il/app/me/${station.payment_methods?.bit?.phone?.replace(/\D/g, '')}/${station.deposit_amount || 200}`, '_blank')
+                      }, 500)
+                    }}
+                  >
+                    פתח אפליקציית ביט לתשלום ←
+                  </a>
+                )}
+              </div>
+            )}
+
+            {/* Paybox */}
+            {station.payment_methods?.paybox?.enabled && station.payment_methods.paybox.phone && (
+              <div style={{ display: 'flex', flexDirection: 'column', gap: '8px' }}>
+                <label style={styles.radioOption}>
+                  <input
+                    type="radio"
+                    name="deposit"
+                    value="paybox"
+                    checked={depositType === 'paybox'}
+                    onChange={e => { setDepositType(e.target.value); setFieldErrors(f => f.filter(x => x !== 'depositType')) }}
+                  />
+                  <span>📦 ₪{station.deposit_amount || 200} בפייבוקס ל-{station.payment_methods.paybox.phone}</span>
+                </label>
+                {depositType === 'paybox' && (
+                  <a
+                    href={`payboxapp://send?phone=${station.payment_methods.paybox.phone.replace(/\D/g, '')}&amount=${station.deposit_amount || 200}`}
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    style={styles.paymentLink}
+                  >
+                    פתח אפליקציית פייבוקס לתשלום ←
+                  </a>
+                )}
+              </div>
+            )}
+
+            {/* Bank Transfer */}
+            {station.payment_methods?.bank_transfer?.enabled && station.payment_methods.bank_transfer.details && (
+              <div style={{ display: 'flex', flexDirection: 'column', gap: '8px' }}>
+                <label style={styles.radioOption}>
+                  <input
+                    type="radio"
+                    name="deposit"
+                    value="bank_transfer"
+                    checked={depositType === 'bank_transfer'}
+                    onChange={e => { setDepositType(e.target.value); setFieldErrors(f => f.filter(x => x !== 'depositType')) }}
+                  />
+                  <span>🏦 ₪{station.deposit_amount || 200} העברה בנקאית</span>
+                </label>
+                {depositType === 'bank_transfer' && (
+                  <div style={styles.bankDetails}>
+                    <strong>פרטי חשבון:</strong><br />
+                    {station.payment_methods.bank_transfer.details}
+                  </div>
+                )}
+              </div>
+            )}
+
+            {/* ID Deposit */}
+            {(station.payment_methods?.id_deposit !== false) && (
+              <label style={styles.radioOption}>
+                <input
+                  type="radio"
+                  name="deposit"
+                  value="id"
+                  checked={depositType === 'id'}
+                  onChange={e => { setDepositType(e.target.value); setFieldErrors(f => f.filter(x => x !== 'depositType')) }}
+                />
+                <span>🪪 פיקדון תעודת זהות (באישור מנהל)</span>
+              </label>
+            )}
+
+            {/* License Deposit */}
+            {(station.payment_methods?.license_deposit !== false) && (
+              <label style={styles.radioOption}>
+                <input
+                  type="radio"
+                  name="deposit"
+                  value="license"
+                  checked={depositType === 'license'}
+                  onChange={e => { setDepositType(e.target.value); setFieldErrors(f => f.filter(x => x !== 'depositType')) }}
+                />
+                <span>🚗 פיקדון רישיון נהיגה (באישור מנהל)</span>
+              </label>
+            )}
           </div>
         </div>
 
@@ -478,7 +596,7 @@ export default function SignFormPage({ params }: { params: Promise<{ stationId: 
         >
           <p><strong>תקנון השאלת גלגל:</strong></p>
           <ol style={styles.termsList}>
-            <li>הפונה מתחייב להחזיר את הצמיג בתוך <strong>72 שעות</strong>, ולהשאיר כפקדון 500 ש"ח במזומן או בביט למספר 050-3044088.</li>
+            <li>הפונה מתחייב להחזיר את הצמיג בתוך <strong>72 שעות</strong>, ולהשאיר כפקדון {station.deposit_amount || 200} ש"ח באמצעי התשלום הזמין.</li>
             <li>הפונה יקבל חזרה את הפקדון בעת החזרת הצמיג. במידה והצמיג לא יוחזר בתוך 72 שעות, סכום הכסף יועבר כתרומה לידידים.</li>
             <li><strong>הפונה מבין שזהו תיקון חירום בלבד!</strong> והגלגל עשוי להיות במידה מעט שונה/לפגוע ביציבות הרכב ולכן מתחייב לא לנהוג במהירות מעל 80 קמ"ש וכן שלא תהיה לו שום תלונה על הסיוע שקיבל.</li>
             <li>במקרים חריגים ניתן להאריך את זמן ההשאלה עד 5 ימים, באישור מנהל התחנה או סג"מ התחנה.</li>
@@ -843,5 +961,26 @@ const styles: { [key: string]: React.CSSProperties } = {
     textDecoration: 'none',
     borderRadius: '8px',
     fontWeight: 'bold',
+  },
+  paymentLink: {
+    display: 'inline-block',
+    marginRight: '26px',
+    padding: '10px 16px',
+    background: '#3b82f6',
+    color: '#fff',
+    textDecoration: 'none',
+    borderRadius: '8px',
+    fontSize: '0.9rem',
+    fontWeight: '500',
+    textAlign: 'center',
+  },
+  bankDetails: {
+    marginRight: '26px',
+    padding: '12px',
+    background: '#f3f4f6',
+    borderRadius: '8px',
+    fontSize: '0.85rem',
+    color: '#374151',
+    whiteSpace: 'pre-wrap',
   },
 }

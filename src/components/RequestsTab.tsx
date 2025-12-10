@@ -126,7 +126,7 @@ export default function RequestsTab({ cityId, cityName, managerName, onRequestsU
     }
   }
 
-  const handleManageRequest = async (requestId: string, action: 'approve' | 'reject' | 'cancel' | 'regenerate', rejectedReason?: string) => {
+  const handleManageRequest = async (requestId: string, action: 'approve' | 'reject' | 'cancel' | 'regenerate' | 'undo_pickup', rejectedReason?: string) => {
     setLoading(true)
     try {
       const response = await fetch('/api/requests/manage', {
@@ -208,10 +208,11 @@ export default function RequestsTab({ cityId, cityName, managerName, onRequestsU
 
   const getSuccessMessage = (action: string) => {
     const messages: Record<string, string> = {
-      approve: 'הבקשה אושרה בהצלחה!',
+      approve: 'הבקשה אושרה והציוד נרשם כמושאל!',
       reject: 'הבקשה נדחתה',
       cancel: 'הבקשה בוטלה',
-      regenerate: 'טוקן חדש נוצר בהצלחה!'
+      regenerate: 'טוקן חדש נוצר בהצלחה!',
+      undo_pickup: 'האיסוף בוטל והמלאי הוחזר!'
     }
     return messages[action] || 'הפעולה בוצעה בהצלחה'
   }
@@ -615,6 +616,33 @@ ${locationUrl ? `\n📍 מיקום הארון:\n${locationUrl}` : ''}
                       className="border-2 border-gray-300 text-gray-700 hover:bg-gray-100 rounded-xl disabled:opacity-50 disabled:cursor-not-allowed"
                     >
                       🚫 בטל בקשה
+                    </Button>
+                  )}
+
+                  {request.status === 'picked_up' && (
+                    <Button
+                      onClick={() => {
+                        if (!canApprove) {
+                          toast.error('אין לך הרשאה לבטל איסוף - נדרשת הרשאת אישור בקשות')
+                          return
+                        }
+                        showConfirmModal({
+                          title: 'ביטול איסוף',
+                          message: 'האם הציוד לא נאסף בפועל? פעולה זו תחזיר את המלאי ותמחק את רשומת ההשאלה.',
+                          icon: '↩️',
+                          confirmText: 'כן, בטל איסוף',
+                          confirmColor: 'orange',
+                          onConfirm: async () => {
+                            setConfirmModal(prev => prev ? { ...prev, loading: true } : null)
+                            await handleManageRequest(request.id, 'undo_pickup')
+                            closeConfirmModal()
+                          }
+                        })
+                      }}
+                      disabled={loading || !canApprove}
+                      className="bg-gradient-to-r from-orange-500 to-amber-500 hover:from-orange-600 hover:to-amber-600 text-white font-semibold rounded-xl shadow-md disabled:opacity-50 disabled:cursor-not-allowed"
+                    >
+                      ↩️ לא נאסף - החזר מלאי
                     </Button>
                   )}
                 </div>

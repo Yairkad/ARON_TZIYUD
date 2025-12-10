@@ -4,13 +4,14 @@ export const metadata: Metadata = {
   title: 'טופס השאלת גלגל - ידידים',
   description: 'טופס להשאלת גלגל מתחנת השאלת צמיגים של ידידים סיוע בדרכים',
   icons: {
-    icon: '/logo.wheels.png',
-    apple: '/logo.wheels.png',
+    icon: '/yedidim-logo.png',
+    apple: '/yedidim-logo.png',
   },
   openGraph: {
     title: 'טופס השאלת גלגל - ידידים',
     description: 'טופס להשאלת גלגל מתחנת השאלת צמיגים של ידידים סיוע בדרכים',
     type: 'website',
+    images: ['/yedidim-logo.png'],
   },
 }
 

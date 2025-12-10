@@ -66,6 +66,8 @@ export async function GET(request: NextRequest, { params }: RouteParams) {
         city_id,
         is_active,
         manager_password,
+        deposit_amount,
+        payment_methods,
         cities (name),
         wheel_station_managers (
           id,
@@ -165,7 +167,7 @@ export async function PUT(request: NextRequest, { params }: RouteParams) {
   try {
     const { stationId } = await params
     const body = await request.json()
-    const { name, address, city_id, is_active, managers, manager_password, manager_phone, current_password } = body
+    const { name, address, city_id, is_active, managers, manager_password, manager_phone, current_password, deposit_amount, payment_methods } = body
 
     // Check if this is a station manager update (has manager_phone and current_password)
     if (manager_phone && current_password) {
@@ -174,20 +176,26 @@ export async function PUT(request: NextRequest, { params }: RouteParams) {
         return NextResponse.json({ error: managerAuth.error }, { status: 401 })
       }
 
-      // Station managers can only update address
-      if (address !== undefined) {
+      // Station managers can update address, deposit_amount, and payment_methods
+      // eslint-disable-next-line @typescript-eslint/no-explicit-any
+      const managerUpdate: { address?: string; deposit_amount?: number; payment_methods?: any } = {}
+      if (address !== undefined) managerUpdate.address = address
+      if (deposit_amount !== undefined) managerUpdate.deposit_amount = deposit_amount
+      if (payment_methods !== undefined) managerUpdate.payment_methods = payment_methods
+
+      if (Object.keys(managerUpdate).length > 0) {
         const { error: updateError } = await supabase
           .from('wheel_stations')
-          .update({ address })
+          .update(managerUpdate)
           .eq('id', stationId)
 
         if (updateError) {
-          console.error('Error updating station address:', updateError)
-          return NextResponse.json({ error: 'Failed to update address' }, { status: 500 })
+          console.error('Error updating station:', updateError)
+          return NextResponse.json({ error: 'Failed to update station' }, { status: 500 })
         }
       }
 
-      return NextResponse.json({ success: true, message: 'הכתובת עודכנה בהצלחה' })
+      return NextResponse.json({ success: true, message: 'הפרטים עודכנו בהצלחה' })
     }
 
     // Super admin authentication
@@ -197,12 +205,15 @@ export async function PUT(request: NextRequest, { params }: RouteParams) {
     }
 
     // Build update object
-    const updateData: { name?: string; address?: string; city_id?: string; is_active?: boolean; manager_password?: string } = {}
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    const updateData: { name?: string; address?: string; city_id?: string; is_active?: boolean; manager_password?: string; deposit_amount?: number; payment_methods?: any } = {}
     if (name !== undefined) updateData.name = name
     if (address !== undefined) updateData.address = address
     if (city_id !== undefined) updateData.city_id = city_id
     if (is_active !== undefined) updateData.is_active = is_active
     if (manager_password !== undefined) updateData.manager_password = manager_password
+    if (deposit_amount !== undefined) updateData.deposit_amount = deposit_amount
+    if (payment_methods !== undefined) updateData.payment_methods = payment_methods
 
     // Update station
     const { error: updateError } = await supabase

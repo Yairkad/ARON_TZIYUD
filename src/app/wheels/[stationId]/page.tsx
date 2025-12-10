@@ -65,6 +65,15 @@ interface Manager {
   is_primary: boolean
 }
 
+interface PaymentMethods {
+  cash?: boolean
+  bit?: { enabled: boolean; phone: string }
+  paybox?: { enabled: boolean; phone: string }
+  bank_transfer?: { enabled: boolean; details: string }
+  id_deposit?: boolean
+  license_deposit?: boolean
+}
+
 interface Station {
   id: string
   name: string
@@ -73,15 +82,8 @@ interface Station {
   wheel_station_managers: Manager[]
   totalWheels: number
   availableWheels: number
-}
-
-interface BorrowForm {
-  borrower_name: string
-  borrower_phone: string
-  expected_return_date: string
-  deposit_type: string
-  deposit_details: string
-  notes: string
+  deposit_amount?: number
+  payment_methods?: PaymentMethods
 }
 
 interface WheelForm {
@@ -134,22 +136,12 @@ export default function StationPage({ params }: { params: Promise<{ stationId: s
   } | null>(null)
 
   // Modals
-  const [showBorrowModal, setShowBorrowModal] = useState(false)
   const [showAddWheelModal, setShowAddWheelModal] = useState(false)
   const [showEditWheelModal, setShowEditWheelModal] = useState(false)
   const [selectedWheel, setSelectedWheel] = useState<Wheel | null>(null)
   const [actionLoading, setActionLoading] = useState(false)
 
   // Forms
-  const [borrowForm, setBorrowForm] = useState<BorrowForm>({
-    borrower_name: '',
-    borrower_phone: '',
-    expected_return_date: '',
-    deposit_type: '',
-    deposit_details: '',
-    notes: ''
-  })
-
   const [wheelForm, setWheelForm] = useState<WheelForm>({
     wheel_number: '',
     rim_size: '',
@@ -164,8 +156,8 @@ export default function StationPage({ params }: { params: Promise<{ stationId: s
   const [wheelFormErrors, setWheelFormErrors] = useState<string[]>([])
   const [showCustomCategory, setShowCustomCategory] = useState(false)
 
-  // Mobile tracking cards collapsed state (collapsed by default)
-  const [mobileCardsCollapsed, setMobileCardsCollapsed] = useState(true)
+  // Mobile tracking cards - track which cards are expanded (collapsed by default)
+  const [expandedCards, setExpandedCards] = useState<Set<string>>(new Set())
 
   // Predefined categories
   const predefinedCategories = ['מכוניות גרמניות', 'מכוניות צרפתיות', 'מכוניות יפניות וקוראניות']
@@ -177,6 +169,21 @@ export default function StationPage({ params }: { params: Promise<{ stationId: s
   const [categoryFilter, setCategoryFilter] = useState('')
   const [typeFilter, setTypeFilter] = useState('')
   const [availabilityFilter, setAvailabilityFilter] = useState('')
+  const [tireSizeWidth, setTireSizeWidth] = useState('')
+  const [tireSizeRatio, setTireSizeRatio] = useState('')
+
+  const clearAllFilters = () => {
+    setRimSizeFilter('')
+    setBoltCountFilter('')
+    setBoltSpacingFilter('')
+    setCategoryFilter('')
+    setTypeFilter('')
+    setAvailabilityFilter('')
+    setTireSizeWidth('')
+    setTireSizeRatio('')
+  }
+
+  const hasActiveFilters = rimSizeFilter || boltCountFilter || boltSpacingFilter || categoryFilter || typeFilter || availabilityFilter || tireSizeWidth || tireSizeRatio
 
   useEffect(() => {
     fetchStation()
@@ -222,6 +229,12 @@ export default function StationPage({ params }: { params: Promise<{ stationId: s
   // Edit station details
   const [showEditDetailsModal, setShowEditDetailsModal] = useState(false)
   const [editAddress, setEditAddress] = useState('')
+  const [editDepositAmount, setEditDepositAmount] = useState('')
+  const [editPaymentMethods, setEditPaymentMethods] = useState<PaymentMethods>({
+    cash: true,
+    id_deposit: true,
+    license_deposit: true
+  })
 
   // Excel import/export
   const fileInputRef = useRef<HTMLInputElement>(null)
@@ -402,46 +415,6 @@ ${signFormUrl}
       setPasswordForm({ current: '', new: '', confirm: '' })
     } catch {
       toast.error('שגיאה בשינוי סיסמא')
-    } finally {
-      setActionLoading(false)
-    }
-  }
-
-  // Borrow wheel
-  const handleBorrow = async () => {
-    if (!selectedWheel || !borrowForm.borrower_name || !borrowForm.borrower_phone) {
-      toast.error('נא למלא שם וטלפון של השואל')
-      return
-    }
-    setActionLoading(true)
-    try {
-      const response = await fetch(`/api/wheel-stations/${stationId}/wheels/${selectedWheel.id}/borrow`, {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({
-          ...borrowForm,
-          manager_phone: currentManager?.phone,
-          manager_password: sessionPassword
-        })
-      })
-      if (!response.ok) {
-        const data = await response.json()
-        throw new Error(data.error || 'Failed to borrow')
-      }
-      await fetchStation()
-      setShowBorrowModal(false)
-      setSelectedWheel(null)
-      setBorrowForm({
-        borrower_name: '',
-        borrower_phone: '',
-        expected_return_date: '',
-        deposit_type: '',
-        deposit_details: '',
-        notes: ''
-      })
-      toast.success('הגלגל הושאל בהצלחה!')
-    } catch (err: unknown) {
-      toast.error(err instanceof Error ? err.message : 'שגיאה בהשאלה')
     } finally {
       setActionLoading(false)
     }
@@ -658,49 +631,82 @@ ${signFormUrl}
   }
 
   // Excel export handler
-  const handleExportExcel = () => {
-    if (!station || !station.wheels.length) {
-      toast.error('אין גלגלים לייצוא')
-      return
+  const handleExportExcel = (exportType: 'inventory' | 'history' | 'all') => {
+    const wb = XLSX.utils.book_new()
+    const date = new Date().toISOString().split('T')[0]
+
+    if (exportType === 'inventory' || exportType === 'all') {
+      if (!station || !station.wheels.length) {
+        if (exportType === 'inventory') {
+          toast.error('אין גלגלים לייצוא')
+          return
+        }
+      } else {
+        // Prepare inventory data with Hebrew headers
+        const inventoryData = station.wheels.map(wheel => ({
+          'מספר גלגל': wheel.wheel_number,
+          'גודל ג\'אנט': wheel.rim_size,
+          'כמות ברגים': wheel.bolt_count,
+          'מרווח ברגים': wheel.bolt_spacing,
+          'קטגוריה': wheel.category || '',
+          'דונאט': wheel.is_donut ? 'כן' : 'לא',
+          'הערות': wheel.notes || '',
+          'זמין': wheel.is_available ? 'כן' : 'לא',
+          'שם שואל': wheel.current_borrow?.borrower_name || '',
+          'טלפון שואל': wheel.current_borrow?.borrower_phone || '',
+        }))
+
+        const wsInventory = XLSX.utils.json_to_sheet(inventoryData)
+        wsInventory['!cols'] = [
+          { wch: 12 }, { wch: 12 }, { wch: 12 }, { wch: 14 }, { wch: 25 },
+          { wch: 8 }, { wch: 25 }, { wch: 8 }, { wch: 20 }, { wch: 15 },
+        ]
+        XLSX.utils.book_append_sheet(wb, wsInventory, 'מלאי גלגלים')
+      }
     }
 
-    // Prepare data with Hebrew headers
-    const exportData = station.wheels.map(wheel => ({
-      'מספר גלגל': wheel.wheel_number,
-      'גודל ג\'אנט': wheel.rim_size,
-      'כמות ברגים': wheel.bolt_count,
-      'מרווח ברגים': wheel.bolt_spacing,
-      'קטגוריה': wheel.category || '',
-      'דונאט': wheel.is_donut ? 'כן' : 'לא',
-      'הערות': wheel.notes || '',
-      'זמין': wheel.is_available ? 'כן' : 'לא',
-      'שם שואל': wheel.current_borrow?.borrower_name || '',
-      'טלפון שואל': wheel.current_borrow?.borrower_phone || '',
-    }))
+    if (exportType === 'history' || exportType === 'all') {
+      if (!borrows.length) {
+        if (exportType === 'history') {
+          toast.error('אין היסטוריה לייצוא')
+          return
+        }
+      } else {
+        // Prepare history data
+        const historyData = borrows.map(borrow => ({
+          'שם פונה': borrow.borrower_name,
+          'טלפון': borrow.borrower_phone,
+          'ת.ז.': borrow.borrower_id_number || '',
+          'כתובת': borrow.borrower_address || '',
+          'דגם רכב': borrow.vehicle_model || '',
+          'מספר גלגל': borrow.wheels?.wheel_number || '',
+          'תאריך השאלה': borrow.borrow_date ? new Date(borrow.borrow_date).toLocaleDateString('he-IL') : '',
+          'תאריך החזרה': borrow.actual_return_date ? new Date(borrow.actual_return_date).toLocaleDateString('he-IL') : '',
+          'סוג פיקדון': borrow.deposit_type === 'cash' ? '₪500 מזומן' :
+                        borrow.deposit_type === 'bit' ? '₪500 ביט' :
+                        borrow.deposit_type === 'id' ? 'ת.ז.' :
+                        borrow.deposit_type === 'license' ? 'רישיון' : '',
+          'סטטוס': borrow.status === 'pending' ? 'ממתין' :
+                   borrow.status === 'borrowed' ? 'מושאל' :
+                   borrow.status === 'returned' ? 'הוחזר' :
+                   borrow.status === 'rejected' ? 'נדחה' : borrow.status,
+          'חתום': borrow.is_signed ? 'כן' : 'לא',
+          'הערות': borrow.notes || '',
+        }))
 
-    // Create workbook
-    const wb = XLSX.utils.book_new()
-    const ws = XLSX.utils.json_to_sheet(exportData)
+        const wsHistory = XLSX.utils.json_to_sheet(historyData)
+        wsHistory['!cols'] = [
+          { wch: 20 }, { wch: 15 }, { wch: 12 }, { wch: 25 }, { wch: 20 },
+          { wch: 12 }, { wch: 14 }, { wch: 14 }, { wch: 15 }, { wch: 10 },
+          { wch: 8 }, { wch: 25 },
+        ]
+        XLSX.utils.book_append_sheet(wb, wsHistory, 'היסטוריית השאלות')
+      }
+    }
 
-    // Set column widths
-    ws['!cols'] = [
-      { wch: 12 }, // מספר גלגל
-      { wch: 12 }, // גודל ג'אנט
-      { wch: 12 }, // כמות ברגים
-      { wch: 14 }, // מרווח ברגים
-      { wch: 25 }, // קטגוריה
-      { wch: 8 },  // דונאט
-      { wch: 25 }, // הערות
-      { wch: 8 },  // זמין
-      { wch: 20 }, // שם שואל
-      { wch: 15 }, // טלפון שואל
-    ]
-
-    XLSX.utils.book_append_sheet(wb, ws, 'גלגלים')
-
-    // Generate filename with station name and date
-    const date = new Date().toISOString().split('T')[0]
-    const filename = `wheels_${station.name.replace(/\s/g, '_')}_${date}.xlsx`
+    // Generate filename
+    const typeLabel = exportType === 'inventory' ? 'inventory' : exportType === 'history' ? 'history' : 'full'
+    const filename = `wheels_${station?.name.replace(/\s/g, '_') || 'station'}_${typeLabel}_${date}.xlsx`
 
     XLSX.writeFile(wb, filename)
     toast.success('הקובץ הורד בהצלחה!')
@@ -752,6 +758,12 @@ ${signFormUrl}
     if (typeFilter === 'full' && wheel.is_donut) return false
     if (availabilityFilter === 'available' && !wheel.is_available) return false
     if (availabilityFilter === 'taken' && wheel.is_available) return false
+    // Tire size search - only for non-donut wheels
+    if ((tireSizeWidth || tireSizeRatio) && !wheel.is_donut) {
+      const searchText = `${wheel.wheel_number} ${wheel.notes || ''}`.toLowerCase()
+      if (tireSizeWidth && !searchText.includes(tireSizeWidth)) return false
+      if (tireSizeRatio && !searchText.includes(tireSizeRatio)) return false
+    }
     return true
   }) || []
 
@@ -925,7 +937,7 @@ ${signFormUrl}
               >
                 📊 <span className="btn-text">Excel</span>
               </button>
-              <button style={styles.editContactsBtn} className="station-manager-btn" onClick={() => { setEditAddress(station.address || ''); setShowEditDetailsModal(true) }}>⚙️ <span className="btn-text">ערוך פרטים</span></button>
+              <button style={styles.editContactsBtn} className="station-manager-btn" onClick={() => { setEditAddress(station.address || ''); setEditDepositAmount(String(station.deposit_amount || 200)); setEditPaymentMethods(station.payment_methods || { cash: true, id_deposit: true, license_deposit: true }); setShowEditDetailsModal(true) }}>⚙️ <span className="btn-text">ערוך פרטים</span></button>
               <button style={styles.logoutBtn} className="station-manager-btn" onClick={handleLogout}>🚪 <span className="btn-text">יציאה</span></button>
             </div>
           ) : (
@@ -1144,27 +1156,6 @@ ${signFormUrl}
 
               {/* Mobile Cards */}
               <div className="mobile-cards" style={{display: 'none', flexDirection: 'column', gap: '12px'}}>
-                {/* Collapse/Expand button */}
-                {borrows.length > 0 && (
-                  <button
-                    onClick={() => setMobileCardsCollapsed(!mobileCardsCollapsed)}
-                    style={{
-                      background: 'rgba(255,255,255,0.1)',
-                      border: '1px solid #4b5563',
-                      borderRadius: '8px',
-                      padding: '10px 16px',
-                      color: '#9ca3af',
-                      cursor: 'pointer',
-                      display: 'flex',
-                      alignItems: 'center',
-                      justifyContent: 'center',
-                      gap: '8px',
-                      fontSize: '14px',
-                    }}
-                  >
-                    {mobileCardsCollapsed ? '📖 הצג פרטים מלאים' : '📕 צמצם תצוגה'}
-                  </button>
-                )}
                 {borrows.length === 0 ? (
                   <div style={styles.emptyState}>
                     <div style={styles.emptyIcon}>📋</div>
@@ -1174,15 +1165,33 @@ ${signFormUrl}
                 ) : borrows.map(borrow => {
                   const isOverdue = borrow.status === 'borrowed' && !borrow.is_signed &&
                     borrow.created_at && (Date.now() - new Date(borrow.created_at).getTime() > 24 * 60 * 60 * 1000)
+                  const isExpanded = expandedCards.has(borrow.id)
+                  const toggleCard = () => {
+                    setExpandedCards(prev => {
+                      const next = new Set(prev)
+                      if (next.has(borrow.id)) {
+                        next.delete(borrow.id)
+                      } else {
+                        next.add(borrow.id)
+                      }
+                      return next
+                    })
+                  }
                   return (
                     <div key={borrow.id} style={styles.mobileCard}>
-                      <div style={styles.mobileCardHeader}>
-                        <div>
-                          <div style={styles.borrowerNameCell}>{borrow.borrower_name}</div>
-                          {!mobileCardsCollapsed && <div style={styles.borrowerInfoCell}>{borrow.borrower_phone}</div>}
+                      <div
+                        style={{...styles.mobileCardHeader, cursor: 'pointer'}}
+                        onClick={toggleCard}
+                      >
+                        <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
+                          <span style={{ fontSize: '12px', color: '#6b7280' }}>{isExpanded ? '▼' : '◀'}</span>
+                          <div>
+                            <div style={styles.borrowerNameCell}>{borrow.borrower_name}</div>
+                            {isExpanded && <div style={styles.borrowerInfoCell}>{borrow.borrower_phone}</div>}
+                          </div>
                         </div>
                         <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
-                          {mobileCardsCollapsed && <span style={{color: '#9ca3af', fontSize: '12px'}}>{borrow.wheels?.wheel_number || '-'}</span>}
+                          {!isExpanded && <span style={{color: '#9ca3af', fontSize: '12px'}}>{borrow.wheels?.wheel_number || '-'}</span>}
                           {borrow.status === 'pending' ? (
                             <span style={styles.statusPending}>🔔 ממתין</span>
                           ) : borrow.status === 'returned' ? (
@@ -1198,7 +1207,7 @@ ${signFormUrl}
                           )}
                         </div>
                       </div>
-                      {!mobileCardsCollapsed && (
+                      {isExpanded && (
                         <>
                           <div style={styles.mobileCardBody}>
                             <div style={styles.mobileCardRow}>
@@ -1234,14 +1243,14 @@ ${signFormUrl}
                               <>
                                 <button
                                   style={{...styles.approveBtn, flex: 1}}
-                                  onClick={() => handleBorrowAction(borrow.id, 'approve')}
+                                  onClick={(e) => { e.stopPropagation(); handleBorrowAction(borrow.id, 'approve') }}
                                   disabled={approvalLoading === borrow.id}
                                 >
                                   {approvalLoading === borrow.id ? '...' : '✅ אשר'}
                                 </button>
                                 <button
                                   style={styles.rejectBtn}
-                                  onClick={() => handleBorrowAction(borrow.id, 'reject')}
+                                  onClick={(e) => { e.stopPropagation(); handleBorrowAction(borrow.id, 'reject') }}
                                   disabled={approvalLoading === borrow.id}
                                 >
                                   ❌
@@ -1254,6 +1263,7 @@ ${signFormUrl}
                                 target="_blank"
                                 rel="noopener noreferrer"
                                 style={{...styles.whatsappBtn, flex: 1, textAlign: 'center'}}
+                                onClick={(e) => e.stopPropagation()}
                               >
                                 📱 שלח טופס
                               </a>
@@ -1261,7 +1271,8 @@ ${signFormUrl}
                             {borrow.status === 'borrowed' && (
                               <button
                                 style={{...styles.returnBtnSmall, flex: 1}}
-                                onClick={() => {
+                                onClick={(e) => {
+                                  e.stopPropagation()
                                   const wheel = station?.wheels.find(w => w.id === borrow.wheel_id)
                                   if (wheel) handleReturn(wheel)
                                 }}
@@ -1281,8 +1292,8 @@ ${signFormUrl}
 
           {/* WhatsApp Link for new borrowers */}
           <div style={styles.whatsappLinkBox}>
-            <h4 style={styles.whatsappLinkTitle}>🔗 קישור לטופס חתימה</h4>
-            <p style={styles.whatsappLinkDesc}>שלח את הקישור הזה לפונים שצריכים לחתום על טופס:</p>
+            <h4 style={styles.whatsappLinkTitle}>🔗 קישור לטופס השאלת גלגל</h4>
+            <p style={styles.whatsappLinkDesc}>שלח את הקישור הזה לפונים שצריכים למלא טופס השאלה:</p>
             <div style={styles.whatsappLinkInput}>
               <input
                 type="text"
@@ -1301,6 +1312,31 @@ ${signFormUrl}
                 📋 העתק
               </button>
             </div>
+            <button
+              style={{
+                marginTop: '12px',
+                padding: '10px 16px',
+                background: '#25d366',
+                color: '#fff',
+                border: 'none',
+                borderRadius: '8px',
+                cursor: 'pointer',
+                fontWeight: '500',
+                fontSize: '14px',
+                display: 'flex',
+                alignItems: 'center',
+                gap: '8px',
+                width: '100%',
+                justifyContent: 'center',
+              }}
+              onClick={() => {
+                const signFormUrl = `${window.location.origin}/wheels/sign/${stationId}`
+                const message = `שלום, להשאלת גלגל נא למלא את הטופס הבא:\n${signFormUrl}`
+                window.open(`https://wa.me/?text=${encodeURIComponent(message)}`, '_blank')
+              }}
+            >
+              <span style={{fontSize: '18px'}}>📲</span> שלח ב-WhatsApp
+            </button>
           </div>
         </div>
       )}
@@ -1312,12 +1348,30 @@ ${signFormUrl}
       <div style={styles.filters}>
         <div style={styles.filtersHeader}>
           <h3 style={styles.filtersTitle}>🔍 סינון</h3>
-          <button
-            style={{...styles.filtersToggle, ...(showAdvancedFilters ? styles.filtersToggleActive : {})}}
-            onClick={() => setShowAdvancedFilters(!showAdvancedFilters)}
-          >
-            {showAdvancedFilters ? '- פחות אפשרויות' : '+ עוד אפשרויות'}
-          </button>
+          <div style={{display: 'flex', gap: '8px'}}>
+            {hasActiveFilters && (
+              <button
+                style={{
+                  background: '#ef4444',
+                  color: '#fff',
+                  border: 'none',
+                  borderRadius: '6px',
+                  padding: '6px 12px',
+                  fontSize: '0.85rem',
+                  cursor: 'pointer',
+                }}
+                onClick={clearAllFilters}
+              >
+                🗑️ נקה הכל
+              </button>
+            )}
+            <button
+              style={{...styles.filtersToggle, ...(showAdvancedFilters ? styles.filtersToggleActive : {})}}
+              onClick={() => setShowAdvancedFilters(!showAdvancedFilters)}
+            >
+              {showAdvancedFilters ? '- פחות אפשרויות' : '+ עוד אפשרויות'}
+            </button>
+          </div>
         </div>
         <div style={styles.filterRow} className="station-filter-row">
           <div style={styles.filterGroup} className="station-filter-group">
@@ -1361,45 +1415,74 @@ ${signFormUrl}
           </div>
         </div>
         {showAdvancedFilters && (
-          <div style={styles.filterRow} className="station-filter-row">
-            <div style={styles.filterGroup} className="station-filter-group">
-              <label style={styles.filterLabel}>קטגוריה</label>
-              <select
-                style={styles.filterSelect}
-                value={categoryFilter}
-                onChange={e => setCategoryFilter(e.target.value)}
-              >
-                <option value="">הכל</option>
-                {categories.map(cat => (
-                  <option key={cat} value={cat || ''}>{cat}</option>
-                ))}
-              </select>
+          <>
+            <div style={styles.filterRow} className="station-filter-row">
+              <div style={styles.filterGroup} className="station-filter-group">
+                <label style={styles.filterLabel}>קטגוריה</label>
+                <select
+                  style={styles.filterSelect}
+                  value={categoryFilter}
+                  onChange={e => setCategoryFilter(e.target.value)}
+                >
+                  <option value="">הכל</option>
+                  {categories.map(cat => (
+                    <option key={cat} value={cat || ''}>{cat}</option>
+                  ))}
+                </select>
+              </div>
+              <div style={styles.filterGroup} className="station-filter-group">
+                <label style={styles.filterLabel}>סוג</label>
+                <select
+                  style={styles.filterSelect}
+                  value={typeFilter}
+                  onChange={e => setTypeFilter(e.target.value)}
+                >
+                  <option value="">הכל</option>
+                  <option value="full">מלא</option>
+                  <option value="donut">דונאט</option>
+                </select>
+              </div>
+              <div style={styles.filterGroup} className="station-filter-group">
+                <label style={styles.filterLabel}>זמינות</label>
+                <select
+                  style={styles.filterSelect}
+                  value={availabilityFilter}
+                  onChange={e => setAvailabilityFilter(e.target.value)}
+                >
+                  <option value="">הכל</option>
+                  <option value="available">זמין בלבד</option>
+                  <option value="taken">מושאל</option>
+                </select>
+              </div>
             </div>
-            <div style={styles.filterGroup} className="station-filter-group">
-              <label style={styles.filterLabel}>סוג</label>
-              <select
-                style={styles.filterSelect}
-                value={typeFilter}
-                onChange={e => setTypeFilter(e.target.value)}
-              >
-                <option value="">הכל</option>
-                <option value="full">מלא</option>
-                <option value="donut">דונאט</option>
-              </select>
+            {/* Tire Size Filter */}
+            <div style={{marginTop: '12px', padding: '12px', background: 'rgba(59, 130, 246, 0.1)', borderRadius: '8px', border: '1px dashed #3b82f6'}}>
+              <label style={{...styles.filterLabel, marginBottom: '8px', display: 'block', color: '#3b82f6'}}>
+                🛞 חיפוש לפי מידת צמיג (מחפש במספר גלגל והערות)
+              </label>
+              <div style={{display: 'flex', gap: '8px', alignItems: 'center', flexWrap: 'wrap'}}>
+                <input
+                  type="text"
+                  placeholder="רוחב (205)"
+                  value={tireSizeWidth}
+                  onChange={e => setTireSizeWidth(e.target.value.replace(/\D/g, ''))}
+                  style={{...styles.filterSelect, width: '80px', textAlign: 'center'}}
+                />
+                <span style={{color: '#9ca3af'}}>/</span>
+                <input
+                  type="text"
+                  placeholder="אחוז (55)"
+                  value={tireSizeRatio}
+                  onChange={e => setTireSizeRatio(e.target.value.replace(/\D/g, ''))}
+                  style={{...styles.filterSelect, width: '80px', textAlign: 'center'}}
+                />
+                <span style={{color: '#6b7280', fontSize: '0.85rem'}}>למשל: 205/55</span>
+              </div>
+              <p style={{fontSize: '0.75rem', color: '#9ca3af', marginTop: '6px'}}>
+                מחפש גלגלים שמספר הגלגל או ההערות שלהם מכילים את המידה
+              </p>
             </div>
-            <div style={styles.filterGroup} className="station-filter-group">
-              <label style={styles.filterLabel}>זמינות</label>
-              <select
-                style={styles.filterSelect}
-                value={availabilityFilter}
-                onChange={e => setAvailabilityFilter(e.target.value)}
-              >
-                <option value="">הכל</option>
-                <option value="available">זמין בלבד</option>
-                <option value="taken">מושאל</option>
-              </select>
-            </div>
-          </div>
+          </>
         )}
       </div>
 
@@ -1480,17 +1563,10 @@ ${signFormUrl}
                   </div>
                 )}
 
-                {/* Manager action buttons */}
+                {/* Manager action buttons - only show return for borrowed wheels */}
                 {isManager && (
                   <div style={styles.cardActions} className="station-card-actions">
-                    {wheel.is_available ? (
-                      <button
-                        style={styles.borrowBtn}
-                        onClick={() => { setSelectedWheel(wheel); setShowBorrowModal(true) }}
-                      >
-                        📤 השאל
-                      </button>
-                    ) : (
+                    {!wheel.is_available && (
                       <button
                         style={styles.returnBtn}
                         onClick={() => handleReturn(wheel)}
@@ -1570,34 +1646,102 @@ ${signFormUrl}
       </>
       )}
 
-      {/* Contact Cards - only show in wheels tab */}
-      {activeTab === 'wheels' && station.wheel_station_managers.length > 0 && (
-        <div style={styles.contacts}>
-          <h3 style={styles.contactsTitle}>👥 אנשי קשר</h3>
-          <div style={styles.contactsGrid}>
-            {station.wheel_station_managers.map(manager => {
-              const cleanPhone = manager.phone.replace(/\D/g, '')
-              const internationalPhone = cleanPhone.startsWith('0') ? '972' + cleanPhone.slice(1) : cleanPhone
-              return (
-                <div key={manager.id} style={styles.contactCard}>
-                  <div style={styles.contactName}>{manager.full_name}</div>
-                  <div style={styles.contactButtons} className="station-contact-buttons">
-                    <a href={`tel:${cleanPhone}`} style={styles.contactBtnCall} className="station-contact-btn">
-                      📞 התקשר
-                    </a>
-                    <a
-                      href={`https://wa.me/${internationalPhone}`}
-                      target="_blank"
-                      rel="noopener noreferrer"
-                      style={styles.contactBtnWhatsapp}
-                      className="station-contact-btn"
-                    >
-                      💬 וואטסאפ
-                    </a>
+      {/* Floating Contact Button */}
+      {station.wheel_station_managers.length > 0 && (
+        <button
+          onClick={() => setShowContactsModal(true)}
+          style={{
+            position: 'fixed',
+            bottom: '80px',
+            left: '20px',
+            width: '56px',
+            height: '56px',
+            borderRadius: '50%',
+            background: 'linear-gradient(135deg, #10b981, #059669)',
+            color: '#fff',
+            border: 'none',
+            boxShadow: '0 4px 12px rgba(16, 185, 129, 0.4)',
+            cursor: 'pointer',
+            display: 'flex',
+            alignItems: 'center',
+            justifyContent: 'center',
+            fontSize: '24px',
+            zIndex: 100,
+          }}
+          title="צור קשר עם מנהל"
+        >
+          📞
+        </button>
+      )}
+
+      {/* Contacts Modal */}
+      {showContactsModal && (
+        <div style={styles.modalOverlay} onClick={() => setShowContactsModal(false)}>
+          <div style={{...styles.modal, maxWidth: '350px'}} onClick={e => e.stopPropagation()}>
+            <h3 style={styles.modalTitle}>📞 צור קשר עם מנהל</h3>
+            <div style={{display: 'flex', flexDirection: 'column', gap: '12px', marginTop: '16px'}}>
+              {station.wheel_station_managers.map(manager => {
+                const cleanPhone = manager.phone.replace(/\D/g, '')
+                const internationalPhone = cleanPhone.startsWith('0') ? '972' + cleanPhone.slice(1) : cleanPhone
+                return (
+                  <div
+                    key={manager.id}
+                    style={{
+                      display: 'flex',
+                      alignItems: 'center',
+                      justifyContent: 'space-between',
+                      padding: '12px',
+                      background: 'rgba(255,255,255,0.05)',
+                      borderRadius: '8px',
+                      border: '1px solid #4b5563',
+                    }}
+                  >
+                    <span style={{fontWeight: '500', color: '#fff'}}>{manager.full_name}</span>
+                    <div style={{display: 'flex', gap: '8px'}}>
+                      <a
+                        href={`tel:${cleanPhone}`}
+                        style={{
+                          width: '36px',
+                          height: '36px',
+                          borderRadius: '50%',
+                          background: '#3b82f6',
+                          display: 'flex',
+                          alignItems: 'center',
+                          justifyContent: 'center',
+                          textDecoration: 'none',
+                          fontSize: '16px',
+                        }}
+                        title="התקשר"
+                      >
+                        📞
+                      </a>
+                      <a
+                        href={`https://wa.me/${internationalPhone}`}
+                        target="_blank"
+                        rel="noopener noreferrer"
+                        style={{
+                          width: '36px',
+                          height: '36px',
+                          borderRadius: '50%',
+                          background: '#22c55e',
+                          display: 'flex',
+                          alignItems: 'center',
+                          justifyContent: 'center',
+                          textDecoration: 'none',
+                          fontSize: '16px',
+                        }}
+                        title="וואטסאפ"
+                      >
+                        💬
+                      </a>
+                    </div>
                   </div>
-                </div>
-              )
-            })}
+                )
+              })}
+            </div>
+            <button style={{...styles.cancelBtn, width: '100%', marginTop: '16px'}} onClick={() => setShowContactsModal(false)}>
+              סגור
+            </button>
           </div>
         </div>
       )}
@@ -1654,81 +1798,6 @@ ${signFormUrl}
               <button style={styles.cancelBtn} onClick={() => setShowLoginModal(false)}>ביטול</button>
               <button style={styles.submitBtn} onClick={handleLogin} disabled={actionLoading}>
                 {actionLoading ? 'מתחבר...' : 'כניסה'}
-              </button>
-            </div>
-          </div>
-        </div>
-      )}
-
-      {/* Borrow Modal */}
-      {showBorrowModal && selectedWheel && (
-        <div style={styles.modalOverlay} onClick={() => setShowBorrowModal(false)}>
-          <div style={styles.modal} onClick={e => e.stopPropagation()}>
-            <h3 style={styles.modalTitle}>📤 השאלת גלגל #{selectedWheel.wheel_number}</h3>
-            <div style={styles.formGroup}>
-              <label style={styles.label}>שם השואל *</label>
-              <input
-                type="text"
-                value={borrowForm.borrower_name}
-                onChange={e => setBorrowForm({...borrowForm, borrower_name: e.target.value})}
-                style={styles.input}
-              />
-            </div>
-            <div style={styles.formGroup}>
-              <label style={styles.label}>טלפון *</label>
-              <input
-                type="tel"
-                value={borrowForm.borrower_phone}
-                onChange={e => setBorrowForm({...borrowForm, borrower_phone: e.target.value})}
-                style={styles.input}
-              />
-            </div>
-            <div style={styles.formGroup}>
-              <label style={styles.label}>תאריך החזרה צפוי</label>
-              <input
-                type="date"
-                value={borrowForm.expected_return_date}
-                onChange={e => setBorrowForm({...borrowForm, expected_return_date: e.target.value})}
-                style={styles.input}
-              />
-            </div>
-            <div style={styles.formGroup}>
-              <label style={styles.label}>סוג פיקדון</label>
-              <select
-                value={borrowForm.deposit_type}
-                onChange={e => setBorrowForm({...borrowForm, deposit_type: e.target.value})}
-                style={styles.input}
-              >
-                <option value="">ללא</option>
-                <option value="id">תעודת זהות</option>
-                <option value="cash">מזומן</option>
-                <option value="other">אחר</option>
-              </select>
-            </div>
-            {borrowForm.deposit_type && (
-              <div style={styles.formGroup}>
-                <label style={styles.label}>פרטי פיקדון</label>
-                <input
-                  type="text"
-                  placeholder={borrowForm.deposit_type === 'cash' ? 'סכום' : 'פרטים'}
-                  value={borrowForm.deposit_details}
-                  onChange={e => setBorrowForm({...borrowForm, deposit_details: e.target.value})}
-                  style={styles.input}
-                />
-              </div>
-            )}
-            <div style={styles.formGroup}>
-              <label style={styles.label}>הערות</label>
-              <textarea
-                value={borrowForm.notes}
-                onChange={e => setBorrowForm({...borrowForm, notes: e.target.value})}
-                style={{...styles.input, minHeight: '60px'}}
-              />
-            </div>
-            <div style={styles.modalButtons}>
-              <button style={styles.cancelBtn} onClick={() => setShowBorrowModal(false)}>ביטול</button>
-              <button style={styles.submitBtn} onClick={handleBorrow} disabled={actionLoading}>
-                {actionLoading ? 'שומר...' : 'השאל'}
               </button>
             </div>
           </div>
@@ -1958,6 +2027,169 @@ ${signFormUrl}
               </button>
             </div>
 
+            {/* Section: Deposit Settings */}
+            <div style={{marginBottom: '20px', padding: '15px', background: 'rgba(255,255,255,0.05)', borderRadius: '10px'}}>
+              <h4 style={{margin: '0 0 12px', color: '#f59e0b', fontSize: '1rem'}}>💰 הגדרות פיקדון ואמצעי תשלום</h4>
+
+              {/* Deposit Amount */}
+              <div style={{marginBottom: '16px'}}>
+                <label style={{fontSize: '0.85rem', color: '#9ca3af', marginBottom: '4px', display: 'block'}}>סכום פיקדון (₪)</label>
+                <input
+                  type="number"
+                  value={editDepositAmount}
+                  onChange={e => setEditDepositAmount(e.target.value)}
+                  style={{...styles.input, width: '120px'}}
+                  placeholder="200"
+                />
+              </div>
+
+              {/* Payment Methods */}
+              <div style={{fontSize: '0.85rem', color: '#9ca3af', marginBottom: '8px'}}>אמצעי תשלום זמינים:</div>
+              <div style={{display: 'flex', flexDirection: 'column', gap: '10px'}}>
+                {/* Cash */}
+                <label style={{display: 'flex', alignItems: 'center', gap: '8px', cursor: 'pointer'}}>
+                  <input
+                    type="checkbox"
+                    checked={editPaymentMethods.cash || false}
+                    onChange={e => setEditPaymentMethods({...editPaymentMethods, cash: e.target.checked})}
+                  />
+                  <span style={{color: '#fff'}}>💵 מזומן</span>
+                </label>
+
+                {/* Bit */}
+                <div style={{display: 'flex', flexDirection: 'column', gap: '6px'}}>
+                  <label style={{display: 'flex', alignItems: 'center', gap: '8px', cursor: 'pointer'}}>
+                    <input
+                      type="checkbox"
+                      checked={editPaymentMethods.bit?.enabled || false}
+                      onChange={e => setEditPaymentMethods({
+                        ...editPaymentMethods,
+                        bit: { enabled: e.target.checked, phone: editPaymentMethods.bit?.phone || '' }
+                      })}
+                    />
+                    <span style={{color: '#fff'}}>📱 ביט</span>
+                  </label>
+                  {editPaymentMethods.bit?.enabled && (
+                    <input
+                      type="tel"
+                      value={editPaymentMethods.bit?.phone || ''}
+                      onChange={e => setEditPaymentMethods({
+                        ...editPaymentMethods,
+                        bit: { enabled: true, phone: e.target.value }
+                      })}
+                      style={{...styles.input, marginRight: '26px', width: 'calc(100% - 26px)'}}
+                      placeholder="מספר טלפון לביט"
+                    />
+                  )}
+                </div>
+
+                {/* Paybox */}
+                <div style={{display: 'flex', flexDirection: 'column', gap: '6px'}}>
+                  <label style={{display: 'flex', alignItems: 'center', gap: '8px', cursor: 'pointer'}}>
+                    <input
+                      type="checkbox"
+                      checked={editPaymentMethods.paybox?.enabled || false}
+                      onChange={e => setEditPaymentMethods({
+                        ...editPaymentMethods,
+                        paybox: { enabled: e.target.checked, phone: editPaymentMethods.paybox?.phone || '' }
+                      })}
+                    />
+                    <span style={{color: '#fff'}}>📦 פייבוקס</span>
+                  </label>
+                  {editPaymentMethods.paybox?.enabled && (
+                    <input
+                      type="tel"
+                      value={editPaymentMethods.paybox?.phone || ''}
+                      onChange={e => setEditPaymentMethods({
+                        ...editPaymentMethods,
+                        paybox: { enabled: true, phone: e.target.value }
+                      })}
+                      style={{...styles.input, marginRight: '26px', width: 'calc(100% - 26px)'}}
+                      placeholder="מספר טלפון לפייבוקס"
+                    />
+                  )}
+                </div>
+
+                {/* Bank Transfer */}
+                <div style={{display: 'flex', flexDirection: 'column', gap: '6px'}}>
+                  <label style={{display: 'flex', alignItems: 'center', gap: '8px', cursor: 'pointer'}}>
+                    <input
+                      type="checkbox"
+                      checked={editPaymentMethods.bank_transfer?.enabled || false}
+                      onChange={e => setEditPaymentMethods({
+                        ...editPaymentMethods,
+                        bank_transfer: { enabled: e.target.checked, details: editPaymentMethods.bank_transfer?.details || '' }
+                      })}
+                    />
+                    <span style={{color: '#fff'}}>🏦 העברה בנקאית</span>
+                  </label>
+                  {editPaymentMethods.bank_transfer?.enabled && (
+                    <textarea
+                      value={editPaymentMethods.bank_transfer?.details || ''}
+                      onChange={e => setEditPaymentMethods({
+                        ...editPaymentMethods,
+                        bank_transfer: { enabled: true, details: e.target.value }
+                      })}
+                      style={{...styles.input, marginRight: '26px', width: 'calc(100% - 26px)', minHeight: '60px'}}
+                      placeholder="פרטי חשבון בנק..."
+                    />
+                  )}
+                </div>
+
+                {/* ID Deposit */}
+                <label style={{display: 'flex', alignItems: 'center', gap: '8px', cursor: 'pointer'}}>
+                  <input
+                    type="checkbox"
+                    checked={editPaymentMethods.id_deposit || false}
+                    onChange={e => setEditPaymentMethods({...editPaymentMethods, id_deposit: e.target.checked})}
+                  />
+                  <span style={{color: '#fff'}}>🪪 פיקדון ת.ז. (באישור מנהל)</span>
+                </label>
+
+                {/* License Deposit */}
+                <label style={{display: 'flex', alignItems: 'center', gap: '8px', cursor: 'pointer'}}>
+                  <input
+                    type="checkbox"
+                    checked={editPaymentMethods.license_deposit || false}
+                    onChange={e => setEditPaymentMethods({...editPaymentMethods, license_deposit: e.target.checked})}
+                  />
+                  <span style={{color: '#fff'}}>🚗 פיקדון רישיון נהיגה (באישור מנהל)</span>
+                </label>
+              </div>
+
+              <button
+                style={{...styles.smallBtn, background: '#10b981', marginTop: '16px'}}
+                onClick={async () => {
+                  setActionLoading(true)
+                  try {
+                    const response = await fetch(`/api/wheel-stations/${stationId}`, {
+                      method: 'PUT',
+                      headers: { 'Content-Type': 'application/json' },
+                      body: JSON.stringify({
+                        deposit_amount: editDepositAmount ? parseInt(editDepositAmount) : 200,
+                        payment_methods: editPaymentMethods,
+                        manager_phone: currentManager?.phone,
+                        current_password: sessionPassword
+                      })
+                    })
+                    if (!response.ok) {
+                      const data = await response.json()
+                      throw new Error(data.error || 'Failed to update')
+                    }
+                    await fetchStation()
+                    toast.success('הגדרות התשלום עודכנו!')
+                  } catch (err: unknown) {
+                    toast.error(err instanceof Error ? err.message : 'שגיאה בעדכון')
+                  } finally {
+                    setActionLoading(false)
+                  }
+                }}
+                disabled={actionLoading}
+              >
+                {actionLoading ? 'שומר...' : 'שמור הגדרות תשלום'}
+              </button>
+            </div>
+
             {/* Section: Contacts */}
             <div style={{marginBottom: '20px', padding: '15px', background: 'rgba(255,255,255,0.05)', borderRadius: '10px'}}>
               <h4 style={{margin: '0 0 12px', color: '#f59e0b', fontSize: '1rem'}}>👥 אנשי קשר ({contacts.length}/4)</h4>
@@ -2115,15 +2347,27 @@ ${signFormUrl}
                 </span>
               </button>
 
-              <button
-                style={styles.excelExportBtn}
-                onClick={handleExportExcel}
-              >
-                📥 ייצוא לקובץ Excel
-                <span style={{display: 'block', fontSize: '0.8rem', marginTop: '5px', opacity: 0.8}}>
-                  הורד את כל הגלגלים לקובץ
-                </span>
-              </button>
+              <div style={{display: 'flex', flexDirection: 'column', gap: '8px'}}>
+                <span style={{fontWeight: 'bold', color: '#fff', marginBottom: '4px'}}>📥 ייצוא לקובץ Excel:</span>
+                <button
+                  style={{...styles.excelExportBtn, padding: '10px 16px'}}
+                  onClick={() => handleExportExcel('inventory')}
+                >
+                  🛞 מלאי גלגלים בלבד
+                </button>
+                <button
+                  style={{...styles.excelExportBtn, padding: '10px 16px'}}
+                  onClick={() => handleExportExcel('history')}
+                >
+                  📋 היסטוריית השאלות בלבד
+                </button>
+                <button
+                  style={{...styles.excelExportBtn, padding: '10px 16px'}}
+                  onClick={() => handleExportExcel('all')}
+                >
+                  📦 הכל (מלאי + היסטוריה)
+                </button>
+              </div>
 
               <a
                 href="/wheels-template.html"

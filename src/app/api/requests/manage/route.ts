@@ -3,6 +3,7 @@ import { supabaseServer } from '@/lib/supabase-server'
 import { createRequestToken } from '@/lib/token'
 import { logActivity, ActivityActions } from '@/lib/activity-logger'
 import { requireApprovePermission } from '@/lib/auth-middleware'
+import { sendLowStockEmail } from '@/lib/email'
 
 /**
  * PATCH /api/requests/manage
@@ -32,7 +33,7 @@ export async function PATCH(request: NextRequest) {
     }
 
     // Valid actions
-    const validActions = ['approve', 'reject', 'cancel', 'regenerate']
+    const validActions = ['approve', 'reject', 'cancel', 'regenerate', 'undo_pickup']
     if (!validActions.includes(action)) {
       return NextResponse.json(
         { error: 'פעולה לא חוקית' },
@@ -136,11 +137,63 @@ export async function PATCH(request: NextRequest) {
           }
         }
 
-        // Just approve the request - keep the original token
+        // Update inventory and create borrow records immediately on approval
+        const currentTime = new Date().toISOString()
+
+        for (const item of existingRequest.items) {
+          const globalEquipment = item.equipment
+          const cityEquipment = cityEquipmentMap.get(item.global_equipment_id)
+
+          if (!cityEquipment) continue
+
+          // 1. Decrease equipment inventory
+          const newQuantity = cityEquipment.quantity - item.quantity
+
+          const { error: updateInvError } = await supabaseServer
+            .from('city_equipment')
+            .update({ quantity: newQuantity })
+            .eq('city_id', cityId)
+            .eq('global_equipment_id', item.global_equipment_id)
+
+          if (updateInvError) {
+            console.error('Error updating inventory:', updateInvError)
+            return NextResponse.json(
+              { error: 'שגיאה בעדכון מלאי' },
+              { status: 500 }
+            )
+          }
+
+          // 2. Create borrow_history record (only for non-consumable items)
+          if (!cityEquipment.is_consumable) {
+            const { error: historyError } = await supabaseServer
+              .from('borrow_history')
+              .insert({
+                name: existingRequest.requester_name,
+                phone: existingRequest.requester_phone,
+                equipment_id: item.global_equipment_id,
+                global_equipment_id: item.global_equipment_id,
+                equipment_name: globalEquipment?.name || '',
+                city_id: cityId,
+                status: 'borrowed',
+                borrow_date: currentTime,
+                equipment_status: 'working'
+              })
+
+            if (historyError) {
+              console.error('Error creating borrow history:', historyError)
+              return NextResponse.json(
+                { error: 'שגיאה ביצירת רשומת השאלה' },
+                { status: 500 }
+              )
+            }
+          }
+        }
+
+        // Set status to picked_up (borrowed) immediately
         updateData = {
-          status: 'approved',
+          status: 'picked_up',
           approved_by: managerName,
-          approved_at: new Date().toISOString()
+          approved_at: currentTime
         }
 
         activityAction = ActivityActions.REQUEST_APPROVED
@@ -150,6 +203,46 @@ export async function PATCH(request: NextRequest) {
           requester_phone: existingRequest.requester_phone,
           items_count: existingRequest.items.length
         }
+
+        // Check for low stock and send email notification (fire and forget)
+        try {
+          const LOW_STOCK_THRESHOLD = 2
+
+          const { data: cityData } = await supabaseServer
+            .from('cities')
+            .select('manager_email, manager1_name, name')
+            .eq('id', cityId)
+            .single()
+
+          const { data: lowStockItems } = await supabaseServer
+            .from('city_equipment')
+            .select(`
+              quantity,
+              global_equipment:global_equipment_pool(name)
+            `)
+            .eq('city_id', cityId)
+            .lte('quantity', LOW_STOCK_THRESHOLD)
+
+          if (lowStockItems && lowStockItems.length > 0 && cityData?.manager_email) {
+            const itemsForEmail = lowStockItems.map(item => ({
+              name: (item.global_equipment as any)?.name || 'ציוד',
+              quantity: item.quantity,
+              minQuantity: LOW_STOCK_THRESHOLD
+            }))
+
+            await sendLowStockEmail(
+              cityData.manager_email,
+              cityData.manager1_name || 'מנהל',
+              cityData.name || 'ארון ציוד',
+              itemsForEmail
+            ).catch(err => {
+              console.error('Failed to send low stock email:', err)
+            })
+          }
+        } catch (lowStockError) {
+          console.error('Error checking low stock:', lowStockError)
+        }
+
         break
 
       case 'reject':
@@ -214,6 +307,73 @@ export async function PATCH(request: NextRequest) {
           request_id: requestId,
           requester_name: existingRequest.requester_name,
           previous_status: existingRequest.status
+        }
+        break
+
+      case 'undo_pickup':
+        // Undo a pickup - restore inventory and delete borrow records
+        if (existingRequest.status !== 'picked_up') {
+          return NextResponse.json(
+            { error: 'ניתן לבטל איסוף רק לבקשות שנאספו' },
+            { status: 400 }
+          )
+        }
+
+        // Restore inventory for each item
+        for (const item of existingRequest.items) {
+          const globalEquipmentId = item.global_equipment_id
+
+          // Get current city equipment
+          const { data: cityEquipment } = await supabaseServer
+            .from('city_equipment')
+            .select('quantity, is_consumable')
+            .eq('city_id', cityId)
+            .eq('global_equipment_id', globalEquipmentId)
+            .single()
+
+          if (cityEquipment) {
+            // Restore quantity
+            const { error: restoreError } = await supabaseServer
+              .from('city_equipment')
+              .update({ quantity: cityEquipment.quantity + item.quantity })
+              .eq('city_id', cityId)
+              .eq('global_equipment_id', globalEquipmentId)
+
+            if (restoreError) {
+              console.error('Error restoring inventory:', restoreError)
+              return NextResponse.json(
+                { error: 'שגיאה בהחזרת מלאי' },
+                { status: 500 }
+              )
+            }
+
+            // Delete borrow_history record (for non-consumables)
+            if (!cityEquipment.is_consumable) {
+              const { error: deleteHistoryError } = await supabaseServer
+                .from('borrow_history')
+                .delete()
+                .eq('city_id', cityId)
+                .eq('global_equipment_id', globalEquipmentId)
+                .eq('phone', existingRequest.requester_phone)
+                .eq('status', 'borrowed')
+
+              if (deleteHistoryError) {
+                console.error('Error deleting borrow history:', deleteHistoryError)
+                // Continue anyway - inventory was restored
+              }
+            }
+          }
+        }
+
+        // Update request status to cancelled
+        updateData = { status: 'cancelled' }
+
+        activityAction = ActivityActions.REQUEST_CANCELLED
+        activityDetails = {
+          request_id: requestId,
+          requester_name: existingRequest.requester_name,
+          previous_status: 'picked_up',
+          reason: 'לא נאסף בפועל - המלאי הוחזר'
         }
         break
     }
