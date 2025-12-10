@@ -1646,8 +1646,8 @@ ${signFormUrl}
       </>
       )}
 
-      {/* Floating Contact Button */}
-      {station.wheel_station_managers.length > 0 && (
+      {/* Floating Contact Button - only show when not logged in as manager */}
+      {!currentManager && station.wheel_station_managers.length > 0 && (
         <button
           onClick={() => setShowContactsModal(true)}
           style={{
