@@ -1753,10 +1753,10 @@ ${signFormUrl}
             <h3 style={styles.modalTitle}>🔐 כניסת מנהל</h3>
             <p style={styles.modalSubtitle}>הזן את פרטי ההתחברות שלך</p>
             <div style={styles.formGroup}>
-              <label style={styles.label}>מספר טלפון</label>
+              <label style={styles.label}>שם משתמש</label>
               <input
-                type="tel"
-                placeholder="050-1234567"
+                type="text"
+                placeholder="הזן שם משתמש"
                 value={loginPhone}
                 onChange={e => setLoginPhone(e.target.value)}
                 style={styles.input}

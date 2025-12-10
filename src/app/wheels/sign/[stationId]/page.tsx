@@ -201,13 +201,13 @@ export default function SignFormPage({ params }: { params: Promise<{ stationId: 
     setFieldErrors(errors)
 
     if (errors.length > 0) {
-      toast.error('נא למלא את כל השדות המסומנים')
+      toast.error('נא למלא את כל השדות המסומנים', { id: 'validation-error' })
       return
     }
 
     const signatureData = getSignatureData()
     if (!signatureData) {
-      toast.error('נא לחתום על הטופס')
+      toast.error('נא לחתום על הטופס', { id: 'signature-error' })
       return
     }
 
@@ -388,42 +388,33 @@ export default function SignFormPage({ params }: { params: Promise<{ stationId: 
 
         <div style={styles.formGroup}>
           <label style={styles.label}>בחר צמיג <span style={styles.required}>*</span></label>
-          <div style={{
-            display: 'grid',
-            gridTemplateColumns: 'repeat(auto-fill, minmax(140px, 1fr))',
-            gap: '10px',
-            ...(fieldErrors.includes('wheelId') ? { outline: '2px solid #ef4444', borderRadius: '8px', padding: '8px' } : {})
-          }}>
+          <select
+            value={selectedWheelId}
+            onChange={e => { setSelectedWheelId(e.target.value); setFieldErrors(f => f.filter(x => x !== 'wheelId')) }}
+            style={getInputStyle('wheelId')}
+          >
+            <option value="">-- בחר צמיג --</option>
             {wheels.map(wheel => (
-              <div
-                key={wheel.id}
-                onClick={() => { setSelectedWheelId(wheel.id); setFieldErrors(f => f.filter(x => x !== 'wheelId')) }}
-                style={{
-                  padding: '12px',
-                  borderRadius: '10px',
-                  border: selectedWheelId === wheel.id ? '2px solid #3b82f6' : '2px solid #e5e7eb',
-                  background: selectedWheelId === wheel.id ? '#eff6ff' : '#fff',
-                  cursor: 'pointer',
-                  transition: 'all 0.2s',
-                  textAlign: 'center',
-                }}
-              >
-                <div style={{ fontSize: '1.25rem', fontWeight: 'bold', color: '#1f2937', marginBottom: '4px' }}>
-                  #{wheel.wheel_number}
-                </div>
-                <div style={{ fontSize: '0.75rem', color: '#6b7280', lineHeight: '1.4' }}>
-                  <div>{wheel.rim_size}" • {wheel.bolt_count}×{wheel.bolt_spacing}</div>
-                  {wheel.is_donut && <div style={{ color: '#f59e0b' }}>🍩 דונאט</div>}
-                  {wheel.notes && <div style={{ marginTop: '4px', fontSize: '0.7rem', color: '#9ca3af' }}>{wheel.notes}</div>}
-                </div>
-              </div>
+              <option key={wheel.id} value={wheel.id}>
+                צמיג #{wheel.wheel_number} ┃ {wheel.bolt_count}×{wheel.bolt_spacing} ┃ "{wheel.rim_size}{wheel.is_donut ? ' ┃ דונאט 🍩' : ''}
+              </option>
             ))}
-          </div>
+          </select>
+          {/* Show selected wheel details as badges */}
+          {selectedWheelId && (() => {
+            const wheel = wheels.find(w => w.id === selectedWheelId)
+            if (!wheel) return null
+            return (
+              <div style={{ display: 'flex', flexWrap: 'wrap', gap: '6px', marginTop: '8px' }}>
+                <span style={styles.badge}>{wheel.bolt_count}×{wheel.bolt_spacing}</span>
+                <span style={styles.badge}>"{wheel.rim_size}</span>
+                {wheel.is_donut && <span style={{...styles.badge, background: '#fef3c7', color: '#92400e'}}>🍩 דונאט</span>}
+                {wheel.notes && <span style={{...styles.badge, background: '#f3f4f6', color: '#374151'}}>{wheel.notes}</span>}
+              </div>
+            )
+          })()}
           {wheels.length === 0 && (
             <p style={{ ...styles.helpText, color: '#ef4444' }}>אין צמיגים זמינים כרגע בתחנה זו</p>
-          )}
-          {wheels.length > 0 && (
-            <p style={styles.helpText}>לחץ על הצמיג הרצוי</p>
           )}
         </div>
 
@@ -982,5 +973,14 @@ const styles: { [key: string]: React.CSSProperties } = {
     fontSize: '0.85rem',
     color: '#374151',
     whiteSpace: 'pre-wrap',
+  },
+  badge: {
+    display: 'inline-block',
+    padding: '4px 10px',
+    background: '#dbeafe',
+    color: '#1e40af',
+    borderRadius: '20px',
+    fontSize: '0.8rem',
+    fontWeight: '500',
   },
 }
