@@ -682,8 +682,10 @@ ${signFormUrl}
           'מספר גלגל': borrow.wheels?.wheel_number || '',
           'תאריך השאלה': borrow.borrow_date ? new Date(borrow.borrow_date).toLocaleDateString('he-IL') : '',
           'תאריך החזרה': borrow.actual_return_date ? new Date(borrow.actual_return_date).toLocaleDateString('he-IL') : '',
-          'סוג פיקדון': borrow.deposit_type === 'cash' ? '₪500 מזומן' :
-                        borrow.deposit_type === 'bit' ? '₪500 ביט' :
+          'סוג פיקדון': borrow.deposit_type === 'cash' ? `₪${station.deposit_amount || 200} מזומן` :
+                        borrow.deposit_type === 'bit' ? `₪${station.deposit_amount || 200} ביט` :
+                        borrow.deposit_type === 'paybox' ? `₪${station.deposit_amount || 200} פייבוקס` :
+                        borrow.deposit_type === 'bank_transfer' ? `₪${station.deposit_amount || 200} העברה` :
                         borrow.deposit_type === 'id' ? 'ת.ז.' :
                         borrow.deposit_type === 'license' ? 'רישיון' : '',
           'סטטוס': borrow.status === 'pending' ? 'ממתין' :
@@ -1075,8 +1077,10 @@ ${signFormUrl}
                             ...(borrow.deposit_type === 'cash' || borrow.deposit_type === 'bit' ? styles.depositBadgeMoney :
                                 borrow.deposit_type === 'id' || borrow.deposit_type === 'license' ? styles.depositBadgeDoc : {})
                           }}>
-                            {borrow.deposit_type === 'cash' ? '₪500 מזומן' :
-                             borrow.deposit_type === 'bit' ? '₪500 ביט' :
+                            {borrow.deposit_type === 'cash' ? `₪${station.deposit_amount || 200} מזומן` :
+                             borrow.deposit_type === 'bit' ? `₪${station.deposit_amount || 200} ביט` :
+                             borrow.deposit_type === 'paybox' ? `₪${station.deposit_amount || 200} פייבוקס` :
+                             borrow.deposit_type === 'bank_transfer' ? `₪${station.deposit_amount || 200} העברה` :
                              borrow.deposit_type === 'id' ? 'ת.ז.' :
                              borrow.deposit_type === 'license' ? 'רישיון' : '-'}
                           </span>
@@ -1225,8 +1229,10 @@ ${signFormUrl}
                                 ...(borrow.deposit_type === 'cash' || borrow.deposit_type === 'bit' ? styles.depositBadgeMoney :
                                     borrow.deposit_type === 'id' || borrow.deposit_type === 'license' ? styles.depositBadgeDoc : {})
                               }}>
-                                {borrow.deposit_type === 'cash' ? '₪500 מזומן' :
-                                 borrow.deposit_type === 'bit' ? '₪500 ביט' :
+                                {borrow.deposit_type === 'cash' ? `₪${station.deposit_amount || 200} מזומן` :
+                                 borrow.deposit_type === 'bit' ? `₪${station.deposit_amount || 200} ביט` :
+                                 borrow.deposit_type === 'paybox' ? `₪${station.deposit_amount || 200} פייבוקס` :
+                                 borrow.deposit_type === 'bank_transfer' ? `₪${station.deposit_amount || 200} העברה` :
                                  borrow.deposit_type === 'id' ? 'ת.ז.' :
                                  borrow.deposit_type === 'license' ? 'רישיון' : '-'}
                               </span>
