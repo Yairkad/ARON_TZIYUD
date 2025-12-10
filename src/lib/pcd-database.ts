@@ -451,7 +451,7 @@ export function extractMakeFromHebrew(hebrewMake: string): string | null {
     'צרי': 'chery',
     'שברולט': 'chevrolet',
     'ג\'יפ': 'jeep',
-    'ג\'יפ': 'jeep',
+    'גיפ': 'jeep',
     'אלפא רומיאו': 'alfa romeo',
     'אלפא': 'alfa romeo',
     'אאודי': 'audi',

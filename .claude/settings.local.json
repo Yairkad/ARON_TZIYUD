@@ -28,7 +28,12 @@
       "Bash(git -C \"c:\\Users\\יאיר קדוש\\ARON_TZIYUD\" push)",
       "Bash(git -C \"c:\\Users\\יאיר קדוש\\ARON_TZIYUD\" status --short)",
       "Bash(git -C \"c:\\Users\\יאיר קדוש\\ARON_TZIYUD\" commit -m \"$(cat <<''EOF''\nFeature: Push notifications for wheel station managers\n\n1. Created migration for wheel_station_push_subscriptions table\n\n2. New API endpoints:\n   - POST/DELETE/GET /api/wheel-stations/[stationId]/push/subscribe\n     Subscribe/unsubscribe managers to push notifications\n   - POST /api/wheel-stations/[stationId]/push/send\n     Send push notification to all station subscribers\n\n3. Station page UI:\n   - Added push notification toggle in settings modal\n   - Check push support and current subscription status\n   - Enable/disable notifications with user-friendly messages\n\n4. Auto-send notification on new borrow request:\n   - When someone submits the sign form, all subscribed\n     managers receive a push notification\n\n🤖 Generated with [Claude Code](https://claude.com/claude-code)\n\nCo-Authored-By: Claude <noreply@anthropic.com>\nEOF\n)\")",
-      "Bash(git -C \"c:\\Users\\יאיר קדוש\\ARON_TZIYUD\" commit -m \"$(cat <<''EOF''\nFix: TypeScript null check for station in Excel export\n\nAdded optional chaining (?.) for station.deposit_amount\nto handle cases where station might be null.\n\n🤖 Generated with [Claude Code](https://claude.com/claude-code)\n\nCo-Authored-By: Claude <noreply@anthropic.com>\nEOF\n)\")"
+      "Bash(git -C \"c:\\Users\\יאיר קדוש\\ARON_TZIYUD\" commit -m \"$(cat <<''EOF''\nFix: TypeScript null check for station in Excel export\n\nAdded optional chaining (?.) for station.deposit_amount\nto handle cases where station might be null.\n\n🤖 Generated with [Claude Code](https://claude.com/claude-code)\n\nCo-Authored-By: Claude <noreply@anthropic.com>\nEOF\n)\")",
+      "Bash(curl:*)",
+      "Bash(npx tsc:*)",
+      "Bash(git add:*)",
+      "Bash(git commit:*)",
+      "Bash(git push)"
     ],
     "deny": [],
     "ask": []

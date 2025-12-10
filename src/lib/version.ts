@@ -1,2 +1,2 @@
 // Version number - auto-incremented on each commit
-export const VERSION = '1.7.2'
+export const VERSION = '1.7.3'
