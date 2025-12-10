@@ -223,7 +223,7 @@ export default function StationPage({ params }: { params: Promise<{ stationId: s
   }, [loading, station])
 
   // Contacts management
-  const [showContactsModal, setShowContactsModal] = useState(false)
+  const [showContactsModal, setShowContactsModal] = useState(false) // For viewing contacts (public)
   const [contacts, setContacts] = useState<Manager[]>([])
 
   // Edit station details
@@ -1918,59 +1918,6 @@ ${signFormUrl}
               <button style={styles.cancelBtn} onClick={() => setShowAddWheelModal(false)}>ביטול</button>
               <button style={styles.submitBtn} onClick={handleAddWheel} disabled={actionLoading}>
                 {actionLoading ? 'שומר...' : 'הוסף'}
-              </button>
-            </div>
-          </div>
-        </div>
-      )}
-
-      {/* Edit Contacts Modal */}
-      {showContactsModal && (
-        <div style={styles.modalOverlay} onClick={() => setShowContactsModal(false)}>
-          <div style={{...styles.modal, maxWidth: '500px'}} onClick={e => e.stopPropagation()}>
-            <h3 style={styles.modalTitle}>👥 עריכת אנשי קשר</h3>
-            <p style={styles.modalSubtitle}>ניתן להוסיף עד 4 אנשי קשר</p>
-
-            {contacts.map((contact, index) => (
-              <div key={index} style={styles.contactEditRow}>
-                <div style={styles.contactEditFields}>
-                  <input
-                    type="text"
-                    placeholder="שם מלא"
-                    value={contact.full_name}
-                    onChange={e => updateContact(index, 'full_name', e.target.value)}
-                    style={styles.inputSmall}
-                  />
-                  <input
-                    type="tel"
-                    placeholder="טלפון"
-                    value={contact.phone}
-                    onChange={e => updateContact(index, 'phone', e.target.value)}
-                    style={styles.inputSmall}
-                  />
-                  <select
-                    value={contact.role}
-                    onChange={e => updateContact(index, 'role', e.target.value)}
-                    style={styles.inputSmall}
-                  >
-                    <option value="מנהל תחנה">מנהל תחנה</option>
-                    <option value="מנהל תחנה ראשי">מנהל תחנה ראשי</option>
-                  </select>
-                </div>
-                <button style={styles.removeContactBtn} onClick={() => removeContact(index)}>✕</button>
-              </div>
-            ))}
-
-            {contacts.length < 4 && (
-              <button style={styles.addContactBtn} onClick={addContact}>
-                ➕ הוסף איש קשר
-              </button>
-            )}
-
-            <div style={styles.modalButtons}>
-              <button style={styles.cancelBtn} onClick={() => setShowContactsModal(false)}>ביטול</button>
-              <button style={styles.submitBtn} onClick={handleSaveContacts} disabled={actionLoading}>
-                {actionLoading ? 'שומר...' : 'שמור'}
               </button>
             </div>
           </div>

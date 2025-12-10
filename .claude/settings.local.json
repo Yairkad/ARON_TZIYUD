@@ -20,7 +20,8 @@
       "Bash(git -C \"c:\\Users\\יאיר קדוש\\ARON_TZIYUD\" commit:*)",
       "Bash(git -C \"c:\\Users\\יאיר קדוש\\ARON_TZIYUD\" commit -m \"$(cat <<''EOF''\nUI: Add password visibility toggle (eye icon) to all password fields\n\nAdded show/hide password toggle button to all password inputs:\n1. Station login modal\n2. Admin login page\n3. Change password form (current, new, confirm fields)\n\nEach field has an eye emoji that toggles between visible (👁️)\nand hidden (🙈) states.\n\n🤖 Generated with [Claude Code](https://claude.com/claude-code)\n\nCo-Authored-By: Claude <noreply@anthropic.com>\nEOF\n)\")",
       "Bash(cat:*)",
-      "Bash(git -C \"c:\\Users\\יאיר קדוש\\ARON_TZIYUD\" add -A)"
+      "Bash(git -C \"c:\\Users\\יאיר קדוש\\ARON_TZIYUD\" add -A)",
+      "Bash(git -C \"c:\\Users\\יאיר קדוש\\ARON_TZIYUD\" commit -m \"$(cat <<''EOF''\nFix: Remove duplicate unused contacts edit modal\n\nThe edit contacts modal was duplicated - contacts editing is already\navailable in the Edit Details Modal. Removed the unused standalone\nmodal that was never opened.\n\nThe floating contact button correctly opens the view-only contacts\nmodal with call/WhatsApp buttons.\n\n🤖 Generated with [Claude Code](https://claude.com/claude-code)\n\nCo-Authored-By: Claude <noreply@anthropic.com>\nEOF\n)\")"
     ],
     "deny": [],
     "ask": []
