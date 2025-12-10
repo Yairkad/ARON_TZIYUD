@@ -167,6 +167,19 @@ export const PCD_DATABASE: PCDEntry[] = [
   { make: 'opel', make_he: 'אופל', model: 'grandland', model_variants: ['grandland x'], year_from: 2017, year_to: null, bolt_count: 4, bolt_spacing: 108, center_bore: 65.1 },
   { make: 'opel', make_he: 'אופל', model: 'mokka', year_from: 2012, year_to: 2020, bolt_count: 5, bolt_spacing: 105, center_bore: 56.6 },
   { make: 'opel', make_he: 'אופל', model: 'mokka', year_from: 2020, year_to: null, bolt_count: 4, bolt_spacing: 108, center_bore: 65.1 },
+
+  // ==================== SUBARU ====================
+  { make: 'subaru', make_he: 'סובארו', model: 'impreza', year_from: 1992, year_to: null, bolt_count: 5, bolt_spacing: 100, center_bore: 56.1 },
+  { make: 'subaru', make_he: 'סובארו', model: 'xv', model_variants: ['crosstrek', 'xv crosstrek'], year_from: 2012, year_to: null, bolt_count: 5, bolt_spacing: 100, center_bore: 56.1 },
+  { make: 'subaru', make_he: 'סובארו', model: 'forester', year_from: 1997, year_to: 2014, bolt_count: 5, bolt_spacing: 100, center_bore: 56.1 },
+  { make: 'subaru', make_he: 'סובארו', model: 'forester', year_from: 2015, year_to: null, bolt_count: 5, bolt_spacing: 114.3, center_bore: 56.1 },
+  { make: 'subaru', make_he: 'סובארו', model: 'outback', year_from: 1994, year_to: 2014, bolt_count: 5, bolt_spacing: 100, center_bore: 56.1 },
+  { make: 'subaru', make_he: 'סובארו', model: 'outback', year_from: 2015, year_to: null, bolt_count: 5, bolt_spacing: 114.3, center_bore: 56.1 },
+  { make: 'subaru', make_he: 'סובארו', model: 'legacy', year_from: 1989, year_to: 2014, bolt_count: 5, bolt_spacing: 100, center_bore: 56.1 },
+  { make: 'subaru', make_he: 'סובארו', model: 'legacy', year_from: 2015, year_to: null, bolt_count: 5, bolt_spacing: 114.3, center_bore: 56.1 },
+  { make: 'subaru', make_he: 'סובארו', model: 'wrx', year_from: 2002, year_to: 2014, bolt_count: 5, bolt_spacing: 100, center_bore: 56.1 },
+  { make: 'subaru', make_he: 'סובארו', model: 'wrx', year_from: 2015, year_to: null, bolt_count: 5, bolt_spacing: 114.3, center_bore: 56.1 },
+  { make: 'subaru', make_he: 'סובארו', model: 'brz', year_from: 2012, year_to: null, bolt_count: 5, bolt_spacing: 100, center_bore: 56.1 },
 ]
 
 /**
@@ -243,6 +256,7 @@ export function extractMakeFromHebrew(hebrewMake: string): string | null {
     'מיצובישי': 'mitsubishi',
     'הונדה': 'honda',
     'אופל': 'opel',
+    'סובארו': 'subaru',
   }
 
   for (const [hebrew, english] of Object.entries(hebrewToEnglish)) {
