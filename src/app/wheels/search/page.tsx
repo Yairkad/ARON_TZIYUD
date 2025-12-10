@@ -47,6 +47,7 @@ function SearchContent() {
   // Get filters from URL
   const boltCount = searchParams.get('bolt_count')
   const boltSpacing = searchParams.get('bolt_spacing')
+  const rimSize = searchParams.get('rim_size')
   const pcd = boltCount && boltSpacing ? `${boltCount}x${boltSpacing}` : null
 
   useEffect(() => {
@@ -56,6 +57,7 @@ function SearchContent() {
         const params = new URLSearchParams()
         if (boltCount) params.set('bolt_count', boltCount)
         if (boltSpacing) params.set('bolt_spacing', boltSpacing)
+        if (rimSize) params.set('rim_size', rimSize)
         params.set('available_only', 'true')
 
         const response = await fetch(`/api/wheel-stations/search?${params}`)
@@ -75,7 +77,7 @@ function SearchContent() {
     }
 
     fetchWheels()
-  }, [boltCount, boltSpacing])
+  }, [boltCount, boltSpacing, rimSize])
 
   return (
     <div className="min-h-screen bg-gradient-to-b from-blue-50 to-white" dir="rtl">
@@ -87,9 +89,9 @@ function SearchContent() {
               <h1 className="text-2xl font-bold text-gray-800">
                 חיפוש גלגלים במלאי
               </h1>
-              {pcd && (
+              {(pcd || rimSize) && (
                 <p className="text-blue-600 font-medium">
-                  מחפש גלגלים עם PCD: {pcd}
+                  מחפש גלגלים {pcd ? `עם PCD: ${pcd}` : ''}{pcd && rimSize ? ' | ' : ''}{rimSize ? `גודל ${rimSize}"` : ''}
                 </p>
               )}
             </div>
@@ -138,12 +140,20 @@ function SearchContent() {
                   <p className="text-3xl font-bold text-gray-600">{data.results.length}</p>
                   <p className="text-sm text-gray-600">תחנות</p>
                 </div>
-                {pcd && (
-                  <div className="flex-1 text-left">
-                    <span className="inline-flex items-center gap-2 px-4 py-2 bg-green-100 text-green-800 rounded-full text-sm font-medium">
-                      <span>PCD:</span>
-                      <span className="font-bold">{pcd}</span>
-                    </span>
+                {(pcd || rimSize) && (
+                  <div className="flex-1 flex flex-wrap gap-2 justify-end">
+                    {pcd && (
+                      <span className="inline-flex items-center gap-2 px-4 py-2 bg-green-100 text-green-800 rounded-full text-sm font-medium">
+                        <span>PCD:</span>
+                        <span className="font-bold">{pcd}</span>
+                      </span>
+                    )}
+                    {rimSize && (
+                      <span className="inline-flex items-center gap-2 px-4 py-2 bg-blue-100 text-blue-800 rounded-full text-sm font-medium">
+                        <span>חישוק:</span>
+                        <span className="font-bold">{rimSize}"</span>
+                      </span>
+                    )}
                   </div>
                 )}
               </div>
@@ -157,7 +167,9 @@ function SearchContent() {
                   לא נמצאו גלגלים זמינים
                 </h2>
                 <p className="text-yellow-700">
-                  {pcd ? `אין גלגלים זמינים עם PCD ${pcd}` : 'אין גלגלים זמינים כרגע'}
+                  {pcd || rimSize ?
+                    `אין גלגלים זמינים${pcd ? ` עם PCD ${pcd}` : ''}${pcd && rimSize ? ' ו' : ''}${rimSize ? `בגודל ${rimSize}"` : ''}`
+                    : 'אין גלגלים זמינים כרגע'}
                 </p>
                 <Link
                   href="/wheels"
@@ -197,14 +209,18 @@ function SearchContent() {
                       {result.wheels.filter(w => w.is_available).map((wheel) => (
                         <div
                           key={wheel.id}
-                          className="bg-gray-50 rounded-xl p-4 text-center border-2 border-gray-100 hover:border-blue-300 transition-colors"
+                          className={`bg-gray-50 rounded-xl p-4 text-center border-2 ${wheel.is_donut ? 'border-orange-200' : 'border-gray-100'} hover:border-blue-300 transition-colors`}
                         >
-                          <p className="text-2xl mb-2">{wheel.is_donut ? '🍩' : '⭕'}</p>
-                          <p className="font-bold text-gray-800">#{wheel.wheel_number}</p>
-                          <p className="text-sm text-gray-600">{wheel.rim_size}&quot;</p>
+                          <p className="font-bold text-gray-800 text-lg">#{wheel.wheel_number}</p>
+                          <p className="text-sm text-gray-600">{wheel.rim_size}"</p>
                           <p className="text-xs text-blue-600 font-medium mt-1">
                             {wheel.bolt_count}×{wheel.bolt_spacing}
                           </p>
+                          {wheel.is_donut && (
+                            <span className="inline-block mt-1 px-2 py-0.5 bg-orange-100 text-orange-700 text-xs rounded-full">
+                              דונאט
+                            </span>
+                          )}
                         </div>
                       ))}
                     </div>

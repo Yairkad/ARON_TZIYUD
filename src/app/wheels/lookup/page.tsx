@@ -21,6 +21,13 @@ interface WheelFitment {
   center_bore?: number
 }
 
+// Extract rim size from tire string (e.g., "195/60R15" -> 15)
+function extractRimSize(tire: string | null | undefined): number | null {
+  if (!tire) return null
+  const match = tire.match(/R(\d+)/i)
+  return match ? parseInt(match[1]) : null
+}
+
 interface LookupResponse {
   success: boolean
   vehicle: VehicleData
@@ -176,18 +183,16 @@ export default function VehicleLookupPage() {
                   <span className="text-2xl">✅</span>
                   נמצא! מידות גלגל מתאימות
                 </h2>
-                <div className="grid grid-cols-2 sm:grid-cols-4 gap-6">
+                <div className="grid grid-cols-2 sm:grid-cols-3 gap-6">
                   <div className="bg-white rounded-xl p-4 text-center shadow">
                     <span className="text-sm text-gray-500">PCD</span>
                     <p className="text-2xl font-bold text-green-700">{result.wheel_fitment.pcd}</p>
                   </div>
                   <div className="bg-white rounded-xl p-4 text-center shadow">
-                    <span className="text-sm text-gray-500">כמות חורים</span>
-                    <p className="text-2xl font-bold text-gray-800">{result.wheel_fitment.bolt_count}</p>
-                  </div>
-                  <div className="bg-white rounded-xl p-4 text-center shadow">
-                    <span className="text-sm text-gray-500">מרחק (מ"מ)</span>
-                    <p className="text-2xl font-bold text-gray-800">{result.wheel_fitment.bolt_spacing}</p>
+                    <span className="text-sm text-gray-500">גודל חישוק</span>
+                    <p className="text-2xl font-bold text-blue-600">
+                      {extractRimSize(result.vehicle.front_tire) || '—'}"
+                    </p>
                   </div>
                   {result.wheel_fitment.center_bore && (
                     <div className="bg-white rounded-xl p-4 text-center shadow">
@@ -200,7 +205,7 @@ export default function VehicleLookupPage() {
                 {/* Search Link */}
                 <div className="mt-6 text-center">
                   <Link
-                    href={`/wheels/search?bolt_count=${result.wheel_fitment.bolt_count}&bolt_spacing=${result.wheel_fitment.bolt_spacing}`}
+                    href={`/wheels/search?bolt_count=${result.wheel_fitment.bolt_count}&bolt_spacing=${result.wheel_fitment.bolt_spacing}${extractRimSize(result.vehicle.front_tire) ? `&rim_size=${extractRimSize(result.vehicle.front_tire)}` : ''}`}
                     className="inline-flex items-center gap-2 px-6 py-3 bg-green-600 text-white font-medium rounded-xl hover:bg-green-700 transition-colors"
                   >
                     <span>🔍</span>
