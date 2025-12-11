@@ -281,6 +281,22 @@ export default function WheelStationsPage() {
           .wheels-admin-link {
             padding: 10px 16px !important;
           }
+          .wheels-vehicle-modal {
+            max-width: calc(100vw - 40px) !important;
+            padding: 15px !important;
+          }
+          .wheels-vehicle-modal .wheels-fitment-badges {
+            flex-direction: column !important;
+            gap: 8px !important;
+          }
+          .wheels-vehicle-modal .wheels-vehicle-info-details {
+            flex-direction: column !important;
+            gap: 5px !important;
+          }
+          .wheels-result-wheel-card {
+            min-width: 80px !important;
+            padding: 8px 10px !important;
+          }
         }
       `}</style>
       <Toaster
@@ -512,7 +528,7 @@ export default function WheelStationsPage() {
       {/* Vehicle Lookup Modal */}
       {showVehicleModal && (
         <div style={styles.modalOverlay} onClick={closeVehicleModal}>
-          <div style={styles.vehicleModal} onClick={e => e.stopPropagation()}>
+          <div style={styles.vehicleModal} className="wheels-vehicle-modal" onClick={e => e.stopPropagation()}>
             <div style={styles.modalHeader}>
               <h3 style={styles.modalTitle}>🚗 חיפוש לפי מספר רכב</h3>
               <button style={styles.closeBtn} onClick={closeVehicleModal}>✕</button>
@@ -527,26 +543,22 @@ export default function WheelStationsPage() {
             <div style={styles.vehicleInputRow}>
               <input
                 type="text"
+                inputMode="numeric"
                 value={vehiclePlate}
                 onChange={e => setVehiclePlate(e.target.value)}
                 onKeyPress={e => e.key === 'Enter' && handleVehicleLookup()}
                 placeholder="הזן מספר רישוי..."
                 style={styles.vehicleInput}
                 dir="ltr"
+                autoFocus
               />
               <button
                 onClick={handleVehicleLookup}
                 disabled={vehicleLoading}
-                style={{
-                  ...styles.vehicleLookupBtn,
-                  ...(vehicleLoading ? { minWidth: '120px' } : {})
-                }}
+                style={styles.vehicleLookupBtn}
               >
                 {vehicleLoading ? (
-                  <span style={{ display: 'flex', alignItems: 'center', gap: '6px' }}>
-                    <span className="spinning-wheel">🛞</span>
-                    <span style={{ fontSize: '0.9rem' }}>מחפש...</span>
-                  </span>
+                  <span className="spinning-wheel">🛞</span>
                 ) : '🔍'}
               </button>
             </div>
@@ -564,7 +576,7 @@ export default function WheelStationsPage() {
                   <div style={styles.vehicleInfoTitle}>
                     {vehicleResult.vehicle.manufacturer} {vehicleResult.vehicle.model}
                   </div>
-                  <div style={styles.vehicleInfoDetails}>
+                  <div style={styles.vehicleInfoDetails} className="wheels-vehicle-info-details">
                     <span>📅 {vehicleResult.vehicle.year}</span>
                     <span style={{ direction: 'ltr' }}>🛞 {vehicleResult.vehicle.front_tire}</span>
                   </div>
@@ -573,7 +585,7 @@ export default function WheelStationsPage() {
                 {/* Wheel Fitment */}
                 {vehicleResult.wheel_fitment ? (
                   <div style={styles.vehicleFitmentCard}>
-                    <div style={styles.fitmentBadges}>
+                    <div style={styles.fitmentBadges} className="wheels-fitment-badges">
                       <span style={styles.pcdBadge}>PCD: {vehicleResult.wheel_fitment.pcd}</span>
                       {extractRimSize(vehicleResult.vehicle.front_tire) && (
                         <span style={styles.rimBadge}>{extractRimSize(vehicleResult.vehicle.front_tire)}"</span>
@@ -603,6 +615,7 @@ export default function WheelStationsPage() {
                                   key={wheel.id}
                                   href={`/wheels/${result.station.id}#wheel-${wheel.wheel_number}`}
                                   style={styles.resultWheelCard}
+                                  className="wheels-result-wheel-card"
                                   onClick={closeVehicleModal}
                                 >
                                   <div style={styles.resultWheelNumber}>#{wheel.wheel_number}</div>

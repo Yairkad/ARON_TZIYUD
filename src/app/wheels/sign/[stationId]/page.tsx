@@ -1,6 +1,7 @@
 'use client'
 
-import { useState, useEffect, useRef, use } from 'react'
+import { useState, useEffect, useRef, use, Suspense } from 'react'
+import { useSearchParams } from 'next/navigation'
 import Link from 'next/link'
 import toast, { Toaster } from 'react-hot-toast'
 
@@ -32,8 +33,8 @@ interface Station {
   payment_methods?: PaymentMethods
 }
 
-export default function SignFormPage({ params }: { params: Promise<{ stationId: string }> }) {
-  const { stationId } = use(params)
+function SignFormContent({ stationId }: { stationId: string }) {
+  const searchParams = useSearchParams()
   const [station, setStation] = useState<Station | null>(null)
   const [wheels, setWheels] = useState<Wheel[]>([])
   const [loading, setLoading] = useState(true)
@@ -41,11 +42,16 @@ export default function SignFormPage({ params }: { params: Promise<{ stationId: 
   const [submitting, setSubmitting] = useState(false)
   const [submitted, setSubmitted] = useState(false)
 
+  // Pre-filled data from URL params
+  const prefilledWheelNumber = searchParams.get('wheel')
+  const prefilledPhone = searchParams.get('phone')
+  const isPrefilledMode = !!(prefilledWheelNumber && prefilledPhone)
+
   // Form state
   const [firstName, setFirstName] = useState('')
   const [lastName, setLastName] = useState('')
   const [idNumber, setIdNumber] = useState('')
-  const [phone, setPhone] = useState('')
+  const [phone, setPhone] = useState(prefilledPhone || '')
   const [address, setAddress] = useState('')
   const [borrowDate, setBorrowDate] = useState('')
   const [selectedWheelId, setSelectedWheelId] = useState('')
@@ -72,6 +78,16 @@ export default function SignFormPage({ params }: { params: Promise<{ stationId: 
     setBorrowDate(today)
     fetchStationData()
   }, [stationId])
+
+  // Auto-select wheel when data is loaded and we have prefilled wheel number
+  useEffect(() => {
+    if (wheels.length > 0 && prefilledWheelNumber && !selectedWheelId) {
+      const matchingWheel = wheels.find(w => w.wheel_number === prefilledWheelNumber)
+      if (matchingWheel) {
+        setSelectedWheelId(matchingWheel.id)
+      }
+    }
+  }, [wheels, prefilledWheelNumber, selectedWheelId])
 
   // Setup canvas
   useEffect(() => {
@@ -358,8 +374,15 @@ export default function SignFormPage({ params }: { params: Promise<{ stationId: 
             value={phone}
             onChange={e => { setPhone(e.target.value); setFieldErrors(f => f.filter(x => x !== 'phone')) }}
             placeholder="050-1234567"
-            style={getInputStyle('phone')}
+            style={{
+              ...getInputStyle('phone'),
+              ...(isPrefilledMode ? { background: '#e2e8f0', cursor: 'not-allowed' } : {})
+            }}
+            disabled={isPrefilledMode}
           />
+          {isPrefilledMode && (
+            <span style={styles.helpText}>🔒 מספר הטלפון הוגדר מראש על ידי מנהל התחנה</span>
+          )}
         </div>
 
         <div style={styles.formGroup}>
@@ -391,7 +414,11 @@ export default function SignFormPage({ params }: { params: Promise<{ stationId: 
           <select
             value={selectedWheelId}
             onChange={e => { setSelectedWheelId(e.target.value); setFieldErrors(f => f.filter(x => x !== 'wheelId')) }}
-            style={getInputStyle('wheelId')}
+            style={{
+              ...getInputStyle('wheelId'),
+              ...(isPrefilledMode && selectedWheelId ? { background: '#e2e8f0', cursor: 'not-allowed' } : {})
+            }}
+            disabled={isPrefilledMode && !!selectedWheelId}
           >
             <option value="">-- בחר גלגל --</option>
             {wheels.map(wheel => (
@@ -400,6 +427,9 @@ export default function SignFormPage({ params }: { params: Promise<{ stationId: 
               </option>
             ))}
           </select>
+          {isPrefilledMode && selectedWheelId && (
+            <span style={styles.helpText}>🔒 הגלגל נבחר מראש על ידי מנהל התחנה</span>
+          )}
           {/* Show selected wheel details as badges */}
           {selectedWheelId && (() => {
             const wheel = wheels.find(w => w.id === selectedWheelId)
@@ -466,21 +496,29 @@ export default function SignFormPage({ params }: { params: Promise<{ stationId: 
                   <span>📱 ₪{station.deposit_amount || 200} בביט ל-{station.payment_methods.bit.phone}</span>
                 </label>
                 {depositType === 'bit' && (
-                  <a
-                    href={`https://www.bitpay.co.il/app/me/${station.payment_methods.bit.phone.replace(/\D/g, '')}/${station.deposit_amount || 200}`}
-                    target="_blank"
-                    rel="noopener noreferrer"
-                    style={styles.paymentLink}
-                    onClick={(e) => {
-                      e.preventDefault()
-                      window.location.href = `bit://pay?phone=${station.payment_methods?.bit?.phone?.replace(/\D/g, '')}&amount=${station.deposit_amount || 200}`
-                      setTimeout(() => {
-                        window.open(`https://www.bitpay.co.il/app/me/${station.payment_methods?.bit?.phone?.replace(/\D/g, '')}/${station.deposit_amount || 200}`, '_blank')
-                      }, 500)
-                    }}
-                  >
-                    פתח אפליקציית ביט לתשלום ←
-                  </a>
+                  <div style={{ marginRight: '26px', display: 'flex', flexDirection: 'column', gap: '8px' }}>
+                    <div style={styles.paymentInfo}>
+                      <strong>מספר לתשלום:</strong> {station.payment_methods.bit.phone}<br/>
+                      <strong>סכום:</strong> ₪{station.deposit_amount || 200}
+                    </div>
+                    <a
+                      href={`intent://pay?phone=${station.payment_methods.bit.phone.replace(/\D/g, '')}&amount=${station.deposit_amount || 200}#Intent;scheme=bit;package=com.bnhp.payments.paymentsapp;end`}
+                      style={styles.paymentLink}
+                    >
+                      פתח אפליקציית ביט (אנדרואיד) ←
+                    </a>
+                    <button
+                      type="button"
+                      onClick={() => {
+                        const phoneNumber = station.payment_methods?.bit?.phone?.replace(/\D/g, '') || ''
+                        navigator.clipboard.writeText(phoneNumber)
+                        toast.success('מספר הטלפון הועתק!')
+                      }}
+                      style={styles.copyBtn}
+                    >
+                      📋 העתק מספר טלפון
+                    </button>
+                  </div>
                 )}
               </div>
             )}
@@ -499,14 +537,29 @@ export default function SignFormPage({ params }: { params: Promise<{ stationId: 
                   <span>📦 ₪{station.deposit_amount || 200} בפייבוקס ל-{station.payment_methods.paybox.phone}</span>
                 </label>
                 {depositType === 'paybox' && (
-                  <a
-                    href={`payboxapp://send?phone=${station.payment_methods.paybox.phone.replace(/\D/g, '')}&amount=${station.deposit_amount || 200}`}
-                    target="_blank"
-                    rel="noopener noreferrer"
-                    style={styles.paymentLink}
-                  >
-                    פתח אפליקציית פייבוקס לתשלום ←
-                  </a>
+                  <div style={{ marginRight: '26px', display: 'flex', flexDirection: 'column', gap: '8px' }}>
+                    <div style={styles.paymentInfo}>
+                      <strong>מספר לתשלום:</strong> {station.payment_methods.paybox.phone}<br/>
+                      <strong>סכום:</strong> ₪{station.deposit_amount || 200}
+                    </div>
+                    <a
+                      href={`intent://send?phone=${station.payment_methods.paybox.phone.replace(/\D/g, '')}&amount=${station.deposit_amount || 200}#Intent;scheme=paybox;package=com.payboxapp;end`}
+                      style={styles.paymentLink}
+                    >
+                      פתח אפליקציית פייבוקס (אנדרואיד) ←
+                    </a>
+                    <button
+                      type="button"
+                      onClick={() => {
+                        const phoneNumber = station.payment_methods?.paybox?.phone?.replace(/\D/g, '') || ''
+                        navigator.clipboard.writeText(phoneNumber)
+                        toast.success('מספר הטלפון הועתק!')
+                      }}
+                      style={styles.copyBtn}
+                    >
+                      📋 העתק מספר טלפון
+                    </button>
+                  </div>
                 )}
               </div>
             )}
@@ -657,6 +710,27 @@ export default function SignFormPage({ params }: { params: Promise<{ stationId: 
         </button>
       </div>
     </div>
+  )
+}
+
+// Wrapper component to handle async params
+export default function SignFormPage({ params }: { params: Promise<{ stationId: string }> }) {
+  const { stationId } = use(params)
+
+  return (
+    <Suspense fallback={
+      <div style={{
+        minHeight: '100vh',
+        display: 'flex',
+        alignItems: 'center',
+        justifyContent: 'center',
+        background: '#f3f4f6'
+      }}>
+        <p>טוען...</p>
+      </div>
+    }>
+      <SignFormContent stationId={stationId} />
+    </Suspense>
   )
 }
 
@@ -981,6 +1055,24 @@ const styles: { [key: string]: React.CSSProperties } = {
     color: '#1e40af',
     borderRadius: '20px',
     fontSize: '0.8rem',
+    fontWeight: '500',
+  },
+  paymentInfo: {
+    padding: '12px',
+    background: '#f0fdf4',
+    borderRadius: '8px',
+    fontSize: '0.9rem',
+    color: '#166534',
+    border: '1px solid #bbf7d0',
+  },
+  copyBtn: {
+    padding: '10px 16px',
+    background: '#e5e7eb',
+    color: '#374151',
+    border: 'none',
+    borderRadius: '8px',
+    cursor: 'pointer',
+    fontSize: '0.9rem',
     fontWeight: '500',
   },
 }

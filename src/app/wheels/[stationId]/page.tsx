@@ -160,6 +160,11 @@ export default function StationPage({ params }: { params: Promise<{ stationId: s
   // Mobile tracking cards - track which cards are expanded (collapsed by default)
   const [expandedCards, setExpandedCards] = useState<Set<string>>(new Set())
 
+  // WhatsApp share modal
+  const [showWhatsAppModal, setShowWhatsAppModal] = useState(false)
+  const [whatsAppPhone, setWhatsAppPhone] = useState('')
+  const [whatsAppWheel, setWhatsAppWheel] = useState<Wheel | null>(null)
+
   // Predefined categories
   const predefinedCategories = ['מכוניות גרמניות', 'מכוניות צרפתיות', 'מכוניות יפניות וקוראניות']
 
@@ -666,6 +671,42 @@ ${signFormUrl}
         }
       }
     })
+  }
+
+  // Open WhatsApp share modal
+  const openWhatsAppModal = (wheel: Wheel) => {
+    setWhatsAppWheel(wheel)
+    setWhatsAppPhone('')
+    setShowWhatsAppModal(true)
+  }
+
+  // Send WhatsApp message with pre-filled form link
+  const sendWhatsAppLink = () => {
+    if (!whatsAppPhone.trim() || !whatsAppWheel) {
+      toast.error('נא להזין מספר טלפון')
+      return
+    }
+
+    // Clean the phone number
+    const cleanPhone = whatsAppPhone.replace(/\D/g, '')
+    const internationalPhone = cleanPhone.startsWith('0') ? '972' + cleanPhone.slice(1) : cleanPhone
+
+    // Build the form URL with pre-filled wheel and phone
+    const formUrl = `${window.location.origin}/wheels/sign/${stationId}?wheel=${whatsAppWheel.wheel_number}&phone=${encodeURIComponent(whatsAppPhone)}`
+
+    // WhatsApp message
+    const message = `שלום רב 👋
+מצורף כאן קישור לחתימה על טופס השאלת גלגל.
+הגלגל המתאים ביותר עבורך כבר נבחר ורק נשאר להשלים פרטים.
+
+${formUrl}`
+
+    // Open WhatsApp
+    const whatsappUrl = `https://wa.me/${internationalPhone}?text=${encodeURIComponent(message)}`
+    window.open(whatsappUrl, '_blank')
+
+    setShowWhatsAppModal(false)
+    toast.success('נפתח בוואטסאפ!')
   }
 
   // Save contacts
@@ -1699,6 +1740,15 @@ ${signFormUrl}
                 {/* Manager action buttons - only show return for borrowed wheels */}
                 {isManager && (
                   <div style={styles.cardActions} className="station-card-actions">
+                    {wheel.is_available && (
+                      <button
+                        style={styles.whatsappShareBtn}
+                        onClick={() => openWhatsAppModal(wheel)}
+                        title="שלח קישור לטופס בוואטסאפ"
+                      >
+                        💬
+                      </button>
+                    )}
                     {!wheel.is_available && (
                       <button
                         style={styles.returnBtn}
@@ -1875,6 +1925,98 @@ ${signFormUrl}
             <button style={{...styles.cancelBtn, width: '100%', marginTop: '16px'}} onClick={() => setShowContactsModal(false)}>
               סגור
             </button>
+          </div>
+        </div>
+      )}
+
+      {/* WhatsApp Share Modal */}
+      {showWhatsAppModal && whatsAppWheel && (
+        <div style={styles.modalOverlay} onClick={() => setShowWhatsAppModal(false)}>
+          <div style={{...styles.modal, maxWidth: '400px'}} onClick={e => e.stopPropagation()}>
+            <h3 style={styles.modalTitle}>💬 שליחת קישור לטופס בוואטסאפ</h3>
+            <p style={{color: '#a0aec0', marginBottom: '16px', fontSize: '0.9rem'}}>
+              שלח הודעת וואטסאפ עם קישור לטופס השאלה. הגלגל ומספר הטלפון יהיו מוגדרים מראש.
+            </p>
+
+            <div style={{
+              background: 'rgba(59, 130, 246, 0.1)',
+              border: '1px solid rgba(59, 130, 246, 0.3)',
+              borderRadius: '10px',
+              padding: '12px',
+              marginBottom: '16px',
+            }}>
+              <div style={{color: '#60a5fa', fontWeight: 'bold', marginBottom: '4px'}}>
+                גלגל #{whatsAppWheel.wheel_number}
+              </div>
+              <div style={{color: '#a0aec0', fontSize: '0.85rem'}}>
+                {whatsAppWheel.rim_size}" | {whatsAppWheel.bolt_count}×{whatsAppWheel.bolt_spacing}
+                {whatsAppWheel.is_donut && ' | דונאט'}
+              </div>
+            </div>
+
+            <div style={{marginBottom: '16px'}}>
+              <label style={{color: '#a0aec0', fontSize: '0.85rem', display: 'block', marginBottom: '8px'}}>
+                מספר טלפון של הפונה
+              </label>
+              <input
+                type="tel"
+                inputMode="numeric"
+                value={whatsAppPhone}
+                onChange={e => setWhatsAppPhone(e.target.value)}
+                onKeyPress={e => e.key === 'Enter' && sendWhatsAppLink()}
+                placeholder="050-1234567"
+                style={{
+                  width: '100%',
+                  padding: '14px',
+                  borderRadius: '10px',
+                  border: '2px solid #4a5568',
+                  background: '#2d3748',
+                  color: 'white',
+                  fontSize: '1.1rem',
+                  textAlign: 'center',
+                  letterSpacing: '1px',
+                }}
+                dir="ltr"
+                autoFocus
+              />
+            </div>
+
+            <div style={{display: 'flex', gap: '12px'}}>
+              <button
+                style={{
+                  flex: 1,
+                  padding: '12px',
+                  borderRadius: '10px',
+                  border: 'none',
+                  background: '#4b5563',
+                  color: '#fff',
+                  cursor: 'pointer',
+                  fontWeight: 'bold',
+                }}
+                onClick={() => setShowWhatsAppModal(false)}
+              >
+                ביטול
+              </button>
+              <button
+                style={{
+                  flex: 1,
+                  padding: '12px',
+                  borderRadius: '10px',
+                  border: 'none',
+                  background: 'linear-gradient(135deg, #22c55e, #16a34a)',
+                  color: '#fff',
+                  cursor: 'pointer',
+                  fontWeight: 'bold',
+                  display: 'flex',
+                  alignItems: 'center',
+                  justifyContent: 'center',
+                  gap: '8px',
+                }}
+                onClick={sendWhatsAppLink}
+              >
+                💬 שלח בוואטסאפ
+              </button>
+            </div>
           </div>
         </div>
       )}
@@ -3028,6 +3170,15 @@ const styles: { [key: string]: React.CSSProperties } = {
   },
   deleteBtn: {
     background: '#ef4444',
+    color: 'white',
+    border: 'none',
+    padding: '8px 12px',
+    borderRadius: '8px',
+    cursor: 'pointer',
+    fontSize: '0.85rem',
+  },
+  whatsappShareBtn: {
+    background: 'linear-gradient(135deg, #22c55e, #16a34a)',
     color: 'white',
     border: 'none',
     padding: '8px 12px',
