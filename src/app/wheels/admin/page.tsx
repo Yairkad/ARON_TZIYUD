@@ -2,7 +2,7 @@
 
 import { useState, useEffect } from 'react'
 import Link from 'next/link'
-import toast, { Toaster } from 'react-hot-toast'
+import toast from 'react-hot-toast'
 
 interface Manager {
   id?: string
@@ -361,27 +361,6 @@ export default function WheelsAdminPage() {
           }
         }
       `}</style>
-      <Toaster
-        position="top-center"
-        toastOptions={{
-          duration: 3000,
-          style: {
-            background: '#1e293b',
-            color: '#fff',
-            border: '1px solid #334155',
-            direction: 'rtl',
-            padding: '16px',
-            borderRadius: '12px',
-            fontSize: '0.95rem',
-          },
-          success: {
-            iconTheme: { primary: '#10b981', secondary: '#fff' },
-          },
-          error: {
-            iconTheme: { primary: '#ef4444', secondary: '#fff' },
-          },
-        }}
-      />
       <header style={styles.header}>
         <div style={styles.headerTop} className="admin-header-top">
           <Link href="/wheels" style={styles.backBtn} className="admin-btn">← <span className="admin-btn-text">חזרה</span></Link>

@@ -3,7 +3,7 @@
 import { useState, useEffect, useRef, use, Suspense } from 'react'
 import { useSearchParams } from 'next/navigation'
 import Link from 'next/link'
-import toast, { Toaster } from 'react-hot-toast'
+import toast from 'react-hot-toast'
 
 interface Wheel {
   id: string
@@ -318,7 +318,6 @@ function SignFormContent({ stationId }: { stationId: string }) {
 
   return (
     <div style={styles.container}>
-      <Toaster position="top-center" />
       <div style={styles.card}>
         {/* Yedidim Logo */}
         <div style={{ display: 'flex', justifyContent: 'center', marginBottom: '16px' }}>
