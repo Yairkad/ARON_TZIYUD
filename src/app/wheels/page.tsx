@@ -553,7 +553,7 @@ export default function WheelStationsPage() {
                   </div>
                   <div style={styles.vehicleInfoDetails}>
                     <span>📅 {vehicleResult.vehicle.year}</span>
-                    <span>🎨 {vehicleResult.vehicle.color}</span>
+                    <span style={{ direction: 'ltr' }}>🛞 {vehicleResult.vehicle.front_tire}</span>
                   </div>
                 </div>
 
