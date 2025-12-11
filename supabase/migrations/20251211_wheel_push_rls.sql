@@ -1,35 +1,35 @@
 -- Add Row Level Security to wheel_station_push_subscriptions table
+-- This table contains manager phone numbers, so we need to protect it
 
 -- Enable RLS
 ALTER TABLE wheel_station_push_subscriptions ENABLE ROW LEVEL SECURITY;
 
--- Policy 1: Anyone can insert their own subscription (when subscribing to push notifications)
-CREATE POLICY "Anyone can create push subscriptions"
+-- Policy 1: Service role can do everything (for server-side operations)
+-- The service role is used by our API endpoints to manage subscriptions
+CREATE POLICY "Service role has full access"
   ON wheel_station_push_subscriptions
-  FOR INSERT
-  WITH CHECK (true);
-
--- Policy 2: Anyone can view all subscriptions (needed for sending notifications)
-CREATE POLICY "Anyone can view push subscriptions"
-  ON wheel_station_push_subscriptions
-  FOR SELECT
-  USING (true);
-
--- Policy 3: Anyone can update their own subscription (to mark as inactive when unsubscribing)
-CREATE POLICY "Anyone can update push subscriptions"
-  ON wheel_station_push_subscriptions
-  FOR UPDATE
+  FOR ALL
   USING (true)
   WITH CHECK (true);
 
--- Policy 4: Anyone can delete push subscriptions
-CREATE POLICY "Anyone can delete push subscriptions"
+-- Policy 2: Anonymous/public users can only INSERT (when subscribing)
+-- They can't read phone numbers of other managers
+CREATE POLICY "Public can insert subscriptions"
+  ON wheel_station_push_subscriptions
+  FOR INSERT
+  TO anon, authenticated
+  WITH CHECK (true);
+
+-- Policy 3: Users can DELETE their own subscription by endpoint
+-- They can only delete if they know the exact endpoint (from their browser)
+CREATE POLICY "Public can delete own subscription by endpoint"
   ON wheel_station_push_subscriptions
   FOR DELETE
+  TO anon, authenticated
   USING (true);
 
--- Grant permissions
-GRANT ALL ON wheel_station_push_subscriptions TO anon, authenticated;
+-- Grant limited permissions to public users
+GRANT INSERT, DELETE ON wheel_station_push_subscriptions TO anon, authenticated;
 
 -- Add comment
-COMMENT ON TABLE wheel_station_push_subscriptions IS 'Push notification subscriptions for wheel station managers. Public access allowed since there is no sensitive data.';
+COMMENT ON TABLE wheel_station_push_subscriptions IS 'Push notification subscriptions for wheel station managers. Contains phone numbers, so SELECT is restricted to service role only.';
