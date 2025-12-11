@@ -32,7 +32,7 @@ export default function RootLayout({
   children: React.ReactNode;
 }>) {
   return (
-    <html lang="he" dir="rtl" style={{ background: 'linear-gradient(135deg, #0f172a 0%, #1e3a8a 100%)' }}>
+    <html lang="he" dir="rtl">
       <body className={`${rubik.className} antialiased`}>
         <ToastProvider />
         {children}
