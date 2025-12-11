@@ -85,9 +85,9 @@ export default function HomePage() {
           }
         `}</style>
         <img
-          src="/favicon.png"
+          src="/logo.png"
           alt="טוען..."
-          className="w-24 h-24 rounded-full object-cover border-3 border-blue-400 shadow-lg mb-4"
+          className="w-32 h-32 object-contain mb-4"
           style={{ animation: 'pulse 1.5s ease-in-out infinite' }}
         />
         <p className="text-white text-lg">טוען...</p>
@@ -290,7 +290,7 @@ export default function HomePage() {
               </Link>
             </p>
             <p className="text-gray-300 text-[10px] mt-2">
-              גירסה 1.8.4
+              גירסה 1.8.5
             </p>
           </div>
         </div>
