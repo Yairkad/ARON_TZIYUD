@@ -209,12 +209,12 @@ export default function WheelStationsPage() {
       setVehicleResult(data)
 
       // If we have wheel fitment, search for matching wheels
+      // Search by PCD only (don't filter by rim_size) to show all compatible wheels
       if (data.wheel_fitment) {
-        const rimSize = extractRimSize(data.vehicle.front_tire)
         const params = new URLSearchParams()
         params.set('bolt_count', data.wheel_fitment.bolt_count.toString())
         params.set('bolt_spacing', data.wheel_fitment.bolt_spacing.toString())
-        if (rimSize) params.set('rim_size', rimSize.toString())
+        // Don't filter by rim_size - show all PCD-compatible wheels
         params.set('available_only', 'true')
 
         const searchResponse = await fetch(`/api/wheel-stations/search?${params}`)
@@ -518,6 +518,11 @@ export default function WheelStationsPage() {
               <button style={styles.closeBtn} onClick={closeVehicleModal}>✕</button>
             </div>
 
+            {/* Beta warning */}
+            <div style={styles.betaWarning}>
+              ⚠️ פיצ'ר בפיתוח - יתכנו טעויות בזיהוי מידות הגלגל
+            </div>
+
             {/* Search input */}
             <div style={styles.vehicleInputRow}>
               <input
@@ -571,7 +576,10 @@ export default function WheelStationsPage() {
                     {vehicleSearchResults && vehicleSearchResults.length > 0 ? (
                       <div style={styles.vehicleWheelResults}>
                         <div style={styles.vehicleResultsHeader}>
-                          ✅ נמצאו {vehicleSearchResults.reduce((acc, r) => acc + r.availableCount, 0)} גלגלים מתאימים
+                          ✅ נמצאו {vehicleSearchResults.reduce((acc, r) => acc + r.availableCount, 0)} גלגלים עם PCD מתאים
+                        </div>
+                        <div style={styles.vehicleResultsNote}>
+                          הגלגלים מסודרים לפי גודל חישוק. לרכב שלך מתאים {extractRimSize(vehicleResult.vehicle.front_tire)}"
                         </div>
                         {vehicleSearchResults.map(result => (
                           <div key={result.station.id} style={styles.resultStationGroup}>
@@ -609,14 +617,24 @@ export default function WheelStationsPage() {
                 ) : (
                   <div style={styles.noFitmentCard}>
                     ⚠️ לא נמצאו מידות גלגל לדגם זה במאגר
-                    <a
-                      href={`https://www.wheel-size.com/size/${vehicleResult.vehicle.model.toLowerCase()}/${vehicleResult.vehicle.year}/`}
-                      target="_blank"
-                      rel="noopener noreferrer"
-                      style={styles.wheelSizeLink}
-                    >
-                      חפש ב-wheel-size.com ↗
-                    </a>
+                    <div style={styles.externalLinks}>
+                      <a
+                        href={`https://www.wheel-size.com/size/${vehicleResult.vehicle.model.toLowerCase()}/${vehicleResult.vehicle.year}/`}
+                        target="_blank"
+                        rel="noopener noreferrer"
+                        style={styles.wheelSizeLink}
+                      >
+                        חפש ב-wheel-size.com ↗
+                      </a>
+                      <a
+                        href="http://wheelfitment.eu"
+                        target="_blank"
+                        rel="noopener noreferrer"
+                        style={styles.wheelSizeLink}
+                      >
+                        חפש ב-wheelfitment.eu ↗
+                      </a>
+                    </div>
                   </div>
                 )}
               </div>
@@ -1041,6 +1059,16 @@ const styles: { [key: string]: React.CSSProperties } = {
     maxHeight: '85vh',
     overflowY: 'auto',
   },
+  betaWarning: {
+    background: 'rgba(251, 191, 36, 0.15)',
+    border: '1px solid rgba(251, 191, 36, 0.3)',
+    color: '#fbbf24',
+    padding: '10px 15px',
+    borderRadius: '10px',
+    textAlign: 'center',
+    fontSize: '0.85rem',
+    marginBottom: '15px',
+  },
   vehicleInputRow: {
     display: 'flex',
     gap: '10px',
@@ -1135,8 +1163,14 @@ const styles: { [key: string]: React.CSSProperties } = {
     color: '#10b981',
     fontWeight: 'bold',
     textAlign: 'center',
-    marginBottom: '12px',
+    marginBottom: '5px',
     fontSize: '0.95rem',
+  },
+  vehicleResultsNote: {
+    color: '#a0aec0',
+    textAlign: 'center',
+    marginBottom: '12px',
+    fontSize: '0.8rem',
   },
   noVehicleResults: {
     textAlign: 'center',
@@ -1160,5 +1194,11 @@ const styles: { [key: string]: React.CSSProperties } = {
     color: '#60a5fa',
     textDecoration: 'none',
     fontSize: '0.9rem',
+  },
+  externalLinks: {
+    display: 'flex',
+    flexDirection: 'column',
+    gap: '8px',
+    marginTop: '5px',
   },
 }
