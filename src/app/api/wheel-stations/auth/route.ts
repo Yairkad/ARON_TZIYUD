@@ -19,16 +19,18 @@ export async function POST(request: NextRequest) {
     // Try to find manager in wheel stations
     const { data: wheelManagers, error: wheelError } = await supabase
       .from('wheel_station_managers')
-      .select('*, wheel_stations(id, name, password)')
+      .select('*, wheel_stations(id, name, manager_password)')
       .eq('phone', phone)
       .limit(1)
+
+    console.log('Wheel managers search:', { phone, wheelManagers, wheelError })
 
     if (wheelManagers && wheelManagers.length > 0) {
       const manager = wheelManagers[0]
       const station = manager.wheel_stations
 
-      // Verify password (station password)
-      if (station?.password !== password) {
+      // Verify password (station manager password)
+      if (station?.manager_password !== password) {
         return NextResponse.json(
           { error: 'סיסמה שגויה' },
           { status: 401 }
@@ -54,6 +56,8 @@ export async function POST(request: NextRequest) {
       .select('*, cities(id, name, password)')
       .eq('phone', phone)
       .limit(1)
+
+    console.log('City managers search:', { phone, cityManagers, cityError })
 
     if (cityManagers && cityManagers.length > 0) {
       const manager = cityManagers[0]

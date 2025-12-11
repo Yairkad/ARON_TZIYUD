@@ -892,14 +892,12 @@ export default function WheelStationsPage() {
                 <div>
                   <label style={styles.formLabel}>שם משתמש</label>
                   <input
-                    type="tel"
-                    inputMode="numeric"
+                    type="text"
                     value={loginPhone}
                     onChange={e => setLoginPhone(e.target.value)}
                     onKeyPress={e => e.key === 'Enter' && handleManagerLogin()}
-                    placeholder="05xxxxxxxx"
+                    placeholder="הזן שם משתמש"
                     style={styles.formInput}
-                    dir="ltr"
                   />
                 </div>
 
