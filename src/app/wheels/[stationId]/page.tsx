@@ -1726,8 +1726,8 @@ ${formUrl}`
                 {wheel.category && <div style={styles.cardCategory}>{wheel.category}</div>}
                 {wheel.notes && <div style={styles.cardNotes}>{wheel.notes}</div>}
 
-                {/* Borrower info when wheel is taken */}
-                {!wheel.is_available && wheel.current_borrow && (
+                {/* Borrower info when wheel is taken - only for managers */}
+                {isManager && !wheel.is_available && wheel.current_borrow && (
                   <div style={styles.borrowerInfo}>
                     <div style={styles.borrowerName}>👤 {wheel.current_borrow.borrower_name}</div>
                     <div style={styles.borrowerPhone}>📱 {wheel.current_borrow.borrower_phone}</div>
