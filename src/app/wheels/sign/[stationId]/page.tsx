@@ -543,7 +543,7 @@ function SignFormContent({ stationId }: { stationId: string }) {
                       <strong>סכום:</strong> ₪{station.deposit_amount || 200}
                     </div>
                     <a
-                      href={`paybox://send?phone=${station.payment_methods.paybox.phone.replace(/\D/g, '')}`}
+                      href="intent://#Intent;package=com.payboxapp;end"
                       style={styles.paymentLink}
                     >
                       פתח אפליקציית פייבוקס ←
