@@ -12,6 +12,13 @@ const rubik = Rubik({
 export const metadata: Metadata = {
   title: "ארון ציוד ידידים",
   description: "מערכת לניהול השאלות והחזרות ציוד",
+  manifest: "/manifest.json",
+  themeColor: "#2563eb",
+  appleWebApp: {
+    capable: true,
+    statusBarStyle: "default",
+    title: "ארון ציוד",
+  },
   icons: {
     icon: "/favicon.png",
     apple: "/favicon.png",
