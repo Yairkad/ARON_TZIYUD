@@ -103,6 +103,12 @@ export default function WheelStationsPage() {
     tire_size_front: ''
   })
   const [addModelLoading, setAddModelLoading] = useState(false)
+  const [makeSuggestions, setMakeSuggestions] = useState<string[]>([])
+  const [makeHeSuggestions, setMakeHeSuggestions] = useState<string[]>([])
+  const [modelSuggestions, setModelSuggestions] = useState<string[]>([])
+  const [showMakeSuggestions, setShowMakeSuggestions] = useState(false)
+  const [showMakeHeSuggestions, setShowMakeHeSuggestions] = useState(false)
+  const [showModelSuggestions, setShowModelSuggestions] = useState(false)
 
   useEffect(() => {
     fetchStations()
@@ -246,6 +252,52 @@ export default function WheelStationsPage() {
     }
   }
 
+  // Fetch autocomplete suggestions
+  const fetchMakeSuggestions = async (value: string) => {
+    if (value.length < 2) {
+      setMakeSuggestions([])
+      return
+    }
+    try {
+      const response = await fetch(`/api/vehicle-models?make=${encodeURIComponent(value)}`)
+      const data = await response.json()
+      const uniqueMakes = [...new Set(data.vehicles.map((v: any) => v.make))]
+      setMakeSuggestions(uniqueMakes.slice(0, 5))
+    } catch {
+      setMakeSuggestions([])
+    }
+  }
+
+  const fetchMakeHeSuggestions = async (value: string) => {
+    if (value.length < 2) {
+      setMakeHeSuggestions([])
+      return
+    }
+    try {
+      const response = await fetch(`/api/vehicle-models?make=${encodeURIComponent(value)}`)
+      const data = await response.json()
+      const uniqueMakes = [...new Set(data.vehicles.map((v: any) => v.make_he))]
+      setMakeHeSuggestions(uniqueMakes.slice(0, 5))
+    } catch {
+      setMakeHeSuggestions([])
+    }
+  }
+
+  const fetchModelSuggestions = async (value: string) => {
+    if (value.length < 2) {
+      setModelSuggestions([])
+      return
+    }
+    try {
+      const response = await fetch(`/api/vehicle-models?model=${encodeURIComponent(value)}`)
+      const data = await response.json()
+      const uniqueModels = [...new Set(data.vehicles.map((v: any) => v.model))]
+      setModelSuggestions(uniqueModels.slice(0, 5))
+    } catch {
+      setModelSuggestions([])
+    }
+  }
+
   const handleAddVehicleModel = async () => {
     // Validate required fields
     if (!addModelForm.make || !addModelForm.make_he || !addModelForm.model ||
@@ -323,6 +375,12 @@ export default function WheelStationsPage() {
         @keyframes pulse {
           0%, 100% { opacity: 1; transform: scale(1); }
           50% { opacity: 0.7; transform: scale(0.95); }
+        }
+        .suggestion-item:hover {
+          background: #374151 !important;
+        }
+        .suggestion-item:last-child {
+          border-bottom: none !important;
         }
         @media (max-width: 600px) {
           .wheels-search-btn {
@@ -733,35 +791,110 @@ export default function WheelStationsPage() {
               <div style={styles.formRow}>
                 <div style={styles.formGroup}>
                   <label style={styles.formLabel}>יצרן (עברית) <span style={{ color: '#ef4444' }}>*</span></label>
-                  <input
-                    type="text"
-                    value={addModelForm.make_he}
-                    onChange={e => setAddModelForm({ ...addModelForm, make_he: e.target.value })}
-                    placeholder="טויוטה"
-                    style={styles.formInput}
-                  />
+                  <div style={{ position: 'relative' }}>
+                    <input
+                      type="text"
+                      value={addModelForm.make_he}
+                      onChange={e => {
+                        setAddModelForm({ ...addModelForm, make_he: e.target.value })
+                        fetchMakeHeSuggestions(e.target.value)
+                        setShowMakeHeSuggestions(true)
+                      }}
+                      onFocus={() => addModelForm.make_he.length >= 2 && setShowMakeHeSuggestions(true)}
+                      onBlur={() => setTimeout(() => setShowMakeHeSuggestions(false), 200)}
+                      placeholder="טויוטה"
+                      style={styles.formInput}
+                    />
+                    {showMakeHeSuggestions && makeHeSuggestions.length > 0 && (
+                      <div style={styles.suggestionsList}>
+                        {makeHeSuggestions.map((suggestion, i) => (
+                          <div
+                            key={i}
+                            className="suggestion-item"
+                            style={styles.suggestionItem}
+                            onClick={() => {
+                              setAddModelForm({ ...addModelForm, make_he: suggestion })
+                              setShowMakeHeSuggestions(false)
+                            }}
+                          >
+                            {suggestion}
+                          </div>
+                        ))}
+                      </div>
+                    )}
+                  </div>
                 </div>
                 <div style={styles.formGroup}>
                   <label style={styles.formLabel}>יצרן (אנגלית) <span style={{ color: '#ef4444' }}>*</span></label>
-                  <input
-                    type="text"
-                    value={addModelForm.make}
-                    onChange={e => setAddModelForm({ ...addModelForm, make: e.target.value })}
-                    placeholder="toyota"
-                    style={styles.formInput}
-                  />
+                  <div style={{ position: 'relative' }}>
+                    <input
+                      type="text"
+                      value={addModelForm.make}
+                      onChange={e => {
+                        setAddModelForm({ ...addModelForm, make: e.target.value })
+                        fetchMakeSuggestions(e.target.value)
+                        setShowMakeSuggestions(true)
+                      }}
+                      onFocus={() => addModelForm.make.length >= 2 && setShowMakeSuggestions(true)}
+                      onBlur={() => setTimeout(() => setShowMakeSuggestions(false), 200)}
+                      placeholder="toyota"
+                      style={styles.formInput}
+                    />
+                    {showMakeSuggestions && makeSuggestions.length > 0 && (
+                      <div style={styles.suggestionsList}>
+                        {makeSuggestions.map((suggestion, i) => (
+                          <div
+                            key={i}
+                            className="suggestion-item"
+                            style={styles.suggestionItem}
+                            onClick={() => {
+                              setAddModelForm({ ...addModelForm, make: suggestion })
+                              setShowMakeSuggestions(false)
+                            }}
+                          >
+                            {suggestion}
+                          </div>
+                        ))}
+                      </div>
+                    )}
+                  </div>
                 </div>
               </div>
 
               <div style={styles.formGroup}>
                 <label style={styles.formLabel}>דגם <span style={{ color: '#ef4444' }}>*</span></label>
-                <input
-                  type="text"
-                  value={addModelForm.model}
-                  onChange={e => setAddModelForm({ ...addModelForm, model: e.target.value })}
-                  placeholder="corolla"
-                  style={styles.formInput}
-                />
+                <div style={{ position: 'relative' }}>
+                  <input
+                    type="text"
+                    value={addModelForm.model}
+                    onChange={e => {
+                      setAddModelForm({ ...addModelForm, model: e.target.value })
+                      fetchModelSuggestions(e.target.value)
+                      setShowModelSuggestions(true)
+                    }}
+                    onFocus={() => addModelForm.model.length >= 2 && setShowModelSuggestions(true)}
+                    onBlur={() => setTimeout(() => setShowModelSuggestions(false), 200)}
+                    placeholder="corolla"
+                    style={styles.formInput}
+                  />
+                  {showModelSuggestions && modelSuggestions.length > 0 && (
+                    <div style={styles.suggestionsList}>
+                      {modelSuggestions.map((suggestion, i) => (
+                        <div
+                          key={i}
+                          className="suggestion-item"
+                          style={styles.suggestionItem}
+                          onClick={() => {
+                            setAddModelForm({ ...addModelForm, model: suggestion })
+                            setShowModelSuggestions(false)
+                          }}
+                        >
+                          {suggestion}
+                        </div>
+                      ))}
+                    </div>
+                  )}
+                </div>
               </div>
 
               <div style={styles.formRow}>
@@ -1501,5 +1634,26 @@ const styles: { [key: string]: React.CSSProperties } = {
     borderRadius: '8px',
     fontSize: '1rem',
     cursor: 'pointer',
+  },
+  suggestionsList: {
+    position: 'absolute',
+    top: '100%',
+    left: 0,
+    right: 0,
+    background: '#1f2937',
+    border: '1px solid #4b5563',
+    borderRadius: '8px',
+    marginTop: '4px',
+    maxHeight: '200px',
+    overflowY: 'auto',
+    zIndex: 1000,
+    boxShadow: '0 4px 6px rgba(0,0,0,0.3)',
+  },
+  suggestionItem: {
+    padding: '10px 12px',
+    cursor: 'pointer',
+    borderBottom: '1px solid #374151',
+    color: '#d1d5db',
+    fontSize: '0.95rem',
   },
 }
