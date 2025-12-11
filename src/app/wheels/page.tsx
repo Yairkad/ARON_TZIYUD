@@ -261,8 +261,8 @@ export default function WheelStationsPage() {
     try {
       const response = await fetch(`/api/vehicle-models?make=${encodeURIComponent(value)}`)
       const data = await response.json()
-      const uniqueMakes = [...new Set(data.vehicles.map((v: any) => v.make))]
-      setMakeSuggestions(uniqueMakes.slice(0, 5))
+      const uniqueMakes = [...new Set(data.vehicles.map((v: any) => v.make as string))]
+      setMakeSuggestions(uniqueMakes.slice(0, 5) as string[])
     } catch {
       setMakeSuggestions([])
     }
@@ -276,8 +276,8 @@ export default function WheelStationsPage() {
     try {
       const response = await fetch(`/api/vehicle-models?make=${encodeURIComponent(value)}`)
       const data = await response.json()
-      const uniqueMakes = [...new Set(data.vehicles.map((v: any) => v.make_he))]
-      setMakeHeSuggestions(uniqueMakes.slice(0, 5))
+      const uniqueMakes = [...new Set(data.vehicles.map((v: any) => v.make_he as string))]
+      setMakeHeSuggestions(uniqueMakes.slice(0, 5) as string[])
     } catch {
       setMakeHeSuggestions([])
     }
@@ -291,8 +291,8 @@ export default function WheelStationsPage() {
     try {
       const response = await fetch(`/api/vehicle-models?model=${encodeURIComponent(value)}`)
       const data = await response.json()
-      const uniqueModels = [...new Set(data.vehicles.map((v: any) => v.model))]
-      setModelSuggestions(uniqueModels.slice(0, 5))
+      const uniqueModels = [...new Set(data.vehicles.map((v: any) => v.model as string))]
+      setModelSuggestions(uniqueModels.slice(0, 5) as string[])
     } catch {
       setModelSuggestions([])
     }
