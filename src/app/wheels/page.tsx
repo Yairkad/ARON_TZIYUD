@@ -66,6 +66,28 @@ export default function WheelStationsPage() {
     available_only: true
   })
 
+  // Vehicle lookup state
+  const [showVehicleModal, setShowVehicleModal] = useState(false)
+  const [vehiclePlate, setVehiclePlate] = useState('')
+  const [vehicleLoading, setVehicleLoading] = useState(false)
+  const [vehicleResult, setVehicleResult] = useState<{
+    vehicle: {
+      manufacturer: string
+      model: string
+      year: number
+      color: string
+      front_tire: string
+    }
+    wheel_fitment: {
+      pcd: string
+      bolt_count: number
+      bolt_spacing: number
+      center_bore?: number
+    } | null
+  } | null>(null)
+  const [vehicleError, setVehicleError] = useState<string | null>(null)
+  const [vehicleSearchResults, setVehicleSearchResults] = useState<SearchResult[] | null>(null)
+
   useEffect(() => {
     fetchStations()
   }, [])
@@ -138,6 +160,74 @@ export default function WheelStationsPage() {
       bolt_spacing: '',
       available_only: true
     })
+  }
+
+  // Vehicle lookup functions
+  const openVehicleModal = () => {
+    setShowVehicleModal(true)
+    setVehicleResult(null)
+    setVehicleError(null)
+    setVehicleSearchResults(null)
+    setVehiclePlate('')
+  }
+
+  const closeVehicleModal = () => {
+    setShowVehicleModal(false)
+    setVehicleResult(null)
+    setVehicleError(null)
+    setVehicleSearchResults(null)
+    setVehiclePlate('')
+  }
+
+  // Extract rim size from tire string
+  const extractRimSize = (tire: string | null | undefined): number | null => {
+    if (!tire) return null
+    const match = tire.match(/R(\d+)/i)
+    return match ? parseInt(match[1]) : null
+  }
+
+  const handleVehicleLookup = async () => {
+    if (!vehiclePlate.trim()) {
+      toast.error('נא להזין מספר רישוי')
+      return
+    }
+
+    setVehicleLoading(true)
+    setVehicleError(null)
+    setVehicleResult(null)
+    setVehicleSearchResults(null)
+
+    try {
+      const response = await fetch(`/api/vehicle/lookup?plate=${encodeURIComponent(vehiclePlate)}`)
+      const data = await response.json()
+
+      if (!response.ok) {
+        setVehicleError(data.error || 'שגיאה בחיפוש')
+        return
+      }
+
+      setVehicleResult(data)
+
+      // If we have wheel fitment, search for matching wheels
+      if (data.wheel_fitment) {
+        const rimSize = extractRimSize(data.vehicle.front_tire)
+        const params = new URLSearchParams()
+        params.set('bolt_count', data.wheel_fitment.bolt_count.toString())
+        params.set('bolt_spacing', data.wheel_fitment.bolt_spacing.toString())
+        if (rimSize) params.set('rim_size', rimSize.toString())
+        params.set('available_only', 'true')
+
+        const searchResponse = await fetch(`/api/wheel-stations/search?${params}`)
+        if (searchResponse.ok) {
+          const searchData = await searchResponse.json()
+          setVehicleSearchResults(searchData.results)
+        }
+      }
+    } catch {
+      setVehicleError('שגיאה בחיבור לשרת')
+    } finally {
+      setVehicleLoading(false)
+    }
   }
 
   if (loading) {
@@ -224,10 +314,15 @@ export default function WheelStationsPage() {
         <h1 style={styles.title} className="wheels-header-title">תחנות השאלת גלגלים</h1>
         <p style={styles.subtitle}>בחר תחנה כדי לראות את המלאי הזמין</p>
 
-        {/* Search Button */}
-        <button style={styles.searchBtn} className="wheels-search-btn" onClick={openSearchModal}>
-          🔍 חיפוש גלגל בכל התחנות
-        </button>
+        {/* Search Buttons */}
+        <div style={styles.searchBtnsRow}>
+          <button style={styles.searchBtn} className="wheels-search-btn" onClick={openSearchModal}>
+            🔍 חיפוש לפי מפרט
+          </button>
+          <button style={styles.vehicleSearchBtn} className="wheels-search-btn" onClick={openVehicleModal}>
+            🚗 חיפוש לפי מספר רכב
+          </button>
+        </div>
       </header>
 
       {stations.length === 0 ? (
@@ -413,6 +508,122 @@ export default function WheelStationsPage() {
           </div>
         </div>
       )}
+
+      {/* Vehicle Lookup Modal */}
+      {showVehicleModal && (
+        <div style={styles.modalOverlay} onClick={closeVehicleModal}>
+          <div style={styles.vehicleModal} onClick={e => e.stopPropagation()}>
+            <div style={styles.modalHeader}>
+              <h3 style={styles.modalTitle}>🚗 חיפוש לפי מספר רכב</h3>
+              <button style={styles.closeBtn} onClick={closeVehicleModal}>✕</button>
+            </div>
+
+            {/* Search input */}
+            <div style={styles.vehicleInputRow}>
+              <input
+                type="text"
+                value={vehiclePlate}
+                onChange={e => setVehiclePlate(e.target.value)}
+                onKeyPress={e => e.key === 'Enter' && handleVehicleLookup()}
+                placeholder="הזן מספר רישוי..."
+                style={styles.vehicleInput}
+                dir="ltr"
+              />
+              <button
+                onClick={handleVehicleLookup}
+                disabled={vehicleLoading}
+                style={styles.vehicleLookupBtn}
+              >
+                {vehicleLoading ? '...' : '🔍'}
+              </button>
+            </div>
+
+            {/* Error */}
+            {vehicleError && (
+              <div style={styles.vehicleError}>❌ {vehicleError}</div>
+            )}
+
+            {/* Vehicle Result */}
+            {vehicleResult && (
+              <div style={styles.vehicleResultSection}>
+                {/* Vehicle Info */}
+                <div style={styles.vehicleInfoCard}>
+                  <div style={styles.vehicleInfoTitle}>
+                    {vehicleResult.vehicle.manufacturer} {vehicleResult.vehicle.model}
+                  </div>
+                  <div style={styles.vehicleInfoDetails}>
+                    <span>📅 {vehicleResult.vehicle.year}</span>
+                    <span>🎨 {vehicleResult.vehicle.color}</span>
+                  </div>
+                </div>
+
+                {/* Wheel Fitment */}
+                {vehicleResult.wheel_fitment ? (
+                  <div style={styles.vehicleFitmentCard}>
+                    <div style={styles.fitmentBadges}>
+                      <span style={styles.pcdBadge}>PCD: {vehicleResult.wheel_fitment.pcd}</span>
+                      {extractRimSize(vehicleResult.vehicle.front_tire) && (
+                        <span style={styles.rimBadge}>{extractRimSize(vehicleResult.vehicle.front_tire)}"</span>
+                      )}
+                    </div>
+
+                    {/* Search Results */}
+                    {vehicleSearchResults && vehicleSearchResults.length > 0 ? (
+                      <div style={styles.vehicleWheelResults}>
+                        <div style={styles.vehicleResultsHeader}>
+                          ✅ נמצאו {vehicleSearchResults.reduce((acc, r) => acc + r.availableCount, 0)} גלגלים מתאימים
+                        </div>
+                        {vehicleSearchResults.map(result => (
+                          <div key={result.station.id} style={styles.resultStationGroup}>
+                            <div style={styles.resultStationHeader}>
+                              <div style={styles.resultStationName}>🏙️ {result.station.name}</div>
+                              {result.station.city && (
+                                <div style={styles.resultCityBadge}>{result.station.city}</div>
+                              )}
+                            </div>
+                            <div style={styles.resultWheelsList}>
+                              {result.wheels.filter(w => w.is_available).map(wheel => (
+                                <Link
+                                  key={wheel.id}
+                                  href={`/wheels/${result.station.id}#wheel-${wheel.wheel_number}`}
+                                  style={styles.resultWheelCard}
+                                  onClick={closeVehicleModal}
+                                >
+                                  <div style={styles.resultWheelNumber}>#{wheel.wheel_number}</div>
+                                  <div style={styles.resultWheelSpecs}>
+                                    <span>{wheel.rim_size}"</span>
+                                    {wheel.is_donut && <span style={styles.resultDonutBadge}>דונאט</span>}
+                                  </div>
+                                </Link>
+                              ))}
+                            </div>
+                          </div>
+                        ))}
+                      </div>
+                    ) : vehicleSearchResults && vehicleSearchResults.length === 0 ? (
+                      <div style={styles.noVehicleResults}>
+                        😕 לא נמצאו גלגלים מתאימים במלאי
+                      </div>
+                    ) : null}
+                  </div>
+                ) : (
+                  <div style={styles.noFitmentCard}>
+                    ⚠️ לא נמצאו מידות גלגל לדגם זה במאגר
+                    <a
+                      href={`https://www.wheel-size.com/size/${vehicleResult.vehicle.model.toLowerCase()}/${vehicleResult.vehicle.year}/`}
+                      target="_blank"
+                      rel="noopener noreferrer"
+                      style={styles.wheelSizeLink}
+                    >
+                      חפש ב-wheel-size.com ↗
+                    </a>
+                  </div>
+                )}
+              </div>
+            )}
+          </div>
+        </div>
+      )}
     </div>
   )
 }
@@ -463,6 +674,12 @@ const styles: { [key: string]: React.CSSProperties } = {
     fontSize: '1.1rem',
     marginBottom: '20px',
   },
+  searchBtnsRow: {
+    display: 'flex',
+    gap: '12px',
+    justifyContent: 'center',
+    flexWrap: 'wrap',
+  },
   searchBtn: {
     background: 'linear-gradient(135deg, #3b82f6, #2563eb)',
     color: 'white',
@@ -475,6 +692,20 @@ const styles: { [key: string]: React.CSSProperties } = {
     display: 'inline-flex',
     alignItems: 'center',
     gap: '8px',
+  },
+  vehicleSearchBtn: {
+    background: 'linear-gradient(135deg, #10b981, #059669)',
+    color: 'white',
+    border: 'none',
+    padding: '14px 28px',
+    borderRadius: '12px',
+    cursor: 'pointer',
+    fontWeight: 'bold',
+    fontSize: '1rem',
+    display: 'inline-flex',
+    alignItems: 'center',
+    gap: '8px',
+    textDecoration: 'none',
   },
   loading: {
     display: 'flex',
@@ -798,6 +1029,136 @@ const styles: { [key: string]: React.CSSProperties } = {
   },
   resultTotal: {
     color: '#a0aec0',
+    fontSize: '0.9rem',
+  },
+  // Vehicle modal styles
+  vehicleModal: {
+    background: '#1e293b',
+    borderRadius: '16px',
+    padding: '25px',
+    width: '100%',
+    maxWidth: '500px',
+    maxHeight: '85vh',
+    overflowY: 'auto',
+  },
+  vehicleInputRow: {
+    display: 'flex',
+    gap: '10px',
+    marginBottom: '15px',
+  },
+  vehicleInput: {
+    flex: 1,
+    padding: '14px 18px',
+    borderRadius: '10px',
+    border: '2px solid #4a5568',
+    background: '#2d3748',
+    color: 'white',
+    fontSize: '1.2rem',
+    textAlign: 'center',
+    letterSpacing: '2px',
+  },
+  vehicleLookupBtn: {
+    background: 'linear-gradient(135deg, #10b981, #059669)',
+    color: 'white',
+    border: 'none',
+    padding: '14px 20px',
+    borderRadius: '10px',
+    cursor: 'pointer',
+    fontWeight: 'bold',
+    fontSize: '1.2rem',
+  },
+  vehicleError: {
+    background: 'rgba(239, 68, 68, 0.2)',
+    color: '#fca5a5',
+    padding: '12px',
+    borderRadius: '10px',
+    textAlign: 'center',
+    marginBottom: '15px',
+  },
+  vehicleResultSection: {
+    display: 'flex',
+    flexDirection: 'column',
+    gap: '15px',
+  },
+  vehicleInfoCard: {
+    background: 'rgba(59, 130, 246, 0.1)',
+    border: '1px solid rgba(59, 130, 246, 0.3)',
+    borderRadius: '12px',
+    padding: '15px',
+    textAlign: 'center',
+  },
+  vehicleInfoTitle: {
+    fontSize: '1.2rem',
+    fontWeight: 'bold',
+    color: '#60a5fa',
+    marginBottom: '8px',
+  },
+  vehicleInfoDetails: {
+    display: 'flex',
+    justifyContent: 'center',
+    gap: '20px',
+    color: '#a0aec0',
+    fontSize: '0.9rem',
+  },
+  vehicleFitmentCard: {
+    background: 'rgba(16, 185, 129, 0.1)',
+    border: '1px solid rgba(16, 185, 129, 0.3)',
+    borderRadius: '12px',
+    padding: '15px',
+  },
+  fitmentBadges: {
+    display: 'flex',
+    justifyContent: 'center',
+    gap: '12px',
+    marginBottom: '15px',
+  },
+  pcdBadge: {
+    background: 'rgba(16, 185, 129, 0.3)',
+    color: '#34d399',
+    padding: '8px 16px',
+    borderRadius: '20px',
+    fontWeight: 'bold',
+    fontSize: '1rem',
+  },
+  rimBadge: {
+    background: 'rgba(59, 130, 246, 0.3)',
+    color: '#60a5fa',
+    padding: '8px 16px',
+    borderRadius: '20px',
+    fontWeight: 'bold',
+    fontSize: '1rem',
+  },
+  vehicleWheelResults: {
+    marginTop: '10px',
+  },
+  vehicleResultsHeader: {
+    color: '#10b981',
+    fontWeight: 'bold',
+    textAlign: 'center',
+    marginBottom: '12px',
+    fontSize: '0.95rem',
+  },
+  noVehicleResults: {
+    textAlign: 'center',
+    color: '#fbbf24',
+    padding: '15px',
+    background: 'rgba(251, 191, 36, 0.1)',
+    borderRadius: '10px',
+  },
+  noFitmentCard: {
+    background: 'rgba(251, 191, 36, 0.1)',
+    border: '1px solid rgba(251, 191, 36, 0.3)',
+    borderRadius: '12px',
+    padding: '20px',
+    textAlign: 'center',
+    color: '#fbbf24',
+    display: 'flex',
+    flexDirection: 'column',
+    gap: '10px',
+  },
+  wheelSizeLink: {
+    color: '#60a5fa',
+    textDecoration: 'none',
     fontSize: '0.9rem',
   },
 }
