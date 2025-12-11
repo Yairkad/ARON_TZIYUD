@@ -327,7 +327,7 @@ export default function WheelStationsPage() {
 
     setLoginLoading(true)
     try {
-      // Try to authenticate with any wheel station
+      // Try to authenticate as wheel station manager or city manager
       const response = await fetch('/api/wheel-stations/auth', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
@@ -341,9 +341,11 @@ export default function WheelStationsPage() {
       }
 
       // Save to localStorage
+      const locationName = data.manager?.station_name || data.manager?.city_name || ''
       localStorage.setItem('vehicle_db_manager', JSON.stringify({
         phone: loginPhone,
-        name: data.manager?.full_name || ''
+        name: data.manager?.full_name || '',
+        location: locationName
       }))
 
       setIsManagerLoggedIn(true)
@@ -352,7 +354,10 @@ export default function WheelStationsPage() {
       setLoginPhone('')
       setLoginPassword('')
 
-      toast.success(`ברוך הבא, ${data.manager?.full_name || 'מנהל'}!`)
+      const welcomeMsg = locationName
+        ? `ברוך הבא ${data.manager?.full_name}, ${locationName}!`
+        : `ברוך הבא, ${data.manager?.full_name || 'מנהל'}!`
+      toast.success(welcomeMsg)
 
       // If there's pending vehicle data, open the add model form
       if (pendingVehicleData) {
@@ -880,12 +885,12 @@ export default function WheelStationsPage() {
 
             <div style={{ padding: '20px 0' }}>
               <p style={{ color: '#d1d5db', marginBottom: '20px', textAlign: 'center' }}>
-                כדי להוסיף דגם רכב למאגר, יש להתחבר כמנהל תחנה
+                כדי להוסיף דגם רכב למאגר, יש להתחבר כמנהל
               </p>
 
               <div style={{ display: 'flex', flexDirection: 'column', gap: '16px' }}>
                 <div>
-                  <label style={styles.formLabel}>מספר טלפון</label>
+                  <label style={styles.formLabel}>שם משתמש</label>
                   <input
                     type="tel"
                     inputMode="numeric"
