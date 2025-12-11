@@ -110,8 +110,28 @@ export default function WheelStationsPage() {
   const [showMakeHeSuggestions, setShowMakeHeSuggestions] = useState(false)
   const [showModelSuggestions, setShowModelSuggestions] = useState(false)
 
+  // Manager authentication for adding models
+  const [isManagerLoggedIn, setIsManagerLoggedIn] = useState(false)
+  const [managerPhone, setManagerPhone] = useState('')
+  const [showManagerLoginModal, setShowManagerLoginModal] = useState(false)
+  const [loginPhone, setLoginPhone] = useState('')
+  const [loginPassword, setLoginPassword] = useState('')
+  const [loginLoading, setLoginLoading] = useState(false)
+  const [pendingVehicleData, setPendingVehicleData] = useState<any>(null)
+
   useEffect(() => {
     fetchStations()
+    // Check if manager is logged in from localStorage
+    const savedManager = localStorage.getItem('vehicle_db_manager')
+    if (savedManager) {
+      try {
+        const { phone } = JSON.parse(savedManager)
+        setIsManagerLoggedIn(true)
+        setManagerPhone(phone)
+      } catch {
+        localStorage.removeItem('vehicle_db_manager')
+      }
+    }
   }, [])
 
   const fetchStations = async () => {
@@ -298,6 +318,78 @@ export default function WheelStationsPage() {
     }
   }
 
+  // Manager login
+  const handleManagerLogin = async () => {
+    if (!loginPhone || !loginPassword) {
+      toast.error('נא למלא טלפון וסיסמה')
+      return
+    }
+
+    setLoginLoading(true)
+    try {
+      // Try to authenticate with any wheel station
+      const response = await fetch('/api/wheel-stations/auth', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ phone: loginPhone, password: loginPassword })
+      })
+
+      const data = await response.json()
+
+      if (!response.ok) {
+        throw new Error(data.error || 'שגיאה בהתחברות')
+      }
+
+      // Save to localStorage
+      localStorage.setItem('vehicle_db_manager', JSON.stringify({
+        phone: loginPhone,
+        name: data.manager?.full_name || ''
+      }))
+
+      setIsManagerLoggedIn(true)
+      setManagerPhone(loginPhone)
+      setShowManagerLoginModal(false)
+      setLoginPhone('')
+      setLoginPassword('')
+
+      toast.success(`ברוך הבא, ${data.manager?.full_name || 'מנהל'}!`)
+
+      // If there's pending vehicle data, open the add model form
+      if (pendingVehicleData) {
+        setAddModelForm({
+          ...addModelForm,
+          make: pendingVehicleData.make,
+          make_he: pendingVehicleData.make_he,
+          model: pendingVehicleData.model,
+          year_from: pendingVehicleData.year_from,
+          tire_size_front: pendingVehicleData.tire_size_front
+        })
+        setShowAddModelModal(true)
+        setPendingVehicleData(null)
+      }
+    } catch (error: any) {
+      toast.error(error.message || 'שגיאה בהתחברות')
+    } finally {
+      setLoginLoading(false)
+    }
+  }
+
+  // Open add model modal - check if logged in first
+  const handleOpenAddModel = (vehicleData: any) => {
+    if (!isManagerLoggedIn) {
+      // Save vehicle data and show login modal
+      setPendingVehicleData(vehicleData)
+      setShowManagerLoginModal(true)
+    } else {
+      // Already logged in, open add model form
+      setAddModelForm({
+        ...addModelForm,
+        ...vehicleData
+      })
+      setShowAddModelModal(true)
+    }
+  }
+
   const handleAddVehicleModel = async () => {
     // Validate required fields
     if (!addModelForm.make || !addModelForm.make_he || !addModelForm.model ||
@@ -312,7 +404,10 @@ export default function WheelStationsPage() {
       const response = await fetch('/api/vehicle-models', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify(addModelForm)
+        body: JSON.stringify({
+          ...addModelForm,
+          added_by: managerPhone
+        })
       })
 
       const data = await response.json()
@@ -755,17 +850,13 @@ export default function WheelStationsPage() {
                       </a>
                     </div>
                     <button
-                      onClick={() => {
-                        setAddModelForm({
-                          ...addModelForm,
-                          make: vehicleResult.vehicle.manufacturer.toLowerCase(),
-                          make_he: vehicleResult.vehicle.manufacturer,
-                          model: vehicleResult.vehicle.model.toLowerCase(),
-                          year_from: vehicleResult.vehicle.year.toString(),
-                          tire_size_front: vehicleResult.vehicle.front_tire
-                        })
-                        setShowAddModelModal(true)
-                      }}
+                      onClick={() => handleOpenAddModel({
+                        make: vehicleResult.vehicle.manufacturer.toLowerCase(),
+                        make_he: vehicleResult.vehicle.manufacturer,
+                        model: vehicleResult.vehicle.model.toLowerCase(),
+                        year_from: vehicleResult.vehicle.year.toString(),
+                        tire_size_front: vehicleResult.vehicle.front_tire
+                      })}
                       style={styles.addModelBtn}
                     >
                       ➕ הוסף דגם זה למאגר
@@ -774,6 +865,64 @@ export default function WheelStationsPage() {
                 )}
               </div>
             )}
+          </div>
+        </div>
+      )}
+
+      {/* Manager Login Modal */}
+      {showManagerLoginModal && (
+        <div style={styles.modalOverlay} onClick={() => setShowManagerLoginModal(false)}>
+          <div style={styles.vehicleModal} onClick={e => e.stopPropagation()}>
+            <div style={styles.modalHeader}>
+              <h3 style={styles.modalTitle}>🔐 התחברות מנהל</h3>
+              <button style={styles.closeBtn} onClick={() => setShowManagerLoginModal(false)}>✕</button>
+            </div>
+
+            <div style={{ padding: '20px 0' }}>
+              <p style={{ color: '#d1d5db', marginBottom: '20px', textAlign: 'center' }}>
+                כדי להוסיף דגם רכב למאגר, יש להתחבר כמנהל תחנה
+              </p>
+
+              <div style={{ display: 'flex', flexDirection: 'column', gap: '16px' }}>
+                <div>
+                  <label style={styles.formLabel}>מספר טלפון</label>
+                  <input
+                    type="tel"
+                    inputMode="numeric"
+                    value={loginPhone}
+                    onChange={e => setLoginPhone(e.target.value)}
+                    onKeyPress={e => e.key === 'Enter' && handleManagerLogin()}
+                    placeholder="05xxxxxxxx"
+                    style={styles.formInput}
+                    dir="ltr"
+                  />
+                </div>
+
+                <div>
+                  <label style={styles.formLabel}>סיסמה</label>
+                  <input
+                    type="password"
+                    value={loginPassword}
+                    onChange={e => setLoginPassword(e.target.value)}
+                    onKeyPress={e => e.key === 'Enter' && handleManagerLogin()}
+                    placeholder="הזן סיסמה"
+                    style={styles.formInput}
+                  />
+                </div>
+
+                <button
+                  onClick={handleManagerLogin}
+                  disabled={loginLoading}
+                  style={{
+                    ...styles.submitBtn,
+                    opacity: loginLoading ? 0.6 : 1,
+                    cursor: loginLoading ? 'not-allowed' : 'pointer'
+                  }}
+                >
+                  {loginLoading ? 'מתחבר...' : '🔓 התחבר'}
+                </button>
+              </div>
+            </div>
           </div>
         </div>
       )}
