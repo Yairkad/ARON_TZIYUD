@@ -502,10 +502,10 @@ function SignFormContent({ stationId }: { stationId: string }) {
                       <strong>סכום:</strong> ₪{station.deposit_amount || 200}
                     </div>
                     <a
-                      href={`intent://pay?phone=${station.payment_methods.bit.phone.replace(/\D/g, '')}&amount=${station.deposit_amount || 200}#Intent;scheme=bit;package=com.bnhp.payments.paymentsapp;end`}
+                      href={`bit://pay?phone=${station.payment_methods.bit.phone.replace(/\D/g, '')}`}
                       style={styles.paymentLink}
                     >
-                      פתח אפליקציית ביט (אנדרואיד) ←
+                      פתח אפליקציית ביט ←
                     </a>
                     <button
                       type="button"
@@ -542,16 +542,22 @@ function SignFormContent({ stationId }: { stationId: string }) {
                       <strong>מספר לתשלום:</strong> {station.payment_methods.paybox.phone}<br/>
                       <strong>סכום:</strong> ₪{station.deposit_amount || 200}
                     </div>
+                    <a
+                      href={`paybox://send?phone=${station.payment_methods.paybox.phone.replace(/\D/g, '')}`}
+                      style={styles.paymentLink}
+                    >
+                      פתח אפליקציית פייבוקס ←
+                    </a>
                     <button
                       type="button"
                       onClick={() => {
                         const phoneNumber = station.payment_methods?.paybox?.phone?.replace(/\D/g, '') || ''
                         navigator.clipboard.writeText(phoneNumber)
-                        toast.success('מספר הטלפון הועתק! פתח את אפליקציית פייבוקס והעבר לטלפון זה')
+                        toast.success('מספר הטלפון הועתק!')
                       }}
-                      style={styles.paymentLink}
+                      style={styles.copyBtn}
                     >
-                      📋 העתק מספר והעבר בפייבוקס
+                      📋 העתק מספר טלפון
                     </button>
                   </div>
                 )}
