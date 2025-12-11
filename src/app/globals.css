@@ -80,6 +80,12 @@ body::before {
   animation: fadeIn 0.5s ease-out;
 }
 
+/* Spinning wheel animation for loading states */
+.spinning-wheel {
+  display: inline-block;
+  animation: spin 1s linear infinite;
+}
+
 /* Smooth scroll */
 html {
   scroll-behavior: smooth;

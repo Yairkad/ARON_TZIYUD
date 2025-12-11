@@ -537,9 +537,17 @@ export default function WheelStationsPage() {
               <button
                 onClick={handleVehicleLookup}
                 disabled={vehicleLoading}
-                style={styles.vehicleLookupBtn}
+                style={{
+                  ...styles.vehicleLookupBtn,
+                  ...(vehicleLoading ? { minWidth: '120px' } : {})
+                }}
               >
-                {vehicleLoading ? '...' : '🔍'}
+                {vehicleLoading ? (
+                  <span style={{ display: 'flex', alignItems: 'center', gap: '6px' }}>
+                    <span className="spinning-wheel">🛞</span>
+                    <span style={{ fontSize: '0.9rem' }}>מחפש...</span>
+                  </span>
+                ) : '🔍'}
               </button>
             </div>
 
