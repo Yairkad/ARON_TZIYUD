@@ -323,7 +323,7 @@ function SignFormContent({ stationId }: { stationId: string }) {
 
         {/* Intro text */}
         <div style={styles.infoBox}>
-          <p>עמותת ידידים סיוע בדרכים סניף ירושלים מאפשרת לשאול גלגלים לפרק זמן מוגבל על מנת לעזור במקרים בהם אין פנצ'ריות פתוחות, ולא ניתן לבצע תיקון זמני.</p>
+          <p>עמותת ידידים סיוע בדרכים סניף {station.name} מאפשרת לשאול גלגלים לפרק זמן מוגבל על מנת לעזור במקרים בהם אין פנצ'ריות פתוחות, ולא ניתן לבצע תיקון זמני.</p>
           <p style={{ marginTop: '10px' }}>אנו מבקשים להחזיר את הגלגל בהקדם האפשרי ועד 72 שעות ממועד ההשאלה, על מנת שנוכל להמשיך ולסייע לאנשים נוספים.</p>
           <p style={{ marginTop: '10px' }}>ארגון ידידים פועל בהתנדבות מלאה, ותרומות עוזרות לארגון ברכישת ציוד - <a href="https://yedidim-il.org" target="_blank" rel="noopener noreferrer" style={styles.link}>ניתן לתרום כאן</a></p>
           <p style={{ marginTop: '10px' }}>להצטרפות למעצמה - פנו להנהלת הסניף או <a href="https://yedidim-il.org" target="_blank" rel="noopener noreferrer" style={styles.link}>בקישור זה</a></p>
@@ -542,22 +542,16 @@ function SignFormContent({ stationId }: { stationId: string }) {
                       <strong>מספר לתשלום:</strong> {station.payment_methods.paybox.phone}<br/>
                       <strong>סכום:</strong> ₪{station.deposit_amount || 200}
                     </div>
-                    <a
-                      href={`intent://send?phone=${station.payment_methods.paybox.phone.replace(/\D/g, '')}&amount=${station.deposit_amount || 200}#Intent;scheme=paybox;package=com.payboxapp;end`}
-                      style={styles.paymentLink}
-                    >
-                      פתח אפליקציית פייבוקס (אנדרואיד) ←
-                    </a>
                     <button
                       type="button"
                       onClick={() => {
                         const phoneNumber = station.payment_methods?.paybox?.phone?.replace(/\D/g, '') || ''
                         navigator.clipboard.writeText(phoneNumber)
-                        toast.success('מספר הטלפון הועתק!')
+                        toast.success('מספר הטלפון הועתק! פתח את אפליקציית פייבוקס והעבר לטלפון זה')
                       }}
-                      style={styles.copyBtn}
+                      style={styles.paymentLink}
                     >
-                      📋 העתק מספר טלפון
+                      📋 העתק מספר והעבר בפייבוקס
                     </button>
                   </div>
                 )}
