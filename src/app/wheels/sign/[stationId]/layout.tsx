@@ -20,15 +20,5 @@ export default function SignLayout({
 }: {
   children: React.ReactNode
 }) {
-  return (
-    <>
-      <style dangerouslySetInnerHTML={{__html: `
-        html, body {
-          background: linear-gradient(135deg, #1e3a8a 0%, #374151 100%) !important;
-          min-height: 100vh;
-        }
-      `}} />
-      {children}
-    </>
-  )
+  return children
 }

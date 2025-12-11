@@ -263,18 +263,8 @@ function SignFormContent({ stationId }: { stationId: string }) {
   if (loading) {
     return (
       <div style={styles.container}>
-        <style>{`
-          @keyframes pulse {
-            0%, 100% { opacity: 1; transform: scale(1); }
-            50% { opacity: 0.7; transform: scale(0.95); }
-          }
-        `}</style>
         <div style={styles.loading}>
-          <img
-            src="/logo.wheels.png"
-            alt="טוען..."
-            style={{ width: '120px', height: '120px', objectFit: 'contain', marginBottom: '16px', animation: 'pulse 1.5s ease-in-out infinite' }}
-          />
+          <div style={styles.spinnerEmoji}>🛞</div>
           <p>טוען טופס...</p>
         </div>
       </div>
