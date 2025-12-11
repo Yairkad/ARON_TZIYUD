@@ -33,6 +33,14 @@ export default function RootLayout({
 }>) {
   return (
     <html lang="he" dir="rtl">
+      <head>
+        <style dangerouslySetInnerHTML={{__html: `
+          html, body {
+            background: linear-gradient(135deg, #0f172a 0%, #1e3a8a 100%) !important;
+            min-height: 100vh;
+          }
+        `}} />
+      </head>
       <body className={`${rubik.className} antialiased`}>
         <ToastProvider />
         {children}
