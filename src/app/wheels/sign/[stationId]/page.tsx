@@ -540,14 +540,11 @@ function SignFormContent({ stationId }: { stationId: string }) {
                   <div style={{ marginRight: '26px', display: 'flex', flexDirection: 'column', gap: '8px' }}>
                     <div style={styles.paymentInfo}>
                       <strong>מספר לתשלום:</strong> {station.payment_methods.paybox.phone}<br/>
-                      <strong>סכום:</strong> ₪{station.deposit_amount || 200}
+                      <strong>סכום:</strong> ₪{station.deposit_amount || 200}<br/>
+                      <span style={{ color: '#f59e0b', fontSize: '14px', marginTop: '4px', display: 'block' }}>
+                        ⚠️ אפליקציית PayBox לא תומכת בפתיחה אוטומטית מטעמי אבטחה. יש לפתוח את האפליקציה באופן ידני.
+                      </span>
                     </div>
-                    <a
-                      href="intent://#Intent;package=com.payboxapp;end"
-                      style={styles.paymentLink}
-                    >
-                      פתח אפליקציית פייבוקס ←
-                    </a>
                     <button
                       type="button"
                       onClick={() => {
