@@ -16,18 +16,11 @@ interface Station {
   id: string
   name: string
   address: string
-  city_id: string | null
   is_active: boolean
   manager_password: string | null
   wheel_station_managers: Manager[]
   totalWheels: number
   availableWheels: number
-  cities?: { name: string }
-}
-
-interface City {
-  id: string
-  name: string
 }
 
 // Super admin password - stored in environment variable
@@ -40,7 +33,6 @@ export default function WheelsAdminPage() {
   const [showPassword, setShowPassword] = useState(false)
 
   const [stations, setStations] = useState<Station[]>([])
-  const [cities, setCities] = useState<City[]>([])
   const [loading, setLoading] = useState(true)
   const [actionLoading, setActionLoading] = useState(false)
 
@@ -53,7 +45,6 @@ export default function WheelsAdminPage() {
   const [stationForm, setStationForm] = useState({
     name: '',
     address: '',
-    city_id: '',
     manager_password: '',
     managers: [] as Manager[]
   })
@@ -77,7 +68,6 @@ export default function WheelsAdminPage() {
   useEffect(() => {
     if (isAuthenticated) {
       fetchStations()
-      fetchCities()
     }
   }, [isAuthenticated])
 
@@ -110,23 +100,11 @@ export default function WheelsAdminPage() {
     }
   }
 
-  const fetchCities = async () => {
-    try {
-      const response = await fetch('/api/cities')
-      if (response.ok) {
-        const data = await response.json()
-        setCities(data.cities || [])
-      }
-    } catch (err) {
-      console.error('Error fetching cities:', err)
-    }
-  }
 
   const resetForm = () => {
     setStationForm({
       name: '',
       address: '',
-      city_id: '',
       manager_password: '',
       managers: []
     })
@@ -243,7 +221,6 @@ export default function WheelsAdminPage() {
     setStationForm({
       name: station.name,
       address: station.address || '',
-      city_id: station.city_id || '',
       manager_password: station.manager_password || '',
       managers: station.wheel_station_managers || []
     })
@@ -389,7 +366,6 @@ export default function WheelsAdminPage() {
                     background: station.is_active ? '#10b981' : '#ef4444'
                   }} />
                   <h3 style={styles.stationName}>{station.name}</h3>
-                  {station.cities?.name && <span style={styles.cityBadge}>{station.cities.name}</span>}
                 </div>
                 <div style={styles.stationStats}>
                   <span style={styles.statBadge}>{station.totalWheels} גלגלים</span>
@@ -477,20 +453,6 @@ export default function WheelsAdminPage() {
                 style={styles.input}
                 placeholder="רחוב ומספר"
               />
-            </div>
-
-            <div style={styles.formGroup}>
-              <label style={styles.label}>עיר</label>
-              <select
-                value={stationForm.city_id}
-                onChange={e => setStationForm({...stationForm, city_id: e.target.value})}
-                style={styles.input}
-              >
-                <option value="">בחר עיר (אופציונלי)</option>
-                {cities.map(city => (
-                  <option key={city.id} value={city.id}>{city.name}</option>
-                ))}
-              </select>
             </div>
 
             <div style={styles.formGroup}>
@@ -698,13 +660,6 @@ const styles: { [key: string]: React.CSSProperties } = {
   stationName: {
     margin: 0,
     fontSize: '1.1rem',
-  },
-  cityBadge: {
-    background: 'rgba(59, 130, 246, 0.2)',
-    color: '#60a5fa',
-    padding: '3px 8px',
-    borderRadius: '6px',
-    fontSize: '0.8rem',
   },
   stationStats: {
     display: 'flex',
