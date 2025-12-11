@@ -88,6 +88,22 @@ export default function WheelStationsPage() {
   const [vehicleError, setVehicleError] = useState<string | null>(null)
   const [vehicleSearchResults, setVehicleSearchResults] = useState<SearchResult[] | null>(null)
 
+  // Add vehicle model modal state
+  const [showAddModelModal, setShowAddModelModal] = useState(false)
+  const [addModelForm, setAddModelForm] = useState({
+    make: '',
+    make_he: '',
+    model: '',
+    year_from: '',
+    year_to: '',
+    bolt_count: '',
+    bolt_spacing: '',
+    center_bore: '',
+    rim_size: '',
+    tire_size_front: ''
+  })
+  const [addModelLoading, setAddModelLoading] = useState(false)
+
   useEffect(() => {
     fetchStations()
   }, [])
@@ -227,6 +243,51 @@ export default function WheelStationsPage() {
       setVehicleError('שגיאה בחיבור לשרת')
     } finally {
       setVehicleLoading(false)
+    }
+  }
+
+  const handleAddVehicleModel = async () => {
+    // Validate required fields
+    if (!addModelForm.make || !addModelForm.make_he || !addModelForm.model ||
+        !addModelForm.bolt_count || !addModelForm.bolt_spacing) {
+      toast.error('נא למלא את כל השדות החובה')
+      return
+    }
+
+    setAddModelLoading(true)
+
+    try {
+      const response = await fetch('/api/vehicle-models', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(addModelForm)
+      })
+
+      const data = await response.json()
+
+      if (!response.ok) {
+        throw new Error(data.error || 'שגיאה בהוספת הדגם')
+      }
+
+      toast.success('הדגם נוסף בהצלחה למאגר!')
+      setShowAddModelModal(false)
+      // Reset form
+      setAddModelForm({
+        make: '',
+        make_he: '',
+        model: '',
+        year_from: '',
+        year_to: '',
+        bolt_count: '',
+        bolt_spacing: '',
+        center_bore: '',
+        rim_size: '',
+        tire_size_front: ''
+      })
+    } catch (error: any) {
+      toast.error(error.message || 'שגיאה בהוספת הדגם')
+    } finally {
+      setAddModelLoading(false)
     }
   }
 
@@ -635,10 +696,175 @@ export default function WheelStationsPage() {
                         חפש ב-wheelfitment.eu ↗
                       </a>
                     </div>
+                    <button
+                      onClick={() => {
+                        setAddModelForm({
+                          ...addModelForm,
+                          make: vehicleResult.vehicle.manufacturer.toLowerCase(),
+                          make_he: vehicleResult.vehicle.manufacturer,
+                          model: vehicleResult.vehicle.model.toLowerCase(),
+                          year_from: vehicleResult.vehicle.year.toString(),
+                          tire_size_front: vehicleResult.vehicle.front_tire
+                        })
+                        setShowAddModelModal(true)
+                      }}
+                      style={styles.addModelBtn}
+                    >
+                      ➕ הוסף דגם זה למאגר
+                    </button>
                   </div>
                 )}
               </div>
             )}
+          </div>
+        </div>
+      )}
+
+      {/* Add Vehicle Model Modal */}
+      {showAddModelModal && (
+        <div style={styles.modalOverlay} onClick={() => setShowAddModelModal(false)}>
+          <div style={styles.addModelModal} onClick={e => e.stopPropagation()}>
+            <div style={styles.modalHeader}>
+              <h3 style={styles.modalTitle}>➕ הוסף דגם רכב למאגר</h3>
+              <button style={styles.closeBtn} onClick={() => setShowAddModelModal(false)}>✕</button>
+            </div>
+
+            <div style={styles.addModelForm}>
+              <div style={styles.formRow}>
+                <div style={styles.formGroup}>
+                  <label style={styles.formLabel}>יצרן (עברית) <span style={{ color: '#ef4444' }}>*</span></label>
+                  <input
+                    type="text"
+                    value={addModelForm.make_he}
+                    onChange={e => setAddModelForm({ ...addModelForm, make_he: e.target.value })}
+                    placeholder="טויוטה"
+                    style={styles.formInput}
+                  />
+                </div>
+                <div style={styles.formGroup}>
+                  <label style={styles.formLabel}>יצרן (אנגלית) <span style={{ color: '#ef4444' }}>*</span></label>
+                  <input
+                    type="text"
+                    value={addModelForm.make}
+                    onChange={e => setAddModelForm({ ...addModelForm, make: e.target.value })}
+                    placeholder="toyota"
+                    style={styles.formInput}
+                  />
+                </div>
+              </div>
+
+              <div style={styles.formGroup}>
+                <label style={styles.formLabel}>דגם <span style={{ color: '#ef4444' }}>*</span></label>
+                <input
+                  type="text"
+                  value={addModelForm.model}
+                  onChange={e => setAddModelForm({ ...addModelForm, model: e.target.value })}
+                  placeholder="corolla"
+                  style={styles.formInput}
+                />
+              </div>
+
+              <div style={styles.formRow}>
+                <div style={styles.formGroup}>
+                  <label style={styles.formLabel}>שנה מ-</label>
+                  <input
+                    type="number"
+                    value={addModelForm.year_from}
+                    onChange={e => setAddModelForm({ ...addModelForm, year_from: e.target.value })}
+                    placeholder="2015"
+                    style={styles.formInput}
+                  />
+                </div>
+                <div style={styles.formGroup}>
+                  <label style={styles.formLabel}>שנה עד</label>
+                  <input
+                    type="number"
+                    value={addModelForm.year_to}
+                    onChange={e => setAddModelForm({ ...addModelForm, year_to: e.target.value })}
+                    placeholder="2020 (ריק = עד היום)"
+                    style={styles.formInput}
+                  />
+                </div>
+              </div>
+
+              <div style={styles.formRow}>
+                <div style={styles.formGroup}>
+                  <label style={styles.formLabel}>כמות ברגים <span style={{ color: '#ef4444' }}>*</span></label>
+                  <select
+                    value={addModelForm.bolt_count}
+                    onChange={e => setAddModelForm({ ...addModelForm, bolt_count: e.target.value })}
+                    style={styles.formInput}
+                  >
+                    <option value="">בחר...</option>
+                    <option value="4">4</option>
+                    <option value="5">5</option>
+                    <option value="6">6</option>
+                  </select>
+                </div>
+                <div style={styles.formGroup}>
+                  <label style={styles.formLabel}>PCD (מרווח ברגים) <span style={{ color: '#ef4444' }}>*</span></label>
+                  <input
+                    type="number"
+                    step="0.1"
+                    value={addModelForm.bolt_spacing}
+                    onChange={e => setAddModelForm({ ...addModelForm, bolt_spacing: e.target.value })}
+                    placeholder="114.3"
+                    style={styles.formInput}
+                  />
+                </div>
+              </div>
+
+              <div style={styles.formRow}>
+                <div style={styles.formGroup}>
+                  <label style={styles.formLabel}>Center Bore</label>
+                  <input
+                    type="number"
+                    step="0.1"
+                    value={addModelForm.center_bore}
+                    onChange={e => setAddModelForm({ ...addModelForm, center_bore: e.target.value })}
+                    placeholder="60.1"
+                    style={styles.formInput}
+                  />
+                </div>
+                <div style={styles.formGroup}>
+                  <label style={styles.formLabel}>גודל חישוק</label>
+                  <input
+                    type="text"
+                    value={addModelForm.rim_size}
+                    onChange={e => setAddModelForm({ ...addModelForm, rim_size: e.target.value })}
+                    placeholder="15, 16, 17"
+                    style={styles.formInput}
+                  />
+                </div>
+              </div>
+
+              <div style={styles.formGroup}>
+                <label style={styles.formLabel}>גודל צמיג קדמי</label>
+                <input
+                  type="text"
+                  value={addModelForm.tire_size_front}
+                  onChange={e => setAddModelForm({ ...addModelForm, tire_size_front: e.target.value })}
+                  placeholder="195/60R15"
+                  style={styles.formInput}
+                />
+              </div>
+
+              <div style={styles.formActions}>
+                <button
+                  onClick={handleAddVehicleModel}
+                  disabled={addModelLoading}
+                  style={styles.submitBtn}
+                >
+                  {addModelLoading ? 'מוסיף...' : '✅ הוסף למאגר'}
+                </button>
+                <button
+                  onClick={() => setShowAddModelModal(false)}
+                  style={styles.cancelBtn}
+                >
+                  ביטול
+                </button>
+              </div>
+            </div>
           </div>
         </div>
       )}
@@ -1200,5 +1426,80 @@ const styles: { [key: string]: React.CSSProperties } = {
     flexDirection: 'column',
     gap: '8px',
     marginTop: '5px',
+  },
+  addModelBtn: {
+    marginTop: '15px',
+    padding: '12px 20px',
+    background: '#10b981',
+    color: '#fff',
+    border: 'none',
+    borderRadius: '8px',
+    fontSize: '1rem',
+    cursor: 'pointer',
+    fontWeight: 'bold',
+  },
+  addModelModal: {
+    background: '#1f2937',
+    borderRadius: '16px',
+    padding: '24px',
+    maxWidth: '600px',
+    width: '90%',
+    maxHeight: '90vh',
+    overflowY: 'auto',
+    boxShadow: '0 25px 50px -12px rgba(0,0,0,0.5)',
+  },
+  addModelForm: {
+    display: 'flex',
+    flexDirection: 'column',
+    gap: '16px',
+  },
+  formRow: {
+    display: 'grid',
+    gridTemplateColumns: '1fr 1fr',
+    gap: '16px',
+  },
+  formGroup: {
+    display: 'flex',
+    flexDirection: 'column',
+    gap: '6px',
+  },
+  formLabel: {
+    fontSize: '0.9rem',
+    color: '#d1d5db',
+    fontWeight: '500',
+  },
+  formInput: {
+    padding: '10px',
+    background: '#374151',
+    border: '1px solid #4b5563',
+    borderRadius: '8px',
+    color: '#fff',
+    fontSize: '1rem',
+  },
+  formActions: {
+    display: 'flex',
+    gap: '12px',
+    marginTop: '10px',
+  },
+  submitBtn: {
+    flex: 1,
+    padding: '12px',
+    background: '#10b981',
+    color: '#fff',
+    border: 'none',
+    borderRadius: '8px',
+    fontSize: '1rem',
+    cursor: 'pointer',
+    fontWeight: 'bold',
+  },
+  cancelBtn: {
+    flex: 1,
+    padding: '12px',
+    background: '#6b7280',
+    color: '#fff',
+    border: 'none',
+    borderRadius: '8px',
+    fontSize: '1rem',
+    cursor: 'pointer',
   },
 }

@@ -5,7 +5,11 @@
  */
 
 import { NextRequest, NextResponse } from 'next/server'
-import { findPCD, extractMakeFromHebrew } from '@/lib/pcd-database'
+import { extractMakeFromHebrew } from '@/lib/pcd-database'
+import { createClient } from '@supabase/supabase-js'
+
+const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL!
+const supabaseAnonKey = process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!
 
 // data.gov.il resource ID for vehicle database
 const RESOURCE_ID = '053cea08-09bc-40ec-8f7a-156f0677aff3'
@@ -97,11 +101,25 @@ export async function GET(request: NextRequest) {
 
     const vehicle = data.result.records[0]
 
-    // Try to find PCD data from our database
+    // Try to find PCD data from Supabase database
+    const supabase = createClient(supabaseUrl, supabaseAnonKey)
     const makeEnglish = extractMakeFromHebrew(vehicle.tozeret_nm)
-    const pcdData = makeEnglish
-      ? findPCD(makeEnglish, vehicle.kinuy_mishari, vehicle.shnat_yitzur)
-      : null
+
+    let pcdData = null
+    if (makeEnglish) {
+      const { data: vehicleModels, error } = await supabase
+        .from('vehicle_models')
+        .select('*')
+        .or(`make.ilike.%${makeEnglish}%,make_he.ilike.%${vehicle.tozeret_nm}%`)
+        .ilike('model', `%${vehicle.kinuy_mishari}%`)
+        .lte('year_from', vehicle.shnat_yitzur)
+        .or(`year_to.gte.${vehicle.shnat_yitzur},year_to.is.null`)
+        .limit(1)
+
+      if (!error && vehicleModels && vehicleModels.length > 0) {
+        pcdData = vehicleModels[0]
+      }
+    }
 
     // Return cleaned vehicle data with PCD
     return NextResponse.json({
