@@ -57,6 +57,9 @@ export default function WheelsAdminPage() {
     color: '#3b82f6'
   })
 
+  // Stations section toggle
+  const [showStationsSection, setShowStationsSection] = useState(false)
+
   // Modals
   const [showAddStation, setShowAddStation] = useState(false)
   const [editingStation, setEditingStation] = useState<Station | null>(null)
@@ -482,8 +485,12 @@ export default function WheelsAdminPage() {
 
       {/* Action Buttons */}
       <div style={{ display: 'flex', gap: '10px', marginBottom: '20px', flexWrap: 'wrap' }}>
-        <button style={styles.addStationBtn} className="admin-add-btn" onClick={() => { resetForm(); setShowAddStation(true) }}>
-          ➕ הוסף תחנה חדשה
+        <button
+          style={{...styles.addStationBtn, background: showStationsSection ? 'linear-gradient(135deg, #3b82f6, #2563eb)' : 'linear-gradient(135deg, #10b981, #059669)'}}
+          className="admin-add-btn"
+          onClick={() => setShowStationsSection(!showStationsSection)}
+        >
+          🏢 {showStationsSection ? 'הסתר' : 'נהל'} תחנות
         </button>
         <button
           style={{...styles.addStationBtn, background: 'linear-gradient(135deg, #8b5cf6, #7c3aed)'}}
@@ -545,12 +552,24 @@ export default function WheelsAdminPage() {
         </div>
       )}
 
-      {/* Stations List */}
-      {loading ? (
-        <div style={styles.loading}>טוען...</div>
-      ) : (
-        <div style={styles.stationsList}>
-          {stations.map(station => (
+      {/* Stations Management Section */}
+      {showStationsSection && (
+        <div style={{...styles.stationSection, marginBottom: '30px'}}>
+          <div style={{display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '15px'}}>
+            <h2 style={{color: '#10b981', fontSize: '1.3rem', margin: 0}}>🏢 ניהול תחנות ({stations.length})</h2>
+            <button
+              style={{...styles.addManagerBtn, background: '#10b981'}}
+              onClick={() => { resetForm(); setShowAddStation(true) }}
+            >
+              ➕ הוסף תחנה
+            </button>
+          </div>
+
+          {loading ? (
+            <div style={styles.loading}>טוען...</div>
+          ) : (
+            <div style={styles.stationsList}>
+              {stations.map(station => (
             <div key={station.id} style={styles.stationCard}>
               <div style={styles.stationHeader} onClick={() => setExpandedStation(expandedStation === station.id ? null : station.id)}>
                 <div style={styles.stationInfo}>
@@ -633,7 +652,9 @@ export default function WheelsAdminPage() {
                 </div>
               )}
             </div>
-          ))}
+              ))}
+            </div>
+          )}
         </div>
       )}
 
@@ -1242,5 +1263,12 @@ const styles: { [key: string]: React.CSSProperties } = {
     borderRadius: '12px',
     padding: '12px',
     border: '1px solid rgba(255,255,255,0.1)',
+  },
+  // Stations section styles
+  stationSection: {
+    background: 'rgba(16, 185, 129, 0.1)',
+    borderRadius: '16px',
+    padding: '20px',
+    border: '2px solid rgba(16, 185, 129, 0.3)',
   },
 }
