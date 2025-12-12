@@ -1183,6 +1183,13 @@ ${formUrl}`
           .tracking-stat-value {
             font-size: 1.3rem !important;
           }
+          .floating-contact-btn {
+            bottom: 15px !important;
+            left: 15px !important;
+            width: 50px !important;
+            height: 50px !important;
+            font-size: 20px !important;
+          }
         }
         @media (min-width: 601px) {
           .tracking-table-container .mobile-cards {
@@ -2027,9 +2034,10 @@ ${formUrl}`
       {!currentManager && station.wheel_station_managers.length > 0 && (
         <button
           onClick={() => setShowContactsModal(true)}
+          className="floating-contact-btn"
           style={{
             position: 'fixed',
-            bottom: '80px',
+            bottom: '20px',
             left: '20px',
             width: '56px',
             height: '56px',

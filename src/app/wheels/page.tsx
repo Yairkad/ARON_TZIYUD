@@ -601,7 +601,7 @@ export default function WheelStationsPage() {
                 <div style={styles.address}>📍 {station.address}</div>
               )}
               {(station.cities?.name || station.district) && (
-                <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginTop: '6px' }}>
+                <div style={{ display: 'flex', alignItems: 'center', gap: '8px', marginTop: '6px', justifyContent: 'flex-start' }}>
                   {station.cities?.name && (
                     <div style={styles.cityName}>{station.cities.name}</div>
                   )}
@@ -615,8 +615,7 @@ export default function WheelStationsPage() {
                       fontWeight: '600',
                       color: getDistrictColor(station.district, districts),
                       backgroundColor: `${getDistrictColor(station.district, districts)}15`,
-                      whiteSpace: 'nowrap',
-                      marginLeft: '8px'
+                      whiteSpace: 'nowrap'
                     }}>
                       {getDistrictName(station.district, districts)}
                     </div>
