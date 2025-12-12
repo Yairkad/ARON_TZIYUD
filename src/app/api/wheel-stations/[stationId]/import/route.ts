@@ -206,11 +206,16 @@ export async function POST(request: NextRequest, { params }: RouteParams) {
     // Normalize Hebrew column names to English
     const wheels = wheelsData.map(normalizeWheelData)
 
+    // Debug: Log first row for troubleshooting
+    console.log('Import debug - First raw row:', wheelsData[0])
+    console.log('Import debug - First normalized wheel:', wheels[0])
+    console.log('Import debug - Total wheels:', wheels.length)
+
     // Validate each wheel
     const validationErrors: string[] = []
     wheels.forEach((wheel, index) => {
       if (!wheel.wheel_number) {
-        validationErrors.push(`שורה ${index + 1}: חסר מספר גלגל`)
+        validationErrors.push(`שורה ${index + 1}: חסר מספר גלגל (קיבלתי: ${JSON.stringify(wheel)})`)
       }
       if (!wheel.rim_size) {
         validationErrors.push(`שורה ${index + 1}: חסר גודל ג'אנט`)
@@ -224,9 +229,11 @@ export async function POST(request: NextRequest, { params }: RouteParams) {
     })
 
     if (validationErrors.length > 0) {
+      console.error('Validation errors:', validationErrors)
       return NextResponse.json({
         error: 'Validation errors',
-        details: validationErrors.slice(0, 10) // Return first 10 errors
+        details: validationErrors.slice(0, 10), // Return first 10 errors
+        sampleData: wheelsData[0] // Include first row for debugging
       }, { status: 400 })
     }
 

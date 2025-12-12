@@ -831,7 +831,9 @@ ${formUrl}`
       const result = await response.json()
 
       if (!response.ok) {
-        toast.error(result.error || 'שגיאה בייבוא מ-Google Sheets')
+        console.error('Import error:', result)
+        const errorMsg = result.details ? `${result.error}: ${result.details.join(', ')}` : result.error
+        toast.error(errorMsg || 'שגיאה בייבוא מ-Google Sheets')
         return
       }
 
