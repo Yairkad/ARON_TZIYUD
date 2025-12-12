@@ -575,6 +575,7 @@ export default function CityPage() {
   const showAdminBar = adminUrl && !hideAdminBar
 
   return (
+    <>
     <div className={`min-h-screen content-wrapper ${showAdminBar ? 'pb-16' : ''}`}>
       <div className="max-w-5xl mx-auto px-3 sm:px-4 py-4 sm:py-6">
         <Logo />
@@ -1851,21 +1852,22 @@ export default function CityPage() {
           </div>
         </div>
       )}
-
-      {/* Floating Admin Bar - Show when logged in as admin (hidden when inside iframe) */}
-      {showAdminBar && (
-        <div className="fixed bottom-0 left-0 right-0 z-50 bg-gradient-to-r from-purple-600 to-pink-600 text-white p-3 shadow-lg flex items-center justify-between">
-          <div className="flex items-center gap-2">
-            <span className="text-lg">👁️</span>
-            <span className="text-sm font-medium">צפייה בממשק מתנדב</span>
-          </div>
-          <Link href={adminUrl}>
-            <Button className="bg-white text-purple-600 hover:bg-purple-50 font-bold px-4 py-2 rounded-xl transition-all hover:scale-105">
-              ⚙️ חזרה לניהול
-            </Button>
-          </Link>
-        </div>
-      )}
     </div>
+
+    {/* Floating Admin Bar - Show when logged in as admin (hidden when inside iframe) */}
+    {showAdminBar && (
+      <div className="fixed bottom-0 left-0 right-0 z-50 bg-gradient-to-r from-purple-600 to-pink-600 text-white p-3 shadow-lg flex items-center justify-between">
+        <div className="flex items-center gap-2">
+          <span className="text-lg">👁️</span>
+          <span className="text-sm font-medium">צפייה בממשק מתנדב</span>
+        </div>
+        <Link href={adminUrl}>
+          <Button className="bg-white text-purple-600 hover:bg-purple-50 font-bold px-4 py-2 rounded-xl transition-all hover:scale-105">
+            ⚙️ חזרה לניהול
+          </Button>
+        </Link>
+      </div>
+    )}
+    </>
   )
 }
