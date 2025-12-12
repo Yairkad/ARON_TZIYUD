@@ -1218,29 +1218,26 @@ ${formUrl}`
           )}
         </div>
         <h1 style={styles.title} className="station-header-title">
-          <div style={{ display: 'flex', alignItems: 'center', gap: '12px', justifyContent: 'center' }}>
-            {station.district && (
-              <div
-                style={{
-                  width: '20px',
-                  height: '20px',
-                  borderRadius: '50%',
-                  backgroundColor: getDistrictColor(station.district, districts),
-                  border: '2px solid rgba(255,255,255,0.3)',
-                  flexShrink: 0
-                }}
-                title={getDistrictName(station.district, districts)}
-              />
-            )}
+          <div style={{ display: 'flex', alignItems: 'center', gap: '12px', justifyContent: 'center', flexWrap: 'wrap' }}>
             <span>🏙️ {station.name}</span>
+            {station.district && (
+              <div style={{
+                display: 'inline-block',
+                padding: '4px 10px',
+                border: `2px solid ${getDistrictColor(station.district, districts)}`,
+                borderRadius: '8px',
+                fontSize: '0.85rem',
+                fontWeight: '600',
+                color: getDistrictColor(station.district, districts),
+                backgroundColor: `${getDistrictColor(station.district, districts)}15`,
+                whiteSpace: 'nowrap'
+              }}>
+                {getDistrictName(station.district, districts)}
+              </div>
+            )}
           </div>
         </h1>
         {station.address && <p style={styles.address}>📍 {station.address}</p>}
-        {station.district && (
-          <p style={{ textAlign: 'center', color: '#6b7280', fontSize: '14px', marginTop: '4px' }}>
-            🗺️ {getDistrictName(station.district, districts)}
-          </p>
-        )}
         {isManager && <div style={styles.managerBadge}>🔓 מצב ניהול</div>}
       </header>
 
