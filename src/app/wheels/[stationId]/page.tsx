@@ -16,6 +16,10 @@ interface Wheel {
   is_donut: boolean
   notes: string | null
   is_available: boolean
+  temporarily_unavailable?: boolean
+  unavailable_reason?: string | null
+  unavailable_notes?: string | null
+  unavailable_since?: string | null
   current_borrow?: {
     id: string
     borrower_name: string
@@ -248,6 +252,12 @@ export default function StationPage({ params }: { params: Promise<{ stationId: s
   const [showExcelModal, setShowExcelModal] = useState(false)
   const [sheetsUrl, setSheetsUrl] = useState('')
   const [importMode, setImportMode] = useState<'file' | 'sheets'>('file')
+
+  // Temporary unavailable modal
+  const [showUnavailableModal, setShowUnavailableModal] = useState(false)
+  const [selectedWheelForUnavailable, setSelectedWheelForUnavailable] = useState<Wheel | null>(null)
+  const [unavailableReason, setUnavailableReason] = useState('maintenance')
+  const [unavailableNotes, setUnavailableNotes] = useState('')
 
   // Tracking tab
   const [activeTab, setActiveTab] = useState<PageTab>('wheels')
@@ -846,6 +856,62 @@ ${formUrl}`
       toast.error('שגיאה בייבוא מ-Google Sheets')
     } finally {
       setUploadLoading(false)
+    }
+  }
+
+  // Mark wheel as temporarily unavailable
+  const handleMarkUnavailable = async () => {
+    if (!selectedWheelForUnavailable) return
+
+    setActionLoading(true)
+    try {
+      const response = await fetch(`/api/wheels/${selectedWheelForUnavailable.id}/unavailable`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          reason: unavailableReason,
+          notes: unavailableNotes,
+          manager_id: currentManager?.id
+        })
+      })
+
+      if (!response.ok) {
+        throw new Error('Failed to mark unavailable')
+      }
+
+      await fetchStation()
+      toast.success('הגלגל סומן כלא זמין זמנית')
+      setShowUnavailableModal(false)
+      setSelectedWheelForUnavailable(null)
+      setUnavailableReason('maintenance')
+      setUnavailableNotes('')
+    } catch (err) {
+      console.error('Error marking unavailable:', err)
+      toast.error('שגיאה בסימון הגלגל')
+    } finally {
+      setActionLoading(false)
+    }
+  }
+
+  // Mark wheel as available again
+  const handleMarkAvailable = async (wheel: Wheel) => {
+    setActionLoading(true)
+    try {
+      const response = await fetch(`/api/wheels/${wheel.id}/unavailable`, {
+        method: 'DELETE'
+      })
+
+      if (!response.ok) {
+        throw new Error('Failed to mark available')
+      }
+
+      await fetchStation()
+      toast.success('הגלגל חזר להיות זמין')
+    } catch (err) {
+      console.error('Error marking available:', err)
+      toast.error('שגיאה בעדכון הגלגל')
+    } finally {
+      setActionLoading(false)
     }
   }
 
@@ -1735,6 +1801,22 @@ ${formUrl}`
                 />
                 <span style={styles.cardNumber}>#{wheel.wheel_number}</span>
                 {wheel.is_donut && <span style={styles.donutBadge}>דונאט</span>}
+                {wheel.temporarily_unavailable && (
+                  <span style={{
+                    position: 'absolute',
+                    top: '45px',
+                    right: '10px',
+                    background: 'linear-gradient(135deg, #f59e0b, #d97706)',
+                    color: '#fff',
+                    padding: '4px 8px',
+                    borderRadius: '6px',
+                    fontSize: '0.7rem',
+                    fontWeight: 'bold',
+                    boxShadow: '0 2px 4px rgba(0,0,0,0.3)',
+                  }}>
+                    ⚠️ לא זמין
+                  </span>
+                )}
                 <span style={{
                   ...styles.cardStatus,
                   ...(wheel.is_available ? styles.statusAvailable : styles.statusTaken)
@@ -1750,6 +1832,32 @@ ${formUrl}`
                 {wheel.category && <div style={styles.cardCategory}>{wheel.category}</div>}
                 {wheel.notes && <div style={styles.cardNotes}>{wheel.notes}</div>}
 
+                {/* Temporarily unavailable info - for managers */}
+                {isManager && wheel.temporarily_unavailable && (
+                  <div style={{
+                    background: 'rgba(245, 158, 11, 0.1)',
+                    border: '1px solid rgba(245, 158, 11, 0.3)',
+                    borderRadius: '8px',
+                    padding: '8px',
+                    marginTop: '8px',
+                    fontSize: '0.85rem',
+                  }}>
+                    <div style={{ color: '#f59e0b', fontWeight: 'bold', marginBottom: '4px' }}>
+                      ⚠️ לא זמין זמנית
+                    </div>
+                    <div style={{ color: '#a0aec0', fontSize: '0.8rem' }}>
+                      סיבה: {wheel.unavailable_reason === 'maintenance' ? 'תחזוקה' :
+                             wheel.unavailable_reason === 'repair' ? 'תיקון' :
+                             wheel.unavailable_reason === 'damaged' ? 'פגום' : 'אחר'}
+                    </div>
+                    {wheel.unavailable_notes && (
+                      <div style={{ color: '#9ca3af', fontSize: '0.75rem', marginTop: '2px' }}>
+                        {wheel.unavailable_notes}
+                      </div>
+                    )}
+                  </div>
+                )}
+
                 {/* Borrower info when wheel is taken - only for managers */}
                 {isManager && !wheel.is_available && wheel.current_borrow && (
                   <div style={styles.borrowerInfo}>
@@ -1764,7 +1872,7 @@ ${formUrl}`
                 {/* Manager action buttons - only show return for borrowed wheels */}
                 {isManager && (
                   <div style={styles.cardActions} className="station-card-actions">
-                    {wheel.is_available && (
+                    {wheel.is_available && !wheel.temporarily_unavailable && (
                       <button
                         style={styles.whatsappShareBtn}
                         onClick={() => openWhatsAppModal(wheel)}
@@ -1780,6 +1888,35 @@ ${formUrl}`
                         disabled={actionLoading}
                       >
                         📥 החזר
+                      </button>
+                    )}
+                    {wheel.is_available && !wheel.temporarily_unavailable && (
+                      <button
+                        style={{
+                          ...styles.deleteBtn,
+                          background: 'linear-gradient(135deg, #f59e0b, #d97706)',
+                        }}
+                        onClick={() => {
+                          setSelectedWheelForUnavailable(wheel)
+                          setShowUnavailableModal(true)
+                        }}
+                        disabled={actionLoading}
+                        title="סמן כלא זמין זמנית"
+                      >
+                        ⚠️
+                      </button>
+                    )}
+                    {wheel.temporarily_unavailable && (
+                      <button
+                        style={{
+                          ...styles.returnBtn,
+                          background: 'linear-gradient(135deg, #22c55e, #16a34a)',
+                        }}
+                        onClick={() => handleMarkAvailable(wheel)}
+                        disabled={actionLoading}
+                        title="החזר לזמין"
+                      >
+                        ✅ החזר לזמין
                       </button>
                     )}
                     <button
@@ -2039,6 +2176,124 @@ ${formUrl}`
                 onClick={sendWhatsAppLink}
               >
                 💬 שלח בוואטסאפ
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* Mark Wheel as Unavailable Modal */}
+      {showUnavailableModal && selectedWheelForUnavailable && (
+        <div style={styles.modalOverlay} onClick={() => setShowUnavailableModal(false)}>
+          <div style={{...styles.modal, maxWidth: '450px'}} onClick={e => e.stopPropagation()}>
+            <h3 style={styles.modalTitle}>⚠️ סימון גלגל כלא זמין זמנית</h3>
+            <p style={{color: '#a0aec0', marginBottom: '16px', fontSize: '0.9rem'}}>
+              הגלגל יסומן כלא זמין להשאלה עד שתחזיר אותו לזמין
+            </p>
+
+            <div style={{
+              background: 'rgba(245, 158, 11, 0.1)',
+              border: '1px solid rgba(245, 158, 11, 0.3)',
+              borderRadius: '10px',
+              padding: '12px',
+              marginBottom: '16px',
+            }}>
+              <div style={{color: '#f59e0b', fontWeight: 'bold', marginBottom: '4px'}}>
+                גלגל #{selectedWheelForUnavailable.wheel_number}
+              </div>
+              <div style={{color: '#a0aec0', fontSize: '0.85rem'}}>
+                {selectedWheelForUnavailable.rim_size}" | {selectedWheelForUnavailable.bolt_count}×{selectedWheelForUnavailable.bolt_spacing}
+                {selectedWheelForUnavailable.is_donut && ' | דונאט'}
+              </div>
+            </div>
+
+            <div style={{marginBottom: '16px'}}>
+              <label style={{color: '#a0aec0', fontSize: '0.85rem', display: 'block', marginBottom: '8px'}}>
+                סיבה *
+              </label>
+              <select
+                value={unavailableReason}
+                onChange={e => setUnavailableReason(e.target.value)}
+                style={{
+                  width: '100%',
+                  padding: '12px',
+                  borderRadius: '10px',
+                  border: '2px solid #4a5568',
+                  background: '#2d3748',
+                  color: 'white',
+                  fontSize: '1rem',
+                }}
+              >
+                <option value="maintenance">תחזוקה</option>
+                <option value="repair">תיקון</option>
+                <option value="damaged">פגום</option>
+                <option value="other">אחר</option>
+              </select>
+            </div>
+
+            <div style={{marginBottom: '16px'}}>
+              <label style={{color: '#a0aec0', fontSize: '0.85rem', display: 'block', marginBottom: '8px'}}>
+                הערות (אופציונלי)
+              </label>
+              <textarea
+                value={unavailableNotes}
+                onChange={e => setUnavailableNotes(e.target.value)}
+                placeholder="פרטים נוספים על הבעיה..."
+                rows={3}
+                style={{
+                  width: '100%',
+                  padding: '12px',
+                  borderRadius: '10px',
+                  border: '2px solid #4a5568',
+                  background: '#2d3748',
+                  color: 'white',
+                  fontSize: '0.95rem',
+                  resize: 'vertical',
+                  fontFamily: 'inherit',
+                }}
+              />
+            </div>
+
+            <div style={{display: 'flex', gap: '12px'}}>
+              <button
+                style={{
+                  flex: 1,
+                  padding: '12px',
+                  borderRadius: '10px',
+                  border: 'none',
+                  background: '#4b5563',
+                  color: '#fff',
+                  cursor: 'pointer',
+                  fontWeight: 'bold',
+                }}
+                onClick={() => {
+                  setShowUnavailableModal(false)
+                  setSelectedWheelForUnavailable(null)
+                  setUnavailableReason('maintenance')
+                  setUnavailableNotes('')
+                }}
+              >
+                ביטול
+              </button>
+              <button
+                style={{
+                  flex: 1,
+                  padding: '12px',
+                  borderRadius: '10px',
+                  border: 'none',
+                  background: 'linear-gradient(135deg, #f59e0b, #d97706)',
+                  color: '#fff',
+                  cursor: 'pointer',
+                  fontWeight: 'bold',
+                  display: 'flex',
+                  alignItems: 'center',
+                  justifyContent: 'center',
+                  gap: '8px',
+                }}
+                onClick={handleMarkUnavailable}
+                disabled={actionLoading}
+              >
+                {actionLoading ? 'שומר...' : '⚠️ סמן כלא זמין'}
               </button>
             </div>
           </div>
