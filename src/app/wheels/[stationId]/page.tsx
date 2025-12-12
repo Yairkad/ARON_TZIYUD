@@ -246,6 +246,8 @@ export default function StationPage({ params }: { params: Promise<{ stationId: s
   const fileInputRef = useRef<HTMLInputElement>(null)
   const [uploadLoading, setUploadLoading] = useState(false)
   const [showExcelModal, setShowExcelModal] = useState(false)
+  const [sheetsUrl, setSheetsUrl] = useState('')
+  const [importMode, setImportMode] = useState<'file' | 'sheets'>('file')
 
   // Tracking tab
   const [activeTab, setActiveTab] = useState<PageTab>('wheels')
@@ -764,11 +766,15 @@ ${formUrl}`
           // Send to import API
           const response = await fetch(`/api/wheel-stations/${stationId}/import`, {
             method: 'POST',
-            headers: { 'Content-Type': 'application/json' },
+            headers: {
+              'Content-Type': 'application/json',
+              'x-station-auth': JSON.stringify({
+                phone: currentManager?.phone,
+                password: sessionPassword
+              })
+            },
             body: JSON.stringify({
-              wheels: jsonData,
-              manager_phone: currentManager?.phone,
-              manager_password: sessionPassword
+              wheels: jsonData
             })
           })
 
@@ -794,6 +800,49 @@ ${formUrl}`
       reader.readAsBinaryString(file)
     } catch {
       toast.error('שגיאה בטעינת הקובץ')
+      setUploadLoading(false)
+    }
+  }
+
+  // Google Sheets import handler
+  const handleSheetsImport = async () => {
+    if (!sheetsUrl.trim()) {
+      toast.error('נא להזין קישור לגיליון Google Sheets')
+      return
+    }
+
+    setUploadLoading(true)
+    try {
+      const response = await fetch(`/api/wheel-stations/${stationId}/import`, {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          'x-station-auth': JSON.stringify({
+            phone: currentManager?.phone,
+            password: sessionPassword
+          })
+        },
+        body: JSON.stringify({
+          sheetsUrl: sheetsUrl.trim(),
+          replace_existing: false
+        })
+      })
+
+      const result = await response.json()
+
+      if (!response.ok) {
+        toast.error(result.error || 'שגיאה בייבוא מ-Google Sheets')
+        return
+      }
+
+      await fetchStation()
+      toast.success(`נוספו ${result.imported} גלגלים בהצלחה מ-Google Sheets!`)
+      setShowExcelModal(false)
+      setSheetsUrl('')
+    } catch (err) {
+      console.error('Sheets import error:', err)
+      toast.error('שגיאה בייבוא מ-Google Sheets')
+    } finally {
       setUploadLoading(false)
     }
   }
@@ -2549,23 +2598,96 @@ ${formUrl}`
       {showExcelModal && (
         <div style={styles.modalOverlay} onClick={() => setShowExcelModal(false)}>
           <div style={{...styles.modal, maxWidth: '400px', textAlign: 'center'}} onClick={e => e.stopPropagation()}>
-            <h3 style={styles.modalTitle}>📊 ייבוא / ייצוא Excel</h3>
+            <h3 style={styles.modalTitle}>📊 ייבוא / ייצוא נתונים</h3>
             <p style={styles.modalSubtitle}>בחר את הפעולה הרצויה</p>
 
             <div style={{display: 'flex', flexDirection: 'column', gap: '15px', marginTop: '20px'}}>
-              <button
-                style={styles.excelImportBtn}
-                onClick={() => {
-                  setShowExcelModal(false)
-                  fileInputRef.current?.click()
-                }}
-                disabled={uploadLoading}
-              >
-                📤 {uploadLoading ? 'מעלה...' : 'ייבוא מקובץ Excel'}
-                <span style={{display: 'block', fontSize: '0.8rem', marginTop: '5px', opacity: 0.8}}>
-                  העלה קובץ Excel להוספת גלגלים
-                </span>
-              </button>
+              {/* Import section with tabs */}
+              <div style={{display: 'flex', flexDirection: 'column', gap: '10px'}}>
+                <span style={{fontWeight: 'bold', color: '#fff', marginBottom: '4px'}}>📤 ייבוא גלגלים:</span>
+
+                {/* Import mode toggle */}
+                <div style={{display: 'flex', gap: '10px', marginBottom: '10px'}}>
+                  <button
+                    style={{
+                      flex: 1,
+                      padding: '8px 12px',
+                      borderRadius: '8px',
+                      border: 'none',
+                      background: importMode === 'file' ? 'linear-gradient(135deg, #059669, #047857)' : '#374151',
+                      color: 'white',
+                      cursor: 'pointer',
+                      fontSize: '0.9rem'
+                    }}
+                    onClick={() => setImportMode('file')}
+                  >
+                    📁 קובץ
+                  </button>
+                  <button
+                    style={{
+                      flex: 1,
+                      padding: '8px 12px',
+                      borderRadius: '8px',
+                      border: 'none',
+                      background: importMode === 'sheets' ? 'linear-gradient(135deg, #059669, #047857)' : '#374151',
+                      color: 'white',
+                      cursor: 'pointer',
+                      fontSize: '0.9rem'
+                    }}
+                    onClick={() => setImportMode('sheets')}
+                  >
+                    🔗 Google Sheets
+                  </button>
+                </div>
+
+                {/* File import */}
+                {importMode === 'file' && (
+                  <button
+                    style={styles.excelImportBtn}
+                    onClick={() => {
+                      setShowExcelModal(false)
+                      fileInputRef.current?.click()
+                    }}
+                    disabled={uploadLoading}
+                  >
+                    {uploadLoading ? 'מעלה...' : 'העלה קובץ Excel'}
+                    <span style={{display: 'block', fontSize: '0.8rem', marginTop: '5px', opacity: 0.8}}>
+                      בחר קובץ מהמחשב
+                    </span>
+                  </button>
+                )}
+
+                {/* Google Sheets import */}
+                {importMode === 'sheets' && (
+                  <div style={{display: 'flex', flexDirection: 'column', gap: '10px'}}>
+                    <input
+                      type="text"
+                      placeholder="הדבק קישור לגיליון Google Sheets"
+                      value={sheetsUrl}
+                      onChange={(e) => setSheetsUrl(e.target.value)}
+                      style={{
+                        padding: '12px',
+                        borderRadius: '8px',
+                        border: '1px solid #4a5568',
+                        background: '#2d3748',
+                        color: 'white',
+                        fontSize: '0.9rem',
+                        direction: 'ltr'
+                      }}
+                    />
+                    <button
+                      style={styles.excelImportBtn}
+                      onClick={handleSheetsImport}
+                      disabled={uploadLoading || !sheetsUrl.trim()}
+                    >
+                      {uploadLoading ? 'מייבא...' : 'ייבא מ-Google Sheets'}
+                      <span style={{display: 'block', fontSize: '0.8rem', marginTop: '5px', opacity: 0.8}}>
+                        הגיליון חייב להיות ציבורי או משותף
+                      </span>
+                    </button>
+                  </div>
+                )}
+              </div>
 
               <div style={{display: 'flex', flexDirection: 'column', gap: '8px'}}>
                 <span style={{fontWeight: 'bold', color: '#fff', marginBottom: '4px'}}>📥 ייצוא לקובץ Excel:</span>

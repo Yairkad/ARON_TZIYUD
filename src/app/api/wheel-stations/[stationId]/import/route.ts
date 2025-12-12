@@ -64,45 +64,70 @@ function normalizeWheelData(wheel: Record<string, unknown>): WheelImportData {
 }
 
 // Helper to verify station manager or super admin
-async function verifyManager(stationId: string): Promise<{ success: boolean; error?: string; userId?: string }> {
+// Supports both Supabase Auth (cookies) and direct station password auth (headers)
+async function verifyManager(stationId: string, request: NextRequest): Promise<{ success: boolean; error?: string; userId?: string }> {
+  // Try Supabase Auth first (for super admins)
   const cookieStore = await cookies()
   const accessToken = cookieStore.get('access_token')?.value
 
-  if (!accessToken) {
-    return { success: false, error: 'Unauthorized' }
-  }
+  if (accessToken) {
+    const { data: { user }, error: authError } = await supabase.auth.getUser(accessToken)
+    if (!authError && user) {
+      const { data: userData } = await supabase
+        .from('users')
+        .select('role, phone')
+        .eq('id', user.id)
+        .single()
 
-  const { data: { user }, error: authError } = await supabase.auth.getUser(accessToken)
-  if (authError || !user) {
-    return { success: false, error: 'Unauthorized' }
-  }
+      // Super admins can manage all stations
+      if (userData?.role === 'super_admin') {
+        return { success: true, userId: user.id }
+      }
 
-  const { data: userData } = await supabase
-    .from('users')
-    .select('role, phone')
-    .eq('id', user.id)
-    .single()
+      // Check if user is a station manager by phone number
+      if (userData?.phone) {
+        const { data: manager } = await supabase
+          .from('wheel_station_managers')
+          .select('id')
+          .eq('station_id', stationId)
+          .eq('phone', userData.phone)
+          .single()
 
-  // Super admins can manage all stations
-  if (userData?.role === 'super_admin') {
-    return { success: true, userId: user.id }
-  }
-
-  // Check if user is a station manager by phone number
-  if (userData?.phone) {
-    const { data: manager } = await supabase
-      .from('wheel_station_managers')
-      .select('id')
-      .eq('station_id', stationId)
-      .eq('phone', userData.phone)
-      .single()
-
-    if (manager) {
-      return { success: true, userId: user.id }
+        if (manager) {
+          return { success: true, userId: user.id }
+        }
+      }
     }
   }
 
-  return { success: false, error: 'Forbidden - Station manager only' }
+  // Try station password auth (for station managers without Supabase Auth)
+  const authHeader = request.headers.get('x-station-auth')
+  if (authHeader) {
+    try {
+      const { phone, password } = JSON.parse(authHeader)
+
+      // Verify manager exists and password is correct
+      const { data: managers } = await supabase
+        .from('wheel_station_managers')
+        .select('id, wheel_stations(id, manager_password)')
+        .eq('station_id', stationId)
+        .eq('phone', phone)
+        .limit(1)
+
+      if (managers && managers.length > 0) {
+        const manager = managers[0]
+        const station = manager.wheel_stations as unknown as { id: string; manager_password: string }
+
+        if (station?.manager_password === password) {
+          return { success: true, userId: manager.id }
+        }
+      }
+    } catch {
+      // Invalid auth header format
+    }
+  }
+
+  return { success: false, error: 'Unauthorized' }
 }
 
 // POST - Import wheels from JSON array (frontend parses Excel to JSON)
@@ -110,7 +135,7 @@ export async function POST(request: NextRequest, { params }: RouteParams) {
   try {
     const { stationId } = await params
 
-    const auth = await verifyManager(stationId)
+    const auth = await verifyManager(stationId, request)
     if (!auth.success) {
       return NextResponse.json({ error: auth.error }, { status: auth.error === 'Unauthorized' ? 401 : 403 })
     }
@@ -127,14 +152,59 @@ export async function POST(request: NextRequest, { params }: RouteParams) {
     }
 
     const body = await request.json()
-    const { wheels: rawWheels, replace_existing } = body as { wheels: Record<string, unknown>[]; replace_existing?: boolean }
+    const { wheels: rawWheels, replace_existing, sheetsUrl } = body as {
+      wheels?: Record<string, unknown>[]
+      replace_existing?: boolean
+      sheetsUrl?: string
+    }
 
-    if (!rawWheels || !Array.isArray(rawWheels) || rawWheels.length === 0) {
-      return NextResponse.json({ error: 'No wheels data provided' }, { status: 400 })
+    let wheelsData: Record<string, unknown>[]
+
+    // Check if Google Sheets URL is provided
+    if (sheetsUrl) {
+      // Convert Google Sheets URL to CSV export URL
+      let csvUrl = sheetsUrl
+      if (sheetsUrl.includes('/edit')) {
+        const sheetId = sheetsUrl.match(/\/d\/([a-zA-Z0-9-_]+)/)?.[1]
+        const gid = sheetsUrl.match(/gid=(\d+)/)?.[1] || '0'
+        csvUrl = `https://docs.google.com/spreadsheets/d/${sheetId}/export?format=csv&gid=${gid}`
+      }
+
+      // Fetch CSV from Google Sheets
+      const response = await fetch(csvUrl)
+      if (!response.ok) {
+        throw new Error(`Failed to fetch Google Sheet: ${response.statusText}`)
+      }
+      const csvContent = await response.text()
+
+      // Parse CSV to JSON
+      const lines = csvContent.split('\n').filter(line => line.trim())
+      const headers = lines[0].split(',').map(h => h.trim())
+
+      wheelsData = []
+      for (let i = 1; i < lines.length; i++) {
+        const values = lines[i].split(',')
+        if (values.length >= headers.length) {
+          const row: Record<string, unknown> = {}
+          headers.forEach((header, index) => {
+            row[header] = values[index]?.trim() || ''
+          })
+          wheelsData.push(row)
+        }
+      }
+    } else if (rawWheels && Array.isArray(rawWheels)) {
+      // Use provided wheels data (from file upload)
+      wheelsData = rawWheels
+    } else {
+      return NextResponse.json({ error: 'No wheels data or Google Sheets URL provided' }, { status: 400 })
+    }
+
+    if (wheelsData.length === 0) {
+      return NextResponse.json({ error: 'No wheels data found' }, { status: 400 })
     }
 
     // Normalize Hebrew column names to English
-    const wheels = rawWheels.map(normalizeWheelData)
+    const wheels = wheelsData.map(normalizeWheelData)
 
     // Validate each wheel
     const validationErrors: string[] = []
