@@ -23,6 +23,15 @@ interface Station {
   availableWheels: number
 }
 
+interface District {
+  id: string
+  code: string
+  name: string
+  color: string
+  created_at?: string
+  updated_at?: string
+}
+
 // Super admin password - stored in environment variable
 const WHEELS_ADMIN_PASSWORD = process.env.NEXT_PUBLIC_WHEELS_ADMIN_PASSWORD || 'wheels2024'
 
@@ -35,6 +44,17 @@ export default function WheelsAdminPage() {
   const [stations, setStations] = useState<Station[]>([])
   const [loading, setLoading] = useState(true)
   const [actionLoading, setActionLoading] = useState(false)
+
+  // Districts state
+  const [districts, setDistricts] = useState<District[]>([])
+  const [showDistrictsSection, setShowDistrictsSection] = useState(false)
+  const [showAddDistrict, setShowAddDistrict] = useState(false)
+  const [editingDistrict, setEditingDistrict] = useState<District | null>(null)
+  const [districtForm, setDistrictForm] = useState({
+    code: '',
+    name: '',
+    color: '#3b82f6'
+  })
 
   // Modals
   const [showAddStation, setShowAddStation] = useState(false)
@@ -68,6 +88,7 @@ export default function WheelsAdminPage() {
   useEffect(() => {
     if (isAuthenticated) {
       fetchStations()
+      fetchDistricts()
     }
   }, [isAuthenticated])
 
@@ -100,6 +121,18 @@ export default function WheelsAdminPage() {
     }
   }
 
+  const fetchDistricts = async () => {
+    try {
+      const response = await fetch('/api/districts')
+      if (response.ok) {
+        const data = await response.json()
+        setDistricts(data.districts || [])
+      }
+    } catch (err) {
+      console.error('Error fetching districts:', err)
+    }
+  }
+
 
   const resetForm = () => {
     setStationForm({
@@ -108,6 +141,102 @@ export default function WheelsAdminPage() {
       manager_password: '',
       managers: []
     })
+  }
+
+  const resetDistrictForm = () => {
+    setDistrictForm({
+      code: '',
+      name: '',
+      color: '#3b82f6'
+    })
+  }
+
+  const handleAddDistrict = async () => {
+    if (!districtForm.code || !districtForm.name || !districtForm.color) {
+      toast.error('נא למלא את כל השדות')
+      return
+    }
+    setActionLoading(true)
+    try {
+      const response = await fetch('/api/districts', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(districtForm)
+      })
+      const data = await response.json()
+      if (!response.ok) {
+        throw new Error(data.error || 'Failed to create district')
+      }
+      await fetchDistricts()
+      setShowAddDistrict(false)
+      resetDistrictForm()
+      toast.success('המחוז נוצר בהצלחה!')
+    } catch (err: unknown) {
+      toast.error(err instanceof Error ? err.message : 'שגיאה ביצירת מחוז')
+    } finally {
+      setActionLoading(false)
+    }
+  }
+
+  const handleUpdateDistrict = async () => {
+    if (!editingDistrict) return
+    setActionLoading(true)
+    try {
+      const response = await fetch(`/api/districts/${editingDistrict.id}`, {
+        method: 'PUT',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(districtForm)
+      })
+      const data = await response.json()
+      if (!response.ok) {
+        throw new Error(data.error || 'Failed to update district')
+      }
+      await fetchDistricts()
+      setEditingDistrict(null)
+      resetDistrictForm()
+      toast.success('המחוז עודכן בהצלחה!')
+    } catch (err: unknown) {
+      toast.error(err instanceof Error ? err.message : 'שגיאה בעדכון מחוז')
+    } finally {
+      setActionLoading(false)
+    }
+  }
+
+  const handleDeleteDistrict = async (district: District) => {
+    setConfirmDialogData({
+      title: '🗑️ מחיקת מחוז',
+      message: `האם למחוק את מחוז "${district.name}"? פעולה זו תסיר את המחוז מכל התחנות שמשתמשות בו.`,
+      onConfirm: async () => {
+        setShowConfirmDialog(false)
+        setConfirmDialogData(null)
+        setActionLoading(true)
+        try {
+          const response = await fetch(`/api/districts/${district.id}`, {
+            method: 'DELETE'
+          })
+          const data = await response.json()
+          if (!response.ok) {
+            throw new Error(data.error || 'Failed to delete district')
+          }
+          await fetchDistricts()
+          toast.success('המחוז נמחק!')
+        } catch (err: unknown) {
+          toast.error(err instanceof Error ? err.message : 'שגיאה במחיקת מחוז')
+        } finally {
+          setActionLoading(false)
+        }
+      }
+    })
+    setShowConfirmDialog(true)
+  }
+
+  const openEditDistrictModal = (district: District) => {
+    setDistrictForm({
+      code: district.code,
+      name: district.name,
+      color: district.color
+    })
+    setEditingDistrict(district)
   }
 
   const handleAddStation = async () => {
@@ -347,10 +476,70 @@ export default function WheelsAdminPage() {
         <p style={styles.subtitle}>{stations.length} תחנות במערכת</p>
       </header>
 
-      {/* Add Station Button */}
-      <button style={styles.addStationBtn} className="admin-add-btn" onClick={() => { resetForm(); setShowAddStation(true) }}>
-        ➕ הוסף תחנה חדשה
-      </button>
+      {/* Action Buttons */}
+      <div style={{ display: 'flex', gap: '10px', marginBottom: '20px', flexWrap: 'wrap' }}>
+        <button style={styles.addStationBtn} className="admin-add-btn" onClick={() => { resetForm(); setShowAddStation(true) }}>
+          ➕ הוסף תחנה חדשה
+        </button>
+        <button
+          style={{...styles.addStationBtn, background: 'linear-gradient(135deg, #8b5cf6, #7c3aed)'}}
+          className="admin-add-btn"
+          onClick={() => setShowDistrictsSection(!showDistrictsSection)}
+        >
+          🗺️ {showDistrictsSection ? 'הסתר' : 'נהל'} מחוזות
+        </button>
+      </div>
+
+      {/* Districts Management Section */}
+      {showDistrictsSection && (
+        <div style={{...styles.districtSection, marginBottom: '30px'}}>
+          <div style={{display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '15px'}}>
+            <h2 style={{color: '#8b5cf6', fontSize: '1.3rem', margin: 0}}>🗺️ ניהול מחוזות ({districts.length})</h2>
+            <button
+              style={{...styles.addManagerBtn, background: '#8b5cf6'}}
+              onClick={() => { resetDistrictForm(); setShowAddDistrict(true) }}
+            >
+              ➕ הוסף מחוז
+            </button>
+          </div>
+          <div style={styles.districtsGrid}>
+            {districts.map((district) => (
+              <div key={district.id} style={styles.districtCard}>
+                <div style={{display: 'flex', alignItems: 'center', gap: '10px', marginBottom: '10px'}}>
+                  <div
+                    style={{
+                      width: '24px',
+                      height: '24px',
+                      borderRadius: '50%',
+                      backgroundColor: district.color,
+                      border: '2px solid rgba(255,255,255,0.3)'
+                    }}
+                  />
+                  <div>
+                    <h4 style={{margin: 0, fontSize: '1.1rem'}}>{district.name}</h4>
+                    <p style={{margin: 0, fontSize: '0.75rem', color: '#a0aec0'}}>{district.code}</p>
+                  </div>
+                </div>
+                <div style={{display: 'flex', gap: '6px', marginTop: '10px'}}>
+                  <button
+                    style={{...styles.editBtn, fontSize: '0.75rem', padding: '6px 10px'}}
+                    onClick={() => openEditDistrictModal(district)}
+                  >
+                    ✏️ ערוך
+                  </button>
+                  <button
+                    style={{...styles.deleteBtn, fontSize: '0.75rem', padding: '6px 10px'}}
+                    onClick={() => handleDeleteDistrict(district)}
+                    disabled={actionLoading}
+                  >
+                    🗑️ מחק
+                  </button>
+                </div>
+              </div>
+            ))}
+          </div>
+        </div>
+      )}
 
       {/* Stations List */}
       {loading ? (
@@ -505,6 +694,77 @@ export default function WheelsAdminPage() {
                 disabled={actionLoading}
               >
                 {actionLoading ? 'שומר...' : (editingStation ? 'עדכן' : 'צור תחנה')}
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* Add/Edit District Modal */}
+      {(showAddDistrict || editingDistrict) && (
+        <div style={styles.modalOverlay} onClick={() => { setShowAddDistrict(false); setEditingDistrict(null) }}>
+          <div style={styles.modal} onClick={e => e.stopPropagation()}>
+            <h3 style={styles.modalTitle}>
+              {editingDistrict ? '✏️ עריכת מחוז' : '➕ מחוז חדש'}
+            </h3>
+
+            <div style={styles.formGroup}>
+              <label style={styles.label}>קוד מחוז (באנגלית) *</label>
+              <input
+                type="text"
+                value={districtForm.code}
+                onChange={e => setDistrictForm({...districtForm, code: e.target.value})}
+                style={styles.input}
+                placeholder="לדוגמה: jerusalem"
+                disabled={!!editingDistrict}
+              />
+              {editingDistrict && (
+                <p style={{fontSize: '0.75rem', color: '#a0aec0', marginTop: '4px'}}>
+                  לא ניתן לשנות את קוד המחוז לאחר יצירתו
+                </p>
+              )}
+            </div>
+
+            <div style={styles.formGroup}>
+              <label style={styles.label}>שם המחוז (בעברית) *</label>
+              <input
+                type="text"
+                value={districtForm.name}
+                onChange={e => setDistrictForm({...districtForm, name: e.target.value})}
+                style={styles.input}
+                placeholder="לדוגמה: ירושלים"
+              />
+            </div>
+
+            <div style={styles.formGroup}>
+              <label style={styles.label}>צבע המחוז *</label>
+              <div style={{display: 'flex', gap: '10px', alignItems: 'center'}}>
+                <input
+                  type="color"
+                  value={districtForm.color}
+                  onChange={e => setDistrictForm({...districtForm, color: e.target.value})}
+                  style={{width: '60px', height: '40px', border: 'none', borderRadius: '8px', cursor: 'pointer'}}
+                />
+                <input
+                  type="text"
+                  value={districtForm.color}
+                  onChange={e => setDistrictForm({...districtForm, color: e.target.value})}
+                  style={{...styles.input, flex: 1}}
+                  placeholder="#3b82f6"
+                />
+              </div>
+            </div>
+
+            <div style={styles.modalButtons}>
+              <button style={styles.cancelBtn} onClick={() => { setShowAddDistrict(false); setEditingDistrict(null) }}>
+                ביטול
+              </button>
+              <button
+                style={styles.submitBtn}
+                onClick={editingDistrict ? handleUpdateDistrict : handleAddDistrict}
+                disabled={actionLoading}
+              >
+                {actionLoading ? 'שומר...' : (editingDistrict ? 'עדכן' : 'צור מחוז')}
               </button>
             </div>
           </div>
@@ -925,5 +1185,23 @@ const styles: { [key: string]: React.CSSProperties } = {
     cursor: 'pointer',
     fontWeight: 'bold',
     fontSize: '1rem',
+  },
+  // Districts styles
+  districtSection: {
+    background: 'rgba(139, 92, 246, 0.1)',
+    borderRadius: '16px',
+    padding: '20px',
+    border: '2px solid rgba(139, 92, 246, 0.3)',
+  },
+  districtsGrid: {
+    display: 'grid',
+    gridTemplateColumns: 'repeat(auto-fill, minmax(200px, 1fr))',
+    gap: '12px',
+  },
+  districtCard: {
+    background: 'rgba(255,255,255,0.05)',
+    borderRadius: '12px',
+    padding: '12px',
+    border: '1px solid rgba(255,255,255,0.1)',
   },
 }

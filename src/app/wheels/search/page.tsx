@@ -3,7 +3,7 @@
 import { useState, useEffect, Suspense } from 'react'
 import { useSearchParams } from 'next/navigation'
 import Link from 'next/link'
-import { getDistrictColor, getDistrictName, DISTRICTS } from '@/lib/districts'
+import { getDistrictColor, getDistrictName, getDistricts, District } from '@/lib/districts'
 
 interface Wheel {
   id: string
@@ -46,6 +46,7 @@ function SearchContent() {
   const [data, setData] = useState<SearchResponse | null>(null)
   const [error, setError] = useState<string | null>(null)
   const [districtFilter, setDistrictFilter] = useState<string>('')
+  const [districts, setDistricts] = useState<District[]>([])
 
   // Get filters from URL
   const boltCount = searchParams.get('bolt_count')
@@ -54,19 +55,26 @@ function SearchContent() {
   const pcd = boltCount && boltSpacing ? `${boltCount}x${boltSpacing}` : null
 
   useEffect(() => {
-    const fetchWheels = async () => {
+    const fetchData = async () => {
       setLoading(true)
       try {
-        const params = new URLSearchParams()
-        if (boltCount) params.set('bolt_count', boltCount)
-        if (boltSpacing) params.set('bolt_spacing', boltSpacing)
-        if (rimSize) params.set('rim_size', rimSize)
-        params.set('available_only', 'true')
+        // Fetch districts and wheels in parallel
+        const [districtsData, wheelsResponse] = await Promise.all([
+          getDistricts(),
+          (async () => {
+            const params = new URLSearchParams()
+            if (boltCount) params.set('bolt_count', boltCount)
+            if (boltSpacing) params.set('bolt_spacing', boltSpacing)
+            if (rimSize) params.set('rim_size', rimSize)
+            params.set('available_only', 'true')
+            return fetch(`/api/wheel-stations/search?${params}`)
+          })()
+        ])
 
-        const response = await fetch(`/api/wheel-stations/search?${params}`)
-        const result = await response.json()
+        setDistricts(districtsData)
 
-        if (!response.ok) {
+        const result = await wheelsResponse.json()
+        if (!wheelsResponse.ok) {
           setError(result.error || 'שגיאה בחיפוש')
           return
         }
@@ -79,7 +87,7 @@ function SearchContent() {
       }
     }
 
-    fetchWheels()
+    fetchData()
   }, [boltCount, boltSpacing, rimSize])
 
   // Filter results by district
@@ -176,9 +184,9 @@ function SearchContent() {
                   className="px-4 py-2 border border-gray-300 rounded-lg text-sm focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
                 >
                   <option value="">כל המחוזות</option>
-                  {Object.values(DISTRICTS).map((district) => (
+                  {districts.map((district) => (
                     <option key={district.code} value={district.code}>
-                      <span style={{color: district.color}}>●</span> {district.name}
+                      {district.name}
                     </option>
                   ))}
                 </select>

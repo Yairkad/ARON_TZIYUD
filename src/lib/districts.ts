@@ -1,55 +1,85 @@
 /**
  * District definitions for wheel stations
- * Each district has a color, Hebrew name, and English identifier
+ * Districts are now stored in the database and can be managed dynamically
  */
 
-export type DistrictCode = 'jerusalem' | 'north' | 'center' | 'south' | 'haifa' | 'tel_aviv'
+import { supabase } from './supabase'
 
 export interface District {
-  code: DistrictCode
+  id: string
+  code: string
   name: string      // Hebrew name
   color: string     // Hex color for the district dot
+  created_at?: string
+  updated_at?: string
 }
 
-export const DISTRICTS: Record<DistrictCode, District> = {
-  jerusalem: {
-    code: 'jerusalem',
-    name: 'ירושלים',
-    color: '#ef4444', // Red
-  },
-  north: {
-    code: 'north',
-    name: 'צפון',
-    color: '#22c55e', // Green
-  },
-  center: {
-    code: 'center',
-    name: 'מרכז',
-    color: '#3b82f6', // Blue
-  },
-  south: {
-    code: 'south',
-    name: 'דרום',
-    color: '#f59e0b', // Orange
-  },
-  haifa: {
-    code: 'haifa',
-    name: 'חיפה',
-    color: '#8b5cf6', // Purple
-  },
-  tel_aviv: {
-    code: 'tel_aviv',
-    name: 'תל אביב',
-    color: '#ec4899', // Pink
-  },
+// Cache for districts to avoid repeated DB calls
+let districtsCache: District[] | null = null
+let lastFetch = 0
+const CACHE_DURATION = 5 * 60 * 1000 // 5 minutes
+
+export async function getDistricts(): Promise<District[]> {
+  const now = Date.now()
+
+  // Return cached data if still fresh
+  if (districtsCache && (now - lastFetch) < CACHE_DURATION) {
+    return districtsCache
+  }
+
+  try {
+    const { data, error } = await supabase
+      .from('districts')
+      .select('*')
+      .order('name')
+
+    if (error) throw error
+
+    districtsCache = data || []
+    lastFetch = now
+    return districtsCache
+  } catch (error) {
+    console.error('Error fetching districts:', error)
+    return []
+  }
 }
 
-export function getDistrictColor(districtCode?: string | null): string {
+export function getDistrictColor(districtCode?: string | null, districts?: District[]): string {
   if (!districtCode) return '#6b7280' // Gray for no district
-  return DISTRICTS[districtCode as DistrictCode]?.color || '#6b7280'
+
+  if (districts) {
+    const district = districts.find(d => d.code === districtCode)
+    return district?.color || '#6b7280'
+  }
+
+  // Fallback to cache if available
+  if (districtsCache) {
+    const district = districtsCache.find(d => d.code === districtCode)
+    return district?.color || '#6b7280'
+  }
+
+  return '#6b7280'
 }
 
-export function getDistrictName(districtCode?: string | null): string {
+export function getDistrictName(districtCode?: string | null, districts?: District[]): string {
   if (!districtCode) return 'ללא מחוז'
-  return DISTRICTS[districtCode as DistrictCode]?.name || districtCode
+
+  if (districts) {
+    const district = districts.find(d => d.code === districtCode)
+    return district?.name || districtCode
+  }
+
+  // Fallback to cache if available
+  if (districtsCache) {
+    const district = districtsCache.find(d => d.code === districtCode)
+    return district?.name || districtCode
+  }
+
+  return districtCode
+}
+
+// Clear cache (useful after adding/editing/deleting districts)
+export function clearDistrictsCache() {
+  districtsCache = null
+  lastFetch = 0
 }
