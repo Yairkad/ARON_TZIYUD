@@ -290,7 +290,7 @@ export default function HomePage() {
               </Link>
             </p>
             <p className="text-gray-300 text-[10px] mt-2">
-              גירסה 2.2.0
+              גירסה 2.2.1
             </p>
           </div>
         </div>
