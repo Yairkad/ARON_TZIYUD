@@ -1,7 +1,5 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { createClient } from '@supabase/supabase-js'
-import fs from 'fs'
-import path from 'path'
 
 const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL!
 const supabaseServiceKey = process.env.SUPABASE_SERVICE_ROLE_KEY!
@@ -18,9 +16,52 @@ export async function POST(request: NextRequest) {
 
     const supabase = createClient(supabaseUrl, supabaseServiceKey)
 
-    // Read CSV file
-    const csvPath = path.join(process.cwd(), 'data', 'pcd-database-utf8.csv')
-    const csvContent = fs.readFileSync(csvPath, 'utf-8')
+    let csvContent: string
+    let source: string
+
+    // Check if request has file upload or Google Sheets URL
+    const contentType = request.headers.get('content-type') || ''
+
+    if (contentType.includes('multipart/form-data')) {
+      // Handle file upload
+      const formData = await request.formData()
+      const file = formData.get('file') as File
+
+      if (!file) {
+        return NextResponse.json({ error: 'No file provided' }, { status: 400 })
+      }
+
+      csvContent = await file.text()
+      source = `Uploaded file: ${file.name}`
+    } else {
+      // Handle Google Sheets URL
+      const body = await request.json().catch(() => ({}))
+      const sheetsUrl = body.sheetsUrl || process.env.VEHICLE_DATA_SHEETS_URL
+
+      if (!sheetsUrl) {
+        return NextResponse.json({
+          error: 'Provide either a file upload (multipart/form-data) or sheetsUrl in JSON body'
+        }, { status: 400 })
+      }
+
+      // Convert Google Sheets URL to CSV export URL
+      // From: https://docs.google.com/spreadsheets/d/{SHEET_ID}/edit#gid=0
+      // To: https://docs.google.com/spreadsheets/d/{SHEET_ID}/export?format=csv&gid=0
+      let csvUrl = sheetsUrl
+      if (sheetsUrl.includes('/edit')) {
+        const sheetId = sheetsUrl.match(/\/d\/([a-zA-Z0-9-_]+)/)?.[1]
+        const gid = sheetsUrl.match(/gid=(\d+)/)?.[1] || '0'
+        csvUrl = `https://docs.google.com/spreadsheets/d/${sheetId}/export?format=csv&gid=${gid}`
+      }
+
+      // Fetch CSV from Google Sheets
+      const response = await fetch(csvUrl)
+      if (!response.ok) {
+        throw new Error(`Failed to fetch Google Sheet: ${response.statusText}`)
+      }
+      csvContent = await response.text()
+      source = `Google Sheets: ${csvUrl}`
+    }
 
     // Parse CSV
     const lines = csvContent.split('\n').filter(line => line.trim())
@@ -73,7 +114,8 @@ export async function POST(request: NextRequest) {
     return NextResponse.json({
       success: true,
       imported: inserted,
-      total: vehicles.length
+      total: vehicles.length,
+      source
     })
 
   } catch (error: any) {
