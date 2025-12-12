@@ -3,6 +3,7 @@
 import { useState, useEffect, Suspense } from 'react'
 import { useSearchParams } from 'next/navigation'
 import Link from 'next/link'
+import { getDistrictColor, getDistrictName, DISTRICTS } from '@/lib/districts'
 
 interface Wheel {
   id: string
@@ -21,6 +22,7 @@ interface StationResult {
     name: string
     address: string
     city: string | null
+    district?: string | null
   }
   wheels: Wheel[]
   availableCount: number
@@ -43,6 +45,7 @@ function SearchContent() {
   const [loading, setLoading] = useState(true)
   const [data, setData] = useState<SearchResponse | null>(null)
   const [error, setError] = useState<string | null>(null)
+  const [districtFilter, setDistrictFilter] = useState<string>('')
 
   // Get filters from URL
   const boltCount = searchParams.get('bolt_count')
@@ -78,6 +81,12 @@ function SearchContent() {
 
     fetchWheels()
   }, [boltCount, boltSpacing, rimSize])
+
+  // Filter results by district
+  const filteredResults = data?.results.filter(result => {
+    if (!districtFilter) return true
+    return result.station.district === districtFilter
+  }) || []
 
   return (
     <div className="min-h-screen bg-gradient-to-b from-blue-50 to-white" dir="rtl">
@@ -129,15 +138,15 @@ function SearchContent() {
         {/* Results */}
         {!loading && data && (
           <>
-            {/* Summary */}
+            {/* Summary + District Filter */}
             <div className="bg-white rounded-2xl shadow-lg p-6 mb-8">
-              <div className="flex flex-wrap items-center gap-6">
+              <div className="flex flex-wrap items-center gap-6 mb-4">
                 <div className="text-center px-6 py-3 bg-blue-50 rounded-xl">
                   <p className="text-3xl font-bold text-blue-600">{data.totalAvailable}</p>
                   <p className="text-sm text-gray-600">גלגלים זמינים</p>
                 </div>
                 <div className="text-center px-6 py-3 bg-gray-50 rounded-xl">
-                  <p className="text-3xl font-bold text-gray-600">{data.results.length}</p>
+                  <p className="text-3xl font-bold text-gray-600">{filteredResults.length}</p>
                   <p className="text-sm text-gray-600">תחנות</p>
                 </div>
                 {(pcd || rimSize) && (
@@ -155,6 +164,31 @@ function SearchContent() {
                       </span>
                     )}
                   </div>
+                )}
+              </div>
+
+              {/* District Filter */}
+              <div className="flex items-center gap-3 pt-4 border-t">
+                <label className="text-sm font-medium text-gray-700">סינון לפי מחוז:</label>
+                <select
+                  value={districtFilter}
+                  onChange={(e) => setDistrictFilter(e.target.value)}
+                  className="px-4 py-2 border border-gray-300 rounded-lg text-sm focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
+                >
+                  <option value="">כל המחוזות</option>
+                  {Object.values(DISTRICTS).map((district) => (
+                    <option key={district.code} value={district.code}>
+                      <span style={{color: district.color}}>●</span> {district.name}
+                    </option>
+                  ))}
+                </select>
+                {districtFilter && (
+                  <button
+                    onClick={() => setDistrictFilter('')}
+                    className="text-sm text-blue-600 hover:text-blue-800"
+                  >
+                    נקה סינון
+                  </button>
                 )}
               </div>
             </div>
@@ -182,19 +216,36 @@ function SearchContent() {
 
             {/* Station Results */}
             <div className="space-y-6">
-              {data.results.map((result) => (
+              {filteredResults.map((result) => (
                 <div key={result.station.id} className="bg-white rounded-2xl shadow-lg overflow-hidden">
                   {/* Station Header */}
                   <div className="bg-gradient-to-l from-blue-500 to-blue-600 px-6 py-4">
                     <div className="flex items-center justify-between">
-                      <div>
-                        <h3 className="text-xl font-bold text-white">{result.station.name}</h3>
-                        <p className="text-blue-100 text-sm">{result.station.address}</p>
-                        {result.station.city && (
-                          <span className="inline-block mt-1 px-2 py-0.5 bg-white/20 text-white text-xs rounded">
-                            {result.station.city}
-                          </span>
+                      <div className="flex items-start gap-3">
+                        {/* District Color Dot */}
+                        {result.station.district && (
+                          <div
+                            className="w-4 h-4 rounded-full mt-1 flex-shrink-0"
+                            style={{ backgroundColor: getDistrictColor(result.station.district) }}
+                            title={getDistrictName(result.station.district)}
+                          />
                         )}
+                        <div>
+                          <h3 className="text-xl font-bold text-white">{result.station.name}</h3>
+                          <p className="text-blue-100 text-sm">{result.station.address}</p>
+                          <div className="flex items-center gap-2 mt-1">
+                            {result.station.city && (
+                              <span className="inline-block px-2 py-0.5 bg-white/20 text-white text-xs rounded">
+                                {result.station.city}
+                              </span>
+                            )}
+                            {result.station.district && (
+                              <span className="inline-block px-2 py-0.5 bg-white/20 text-white text-xs rounded">
+                                {getDistrictName(result.station.district)}
+                              </span>
+                            )}
+                          </div>
+                        </div>
                       </div>
                       <div className="text-left">
                         <p className="text-3xl font-bold text-white">{result.availableCount}</p>

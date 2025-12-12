@@ -36,6 +36,7 @@ export async function GET(request: NextRequest) {
           id,
           name,
           address,
+          district,
           is_active,
           cities (name)
         )
@@ -70,6 +71,7 @@ export async function GET(request: NextRequest) {
         name: string
         address: string
         city: string | null
+        district: string | null
       }
       wheels: typeof wheels
       availableCount: number
@@ -81,6 +83,7 @@ export async function GET(request: NextRequest) {
         id: string
         name: string
         address: string
+        district: string | null
         cities: { name: string } | null
       }
 
@@ -90,7 +93,8 @@ export async function GET(request: NextRequest) {
             id: station.id,
             name: station.name,
             address: station.address,
-            city: station.cities?.name || null
+            city: station.cities?.name || null,
+            district: station.district || null
           },
           wheels: [],
           availableCount: 0,
