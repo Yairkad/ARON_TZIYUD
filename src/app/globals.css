@@ -1,11 +1,16 @@
 @import "tailwindcss";
 
-/* Global body background with subtle pattern */
+/* Global body background with subtle pattern - optimized for performance */
 body {
   background: linear-gradient(135deg, #e0f2fe 0%, #ffffff 100%);
   background-attachment: fixed;
   min-height: 100vh;
-  font-size: 14px; /* Smaller base font size */
+  font-size: 14px;
+  /* Hardware acceleration for smooth rendering */
+  transform: translateZ(0);
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
+  will-change: auto;
 }
 
 body::before {
@@ -20,6 +25,9 @@ body::before {
     radial-gradient(circle at 80% 80%, rgba(14, 165, 233, 0.06) 0%, transparent 50%);
   pointer-events: none;
   z-index: 0;
+  /* Performance optimization */
+  transform: translateZ(0);
+  backface-visibility: hidden;
 }
 
 /* RTL support for Hebrew */

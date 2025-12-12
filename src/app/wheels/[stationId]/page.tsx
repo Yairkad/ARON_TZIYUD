@@ -5,6 +5,7 @@ import Link from 'next/link'
 import toast from 'react-hot-toast'
 import * as XLSX from 'xlsx'
 import { isPushSupported, requestNotificationPermission, registerServiceWorker, getPushNotSupportedReason } from '@/lib/push'
+import { getDistricts, getDistrictColor, getDistrictName, District } from '@/lib/districts'
 
 interface Wheel {
   id: string
@@ -83,6 +84,7 @@ interface Station {
   id: string
   name: string
   address: string
+  district?: string | null
   wheels: Wheel[]
   wheel_station_managers: Manager[]
   totalWheels: number
@@ -111,6 +113,7 @@ export default function StationPage({ params }: { params: Promise<{ stationId: s
   const [error, setError] = useState<string | null>(null)
   const [viewMode, setViewMode] = useState<ViewMode>('cards')
   const [showAdvancedFilters, setShowAdvancedFilters] = useState(false)
+  const [districts, setDistricts] = useState<District[]>([])
 
   // Manager mode
   const [isManager, setIsManager] = useState(false)
@@ -197,6 +200,7 @@ export default function StationPage({ params }: { params: Promise<{ stationId: s
 
   useEffect(() => {
     fetchStation()
+    fetchDistrictsData()
     // Check if already logged in
     const savedSession = localStorage.getItem(`wheel_manager_${stationId}`)
     if (savedSession) {
@@ -463,6 +467,15 @@ ${signFormUrl}
     const cleanPhone = borrowerPhone.replace(/\D/g, '')
     const israelPhone = cleanPhone.startsWith('0') ? '972' + cleanPhone.slice(1) : cleanPhone
     return `https://wa.me/${israelPhone}?text=${encodeURIComponent(message)}`
+  }
+
+  const fetchDistrictsData = async () => {
+    try {
+      const districtsData = await getDistricts()
+      setDistricts(districtsData)
+    } catch (err) {
+      console.error('Error fetching districts:', err)
+    }
   }
 
   const fetchStation = async () => {
@@ -1204,8 +1217,30 @@ ${formUrl}`
             <button style={styles.managerBtn} className="station-login-btn" onClick={() => setShowLoginModal(true)}>🔐 כניסת מנהל</button>
           )}
         </div>
-        <h1 style={styles.title} className="station-header-title">🏙️ {station.name}</h1>
+        <h1 style={styles.title} className="station-header-title">
+          <div style={{ display: 'flex', alignItems: 'center', gap: '12px', justifyContent: 'center' }}>
+            {station.district && (
+              <div
+                style={{
+                  width: '20px',
+                  height: '20px',
+                  borderRadius: '50%',
+                  backgroundColor: getDistrictColor(station.district, districts),
+                  border: '2px solid rgba(255,255,255,0.3)',
+                  flexShrink: 0
+                }}
+                title={getDistrictName(station.district, districts)}
+              />
+            )}
+            <span>🏙️ {station.name}</span>
+          </div>
+        </h1>
         {station.address && <p style={styles.address}>📍 {station.address}</p>}
+        {station.district && (
+          <p style={{ textAlign: 'center', color: '#6b7280', fontSize: '14px', marginTop: '4px' }}>
+            🗺️ {getDistrictName(station.district, districts)}
+          </p>
+        )}
         {isManager && <div style={styles.managerBadge}>🔓 מצב ניהול</div>}
       </header>
 

@@ -7,6 +7,9 @@ import ToastProvider from "@/components/ToastProvider";
 const rubik = Rubik({
   subsets: ["hebrew", "latin"],
   display: "swap",
+  preload: true,
+  fallback: ["system-ui", "arial"],
+  adjustFontFallback: true,
 });
 
 export const metadata: Metadata = {

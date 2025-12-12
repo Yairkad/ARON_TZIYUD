@@ -52,7 +52,15 @@ function SearchContent() {
   const boltCount = searchParams.get('bolt_count')
   const boltSpacing = searchParams.get('bolt_spacing')
   const rimSize = searchParams.get('rim_size')
+  const urlDistrict = searchParams.get('district')
   const pcd = boltCount && boltSpacing ? `${boltCount}x${boltSpacing}` : null
+
+  // Set district filter from URL parameter
+  useEffect(() => {
+    if (urlDistrict) {
+      setDistrictFilter(urlDistrict)
+    }
+  }, [urlDistrict])
 
   useEffect(() => {
     const fetchData = async () => {
@@ -234,8 +242,8 @@ function SearchContent() {
                         {result.station.district && (
                           <div
                             className="w-4 h-4 rounded-full mt-1 flex-shrink-0"
-                            style={{ backgroundColor: getDistrictColor(result.station.district) }}
-                            title={getDistrictName(result.station.district)}
+                            style={{ backgroundColor: getDistrictColor(result.station.district, districts) }}
+                            title={getDistrictName(result.station.district, districts)}
                           />
                         )}
                         <div>
@@ -249,7 +257,7 @@ function SearchContent() {
                             )}
                             {result.station.district && (
                               <span className="inline-block px-2 py-0.5 bg-white/20 text-white text-xs rounded">
-                                {getDistrictName(result.station.district)}
+                                {getDistrictName(result.station.district, districts)}
                               </span>
                             )}
                           </div>

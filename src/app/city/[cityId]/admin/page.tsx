@@ -3,6 +3,7 @@
 import React, { useState, useEffect } from 'react'
 import { useParams, useRouter, useSearchParams } from 'next/navigation'
 import Link from 'next/link'
+import dynamic from 'next/dynamic'
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card'
 import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
@@ -11,9 +12,6 @@ import { Equipment, BorrowHistory, City } from '@/types'
 import { FileDown, Bell, BellOff } from 'lucide-react'
 import Logo from '@/components/Logo'
 import { checkAuth, logout } from '@/lib/auth'
-import RequestsTab from '@/components/RequestsTab'
-import ReportsTab from '@/components/ReportsTab'
-import EquipmentPoolModal from '@/components/EquipmentPoolModal'
 import {
   isPushSupported,
   hasNotificationPermission,
@@ -25,6 +23,22 @@ import {
 } from '@/lib/push'
 import toast from 'react-hot-toast'
 import { VERSION } from '@/lib/version'
+
+// Lazy load heavy components for better performance
+const RequestsTab = dynamic(() => import('@/components/RequestsTab'), {
+  ssr: false,
+  loading: () => <div className="p-4 text-center text-gray-500">טוען בקשות...</div>
+})
+
+const ReportsTab = dynamic(() => import('@/components/ReportsTab'), {
+  ssr: false,
+  loading: () => <div className="p-4 text-center text-gray-500">טוען דוחות...</div>
+})
+
+const EquipmentPoolModal = dynamic(() => import('@/components/EquipmentPoolModal'), {
+  ssr: false,
+  loading: () => <div className="p-4 text-center text-gray-500">טוען...</div>
+})
 
 // Function to extract coordinates from Google Maps URL
 // Handles both full URLs and short URLs (via API expansion)

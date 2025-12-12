@@ -1,7 +1,8 @@
 'use client'
 
-import { useState } from 'react'
+import { useState, useEffect } from 'react'
 import Link from 'next/link'
+import { getDistricts, District } from '@/lib/districts'
 
 interface VehicleData {
   plate: number
@@ -41,6 +42,20 @@ export default function VehicleLookupPage() {
   const [loading, setLoading] = useState(false)
   const [result, setResult] = useState<LookupResponse | null>(null)
   const [error, setError] = useState<string | null>(null)
+  const [districts, setDistricts] = useState<District[]>([])
+  const [districtFilter, setDistrictFilter] = useState<string>('')
+
+  useEffect(() => {
+    const fetchDistrictsData = async () => {
+      try {
+        const districtsData = await getDistricts()
+        setDistricts(districtsData)
+      } catch (err) {
+        console.error('Error fetching districts:', err)
+      }
+    }
+    fetchDistrictsData()
+  }, [])
 
   const handleSearch = async () => {
     if (!plate.trim()) {
@@ -97,38 +112,61 @@ export default function VehicleLookupPage() {
       <main className="max-w-4xl mx-auto px-4 py-8">
         {/* Search Box */}
         <div className="bg-white rounded-2xl shadow-lg p-6 mb-8">
-          <div className="flex flex-col sm:flex-row gap-4">
-            <div className="flex-1">
-              <label className="block text-sm font-medium text-gray-700 mb-2">
-                מספר רישוי
-              </label>
-              <input
-                type="text"
-                value={plate}
-                onChange={(e) => setPlate(e.target.value)}
-                onKeyPress={handleKeyPress}
-                placeholder="לדוגמה: 12-345-67"
-                className="w-full px-4 py-3 text-lg border-2 border-gray-200 rounded-xl focus:border-blue-500 focus:ring-2 focus:ring-blue-200 transition-all text-center tracking-widest"
-                style={{ direction: 'ltr' }}
-              />
+          <div className="space-y-4">
+            <div className="flex flex-col sm:flex-row gap-4">
+              <div className="flex-1">
+                <label className="block text-sm font-medium text-gray-700 mb-2">
+                  מספר רישוי
+                </label>
+                <input
+                  type="text"
+                  value={plate}
+                  onChange={(e) => setPlate(e.target.value)}
+                  onKeyPress={handleKeyPress}
+                  placeholder="לדוגמה: 12-345-67"
+                  className="w-full px-4 py-3 text-lg border-2 border-gray-200 rounded-xl focus:border-blue-500 focus:ring-2 focus:ring-blue-200 transition-all text-center tracking-widest"
+                  style={{ direction: 'ltr' }}
+                />
+              </div>
+              <div className="flex items-end">
+                <button
+                  onClick={handleSearch}
+                  disabled={loading}
+                  className="w-full sm:w-auto px-8 py-3 bg-blue-600 text-white font-medium rounded-xl hover:bg-blue-700 disabled:bg-gray-400 transition-colors"
+                >
+                  {loading ? (
+                    <span className="flex items-center gap-2">
+                      <svg className="animate-spin h-5 w-5" viewBox="0 0 24 24">
+                        <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4" fill="none" />
+                        <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z" />
+                      </svg>
+                      מחפש...
+                    </span>
+                  ) : 'חפש'}
+                </button>
+              </div>
             </div>
-            <div className="flex items-end">
-              <button
-                onClick={handleSearch}
-                disabled={loading}
-                className="w-full sm:w-auto px-8 py-3 bg-blue-600 text-white font-medium rounded-xl hover:bg-blue-700 disabled:bg-gray-400 transition-colors"
-              >
-                {loading ? (
-                  <span className="flex items-center gap-2">
-                    <svg className="animate-spin h-5 w-5" viewBox="0 0 24 24">
-                      <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4" fill="none" />
-                      <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z" />
-                    </svg>
-                    מחפש...
-                  </span>
-                ) : 'חפש'}
-              </button>
-            </div>
+
+            {/* District Filter */}
+            {districts.length > 0 && (
+              <div>
+                <label className="block text-sm font-medium text-gray-700 mb-2">
+                  סנן לפי מחוז (אופציונלי)
+                </label>
+                <select
+                  value={districtFilter}
+                  onChange={(e) => setDistrictFilter(e.target.value)}
+                  className="w-full px-4 py-3 border-2 border-gray-200 rounded-xl focus:border-blue-500 focus:ring-2 focus:ring-blue-200 transition-all"
+                >
+                  <option value="">כל המחוזות</option>
+                  {districts.map((district) => (
+                    <option key={district.code} value={district.code}>
+                      {district.name}
+                    </option>
+                  ))}
+                </select>
+              </div>
+            )}
           </div>
         </div>
 
@@ -205,11 +243,16 @@ export default function VehicleLookupPage() {
                 {/* Search Link */}
                 <div className="mt-6 text-center">
                   <Link
-                    href={`/wheels/search?bolt_count=${result.wheel_fitment.bolt_count}&bolt_spacing=${result.wheel_fitment.bolt_spacing}${extractRimSize(result.vehicle.front_tire) ? `&rim_size=${extractRimSize(result.vehicle.front_tire)}` : ''}`}
+                    href={`/wheels/search?bolt_count=${result.wheel_fitment.bolt_count}&bolt_spacing=${result.wheel_fitment.bolt_spacing}${extractRimSize(result.vehicle.front_tire) ? `&rim_size=${extractRimSize(result.vehicle.front_tire)}` : ''}${districtFilter ? `&district=${districtFilter}` : ''}`}
                     className="inline-flex items-center gap-2 px-6 py-3 bg-green-600 text-white font-medium rounded-xl hover:bg-green-700 transition-colors"
                   >
                     <span>🔍</span>
                     חפש גלגלים מתאימים במלאי
+                    {districtFilter && districts.find(d => d.code === districtFilter) && (
+                      <span className="text-sm opacity-90">
+                        ({districts.find(d => d.code === districtFilter)?.name})
+                      </span>
+                    )}
                   </Link>
                 </div>
               </div>

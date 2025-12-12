@@ -42,9 +42,17 @@ next-env.d.ts
 
 # temporary debug files
 *.sql
+!supabase/migrations/*.sql
 check-*.js
 create-super-admin*.js
 fix-super-admin*.js
 set-default-no-image.js
 nul
 תמונות/
+
+# supabase temp files
+supabase/.temp/
+
+# data files
+data/*.csv
+data/*.xlsx
