@@ -17,15 +17,11 @@ ADD CONSTRAINT valid_hex_color CHECK (color ~ '^#[0-9A-Fa-f]{6}$');
 -- Create index on code for faster lookups
 CREATE INDEX IF NOT EXISTS idx_districts_code ON districts(code);
 
--- Insert default districts
-INSERT INTO districts (code, name, color) VALUES
-  ('jerusalem', 'ירושלים', '#ef4444'),
-  ('north', 'צפון', '#22c55e'),
-  ('center', 'מרכז', '#3b82f6'),
-  ('south', 'דרום', '#f59e0b'),
-  ('haifa', 'חיפה', '#8b5cf6'),
-  ('tel_aviv', 'תל אביב', '#ec4899')
-ON CONFLICT (code) DO NOTHING;
+-- Insert default districts (one by one to support ON CONFLICT)
+INSERT INTO districts (code, name, color) VALUES ('jerusalem', 'ירושלים', '#ef4444') ON CONFLICT (code) DO NOTHING;
+INSERT INTO districts (code, name, color) VALUES ('north', 'צפון', '#22c55e') ON CONFLICT (code) DO NOTHING;
+INSERT INTO districts (code, name, color) VALUES ('center', 'מרכז', '#3b82f6') ON CONFLICT (code) DO NOTHING;
+INSERT INTO districts (code, name, color) VALUES ('south', 'דרום', '#f59e0b') ON CONFLICT (code) DO NOTHING;
 
 -- Enable RLS
 ALTER TABLE districts ENABLE ROW LEVEL SECURITY;
