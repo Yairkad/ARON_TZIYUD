@@ -48,8 +48,12 @@ GRANT INSERT, UPDATE, DELETE ON districts TO authenticated;
 -- Add comment
 COMMENT ON TABLE districts IS 'Geographic districts/regions for organizing wheel stations. Admins can add/edit/delete districts.';
 
--- Update wheel_stations constraint to reference districts table dynamically
--- First, drop the old constraint
+-- Update wheel_stations to reference districts table dynamically
+-- First, add district column if it doesn't exist
+ALTER TABLE wheel_stations
+ADD COLUMN IF NOT EXISTS district TEXT;
+
+-- Drop the old constraint if exists
 ALTER TABLE wheel_stations DROP CONSTRAINT IF EXISTS valid_district;
 
 -- Add foreign key to districts table (nullable - stations can have no district)
@@ -57,3 +61,8 @@ ALTER TABLE wheel_stations
 ADD CONSTRAINT fk_wheel_stations_district
 FOREIGN KEY (district) REFERENCES districts(code)
 ON DELETE SET NULL;
+
+-- Add index for filtering by district
+CREATE INDEX IF NOT EXISTS idx_wheel_stations_district
+  ON wheel_stations(district)
+  WHERE district IS NOT NULL;
