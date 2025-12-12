@@ -533,8 +533,9 @@ export default function WheelStationsPage() {
             padding: 10px 16px !important;
           }
           .wheels-vehicle-modal {
-            max-width: calc(100vw - 40px) !important;
+            max-width: calc(100vw - 30px) !important;
             padding: 15px !important;
+            max-height: 90vh !important;
           }
           .wheels-vehicle-modal .wheels-fitment-badges {
             flex-direction: column !important;
@@ -549,12 +550,14 @@ export default function WheelStationsPage() {
             padding: 8px 10px !important;
           }
           .wheels-search-modal {
-            padding: 12px !important;
-            max-width: calc(100vw - 10px) !important;
+            padding: 15px !important;
+            max-width: calc(100vw - 30px) !important;
+            max-height: 90vh !important;
           }
           .wheels-add-model-modal {
-            padding: 12px !important;
-            max-width: calc(100vw - 10px) !important;
+            padding: 15px !important;
+            max-width: calc(100vw - 30px) !important;
+            max-height: 90vh !important;
           }
           .wheels-modal-title {
             font-size: 1.1rem !important;
@@ -1432,16 +1435,16 @@ const styles: { [key: string]: React.CSSProperties } = {
     alignItems: 'center',
     justifyContent: 'center',
     zIndex: 1000,
-    padding: '5px',
+    padding: '20px',
     overflow: 'auto',
   },
   modal: {
     background: '#1e293b',
     borderRadius: '16px',
-    padding: '15px',
+    padding: '20px',
     width: '100%',
-    maxWidth: '95vw',
-    maxHeight: 'calc(100vh - 10px)',
+    maxWidth: '500px',
+    maxHeight: '85vh',
     overflowY: 'auto',
     margin: 'auto',
   },
@@ -1643,10 +1646,10 @@ const styles: { [key: string]: React.CSSProperties } = {
   vehicleModal: {
     background: '#1e293b',
     borderRadius: '16px',
-    padding: '15px',
+    padding: '20px',
     width: '100%',
-    maxWidth: '95vw',
-    maxHeight: 'calc(100vh - 10px)',
+    maxWidth: '500px',
+    maxHeight: '85vh',
     overflowY: 'auto',
     margin: 'auto',
   },
@@ -1806,12 +1809,13 @@ const styles: { [key: string]: React.CSSProperties } = {
   addModelModal: {
     background: '#1f2937',
     borderRadius: '16px',
-    padding: '24px',
-    maxWidth: '600px',
-    width: '90%',
-    maxHeight: '90vh',
+    padding: '20px',
+    maxWidth: '550px',
+    width: '100%',
+    maxHeight: '85vh',
     overflowY: 'auto',
     boxShadow: '0 25px 50px -12px rgba(0,0,0,0.5)',
+    margin: 'auto',
   },
   addModelForm: {
     display: 'flex',
