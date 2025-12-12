@@ -576,7 +576,7 @@ export default function CityPage() {
 
   return (
     <>
-    <div className={`min-h-screen content-wrapper ${showAdminBar ? 'pb-16' : ''}`}>
+    <div className={`min-h-screen ${showAdminBar ? 'pb-20' : ''}`}>
       <div className="max-w-5xl mx-auto px-3 sm:px-4 py-4 sm:py-6">
         <Logo />
 
