@@ -2,7 +2,7 @@
 
 import { useState, useEffect } from 'react'
 import Link from 'next/link'
-import toast from 'react-hot-toast'
+import toast, { Toaster } from 'react-hot-toast'
 import { getDistricts, getDistrictColor, getDistrictName, District } from '@/lib/districts'
 
 interface Station {
@@ -486,8 +486,24 @@ export default function WheelStationsPage() {
   }
 
   return (
-    <div style={styles.container}>
-      <style>{`
+    <>
+      <Toaster
+        position="top-center"
+        containerStyle={{
+          top: 20,
+        }}
+        toastOptions={{
+          duration: 3000,
+          style: {
+            background: '#1e293b',
+            color: '#fff',
+            border: '1px solid #3b82f6',
+            zIndex: 9999,
+          },
+        }}
+      />
+      <div style={styles.container}>
+        <style>{`
         @keyframes pulse {
           0%, 100% { opacity: 1; transform: scale(1); }
           50% { opacity: 0.7; transform: scale(0.95); }
@@ -532,6 +548,17 @@ export default function WheelStationsPage() {
             min-width: 80px !important;
             padding: 8px 10px !important;
           }
+          .wheels-search-modal {
+            padding: 12px !important;
+            max-width: calc(100vw - 10px) !important;
+          }
+          .wheels-add-model-modal {
+            padding: 12px !important;
+            max-width: calc(100vw - 10px) !important;
+          }
+          .wheels-modal-title {
+            font-size: 1.1rem !important;
+          }
         }
       `}</style>
       <header style={styles.header}>
@@ -570,26 +597,30 @@ export default function WheelStationsPage() {
               <h3 style={styles.cardTitle}>
                 🏙️ {station.name}
               </h3>
-              {station.district && (
-                <div style={{
-                  display: 'inline-block',
-                  padding: '4px 10px',
-                  border: `2px solid ${getDistrictColor(station.district, districts)}`,
-                  borderRadius: '8px',
-                  fontSize: '0.85rem',
-                  fontWeight: '600',
-                  color: getDistrictColor(station.district, districts),
-                  marginBottom: '8px',
-                  backgroundColor: `${getDistrictColor(station.district, districts)}15`
-                }}>
-                  {getDistrictName(station.district, districts)}
-                </div>
-              )}
               {station.address && (
                 <div style={styles.address}>📍 {station.address}</div>
               )}
-              {station.cities?.name && (
-                <div style={styles.cityName}>{station.cities.name}</div>
+              {(station.cities?.name || station.district) && (
+                <div style={{ display: 'flex', alignItems: 'center', gap: '8px', marginTop: '6px', flexWrap: 'wrap' }}>
+                  {station.cities?.name && (
+                    <div style={styles.cityName}>{station.cities.name}</div>
+                  )}
+                  {station.district && (
+                    <div style={{
+                      display: 'inline-block',
+                      padding: '3px 8px',
+                      border: `2px solid ${getDistrictColor(station.district, districts)}`,
+                      borderRadius: '6px',
+                      fontSize: '0.75rem',
+                      fontWeight: '600',
+                      color: getDistrictColor(station.district, districts),
+                      backgroundColor: `${getDistrictColor(station.district, districts)}15`,
+                      whiteSpace: 'nowrap'
+                    }}>
+                      {getDistrictName(station.district, districts)}
+                    </div>
+                  )}
+                </div>
               )}
               <div style={styles.stats}>
                 <div style={styles.stat}>
@@ -618,9 +649,9 @@ export default function WheelStationsPage() {
       {/* Search Modal */}
       {showSearchModal && (
         <div style={styles.modalOverlay} onClick={closeSearchModal}>
-          <div style={styles.modal} onClick={e => e.stopPropagation()}>
+          <div style={styles.modal} className="wheels-search-modal" onClick={e => e.stopPropagation()}>
             <div style={styles.modalHeader}>
-              <h3 style={styles.modalTitle}>🔍 חיפוש גלגל</h3>
+              <h3 style={styles.modalTitle} className="wheels-modal-title">🔍 חיפוש גלגל</h3>
               <button style={styles.closeBtn} onClick={closeSearchModal}>✕</button>
             </div>
 
@@ -773,7 +804,7 @@ export default function WheelStationsPage() {
         <div style={styles.modalOverlay} onClick={closeVehicleModal}>
           <div style={styles.vehicleModal} className="wheels-vehicle-modal" onClick={e => e.stopPropagation()}>
             <div style={styles.modalHeader}>
-              <h3 style={styles.modalTitle}>🚗 חיפוש לפי מספר רכב</h3>
+              <h3 style={styles.modalTitle} className="wheels-modal-title">🚗 חיפוש לפי מספר רכב</h3>
               <button style={styles.closeBtn} onClick={closeVehicleModal}>✕</button>
             </div>
 
@@ -978,9 +1009,9 @@ export default function WheelStationsPage() {
       {/* Add Vehicle Model Modal */}
       {showAddModelModal && (
         <div style={styles.modalOverlay} onClick={() => setShowAddModelModal(false)}>
-          <div style={styles.addModelModal} onClick={e => e.stopPropagation()}>
+          <div style={styles.addModelModal} className="wheels-add-model-modal" onClick={e => e.stopPropagation()}>
             <div style={styles.modalHeader}>
-              <h3 style={styles.modalTitle}>➕ הוסף דגם רכב למאגר</h3>
+              <h3 style={styles.modalTitle} className="wheels-modal-title">➕ הוסף דגם רכב למאגר</h3>
               <button style={styles.closeBtn} onClick={() => setShowAddModelModal(false)}>✕</button>
             </div>
 
@@ -1199,6 +1230,7 @@ export default function WheelStationsPage() {
         </div>
       )}
     </div>
+    </>
   )
 }
 
