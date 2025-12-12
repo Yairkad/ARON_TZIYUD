@@ -59,6 +59,7 @@ export default function WheelsAdminPage() {
 
   // Stations section toggle
   const [showStationsSection, setShowStationsSection] = useState(false)
+  const [stationSearchQuery, setStationSearchQuery] = useState('')
 
   // Modals
   const [showAddStation, setShowAddStation] = useState(false)
@@ -565,11 +566,48 @@ export default function WheelsAdminPage() {
             </button>
           </div>
 
+          {/* Search Bar */}
+          <div style={{marginBottom: '15px'}}>
+            <input
+              type="text"
+              value={stationSearchQuery}
+              onChange={(e) => setStationSearchQuery(e.target.value)}
+              placeholder="🔍 חפש לפי שם תחנה או שם מנהל..."
+              style={{
+                width: '100%',
+                padding: '12px 16px',
+                fontSize: '1rem',
+                border: '2px solid rgba(16, 185, 129, 0.3)',
+                borderRadius: '12px',
+                background: 'rgba(255,255,255,0.05)',
+                color: 'white',
+                outline: 'none',
+                transition: 'all 0.2s'
+              }}
+              onFocus={(e) => e.target.style.borderColor = '#10b981'}
+              onBlur={(e) => e.target.style.borderColor = 'rgba(16, 185, 129, 0.3)'}
+            />
+            {stationSearchQuery && (
+              <p style={{fontSize: '0.85rem', color: '#a0aec0', marginTop: '6px'}}>
+                נמצאו {stations.filter(station => {
+                  const query = stationSearchQuery.toLowerCase()
+                  return station.name.toLowerCase().includes(query) ||
+                         station.wheel_station_managers?.some(m => m.full_name.toLowerCase().includes(query))
+                }).length} תחנות
+              </p>
+            )}
+          </div>
+
           {loading ? (
             <div style={styles.loading}>טוען...</div>
           ) : (
             <div style={styles.stationsList}>
-              {stations.map(station => (
+              {stations.filter(station => {
+                if (!stationSearchQuery) return true
+                const query = stationSearchQuery.toLowerCase()
+                return station.name.toLowerCase().includes(query) ||
+                       station.wheel_station_managers?.some(m => m.full_name.toLowerCase().includes(query))
+              }).map(station => (
             <div key={station.id} style={styles.stationCard}>
               <div style={styles.stationHeader} onClick={() => setExpandedStation(expandedStation === station.id ? null : station.id)}>
                 <div style={styles.stationInfo}>
@@ -1098,16 +1136,18 @@ const styles: { [key: string]: React.CSSProperties } = {
     alignItems: 'center',
     justifyContent: 'center',
     zIndex: 1000,
-    padding: '20px',
+    padding: '10px',
+    overflow: 'auto',
   },
   modal: {
     background: '#1e293b',
     borderRadius: '16px',
-    padding: '25px',
+    padding: '20px',
     width: '100%',
     maxWidth: '500px',
-    maxHeight: '90vh',
+    maxHeight: 'calc(100vh - 20px)',
     overflowY: 'auto',
+    margin: 'auto',
   },
   modalTitle: {
     color: '#f59e0b',
