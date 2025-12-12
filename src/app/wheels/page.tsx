@@ -601,21 +601,22 @@ export default function WheelStationsPage() {
                 <div style={styles.address}>📍 {station.address}</div>
               )}
               {(station.cities?.name || station.district) && (
-                <div style={{ display: 'flex', alignItems: 'center', gap: '8px', marginTop: '6px', flexWrap: 'wrap' }}>
+                <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginTop: '6px' }}>
                   {station.cities?.name && (
                     <div style={styles.cityName}>{station.cities.name}</div>
                   )}
                   {station.district && (
                     <div style={{
                       display: 'inline-block',
-                      padding: '3px 8px',
-                      border: `2px solid ${getDistrictColor(station.district, districts)}`,
-                      borderRadius: '6px',
-                      fontSize: '0.75rem',
+                      padding: '2px 6px',
+                      border: `1.5px solid ${getDistrictColor(station.district, districts)}`,
+                      borderRadius: '4px',
+                      fontSize: '0.7rem',
                       fontWeight: '600',
                       color: getDistrictColor(station.district, districts),
                       backgroundColor: `${getDistrictColor(station.district, districts)}15`,
-                      whiteSpace: 'nowrap'
+                      whiteSpace: 'nowrap',
+                      marginLeft: '8px'
                     }}>
                       {getDistrictName(station.district, districts)}
                     </div>

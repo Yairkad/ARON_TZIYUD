@@ -1218,15 +1218,16 @@ ${formUrl}`
           )}
         </div>
         <h1 style={styles.title} className="station-header-title">
-          <div style={{ display: 'flex', alignItems: 'center', gap: '12px', justifyContent: 'center', flexWrap: 'wrap' }}>
+          <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', position: 'relative' }}>
             <span>🏙️ {station.name}</span>
             {station.district && (
               <div style={{
-                display: 'inline-block',
-                padding: '4px 10px',
-                border: `2px solid ${getDistrictColor(station.district, districts)}`,
-                borderRadius: '8px',
-                fontSize: '0.85rem',
+                position: 'absolute',
+                left: '10px',
+                padding: '2px 8px',
+                border: `1.5px solid ${getDistrictColor(station.district, districts)}`,
+                borderRadius: '4px',
+                fontSize: '0.7rem',
                 fontWeight: '600',
                 color: getDistrictColor(station.district, districts),
                 backgroundColor: `${getDistrictColor(station.district, districts)}15`,
