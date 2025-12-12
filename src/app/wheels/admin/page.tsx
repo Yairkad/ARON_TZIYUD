@@ -16,6 +16,7 @@ interface Station {
   id: string
   name: string
   address: string
+  district?: string | null
   is_active: boolean
   manager_password: string | null
   wheel_station_managers: Manager[]
@@ -65,6 +66,7 @@ export default function WheelsAdminPage() {
   const [stationForm, setStationForm] = useState({
     name: '',
     address: '',
+    district: '' as string,
     manager_password: '',
     managers: [] as Manager[]
   })
@@ -138,6 +140,7 @@ export default function WheelsAdminPage() {
     setStationForm({
       name: '',
       address: '',
+      district: '',
       manager_password: '',
       managers: []
     })
@@ -350,6 +353,7 @@ export default function WheelsAdminPage() {
     setStationForm({
       name: station.name,
       address: station.address || '',
+      district: station.district || '',
       manager_password: station.manager_password || '',
       managers: station.wheel_station_managers || []
     })
@@ -572,6 +576,25 @@ export default function WheelsAdminPage() {
                     <span>{station.address || 'לא הוגדרה'}</span>
                   </div>
                   <div style={styles.detailRow}>
+                    <span style={styles.detailLabel}>מחוז:</span>
+                    {station.district ? (
+                      <span style={{display: 'flex', alignItems: 'center', gap: '6px'}}>
+                        <div
+                          style={{
+                            width: '12px',
+                            height: '12px',
+                            borderRadius: '50%',
+                            backgroundColor: districts.find(d => d.code === station.district)?.color || '#6b7280',
+                            border: '1px solid rgba(255,255,255,0.3)'
+                          }}
+                        />
+                        {districts.find(d => d.code === station.district)?.name || station.district}
+                      </span>
+                    ) : (
+                      <span style={{color: '#a0aec0'}}>ללא מחוז</span>
+                    )}
+                  </div>
+                  <div style={styles.detailRow}>
                     <span style={styles.detailLabel}>סיסמת תחנה:</span>
                     <span style={styles.passwordDisplay}>
                       {station.manager_password || <span style={{color: '#ef4444'}}>לא הוגדרה!</span>}
@@ -642,6 +665,22 @@ export default function WheelsAdminPage() {
                 style={styles.input}
                 placeholder="רחוב ומספר"
               />
+            </div>
+
+            <div style={styles.formGroup}>
+              <label style={styles.label}>מחוז</label>
+              <select
+                value={stationForm.district}
+                onChange={e => setStationForm({...stationForm, district: e.target.value})}
+                style={styles.input}
+              >
+                <option value="">ללא מחוז</option>
+                {districts.map((district) => (
+                  <option key={district.code} value={district.code}>
+                    {district.name}
+                  </option>
+                ))}
+              </select>
             </div>
 
             <div style={styles.formGroup}>
