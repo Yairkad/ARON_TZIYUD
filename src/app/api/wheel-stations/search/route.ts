@@ -17,6 +17,7 @@ export async function GET(request: NextRequest) {
     const rim_size = searchParams.get('rim_size')
     const bolt_count = searchParams.get('bolt_count')
     const bolt_spacing = searchParams.get('bolt_spacing')
+    const district = searchParams.get('district')
     const available_only = searchParams.get('available_only') === 'true'
 
     // Build query
@@ -52,6 +53,9 @@ export async function GET(request: NextRequest) {
     }
     if (bolt_spacing) {
       query = query.eq('bolt_spacing', parseFloat(bolt_spacing))
+    }
+    if (district) {
+      query = query.eq('wheel_stations.district', district)
     }
     if (available_only) {
       query = query.eq('is_available', true)

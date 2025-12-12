@@ -3,12 +3,14 @@
 import { useState, useEffect } from 'react'
 import Link from 'next/link'
 import toast from 'react-hot-toast'
+import { getDistricts, getDistrictColor, getDistrictName, District } from '@/lib/districts'
 
 interface Station {
   id: string
   name: string
   address: string
   city_id: string
+  district: string | null
   cities: { name: string } | null
   wheel_station_managers: Manager[]
   totalWheels: number
@@ -53,6 +55,7 @@ export default function WheelStationsPage() {
   const [stations, setStations] = useState<Station[]>([])
   const [loading, setLoading] = useState(true)
   const [error, setError] = useState<string | null>(null)
+  const [districts, setDistricts] = useState<District[]>([])
 
   // Search state
   const [showSearchModal, setShowSearchModal] = useState(false)
@@ -63,6 +66,7 @@ export default function WheelStationsPage() {
     rim_size: '',
     bolt_count: '',
     bolt_spacing: '',
+    district: '',
     available_only: true
   })
 
@@ -121,6 +125,7 @@ export default function WheelStationsPage() {
 
   useEffect(() => {
     fetchStations()
+    fetchDistrictsData()
     // Check if manager is logged in from localStorage
     const savedManager = localStorage.getItem('vehicle_db_manager')
     if (savedManager) {
@@ -133,6 +138,15 @@ export default function WheelStationsPage() {
       }
     }
   }, [])
+
+  const fetchDistrictsData = async () => {
+    try {
+      const districtsData = await getDistricts()
+      setDistricts(districtsData)
+    } catch (err) {
+      console.error('Error fetching districts:', err)
+    }
+  }
 
   const fetchStations = async () => {
     try {
@@ -161,6 +175,7 @@ export default function WheelStationsPage() {
       if (searchFilters.rim_size) params.append('rim_size', searchFilters.rim_size)
       if (searchFilters.bolt_count) params.append('bolt_count', searchFilters.bolt_count)
       if (searchFilters.bolt_spacing) params.append('bolt_spacing', searchFilters.bolt_spacing)
+      if (searchFilters.district) params.append('district', searchFilters.district)
       if (searchFilters.available_only) params.append('available_only', 'true')
 
       const response = await fetch(`/api/wheel-stations/search?${params}`)
@@ -200,6 +215,7 @@ export default function WheelStationsPage() {
       rim_size: '',
       bolt_count: '',
       bolt_spacing: '',
+      district: '',
       available_only: true
     })
   }
@@ -554,6 +570,21 @@ export default function WheelStationsPage() {
               <h3 style={styles.cardTitle}>
                 🏙️ {station.name}
               </h3>
+              {station.district && (
+                <div style={{
+                  display: 'inline-block',
+                  padding: '4px 10px',
+                  border: `2px solid ${getDistrictColor(station.district, districts)}`,
+                  borderRadius: '8px',
+                  fontSize: '0.85rem',
+                  fontWeight: '600',
+                  color: getDistrictColor(station.district, districts),
+                  marginBottom: '8px',
+                  backgroundColor: `${getDistrictColor(station.district, districts)}15`
+                }}>
+                  {getDistrictName(station.district, districts)}
+                </div>
+              )}
               {station.address && (
                 <div style={styles.address}>📍 {station.address}</div>
               )}
@@ -636,6 +667,20 @@ export default function WheelStationsPage() {
                       <option value="">בחר...</option>
                       {filterOptions?.bolt_spacings.map(spacing => (
                         <option key={spacing} value={spacing}>{spacing}</option>
+                      ))}
+                    </select>
+                  </div>
+
+                  <div style={styles.filterGroup}>
+                    <label style={styles.filterLabel}>מחוז</label>
+                    <select
+                      style={styles.filterSelect}
+                      value={searchFilters.district}
+                      onChange={e => setSearchFilters({...searchFilters, district: e.target.value})}
+                    >
+                      <option value="">כל המחוזות</option>
+                      {districts.map(district => (
+                        <option key={district.code} value={district.code}>{district.name}</option>
                       ))}
                     </select>
                   </div>
@@ -1355,16 +1400,16 @@ const styles: { [key: string]: React.CSSProperties } = {
     alignItems: 'center',
     justifyContent: 'center',
     zIndex: 1000,
-    padding: '10px',
+    padding: '5px',
     overflow: 'auto',
   },
   modal: {
     background: '#1e293b',
     borderRadius: '16px',
-    padding: '20px',
+    padding: '15px',
     width: '100%',
-    maxWidth: '450px',
-    maxHeight: 'calc(100vh - 20px)',
+    maxWidth: '95vw',
+    maxHeight: 'calc(100vh - 10px)',
     overflowY: 'auto',
     margin: 'auto',
   },
@@ -1566,11 +1611,12 @@ const styles: { [key: string]: React.CSSProperties } = {
   vehicleModal: {
     background: '#1e293b',
     borderRadius: '16px',
-    padding: '25px',
+    padding: '15px',
     width: '100%',
-    maxWidth: '500px',
-    maxHeight: '85vh',
+    maxWidth: '95vw',
+    maxHeight: 'calc(100vh - 10px)',
     overflowY: 'auto',
+    margin: 'auto',
   },
   betaWarning: {
     background: 'rgba(251, 191, 36, 0.15)',
