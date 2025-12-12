@@ -23,6 +23,7 @@ export async function GET() {
         name,
         address,
         city_id,
+        district,
         cities (name),
         wheel_station_managers (
           id,
@@ -89,14 +90,17 @@ export async function POST(request: NextRequest) {
     }
 
     const body = await request.json()
-    const { name, address, city_id, managers, manager_password } = body
+    const { name, address, city_id, district, managers, manager_password } = body
 
     if (!name) {
       return NextResponse.json({ error: 'Station name is required' }, { status: 400 })
     }
 
     // Create station with optional password
-    const stationData: { name: string; address?: string; city_id?: string; manager_password?: string } = { name, address, city_id }
+    const stationData: { name: string; address?: string; city_id?: string; district?: string; manager_password?: string } = { name, address, city_id }
+    if (district) {
+      stationData.district = district
+    }
     if (manager_password) {
       stationData.manager_password = manager_password
     }

@@ -23,7 +23,7 @@ export async function PUT(request: NextRequest, { params }: RouteParams) {
   try {
     const { stationId } = await params
     const body = await request.json()
-    const { admin_password, name, address, city_id, is_active, manager_password, managers } = body
+    const { admin_password, name, address, city_id, district, is_active, manager_password, managers } = body
 
     // Verify admin password
     if (admin_password !== WHEELS_ADMIN_PASSWORD) {
@@ -35,6 +35,7 @@ export async function PUT(request: NextRequest, { params }: RouteParams) {
       name?: string
       address?: string
       city_id?: string | null
+      district?: string | null
       is_active?: boolean
       manager_password?: string
     } = {}
@@ -42,6 +43,7 @@ export async function PUT(request: NextRequest, { params }: RouteParams) {
     if (name !== undefined) updateData.name = name
     if (address !== undefined) updateData.address = address
     if (city_id !== undefined) updateData.city_id = city_id || null
+    if (district !== undefined) updateData.district = district || null
     if (is_active !== undefined) updateData.is_active = is_active
     if (manager_password !== undefined) updateData.manager_password = manager_password
 
