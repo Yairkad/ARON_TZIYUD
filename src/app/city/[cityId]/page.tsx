@@ -1860,10 +1860,11 @@ export default function CityPage() {
         className="bg-gradient-to-r from-purple-600 to-pink-600 text-white p-3 shadow-lg flex items-center justify-between"
         style={{
           position: 'fixed',
-          bottom: 0,
-          left: 0,
-          right: 0,
+          bottom: '0px',
+          left: '0px',
+          right: '0px',
           zIndex: 9999,
+          width: '100%',
         }}
       >
         <div className="flex items-center gap-2">
