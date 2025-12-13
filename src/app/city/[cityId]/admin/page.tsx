@@ -158,6 +158,7 @@ export default function CityAdminPage() {
   const [isCityDetailsExpanded, setIsCityDetailsExpanded] = useState(false)
   const [equipmentSearchQuery, setEquipmentSearchQuery] = useState('')
   const [currentUser, setCurrentUser] = useState<any>(null)
+  const [managerRole, setManagerRole] = useState<'manager1' | 'manager2' | null>(null)
   const [distanceSaveTimer, setDistanceSaveTimer] = useState<NodeJS.Timeout | null>(null)
   const [distanceSaveStatus, setDistanceSaveStatus] = useState<'idle' | 'saving' | 'saved' | 'error'>('idle')
   const [showAccountSettings, setShowAccountSettings] = useState(false)
