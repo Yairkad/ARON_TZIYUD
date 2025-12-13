@@ -558,12 +558,13 @@ export default function CityAdminPage() {
 
           if (response.ok) {
             const managedCities = data.cities || []
-            const managesThisCity = managedCities.some((c: any) => c.id === cityId)
+            const cityData = managedCities.find((c: any) => c.id === cityId)
 
-            if (managesThisCity) {
-              console.log('✅ Access granted: City Manager', { userId, cityId, managedCities: managedCities.length })
+            if (cityData) {
+              console.log('✅ Access granted: City Manager', { userId, cityId, role: cityData.role, managedCities: managedCities.length })
               setIsAuthenticated(true)
               setCurrentUser(user)
+              setManagerRole(cityData.role) // Save manager1 or manager2
             } else {
               console.log('❌ Access denied - user does not manage this city', { authenticated, userType, cityId, managedCities })
               setCurrentUser(null)
@@ -1428,7 +1429,7 @@ export default function CityAdminPage() {
                 <div className="font-bold text-xl sm:text-2xl">{currentUser?.full_name || 'משתמש'}</div>
                 <div className="text-sm sm:text-base opacity-90 mt-2">{currentUser?.email}</div>
                 <div className="mt-3 inline-block bg-white/20 px-4 py-1.5 rounded-full text-sm">
-                  🏙️ {city?.name} • {currentUser?.role === 'manager1' ? 'מנהל ראשי' : 'מנהל משני'}
+                  🏙️ {city?.name} • {managerRole === 'manager1' ? 'מנהל ראשי' : 'מנהל משני'}
                 </div>
               </div>
               {/* Profile Actions - Larger buttons for desktop */}
