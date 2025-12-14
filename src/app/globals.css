@@ -7,10 +7,9 @@ body {
   min-height: 100vh;
   font-size: 14px;
   /* Hardware acceleration for smooth rendering */
-  transform: translateZ(0);
+  /* NOTE: Removed transform: translateZ(0) as it breaks position: fixed elements */
   -webkit-font-smoothing: antialiased;
   -moz-osx-font-smoothing: grayscale;
-  will-change: auto;
 }
 
 body::before {
