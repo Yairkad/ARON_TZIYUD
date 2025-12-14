@@ -157,6 +157,7 @@ export default function CityAdminPage() {
   const [pushNotSupportedReason, setPushNotSupportedReason] = useState<string | null>(null)
   const [enablingPush, setEnablingPush] = useState(false)
   const [isCityDetailsExpanded, setIsCityDetailsExpanded] = useState(false)
+  const [isRequestSettingsExpanded, setIsRequestSettingsExpanded] = useState(false)
   const [equipmentSearchQuery, setEquipmentSearchQuery] = useState('')
   const [currentUser, setCurrentUser] = useState<any>(null)
   const [managerRole, setManagerRole] = useState<'manager1' | 'manager2' | null>(null)
@@ -2867,9 +2868,20 @@ export default function CityAdminPage() {
 
                   {/* Request Mode Additional Settings */}
                   {city?.request_mode === 'request' && (
-                    <div className="bg-white rounded-xl p-6 border-2 border-purple-200 space-y-4">
-                      <h4 className="font-bold text-gray-800 mb-3">הגדרות נוספות למצב בקשות</h4>
+                    <div className="bg-white rounded-xl border-2 border-purple-200 overflow-hidden">
+                      <button
+                        type="button"
+                        onClick={() => setIsRequestSettingsExpanded(!isRequestSettingsExpanded)}
+                        className="w-full p-4 flex items-center justify-between hover:bg-purple-50 transition-colors"
+                      >
+                        <h4 className="font-bold text-gray-800">הגדרות נוספות למצב בקשות</h4>
+                        <span className="text-purple-500 font-semibold">
+                          {isRequestSettingsExpanded ? '🔼 כיווץ' : '🔽 הרחב'}
+                        </span>
+                      </button>
 
+                      {isRequestSettingsExpanded && (
+                        <div className="p-6 pt-2 space-y-4 border-t border-purple-100">
                       {/* Cabinet Code */}
                       <div className="space-y-2">
                         <label className={`block text-sm font-semibold ${!canEdit ? 'text-gray-400' : 'text-gray-700'}`}>🔐 קוד ארון (אופציונלי)</label>
@@ -3055,13 +3067,13 @@ export default function CityAdminPage() {
                           💡 לצורך מניעת ספאם, המערכת תבקש מהמשתמש לאשר גישה למיקום לפני שליחת בקשה
                         </p>
                       </div>
+                        </div>
+                      )}
                     </div>
                   )}
 
                 {/* Toggle Settings */}
                 <div className="bg-white rounded-2xl shadow-lg p-4 space-y-3">
-                  <h3 className="font-bold text-gray-800 mb-2">⚙️ הגדרות</h3>
-
                   <ToggleSetting
                     icon="🆔"
                     title="לדרוש מזהה קריאה"

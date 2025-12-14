@@ -23,12 +23,13 @@ export function ToggleSwitch({ enabled, onChange, disabled = false, className }:
         disabled && 'opacity-50 cursor-not-allowed',
         className
       )}
+      style={{ direction: 'ltr' }}
     >
       <span
         className={cn(
-          'pointer-events-none inline-block h-6 w-6 transform rounded-full bg-white shadow-md ring-0 transition-transform duration-300 ease-in-out',
+          'pointer-events-none inline-block h-6 w-6 rounded-full bg-white shadow-md ring-0 transition-all duration-300 ease-in-out',
           'absolute top-[2px]',
-          enabled ? 'translate-x-[2px]' : 'translate-x-[24px]'
+          enabled ? 'left-[24px]' : 'left-[2px]'
         )}
       />
     </button>
