@@ -31,7 +31,8 @@ export async function POST(request: NextRequest) {
       enable_push_notifications,
       max_request_distance_km,
       is_temporarily_closed,
-      closure_message
+      closure_message,
+      require_return_photo
     } = body
 
     if (!cityId) {
@@ -160,6 +161,9 @@ export async function POST(request: NextRequest) {
     if (closure_message !== undefined) {
       updateData.closure_message = closure_message ? closure_message.trim() : null
     }
+    if (require_return_photo !== undefined) {
+      updateData.require_return_photo = require_return_photo
+    }
 
     // עדכון העיר
     const { error: updateError } = await supabase
@@ -218,6 +222,7 @@ export async function POST(request: NextRequest) {
     if (updateData.hide_navigation !== undefined && city.hide_navigation !== updateData.hide_navigation) changedFields.push('הצגת ניווט')
     if (updateData.enable_push_notifications !== undefined && city.enable_push_notifications !== updateData.enable_push_notifications) changedFields.push('התראות דחיפה')
     if (updateData.max_request_distance_km !== undefined && city.max_request_distance_km !== updateData.max_request_distance_km) changedFields.push('טווח מרחק לבקשות')
+    if (updateData.require_return_photo !== undefined && city.require_return_photo !== updateData.require_return_photo) changedFields.push('צילום בהחזרה')
     if (updateData.is_temporarily_closed !== undefined && city.is_temporarily_closed !== updateData.is_temporarily_closed) {
       changedFields.push(updateData.is_temporarily_closed ? 'הארון נסגר זמנית' : 'הארון נפתח')
 

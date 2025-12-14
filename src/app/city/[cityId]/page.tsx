@@ -288,8 +288,9 @@ export default function CityPage() {
       return
     }
 
-    // Validate that image is required
-    if (!returnImage) {
+    // Validate that image is required (if city requires it - default is true)
+    const requirePhoto = city?.require_return_photo !== false
+    if (requirePhoto && !returnImage) {
       toast.error('יש לצלם תמונה של הציוד בארון לפני ההחזרה')
       return
     }
@@ -315,19 +316,21 @@ export default function CityPage() {
 
       if (updateError) throw updateError
 
-      // Upload return image
-      setUploadingImage(true)
-      const formData = new FormData()
-      formData.append('file', returnImage)
-      formData.append('historyId', borrowId)
+      // Upload return image (only if provided)
+      if (returnImage) {
+        setUploadingImage(true)
+        const formData = new FormData()
+        formData.append('file', returnImage)
+        formData.append('historyId', borrowId)
 
-      const uploadResponse = await fetch('/api/equipment/upload-return-image', {
-        method: 'POST',
-        body: formData
-      })
+        const uploadResponse = await fetch('/api/equipment/upload-return-image', {
+          method: 'POST',
+          body: formData
+        })
 
-      if (!uploadResponse.ok) {
-        throw new Error('שגיאה בהעלאת תמונת ההחזרה')
+        if (!uploadResponse.ok) {
+          throw new Error('שגיאה בהעלאת תמונת ההחזרה')
+        }
       }
 
       // DON'T update equipment quantity here - wait for manager approval
@@ -1362,44 +1365,46 @@ export default function CityPage() {
                                 </div>
                               )}
 
-                              {/* צילום תמונת החזרה - חובה */}
-                              <div className="mb-4 p-4 bg-blue-50 border-2 border-blue-200 rounded-xl">
-                                <label className="block text-sm font-bold text-blue-800 mb-3">
-                                  📸 תמונת הציוד בארון (חובה) *
-                                </label>
-                                {!returnImage ? (
-                                  <Button
-                                    type="button"
-                                    onClick={() => setShowCamera(true)}
-                                    className="w-full bg-gradient-to-r from-blue-500 to-indigo-500 hover:from-blue-600 hover:to-indigo-600 text-white font-semibold py-3 rounded-lg"
-                                  >
-                                    📷 צלם תמונה
-                                  </Button>
-                                ) : (
-                                  <div>
-                                    <div className="mb-2 p-2 bg-green-50 border border-green-300 rounded-lg flex items-center justify-between">
-                                      <span className="text-sm text-green-700 font-semibold">✅ תמונה נוספה</span>
-                                      <Button
-                                        type="button"
-                                        onClick={() => setShowCamera(true)}
-                                        size="sm"
-                                        variant="outline"
-                                        className="text-xs"
-                                      >
-                                        צלם שוב
-                                      </Button>
+                              {/* צילום תמונת החזרה - לפי הגדרת העיר */}
+                              {city?.require_return_photo !== false && (
+                                <div className="mb-4 p-4 bg-blue-50 border-2 border-blue-200 rounded-xl">
+                                  <label className="block text-sm font-bold text-blue-800 mb-3">
+                                    📸 תמונת הציוד בארון (חובה) *
+                                  </label>
+                                  {!returnImage ? (
+                                    <Button
+                                      type="button"
+                                      onClick={() => setShowCamera(true)}
+                                      className="w-full bg-gradient-to-r from-blue-500 to-indigo-500 hover:from-blue-600 hover:to-indigo-600 text-white font-semibold py-3 rounded-lg"
+                                    >
+                                      📷 צלם תמונה
+                                    </Button>
+                                  ) : (
+                                    <div>
+                                      <div className="mb-2 p-2 bg-green-50 border border-green-300 rounded-lg flex items-center justify-between">
+                                        <span className="text-sm text-green-700 font-semibold">✅ תמונה נוספה</span>
+                                        <Button
+                                          type="button"
+                                          onClick={() => setShowCamera(true)}
+                                          size="sm"
+                                          variant="outline"
+                                          className="text-xs"
+                                        >
+                                          צלם שוב
+                                        </Button>
+                                      </div>
                                     </div>
-                                  </div>
-                                )}
-                                <p className="text-xs text-blue-600 mt-2">
-                                  יש לצלם תמונה של הציוד בארון לאחר ההחזרה
-                                </p>
-                              </div>
+                                  )}
+                                  <p className="text-xs text-blue-600 mt-2">
+                                    יש לצלם תמונה של הציוד בארון לאחר ההחזרה
+                                  </p>
+                                </div>
+                              )}
 
                               <div className="flex gap-3">
                                 <Button
                                   onClick={() => handleReturn(returnStatus.borrowId, returnStatus.equipmentId, selectedStatus)}
-                                  disabled={loading || uploadingImage || !returnImage}
+                                  disabled={loading || uploadingImage || (city?.require_return_photo !== false && !returnImage)}
                                   className="flex-1 bg-gradient-to-r from-blue-600 to-indigo-600 hover:from-blue-700 hover:to-indigo-700 text-white font-semibold rounded-xl shadow-md disabled:opacity-50 disabled:cursor-not-allowed"
                                 >
                                   {uploadingImage ? 'מעלה תמונה...' : 'אשר החזרה'}

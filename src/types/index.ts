@@ -27,6 +27,7 @@ export interface City {
   enable_push_notifications?: boolean
   admin_emails?: string[] | null
   max_request_distance_km?: number | null  // Maximum distance for requests (km). NULL or 0 = no limit
+  require_return_photo?: boolean  // Require photo when returning equipment (default: true)
   created_at: string
   updated_at: string
 }

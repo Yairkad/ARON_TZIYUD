@@ -7,6 +7,7 @@ import dynamic from 'next/dynamic'
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card'
 import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
+import { ToggleSetting } from '@/components/ui/toggle-switch'
 import { supabase } from '@/lib/supabase'
 import { Equipment, BorrowHistory, City } from '@/types'
 import { FileDown, Bell, BellOff } from 'lucide-react'
@@ -2924,65 +2925,6 @@ export default function CityAdminPage() {
                         />
                       </div>
 
-                      {/* Require Call ID */}
-                      <div className="flex items-center justify-between p-4 bg-gray-50 rounded-xl">
-                        <div>
-                          <div className="font-semibold text-gray-800">🆔 לדרוש מזהה קריאה</div>
-                          <div className="text-sm text-gray-500">האם להצריך מבקשים למלא מזהה קריאה</div>
-                        </div>
-                        <button
-                          onClick={async () => {
-                            // Check permissions
-                            if (!canEdit) {
-                              toast.error('אין לך הרשאה לבצע פעולה זו - נדרשת הרשאת עריכה מלאה')
-                              return
-                            }
-
-                            const newValue = !city.require_call_id
-
-                            // Update local state immediately for instant feedback
-                            setCity({ ...city, require_call_id: newValue })
-
-                            try {
-                              const { data: { session } } = await supabase.auth.getSession()
-                              const accessToken = session?.access_token
-                              const response = await fetch('/api/city/update-details', {
-                                method: 'POST',
-                                headers: {
-                                  'Content-Type': 'application/json',
-                                  ...(accessToken && { 'Authorization': `Bearer ${accessToken}` }),
-                                },
-                                credentials: 'include',
-                                body: JSON.stringify({
-                                  cityId,
-                                  require_call_id: newValue
-                                })
-                              })
-
-                              if (response.ok) {
-                                toast.success(newValue ? 'מזהה קריאה חובה' : 'מזהה קריאה אופציונלי')
-                                fetchCity() // Refresh to ensure sync
-                              } else {
-                                // Revert on error
-                                toast.error('שגיאה בעדכון')
-                                fetchCity()
-                              }
-                            } catch (error) {
-                              console.error('Error updating require_call_id:', error)
-                              toast.error('שגיאה בעדכון')
-                              fetchCity() // Revert to server value
-                            }
-                          }}
-                          className={`px-6 py-2 rounded-xl font-semibold transition-all ${
-                            city.require_call_id
-                              ? 'bg-green-500 text-white'
-                              : 'bg-gray-300 text-gray-600'
-                          }`}
-                        >
-                          {city.require_call_id ? 'ON' : 'OFF'}
-                        </button>
-                      </div>
-
                       {/* Max Request Distance */}
                       <div className="space-y-2">
                         <label className={`block text-sm font-semibold ${!canEdit ? 'text-gray-400' : 'text-gray-700'}`}>📍 הגבלת טווח לבקשות (ק"מ)</label>
@@ -3116,85 +3058,129 @@ export default function CityAdminPage() {
                     </div>
                   )}
 
-                {/* Navigation & Push Notifications - Side by Side */}
-                <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
-                  {/* Hide Navigation Toggle */}
-                  <div className="bg-gradient-to-r from-amber-50 to-orange-50 rounded-xl p-4 border-2 border-amber-200">
-                    <div className="flex items-center justify-between">
-                      <div className="flex-1 min-w-0">
-                        <div className="font-semibold text-gray-800 text-sm">🗺️ הסתר ניווט</div>
-                        <div className="text-xs text-gray-500 truncate">הסתר Google Maps / Waze</div>
-                      </div>
-                      <button
-                        onClick={async () => {
-                          if (!canEdit) {
-                            toast.error('אין לך הרשאה לבצע פעולה זו')
-                            return
-                          }
-                          const newValue = !city?.hide_navigation
-                          setCity({ ...city!, hide_navigation: newValue })
-                          try {
-                            const { data: { session } } = await supabase.auth.getSession()
-                            const accessToken = session?.access_token
-                            const response = await fetch('/api/city/update-details', {
-                              method: 'POST',
-                              headers: {
-                                'Content-Type': 'application/json',
-                                ...(accessToken && { 'Authorization': `Bearer ${accessToken}` }),
-                              },
-                              credentials: 'include',
-                              body: JSON.stringify({ cityId, hide_navigation: newValue })
-                            })
-                            if (!response.ok) fetchCity()
-                          } catch { fetchCity() }
-                        }}
-                        className={`flex-shrink-0 px-4 py-2 rounded-xl font-semibold text-sm transition-all ${
-                          city?.hide_navigation
-                            ? 'bg-green-500 text-white'
-                            : 'bg-gray-300 text-gray-600'
-                        }`}
-                      >
-                        {city?.hide_navigation ? 'ON' : 'OFF'}
-                      </button>
-                    </div>
-                  </div>
+                {/* Toggle Settings */}
+                <div className="bg-white rounded-2xl shadow-lg p-4 space-y-3">
+                  <h3 className="font-bold text-gray-800 mb-2">⚙️ הגדרות</h3>
 
-                  {/* Enable Push Notifications Toggle */}
-                  <div className="bg-gradient-to-r from-blue-50 to-indigo-50 rounded-xl p-4 border-2 border-blue-200">
-                    <div className="flex items-center justify-between">
-                      <div className="flex-1 min-w-0">
-                        <div className="font-semibold text-gray-800 text-sm">🔔 התראות דחיפה</div>
-                        <div className="text-xs text-gray-500 truncate">התראות על בקשות חדשות</div>
-                      </div>
-                      <button
-                        onClick={async () => {
-                          const newValue = !city?.enable_push_notifications
-                          setCity({ ...city!, enable_push_notifications: newValue })
-                          try {
-                            const { data: { session } } = await supabase.auth.getSession()
-                            const accessToken = session?.access_token
-                            const response = await fetch('/api/city/update-details', {
-                              method: 'POST',
-                              headers: {
-                                'Content-Type': 'application/json',
-                                ...(accessToken && { 'Authorization': `Bearer ${accessToken}` }),
-                              },
-                              credentials: 'include',
-                              body: JSON.stringify({ cityId, enable_push_notifications: newValue })
-                            })
-                            if (!response.ok) fetchCity()
-                          } catch { fetchCity() }
-                        }}
-                        className={`flex-shrink-0 px-4 py-2 rounded-xl font-semibold text-sm transition-all ${
-                          city?.enable_push_notifications
-                            ? 'bg-green-500 text-white'
-                            : 'bg-gray-300 text-gray-600'
-                        }`}
-                      >
-                        {city?.enable_push_notifications ? 'ON' : 'OFF'}
-                      </button>
-                    </div>
-                  </div>
+                  <ToggleSetting
+                    icon="🆔"
+                    title="לדרוש מזהה קריאה"
+                    description="חובת מזהה קריאה בבקשות"
+                    enabled={city?.require_call_id || false}
+                    disabled={!canEdit}
+                    onChange={async (newValue) => {
+                      if (!canEdit) {
+                        toast.error('אין לך הרשאה לבצע פעולה זו')
+                        return
+                      }
+                      setCity({ ...city!, require_call_id: newValue })
+                      try {
+                        const { data: { session } } = await supabase.auth.getSession()
+                        const accessToken = session?.access_token
+                        const response = await fetch('/api/city/update-details', {
+                          method: 'POST',
+                          headers: {
+                            'Content-Type': 'application/json',
+                            ...(accessToken && { 'Authorization': `Bearer ${accessToken}` }),
+                          },
+                          credentials: 'include',
+                          body: JSON.stringify({ cityId, require_call_id: newValue })
+                        })
+                        if (response.ok) {
+                          toast.success(newValue ? 'מזהה קריאה חובה' : 'מזהה קריאה אופציונלי')
+                        } else {
+                          fetchCity()
+                        }
+                      } catch { fetchCity() }
+                    }}
+                  />
+
+                  <ToggleSetting
+                    icon="🗺️"
+                    title="הסתר ניווט"
+                    description="הסתר Google Maps / Waze"
+                    enabled={city?.hide_navigation || false}
+                    disabled={!canEdit}
+                    onChange={async (newValue) => {
+                      if (!canEdit) {
+                        toast.error('אין לך הרשאה לבצע פעולה זו')
+                        return
+                      }
+                      setCity({ ...city!, hide_navigation: newValue })
+                      try {
+                        const { data: { session } } = await supabase.auth.getSession()
+                        const accessToken = session?.access_token
+                        const response = await fetch('/api/city/update-details', {
+                          method: 'POST',
+                          headers: {
+                            'Content-Type': 'application/json',
+                            ...(accessToken && { 'Authorization': `Bearer ${accessToken}` }),
+                          },
+                          credentials: 'include',
+                          body: JSON.stringify({ cityId, hide_navigation: newValue })
+                        })
+                        if (!response.ok) fetchCity()
+                      } catch { fetchCity() }
+                    }}
+                  />
+
+                  <ToggleSetting
+                    icon="🔔"
+                    title="התראות דחיפה"
+                    description="התראות על בקשות חדשות"
+                    enabled={city?.enable_push_notifications || false}
+                    disabled={!canEdit}
+                    onChange={async (newValue) => {
+                      if (!canEdit) {
+                        toast.error('אין לך הרשאה לבצע פעולה זו')
+                        return
+                      }
+                      setCity({ ...city!, enable_push_notifications: newValue })
+                      try {
+                        const { data: { session } } = await supabase.auth.getSession()
+                        const accessToken = session?.access_token
+                        const response = await fetch('/api/city/update-details', {
+                          method: 'POST',
+                          headers: {
+                            'Content-Type': 'application/json',
+                            ...(accessToken && { 'Authorization': `Bearer ${accessToken}` }),
+                          },
+                          credentials: 'include',
+                          body: JSON.stringify({ cityId, enable_push_notifications: newValue })
+                        })
+                        if (!response.ok) fetchCity()
+                      } catch { fetchCity() }
+                    }}
+                  />
+
+                  <ToggleSetting
+                    icon="📸"
+                    title="צילום בהחזרה"
+                    description="חובת צילום ציוד בעת החזרה"
+                    enabled={city?.require_return_photo !== false}
+                    disabled={!canEdit}
+                    onChange={async (newValue) => {
+                      if (!canEdit) {
+                        toast.error('אין לך הרשאה לבצע פעולה זו')
+                        return
+                      }
+                      setCity({ ...city!, require_return_photo: newValue })
+                      try {
+                        const { data: { session } } = await supabase.auth.getSession()
+                        const accessToken = session?.access_token
+                        const response = await fetch('/api/city/update-details', {
+                          method: 'POST',
+                          headers: {
+                            'Content-Type': 'application/json',
+                            ...(accessToken && { 'Authorization': `Bearer ${accessToken}` }),
+                          },
+                          credentials: 'include',
+                          body: JSON.stringify({ cityId, require_return_photo: newValue })
+                        })
+                        if (!response.ok) fetchCity()
+                      } catch { fetchCity() }
+                    }}
+                  />
                 </div>
 
                 {/* City Details Edit Form */}
