@@ -61,8 +61,8 @@ export async function POST(request: NextRequest) {
     const payload = JSON.stringify({
       title: title || 'התראה למנהל ראשי',
       body: body || '',
-      icon: '/icon-192.png',
-      badge: '/badge-72.png',
+      icon: '/favicon.png',
+      badge: '/favicon.png',
       url: url || '/super-admin',
       tag: type || 'super-admin-notification'
     })

@@ -66,8 +66,8 @@ export async function POST(request: NextRequest) {
     const payload = JSON.stringify({
       title: title || 'בקשה חדשה',
       body: body || '',
-      icon: '/icon-192.png',
-      badge: '/badge-72.png',
+      icon: '/favicon.png',
+      badge: '/favicon.png',
       url: url || '/super-admin',
       tag: type || 'city-request-notification'
     })

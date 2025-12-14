@@ -107,8 +107,8 @@ export async function POST(request: NextRequest) {
     const payload = JSON.stringify({
       title: title || 'בקשה חדשה!',
       body: body || 'יש בקשות חדשות ממתינות לאישור',
-      icon: '/icon-192.png',
-      badge: '/badge-72.png',
+      icon: '/favicon.png',
+      badge: '/favicon.png',
       url: url || `/city/${cityId}/admin`,
       cityId,
       tag: 'equipment-request'
