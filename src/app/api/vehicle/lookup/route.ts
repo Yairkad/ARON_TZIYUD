@@ -107,17 +107,53 @@ export async function GET(request: NextRequest) {
 
     let pcdData = null
     if (makeEnglish) {
-      const { data: vehicleModels, error } = await supabase
+      const modelName = vehicle.kinuy_mishari?.toLowerCase() || ''
+
+      // First try: exact model match
+      let { data: vehicleModels, error } = await supabase
         .from('vehicle_models')
         .select('*')
         .or(`make.ilike.%${makeEnglish}%,make_he.ilike.%${vehicle.tozeret_nm}%`)
-        .ilike('model', `%${vehicle.kinuy_mishari}%`)
+        .ilike('model', `%${modelName}%`)
         .lte('year_from', vehicle.shnat_yitzur)
         .or(`year_to.gte.${vehicle.shnat_yitzur},year_to.is.null`)
         .limit(1)
 
       if (!error && vehicleModels && vehicleModels.length > 0) {
         pcdData = vehicleModels[0]
+      }
+
+      // Second try: search in variants column
+      if (!pcdData) {
+        const result = await supabase
+          .from('vehicle_models')
+          .select('*')
+          .or(`make.ilike.%${makeEnglish}%,make_he.ilike.%${vehicle.tozeret_nm}%`)
+          .ilike('variants', `%${modelName}%`)
+          .lte('year_from', vehicle.shnat_yitzur)
+          .or(`year_to.gte.${vehicle.shnat_yitzur},year_to.is.null`)
+          .limit(1)
+
+        if (!result.error && result.data && result.data.length > 0) {
+          pcdData = result.data[0]
+        }
+      }
+
+      // Third try: search for first word only (e.g., "PRIUS" from "PRIUS HYBRID")
+      if (!pcdData && modelName.includes(' ')) {
+        const firstWord = modelName.split(' ')[0]
+        const result = await supabase
+          .from('vehicle_models')
+          .select('*')
+          .or(`make.ilike.%${makeEnglish}%,make_he.ilike.%${vehicle.tozeret_nm}%`)
+          .ilike('model', `%${firstWord}%`)
+          .lte('year_from', vehicle.shnat_yitzur)
+          .or(`year_to.gte.${vehicle.shnat_yitzur},year_to.is.null`)
+          .limit(1)
+
+        if (!result.error && result.data && result.data.length > 0) {
+          pcdData = result.data[0]
+        }
       }
     }
 
