@@ -6,7 +6,7 @@ import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
 
 type FeedbackType = 'bug' | 'suggestion' | 'other'
-type UserSource = 'volunteer' | 'city_admin' | 'super_admin' | 'unknown'
+type UserSource = 'volunteer' | 'city_admin' | 'super_admin' | 'wheels' | 'unknown'
 
 interface AttachedFile {
   name: string

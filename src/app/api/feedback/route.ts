@@ -17,7 +17,7 @@ interface AttachedFile {
   base64: string
 }
 
-type UserSource = 'volunteer' | 'city_admin' | 'super_admin' | 'unknown'
+type UserSource = 'volunteer' | 'city_admin' | 'super_admin' | 'wheels' | 'unknown'
 
 interface FeedbackBody {
   type: 'bug' | 'suggestion' | 'other'
@@ -56,9 +56,10 @@ export async function POST(request: NextRequest) {
     }
 
     const sourceLabels: Record<UserSource, string> = {
-      volunteer: '👤 מתנדב (דף ציבורי)',
-      city_admin: '🏙️ מנהל עיר',
+      volunteer: '📦 ארון ציוד - מתנדב',
+      city_admin: '📦 ארון ציוד - מנהל עיר',
       super_admin: '👑 מנהל ראשי',
+      wheels: '🛞 מערכת גלגלים',
       unknown: '❓ לא ידוע'
     }
 
@@ -66,6 +67,7 @@ export async function POST(request: NextRequest) {
       volunteer: { bg: '#f0fdf4', border: '#22c55e', text: '#166534' },
       city_admin: { bg: '#eff6ff', border: '#3b82f6', text: '#1e40af' },
       super_admin: { bg: '#fef3c7', border: '#f59e0b', text: '#92400e' },
+      wheels: { bg: '#fef3c7', border: '#6b7280', text: '#374151' },
       unknown: { bg: '#f3f4f6', border: '#9ca3af', text: '#374151' }
     }
 
