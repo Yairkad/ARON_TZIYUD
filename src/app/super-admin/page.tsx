@@ -1702,7 +1702,15 @@ export default function SuperAdminPage() {
                     }, 100)
                   }
                 }}
-                className="md:hidden fixed bottom-6 left-6 z-40 w-14 h-14 rounded-full bg-gradient-to-br from-green-500 to-emerald-600 hover:from-green-600 hover:to-emerald-700 text-white shadow-lg hover:shadow-xl transition-all duration-200 flex items-center justify-center border-2 border-white"
+                className="md:hidden rounded-full bg-gradient-to-br from-green-500 to-emerald-600 hover:from-green-600 hover:to-emerald-700 text-white shadow-lg hover:shadow-xl transition-all duration-200 flex items-center justify-center border-2 border-white"
+                style={{
+                  position: 'fixed',
+                  bottom: '24px',
+                  left: '24px',
+                  zIndex: 9998,
+                  width: '56px',
+                  height: '56px',
+                }}
               >
                 {showAddCity ? (
                   <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -2380,7 +2388,15 @@ export default function SuperAdminPage() {
                         }, 100)
                       }
                     }}
-                    className="md:hidden fixed bottom-6 left-6 z-40 w-14 h-14 rounded-full bg-gradient-to-br from-green-500 to-emerald-600 hover:from-green-600 hover:to-emerald-700 text-white shadow-lg hover:shadow-xl transition-all duration-200 flex items-center justify-center border-2 border-white"
+                    className="md:hidden rounded-full bg-gradient-to-br from-green-500 to-emerald-600 hover:from-green-600 hover:to-emerald-700 text-white shadow-lg hover:shadow-xl transition-all duration-200 flex items-center justify-center border-2 border-white"
+                    style={{
+                      position: 'fixed',
+                      bottom: '24px',
+                      left: '24px',
+                      zIndex: 9998,
+                      width: '56px',
+                      height: '56px',
+                    }}
                   >
                     {showAddUser ? (
                       <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
