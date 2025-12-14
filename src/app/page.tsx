@@ -96,7 +96,6 @@ export default function HomePage() {
   }
 
   return (
-    <>
     <div className="min-h-screen content-wrapper flex flex-col items-center justify-center p-4 pt-16 sm:pt-4 relative">
       {/* Admin Login Button - Only show when not logged in as admin */}
       {!adminUrl && (
@@ -275,38 +274,30 @@ export default function HomePage() {
               </Link>
             </p>
             <p className="text-gray-300 text-[10px] mt-2">
-              גירסה 2.2.7
+              גירסה 2.2.8
             </p>
           </div>
         </div>
       </div>
-    </div>
 
-    {/* Floating Admin Bar - Show when logged in as admin */}
-    {adminUrl && (
-      <div
-        className="bg-gradient-to-r from-purple-600 to-pink-600 text-white p-3 shadow-lg flex items-center justify-between"
-        style={{
-          position: 'fixed',
-          bottom: '0px',
-          left: '0px',
-          right: '0px',
-          zIndex: 9999,
-          width: '100%',
-        }}
-      >
-        <div className="flex items-center gap-2">
-          <span className="text-lg">👁️</span>
-          <span className="text-sm font-medium">צפייה בממשק מתנדב</span>
-        </div>
-        <Button
-          onClick={() => router.push(adminUrl)}
-          className="bg-white text-purple-600 hover:bg-purple-50 font-bold px-4 py-2 rounded-xl transition-all hover:scale-105"
+      {/* Floating Admin Bar - Show when logged in as admin */}
+      {adminUrl && (
+        <div
+          className="fixed bottom-0 left-0 right-0 bg-gradient-to-r from-purple-600 to-pink-600 text-white p-3 shadow-lg flex items-center justify-between"
+          style={{ zIndex: 9999 }}
         >
-          ⚙️ חזרה לניהול
-        </Button>
-      </div>
-    )}
-    </>
+          <div className="flex items-center gap-2">
+            <span className="text-lg">👁️</span>
+            <span className="text-sm font-medium">צפייה בממשק מתנדב</span>
+          </div>
+          <Button
+            onClick={() => router.push(adminUrl)}
+            className="bg-white text-purple-600 hover:bg-purple-50 font-bold px-4 py-2 rounded-xl transition-all hover:scale-105"
+          >
+            ⚙️ חזרה לניהול
+          </Button>
+        </div>
+      )}
+    </div>
   )
 }

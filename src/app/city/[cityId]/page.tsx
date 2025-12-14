@@ -575,7 +575,6 @@ export default function CityPage() {
   const showAdminBar = adminUrl && !hideAdminBar
 
   return (
-    <>
     <div className={`min-h-screen content-wrapper ${showAdminBar ? 'pb-16' : ''}`}>
       <div className="max-w-5xl mx-auto px-3 sm:px-4 py-4 sm:py-6">
         <Logo />
@@ -1852,20 +1851,12 @@ export default function CityPage() {
           </div>
         </div>
       )}
-    </div>
 
     {/* Floating Admin Bar - Show when logged in as admin (hidden when inside iframe) */}
     {showAdminBar && (
       <div
-        className="bg-gradient-to-r from-purple-600 to-pink-600 text-white p-3 shadow-lg flex items-center justify-between"
-        style={{
-          position: 'fixed',
-          bottom: '0px',
-          left: '0px',
-          right: '0px',
-          zIndex: 9999,
-          width: '100%',
-        }}
+        className="fixed bottom-0 left-0 right-0 bg-gradient-to-r from-purple-600 to-pink-600 text-white p-3 shadow-lg flex items-center justify-between"
+        style={{ zIndex: 9999 }}
       >
         <div className="flex items-center gap-2">
           <span className="text-lg">👁️</span>
@@ -1878,6 +1869,6 @@ export default function CityPage() {
         </Link>
       </div>
     )}
-    </>
+    </div>
   )
 }
