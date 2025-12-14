@@ -4,6 +4,7 @@ import { useState, useEffect } from 'react'
 import Link from 'next/link'
 import toast, { Toaster } from 'react-hot-toast'
 import { getDistricts, getDistrictColor, getDistrictName, District } from '@/lib/districts'
+import { VERSION } from '@/lib/version'
 
 interface Station {
   id: string
@@ -647,6 +648,15 @@ export default function WheelStationsPage() {
 
       <footer style={styles.footer}>
         <Link href="/wheels/admin" style={styles.adminLink} className="wheels-admin-link">⚙️ ניהול</Link>
+        <div style={styles.footerInfo}>
+          <p style={styles.footerText}>
+            מערכת גלגלים ידידים •{' '}
+            <Link href="/feedback?source=wheels" style={styles.feedbackLink}>
+              דווח על בעיה או הצע שיפור
+            </Link>
+          </p>
+          <p style={styles.versionText}>גירסה {VERSION}</p>
+        </div>
       </footer>
 
       {/* Search Modal */}
@@ -1422,6 +1432,23 @@ const styles: { [key: string]: React.CSSProperties } = {
     color: '#f59e0b',
     textDecoration: 'none',
     fontSize: '0.9rem',
+  },
+  footerInfo: {
+    marginTop: '15px',
+  },
+  footerText: {
+    color: '#9ca3af',
+    fontSize: '0.75rem',
+    margin: 0,
+  },
+  feedbackLink: {
+    color: '#60a5fa',
+    textDecoration: 'none',
+  },
+  versionText: {
+    color: '#6b7280',
+    fontSize: '0.65rem',
+    marginTop: '8px',
   },
   // Modal styles
   modalOverlay: {
