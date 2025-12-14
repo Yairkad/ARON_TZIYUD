@@ -28,8 +28,8 @@ self.addEventListener('push', (event) => {
 
   const options = {
     body: bodyText + '\n\nלחץ על ההודעה למעבר',
-    icon: data.icon || '/icon-192.png',
-    badge: data.badge || '/badge-72.png',
+    icon: data.icon || '/favicon.png',
+    badge: data.badge || '/favicon.png',
     vibrate: [200, 100, 200],
     tag: data.tag || 'equipment-request',
     requireInteraction: false,
