@@ -1201,7 +1201,7 @@ export default function WheelStationsPage() {
                   inputMode="numeric"
                   value={modelSearchYear}
                   onChange={e => setModelSearchYear(e.target.value.replace(/\D/g, '').slice(0, 4))}
-                  onKeyPress={e => e.key === 'Enter' && handleModelSearch()}
+                  onKeyDown={e => e.key === 'Enter' && handleModelSearch()}
                   placeholder="שנה - לדוגמה: 2020"
                   style={styles.vehicleInput}
                 />
@@ -1222,47 +1222,33 @@ export default function WheelStationsPage() {
               </div>
             )}
 
-            {/* Error with external links */}
-            {vehicleError && (
-              <div style={{...styles.vehicleError, flexDirection: 'column', gap: '12px'}}>
+            {/* Error message with wheel-size.com link */}
+            {vehicleError && vehicleSearchTab === 'model' && modelSearchMake && modelSearchModel && (
+              <div style={{...styles.vehicleError, flexDirection: 'column', gap: '12px', display: 'flex'}}>
                 <div>❌ {vehicleError}</div>
-                {vehicleSearchTab === 'model' && modelSearchMake && modelSearchModel && (
-                  <div style={{display: 'flex', flexDirection: 'column', gap: '8px', marginTop: '8px'}}>
-                    <span style={{fontSize: '0.85rem', color: '#9ca3af'}}>חפש באתרים חיצוניים:</span>
-                    <a
-                      href={`https://www.wheel-size.com/size/${(modelSearchMake.includes('(') ? modelSearchMake.split(' (')[0] : modelSearchMake).toLowerCase().replace(/\s+/g, '-')}/${modelSearchModel.toLowerCase().replace(/\s+/g, '-')}/${modelSearchYear || ''}/`}
-                      target="_blank"
-                      rel="noopener noreferrer"
-                      style={{
-                        padding: '8px 12px',
-                        background: '#3b82f6',
-                        color: '#fff',
-                        borderRadius: '6px',
-                        textDecoration: 'none',
-                        fontSize: '0.85rem',
-                        textAlign: 'center'
-                      }}
-                    >
-                      🔗 wheel-size.com
-                    </a>
-                    <a
-                      href={`https://www.google.com/search?q=${encodeURIComponent(`${modelSearchMake} ${modelSearchModel} ${modelSearchYear} PCD bolt pattern`)}`}
-                      target="_blank"
-                      rel="noopener noreferrer"
-                      style={{
-                        padding: '8px 12px',
-                        background: '#4b5563',
-                        color: '#fff',
-                        borderRadius: '6px',
-                        textDecoration: 'none',
-                        fontSize: '0.85rem',
-                        textAlign: 'center'
-                      }}
-                    >
-                      🔍 חיפוש בגוגל
-                    </a>
-                  </div>
-                )}
+                <a
+                  href={`https://www.wheel-size.com/size/${(modelSearchMake.includes('(') ? modelSearchMake.split(' (')[0] : modelSearchMake).toLowerCase().replace(/\s+/g, '-')}/${modelSearchModel.toLowerCase().replace(/\s+/g, '-')}/${modelSearchYear || ''}/`}
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  style={{
+                    padding: '10px 16px',
+                    background: '#3b82f6',
+                    color: '#fff',
+                    borderRadius: '8px',
+                    textDecoration: 'none',
+                    fontSize: '0.9rem',
+                    fontWeight: 'bold'
+                  }}
+                >
+                  🌐 חפש ב-wheel-size.com
+                </a>
+              </div>
+            )}
+
+            {/* Error message for plate search */}
+            {vehicleError && vehicleSearchTab === 'plate' && (
+              <div style={styles.vehicleError}>
+                ❌ {vehicleError}
               </div>
             )}
 
