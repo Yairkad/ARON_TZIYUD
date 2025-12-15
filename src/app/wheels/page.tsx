@@ -73,6 +73,7 @@ export default function WheelStationsPage() {
 
   // Vehicle lookup state
   const [showVehicleModal, setShowVehicleModal] = useState(false)
+  const [vehicleSearchTab, setVehicleSearchTab] = useState<'plate' | 'model'>('plate')
   const [vehiclePlate, setVehiclePlate] = useState('')
   const [vehicleLoading, setVehicleLoading] = useState(false)
   const [vehicleResult, setVehicleResult] = useState<{
@@ -92,6 +93,12 @@ export default function WheelStationsPage() {
   } | null>(null)
   const [vehicleError, setVehicleError] = useState<string | null>(null)
   const [vehicleSearchResults, setVehicleSearchResults] = useState<SearchResult[] | null>(null)
+
+  // Model search state
+  const [modelSearchMake, setModelSearchMake] = useState('')
+  const [modelSearchModel, setModelSearchModel] = useState('')
+  const [modelSearchYear, setModelSearchYear] = useState('')
+  const [modelSearchLoading, setModelSearchLoading] = useState(false)
 
   // Add vehicle model modal state
   const [showAddModelModal, setShowAddModelModal] = useState(false)
@@ -228,6 +235,10 @@ export default function WheelStationsPage() {
     setVehicleError(null)
     setVehicleSearchResults(null)
     setVehiclePlate('')
+    setModelSearchMake('')
+    setModelSearchModel('')
+    setModelSearchYear('')
+    setVehicleSearchTab('plate')
   }
 
   const closeVehicleModal = () => {
@@ -236,6 +247,9 @@ export default function WheelStationsPage() {
     setVehicleError(null)
     setVehicleSearchResults(null)
     setVehiclePlate('')
+    setModelSearchMake('')
+    setModelSearchModel('')
+    setModelSearchYear('')
   }
 
   // Extract rim size from tire string
@@ -286,6 +300,103 @@ export default function WheelStationsPage() {
       setVehicleError('שגיאה בחיבור לשרת')
     } finally {
       setVehicleLoading(false)
+    }
+  }
+
+  // Search by make/model/year using wheel-size.com scraper
+  const handleModelSearch = async () => {
+    if (!modelSearchMake.trim() || !modelSearchModel.trim() || !modelSearchYear.trim()) {
+      toast.error('נא למלא יצרן, דגם ושנה')
+      return
+    }
+
+    setModelSearchLoading(true)
+    setVehicleError(null)
+    setVehicleResult(null)
+    setVehicleSearchResults(null)
+
+    try {
+      // First try local DB
+      const localResponse = await fetch(
+        `/api/vehicle-models?make=${encodeURIComponent(modelSearchMake)}&model=${encodeURIComponent(modelSearchModel)}&year=${modelSearchYear}`
+      )
+      const localData = await localResponse.json()
+
+      let wheelFitment = null
+
+      if (localData.models && localData.models.length > 0) {
+        // Found in local DB
+        const model = localData.models[0]
+        wheelFitment = {
+          pcd: `${model.bolt_count}×${model.bolt_spacing}`,
+          bolt_count: model.bolt_count,
+          bolt_spacing: model.bolt_spacing,
+          center_bore: model.center_bore
+        }
+        setVehicleResult({
+          vehicle: {
+            manufacturer: model.make,
+            model: model.model,
+            year: parseInt(modelSearchYear),
+            color: '',
+            front_tire: model.tire_size_front || ''
+          },
+          wheel_fitment: wheelFitment
+        })
+      } else {
+        // Try scraping from wheel-size.com
+        const scrapeResponse = await fetch('/api/vehicle-models/scrape', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({
+            make: modelSearchMake,
+            model: modelSearchModel,
+            year: modelSearchYear
+          })
+        })
+
+        if (scrapeResponse.ok) {
+          const scrapeData = await scrapeResponse.json()
+          if (scrapeData.success && scrapeData.data) {
+            wheelFitment = {
+              pcd: `${scrapeData.data.bolt_count}×${scrapeData.data.bolt_spacing}`,
+              bolt_count: scrapeData.data.bolt_count,
+              bolt_spacing: scrapeData.data.bolt_spacing,
+              center_bore: scrapeData.data.center_bore
+            }
+            setVehicleResult({
+              vehicle: {
+                manufacturer: scrapeData.data.make,
+                model: scrapeData.data.model,
+                year: scrapeData.data.year,
+                color: '',
+                front_tire: scrapeData.data.tire_sizes?.[0] || ''
+              },
+              wheel_fitment: wheelFitment
+            })
+          }
+        }
+      }
+
+      // Search for matching wheels if we have fitment data
+      if (wheelFitment) {
+        const params = new URLSearchParams()
+        params.set('bolt_count', wheelFitment.bolt_count.toString())
+        params.set('bolt_spacing', wheelFitment.bolt_spacing.toString())
+        params.set('available_only', 'true')
+
+        const searchResponse = await fetch(`/api/wheel-stations/search?${params}`)
+        if (searchResponse.ok) {
+          const searchData = await searchResponse.json()
+          setVehicleSearchResults(searchData.results)
+        }
+      } else {
+        setVehicleError('לא נמצאו מידות גלגל לדגם זה. נסה לחפש באתר wheel-size.com')
+      }
+    } catch {
+      setVehicleError('שגיאה בחיפוש')
+    } finally {
+      setModelSearchLoading(false)
     }
   }
 
@@ -581,7 +692,7 @@ export default function WheelStationsPage() {
             🔍 חיפוש לפי מפרט
           </button>
           <button style={styles.vehicleSearchBtn} className="wheels-search-btn" onClick={openVehicleModal}>
-            🚗 חיפוש לפי מספר רכב
+            🚗 חיפוש לפי רכב
           </button>
         </div>
       </header>
@@ -817,7 +928,7 @@ export default function WheelStationsPage() {
         <div style={styles.modalOverlay} onClick={closeVehicleModal}>
           <div style={styles.vehicleModal} className="wheels-vehicle-modal" onClick={e => e.stopPropagation()}>
             <div style={styles.modalHeader}>
-              <h3 style={styles.modalTitle} className="wheels-modal-title">🚗 חיפוש לפי מספר רכב</h3>
+              <h3 style={styles.modalTitle} className="wheels-modal-title">🚗 חיפוש לפי רכב</h3>
               <button style={styles.closeBtn} onClick={closeVehicleModal}>✕</button>
             </div>
 
@@ -826,29 +937,121 @@ export default function WheelStationsPage() {
               ⚠️ פיצ'ר בפיתוח - יתכנו טעויות בזיהוי מידות הגלגל
             </div>
 
-            {/* Search input */}
-            <div style={styles.vehicleInputRow}>
-              <input
-                type="text"
-                inputMode="numeric"
-                value={vehiclePlate}
-                onChange={e => setVehiclePlate(e.target.value)}
-                onKeyPress={e => e.key === 'Enter' && handleVehicleLookup()}
-                placeholder="הזן מספר רישוי..."
-                style={styles.vehicleInput}
-                dir="ltr"
-                autoFocus
-              />
+            {/* Tabs */}
+            <div style={{
+              display: 'flex',
+              gap: '0',
+              marginBottom: '16px',
+              borderRadius: '8px',
+              overflow: 'hidden',
+              border: '1px solid #4b5563'
+            }}>
               <button
-                onClick={handleVehicleLookup}
-                disabled={vehicleLoading}
-                style={styles.vehicleLookupBtn}
+                onClick={() => { setVehicleSearchTab('plate'); setVehicleResult(null); setVehicleError(null); setVehicleSearchResults(null); }}
+                style={{
+                  flex: 1,
+                  padding: '10px 16px',
+                  border: 'none',
+                  background: vehicleSearchTab === 'plate' ? '#3b82f6' : 'transparent',
+                  color: vehicleSearchTab === 'plate' ? '#fff' : '#9ca3af',
+                  cursor: 'pointer',
+                  fontWeight: vehicleSearchTab === 'plate' ? 'bold' : 'normal',
+                  fontSize: '0.9rem',
+                  transition: 'all 0.2s'
+                }}
               >
-                {vehicleLoading ? (
-                  <span className="spinning-wheel">🛞</span>
-                ) : '🔍'}
+                🔢 מספר רכב
+              </button>
+              <button
+                onClick={() => { setVehicleSearchTab('model'); setVehicleResult(null); setVehicleError(null); setVehicleSearchResults(null); }}
+                style={{
+                  flex: 1,
+                  padding: '10px 16px',
+                  border: 'none',
+                  borderRight: '1px solid #4b5563',
+                  background: vehicleSearchTab === 'model' ? '#3b82f6' : 'transparent',
+                  color: vehicleSearchTab === 'model' ? '#fff' : '#9ca3af',
+                  cursor: 'pointer',
+                  fontWeight: vehicleSearchTab === 'model' ? 'bold' : 'normal',
+                  fontSize: '0.9rem',
+                  transition: 'all 0.2s'
+                }}
+              >
+                🚘 יצרן ודגם
               </button>
             </div>
+
+            {/* Tab Content: Plate Search */}
+            {vehicleSearchTab === 'plate' && (
+              <div style={styles.vehicleInputRow}>
+                <input
+                  type="text"
+                  inputMode="numeric"
+                  value={vehiclePlate}
+                  onChange={e => setVehiclePlate(e.target.value)}
+                  onKeyPress={e => e.key === 'Enter' && handleVehicleLookup()}
+                  placeholder="הזן מספר רישוי..."
+                  style={styles.vehicleInput}
+                  dir="ltr"
+                  autoFocus
+                />
+                <button
+                  onClick={handleVehicleLookup}
+                  disabled={vehicleLoading}
+                  style={styles.vehicleLookupBtn}
+                >
+                  {vehicleLoading ? (
+                    <span className="spinning-wheel">🛞</span>
+                  ) : '🔍'}
+                </button>
+              </div>
+            )}
+
+            {/* Tab Content: Model Search */}
+            {vehicleSearchTab === 'model' && (
+              <div style={{ display: 'flex', flexDirection: 'column', gap: '10px' }}>
+                <input
+                  type="text"
+                  value={modelSearchMake}
+                  onChange={e => setModelSearchMake(e.target.value)}
+                  placeholder="יצרן (באנגלית) - לדוגמה: Toyota"
+                  style={styles.vehicleInput}
+                  dir="ltr"
+                />
+                <input
+                  type="text"
+                  value={modelSearchModel}
+                  onChange={e => setModelSearchModel(e.target.value)}
+                  placeholder="דגם (באנגלית) - לדוגמה: Corolla"
+                  style={styles.vehicleInput}
+                  dir="ltr"
+                />
+                <input
+                  type="text"
+                  inputMode="numeric"
+                  value={modelSearchYear}
+                  onChange={e => setModelSearchYear(e.target.value.replace(/\D/g, '').slice(0, 4))}
+                  onKeyPress={e => e.key === 'Enter' && handleModelSearch()}
+                  placeholder="שנה - לדוגמה: 2020"
+                  style={styles.vehicleInput}
+                  dir="ltr"
+                />
+                <button
+                  onClick={handleModelSearch}
+                  disabled={modelSearchLoading}
+                  style={{
+                    ...styles.vehicleLookupBtn,
+                    width: '100%',
+                    padding: '12px',
+                    fontSize: '1rem'
+                  }}
+                >
+                  {modelSearchLoading ? (
+                    <span className="spinning-wheel">🛞</span>
+                  ) : '🔍 חפש'}
+                </button>
+              </div>
+            )}
 
             {/* Error */}
             {vehicleError && (
