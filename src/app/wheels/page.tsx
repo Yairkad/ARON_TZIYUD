@@ -322,12 +322,15 @@ export default function WheelStationsPage() {
     setShowModelModelSuggestions(false)
 
     // Extract English make name if contains Hebrew in parentheses
-    const englishMake = modelSearchMake.includes('(') ? modelSearchMake.split(' (')[0] : modelSearchMake
+    const englishMake = modelSearchMake.includes('(') ? modelSearchMake.split(' (')[0] : (hebrewToEnglishMakes[modelSearchMake] || modelSearchMake)
+
+    // Extract English model name if contains Hebrew in parentheses
+    const englishModel = modelSearchModel.includes('(') ? modelSearchModel.split(' (')[0] : (hebrewToEnglishModels[modelSearchModel] || modelSearchModel)
 
     try {
       // First try local DB
       const localResponse = await fetch(
-        `/api/vehicle-models?make=${encodeURIComponent(englishMake)}&model=${encodeURIComponent(modelSearchModel)}&year=${modelSearchYear}`
+        `/api/vehicle-models?make=${encodeURIComponent(englishMake)}&model=${encodeURIComponent(englishModel)}&year=${modelSearchYear}`
       )
       const localData = await localResponse.json()
 
@@ -359,7 +362,7 @@ export default function WheelStationsPage() {
           headers: { 'Content-Type': 'application/json' },
           body: JSON.stringify({
             make: englishMake,
-            model: modelSearchModel,
+            model: englishModel,
             year: modelSearchYear
           })
         })
@@ -421,6 +424,37 @@ export default function WheelStationsPage() {
     'טסלה': 'Tesla', 'ביואיק': 'BYD', 'ג\'ילי': 'Geely', 'MG': 'MG'
   }
 
+  // Common Hebrew to English car model mappings
+  const hebrewToEnglishModels: Record<string, string> = {
+    // Toyota
+    'קורולה': 'Corolla', 'קאמרי': 'Camry', 'יאריס': 'Yaris', 'אוריס': 'Auris',
+    'ראב 4': 'RAV4', 'לנד קרוזר': 'Land Cruiser', 'היילקס': 'Hilux', 'פריוס': 'Prius',
+    'אייגו': 'Aygo', 'סי-אייץ\'ר': 'C-HR', 'היילנדר': 'Highlander',
+    // Hyundai
+    'איי 10': 'i10', 'איי 20': 'i20', 'איי 30': 'i30', 'איי 40': 'i40',
+    'טוסון': 'Tucson', 'סנטה פה': 'Santa Fe', 'קונה': 'Kona', 'יוניק': 'Ioniq',
+    'אלנטרה': 'Elantra', 'סונטה': 'Sonata', 'אקסנט': 'Accent',
+    // Kia
+    'פיקנטו': 'Picanto', 'ריו': 'Rio', 'סיד': 'Ceed', 'ספורטאז\'': 'Sportage',
+    'סורנטו': 'Sorento', 'נירו': 'Niro', 'סטוניק': 'Stonic', 'סול': 'Soul',
+    // Mazda
+    'מזדה 2': 'Mazda2', 'מזדה 3': 'Mazda3', 'מזדה 6': 'Mazda6',
+    'סי-איקס 3': 'CX-3', 'סי-איקס 5': 'CX-5', 'סי-איקס 30': 'CX-30',
+    // Honda
+    'סיוויק': 'Civic', 'אקורד': 'Accord', 'ג\'אז': 'Jazz', 'סי-אר-וי': 'CR-V', 'האר-וי': 'HR-V',
+    // Nissan
+    'מיקרה': 'Micra', 'ג\'וק': 'Juke', 'קשקאי': 'Qashqai', 'איקס-טרייל': 'X-Trail',
+    'ליף': 'Leaf', 'נוט': 'Note', 'סנטרה': 'Sentra',
+    // Volkswagen
+    'גולף': 'Golf', 'פולו': 'Polo', 'פאסאט': 'Passat', 'טיגואן': 'Tiguan',
+    'טי-רוק': 'T-Roc', 'אפ': 'Up', 'ארטיאון': 'Arteon', 'טוארג': 'Touareg',
+    // Skoda
+    'פאביה': 'Fabia', 'אוקטביה': 'Octavia', 'סופרב': 'Superb', 'קארוק': 'Karoq', 'קודיאק': 'Kodiaq',
+    // Other common
+    'פוקוס': 'Focus', 'פיאסטה': 'Fiesta', 'אסטרה': 'Astra', 'קורסה': 'Corsa',
+    'קליאו': 'Clio', 'מגאן': 'Megane', 'סי 3': 'C3', 'סי 4': 'C4', '208': '208', '308': '308'
+  }
+
   // Fetch suggestions for model search (supports Hebrew and English)
   const fetchModelSearchMakeSuggestions = async (value: string) => {
     if (value.length < 2) {
@@ -471,11 +505,34 @@ export default function WheelStationsPage() {
     // Extract English make name if contains Hebrew in parentheses
     const englishMake = make.includes('(') ? make.split(' (')[0] : (hebrewToEnglishMakes[make] || make)
 
+    // Check if Hebrew model input, translate to English
+    const englishModel = hebrewToEnglishModels[value] || value
+
     try {
-      const response = await fetch(`/api/vehicle-models?make=${encodeURIComponent(englishMake)}&model=${encodeURIComponent(value)}`)
+      const response = await fetch(`/api/vehicle-models?make=${encodeURIComponent(englishMake)}&model=${encodeURIComponent(englishModel)}`)
       const data = await response.json()
-      const uniqueModels = [...new Set(data.vehicles?.map((v: any) => v.model as string) || [])]
-      setModelModelSuggestions(uniqueModels.slice(0, 8) as string[])
+
+      // Get unique models from database
+      const suggestions: string[] = []
+      const seen = new Set<string>()
+
+      data.vehicles?.forEach((v: any) => {
+        if (v.model && !seen.has(v.model.toLowerCase())) {
+          seen.add(v.model.toLowerCase())
+          const hebrewName = Object.entries(hebrewToEnglishModels).find(([, eng]) => eng.toLowerCase() === v.model.toLowerCase())?.[0]
+          suggestions.push(hebrewName ? `${v.model} (${hebrewName})` : v.model)
+        }
+      })
+
+      // Add common models that match
+      Object.entries(hebrewToEnglishModels).forEach(([he, en]) => {
+        if ((he.includes(value) || en.toLowerCase().includes(value.toLowerCase())) && !seen.has(en.toLowerCase())) {
+          seen.add(en.toLowerCase())
+          suggestions.push(`${en} (${he})`)
+        }
+      })
+
+      setModelModelSuggestions(suggestions.slice(0, 8))
     } catch {
       setModelModelSuggestions([])
     }
