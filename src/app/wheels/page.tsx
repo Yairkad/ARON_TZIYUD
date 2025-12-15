@@ -1224,7 +1224,7 @@ export default function WheelStationsPage() {
 
             {/* Error message with external links and add model button */}
             {vehicleError && vehicleSearchTab === 'model' && modelSearchMake && modelSearchModel && (
-              <div style={styles.noFitmentCard}>
+              <div style={{...styles.noFitmentCard, marginTop: '10px'}}>
                 ⚠️ לא נמצאו מידות גלגל לדגם זה במאגר
                 <div style={styles.externalLinks}>
                   <a
