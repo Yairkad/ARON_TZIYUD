@@ -99,6 +99,10 @@ export default function WheelStationsPage() {
   const [modelSearchModel, setModelSearchModel] = useState('')
   const [modelSearchYear, setModelSearchYear] = useState('')
   const [modelSearchLoading, setModelSearchLoading] = useState(false)
+  const [modelMakeSuggestions, setModelMakeSuggestions] = useState<string[]>([])
+  const [modelModelSuggestions, setModelModelSuggestions] = useState<string[]>([])
+  const [showModelMakeSuggestions, setShowModelMakeSuggestions] = useState(false)
+  const [showModelModelSuggestions, setShowModelModelSuggestions] = useState(false)
 
   // Add vehicle model modal state
   const [showAddModelModal, setShowAddModelModal] = useState(false)
@@ -314,11 +318,16 @@ export default function WheelStationsPage() {
     setVehicleError(null)
     setVehicleResult(null)
     setVehicleSearchResults(null)
+    setShowModelMakeSuggestions(false)
+    setShowModelModelSuggestions(false)
+
+    // Extract English make name if contains Hebrew in parentheses
+    const englishMake = modelSearchMake.includes('(') ? modelSearchMake.split(' (')[0] : modelSearchMake
 
     try {
       // First try local DB
       const localResponse = await fetch(
-        `/api/vehicle-models?make=${encodeURIComponent(modelSearchMake)}&model=${encodeURIComponent(modelSearchModel)}&year=${modelSearchYear}`
+        `/api/vehicle-models?make=${encodeURIComponent(englishMake)}&model=${encodeURIComponent(modelSearchModel)}&year=${modelSearchYear}`
       )
       const localData = await localResponse.json()
 
@@ -349,7 +358,7 @@ export default function WheelStationsPage() {
           method: 'POST',
           headers: { 'Content-Type': 'application/json' },
           body: JSON.stringify({
-            make: modelSearchMake,
+            make: englishMake,
             model: modelSearchModel,
             year: modelSearchYear
           })
@@ -397,6 +406,78 @@ export default function WheelStationsPage() {
       setVehicleError('שגיאה בחיפוש')
     } finally {
       setModelSearchLoading(false)
+    }
+  }
+
+  // Common Hebrew to English car brand mappings
+  const hebrewToEnglishMakes: Record<string, string> = {
+    'טויוטה': 'Toyota', 'יונדאי': 'Hyundai', 'קיא': 'Kia', 'מזדה': 'Mazda',
+    'הונדה': 'Honda', 'ניסאן': 'Nissan', 'סוזוקי': 'Suzuki', 'מיצובישי': 'Mitsubishi',
+    'סובארו': 'Subaru', 'פולקסווגן': 'Volkswagen', 'סקודה': 'Skoda', 'סיאט': 'Seat',
+    'אאודי': 'Audi', 'במוו': 'BMW', 'מרצדס': 'Mercedes-Benz', 'פיג\'ו': 'Peugeot',
+    'סיטרואן': 'Citroen', 'רנו': 'Renault', 'פיאט': 'Fiat', 'אלפא רומאו': 'Alfa Romeo',
+    'שברולט': 'Chevrolet', 'פורד': 'Ford', 'ג\'יפ': 'Jeep', 'דאצ\'יה': 'Dacia',
+    'אופל': 'Opel', 'וולוו': 'Volvo', 'לקסוס': 'Lexus', 'אינפיניטי': 'Infiniti',
+    'טסלה': 'Tesla', 'ביואיק': 'BYD', 'ג\'ילי': 'Geely', 'MG': 'MG'
+  }
+
+  // Fetch suggestions for model search (supports Hebrew and English)
+  const fetchModelSearchMakeSuggestions = async (value: string) => {
+    if (value.length < 2) {
+      setModelMakeSuggestions([])
+      return
+    }
+
+    // Check if Hebrew input, translate to English
+    const englishValue = hebrewToEnglishMakes[value] || value
+
+    try {
+      // Search in local DB by both make and make_he
+      const response = await fetch(`/api/vehicle-models?make=${encodeURIComponent(englishValue)}`)
+      const data = await response.json()
+
+      // Get unique makes and make_he pairs
+      const suggestions: string[] = []
+      const seen = new Set<string>()
+
+      data.vehicles?.forEach((v: any) => {
+        if (v.make && !seen.has(v.make.toLowerCase())) {
+          seen.add(v.make.toLowerCase())
+          const hebrewName = Object.entries(hebrewToEnglishMakes).find(([, eng]) => eng.toLowerCase() === v.make.toLowerCase())?.[0]
+          suggestions.push(hebrewName ? `${v.make} (${hebrewName})` : v.make)
+        }
+      })
+
+      // Add common makes that match
+      Object.entries(hebrewToEnglishMakes).forEach(([he, en]) => {
+        if ((he.includes(value) || en.toLowerCase().includes(value.toLowerCase())) && !seen.has(en.toLowerCase())) {
+          seen.add(en.toLowerCase())
+          suggestions.push(`${en} (${he})`)
+        }
+      })
+
+      setModelMakeSuggestions(suggestions.slice(0, 8))
+    } catch {
+      setModelMakeSuggestions([])
+    }
+  }
+
+  const fetchModelSearchModelSuggestions = async (make: string, value: string) => {
+    if (value.length < 2 || !make) {
+      setModelModelSuggestions([])
+      return
+    }
+
+    // Extract English make name if contains Hebrew in parentheses
+    const englishMake = make.includes('(') ? make.split(' (')[0] : (hebrewToEnglishMakes[make] || make)
+
+    try {
+      const response = await fetch(`/api/vehicle-models?make=${encodeURIComponent(englishMake)}&model=${encodeURIComponent(value)}`)
+      const data = await response.json()
+      const uniqueModels = [...new Set(data.vehicles?.map((v: any) => v.model as string) || [])]
+      setModelModelSuggestions(uniqueModels.slice(0, 8) as string[])
+    } catch {
+      setModelModelSuggestions([])
     }
   }
 
@@ -1010,22 +1091,111 @@ export default function WheelStationsPage() {
             {/* Tab Content: Model Search */}
             {vehicleSearchTab === 'model' && (
               <div style={{ display: 'flex', flexDirection: 'column', gap: '10px' }}>
-                <input
-                  type="text"
-                  value={modelSearchMake}
-                  onChange={e => setModelSearchMake(e.target.value)}
-                  placeholder="יצרן (באנגלית) - לדוגמה: Toyota"
-                  style={styles.vehicleInput}
-                  dir="ltr"
-                />
-                <input
-                  type="text"
-                  value={modelSearchModel}
-                  onChange={e => setModelSearchModel(e.target.value)}
-                  placeholder="דגם (באנגלית) - לדוגמה: Corolla"
-                  style={styles.vehicleInput}
-                  dir="ltr"
-                />
+                {/* Make Input with Autocomplete */}
+                <div style={{ position: 'relative' }}>
+                  <input
+                    type="text"
+                    value={modelSearchMake}
+                    onChange={e => {
+                      setModelSearchMake(e.target.value)
+                      fetchModelSearchMakeSuggestions(e.target.value)
+                      setShowModelMakeSuggestions(true)
+                    }}
+                    onFocus={() => modelSearchMake.length >= 2 && setShowModelMakeSuggestions(true)}
+                    onBlur={() => setTimeout(() => setShowModelMakeSuggestions(false), 200)}
+                    placeholder="יצרן - לדוגמה: Toyota או טויוטה"
+                    style={styles.vehicleInput}
+                  />
+                  {showModelMakeSuggestions && modelMakeSuggestions.length > 0 && (
+                    <div style={{
+                      position: 'absolute',
+                      top: '100%',
+                      left: 0,
+                      right: 0,
+                      background: '#1f2937',
+                      border: '1px solid #4b5563',
+                      borderRadius: '0 0 8px 8px',
+                      zIndex: 100,
+                      maxHeight: '200px',
+                      overflowY: 'auto'
+                    }}>
+                      {modelMakeSuggestions.map((suggestion, i) => (
+                        <div
+                          key={i}
+                          onClick={() => {
+                            setModelSearchMake(suggestion)
+                            setShowModelMakeSuggestions(false)
+                            setModelModelSuggestions([])
+                          }}
+                          style={{
+                            padding: '10px 12px',
+                            cursor: 'pointer',
+                            borderBottom: '1px solid #374151',
+                            color: '#fff',
+                            fontSize: '0.9rem'
+                          }}
+                          onMouseOver={e => (e.currentTarget.style.background = '#374151')}
+                          onMouseOut={e => (e.currentTarget.style.background = 'transparent')}
+                        >
+                          {suggestion}
+                        </div>
+                      ))}
+                    </div>
+                  )}
+                </div>
+
+                {/* Model Input with Autocomplete */}
+                <div style={{ position: 'relative' }}>
+                  <input
+                    type="text"
+                    value={modelSearchModel}
+                    onChange={e => {
+                      setModelSearchModel(e.target.value)
+                      fetchModelSearchModelSuggestions(modelSearchMake, e.target.value)
+                      setShowModelModelSuggestions(true)
+                    }}
+                    onFocus={() => modelSearchModel.length >= 2 && setShowModelModelSuggestions(true)}
+                    onBlur={() => setTimeout(() => setShowModelModelSuggestions(false), 200)}
+                    placeholder="דגם - לדוגמה: Corolla"
+                    style={styles.vehicleInput}
+                  />
+                  {showModelModelSuggestions && modelModelSuggestions.length > 0 && (
+                    <div style={{
+                      position: 'absolute',
+                      top: '100%',
+                      left: 0,
+                      right: 0,
+                      background: '#1f2937',
+                      border: '1px solid #4b5563',
+                      borderRadius: '0 0 8px 8px',
+                      zIndex: 100,
+                      maxHeight: '200px',
+                      overflowY: 'auto'
+                    }}>
+                      {modelModelSuggestions.map((suggestion, i) => (
+                        <div
+                          key={i}
+                          onClick={() => {
+                            setModelSearchModel(suggestion)
+                            setShowModelModelSuggestions(false)
+                          }}
+                          style={{
+                            padding: '10px 12px',
+                            cursor: 'pointer',
+                            borderBottom: '1px solid #374151',
+                            color: '#fff',
+                            fontSize: '0.9rem'
+                          }}
+                          onMouseOver={e => (e.currentTarget.style.background = '#374151')}
+                          onMouseOut={e => (e.currentTarget.style.background = 'transparent')}
+                        >
+                          {suggestion}
+                        </div>
+                      ))}
+                    </div>
+                  )}
+                </div>
+
                 <input
                   type="text"
                   inputMode="numeric"
@@ -1034,7 +1204,6 @@ export default function WheelStationsPage() {
                   onKeyPress={e => e.key === 'Enter' && handleModelSearch()}
                   placeholder="שנה - לדוגמה: 2020"
                   style={styles.vehicleInput}
-                  dir="ltr"
                 />
                 <button
                   onClick={handleModelSearch}
@@ -1053,9 +1222,48 @@ export default function WheelStationsPage() {
               </div>
             )}
 
-            {/* Error */}
+            {/* Error with external links */}
             {vehicleError && (
-              <div style={styles.vehicleError}>❌ {vehicleError}</div>
+              <div style={{...styles.vehicleError, flexDirection: 'column', gap: '12px'}}>
+                <div>❌ {vehicleError}</div>
+                {vehicleSearchTab === 'model' && modelSearchMake && modelSearchModel && (
+                  <div style={{display: 'flex', flexDirection: 'column', gap: '8px', marginTop: '8px'}}>
+                    <span style={{fontSize: '0.85rem', color: '#9ca3af'}}>חפש באתרים חיצוניים:</span>
+                    <a
+                      href={`https://www.wheel-size.com/size/${(modelSearchMake.includes('(') ? modelSearchMake.split(' (')[0] : modelSearchMake).toLowerCase().replace(/\s+/g, '-')}/${modelSearchModel.toLowerCase().replace(/\s+/g, '-')}/${modelSearchYear || ''}/`}
+                      target="_blank"
+                      rel="noopener noreferrer"
+                      style={{
+                        padding: '8px 12px',
+                        background: '#3b82f6',
+                        color: '#fff',
+                        borderRadius: '6px',
+                        textDecoration: 'none',
+                        fontSize: '0.85rem',
+                        textAlign: 'center'
+                      }}
+                    >
+                      🔗 wheel-size.com
+                    </a>
+                    <a
+                      href={`https://www.google.com/search?q=${encodeURIComponent(`${modelSearchMake} ${modelSearchModel} ${modelSearchYear} PCD bolt pattern`)}`}
+                      target="_blank"
+                      rel="noopener noreferrer"
+                      style={{
+                        padding: '8px 12px',
+                        background: '#4b5563',
+                        color: '#fff',
+                        borderRadius: '6px',
+                        textDecoration: 'none',
+                        fontSize: '0.85rem',
+                        textAlign: 'center'
+                      }}
+                    >
+                      🔍 חיפוש בגוגל
+                    </a>
+                  </div>
+                )}
+              </div>
             )}
 
             {/* Vehicle Result */}
