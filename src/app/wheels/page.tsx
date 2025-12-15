@@ -1092,7 +1092,7 @@ export default function WheelStationsPage() {
             {vehicleSearchTab === 'model' && (
               <div style={{ display: 'flex', flexDirection: 'column', gap: '10px' }}>
                 {/* Make Input with Autocomplete */}
-                <div style={{ position: 'relative' }}>
+                <div style={{ position: 'relative', width: '100%' }}>
                   <input
                     type="text"
                     value={modelSearchMake}
@@ -1104,7 +1104,7 @@ export default function WheelStationsPage() {
                     onFocus={() => modelSearchMake.length >= 2 && setShowModelMakeSuggestions(true)}
                     onBlur={() => setTimeout(() => setShowModelMakeSuggestions(false), 200)}
                     placeholder="יצרן - לדוגמה: Toyota או טויוטה"
-                    style={styles.vehicleInput}
+                    style={{...styles.vehicleInput, width: '100%', flex: 'none'}}
                   />
                   {showModelMakeSuggestions && modelMakeSuggestions.length > 0 && (
                     <div style={{
@@ -1145,7 +1145,7 @@ export default function WheelStationsPage() {
                 </div>
 
                 {/* Model Input with Autocomplete */}
-                <div style={{ position: 'relative' }}>
+                <div style={{ position: 'relative', width: '100%' }}>
                   <input
                     type="text"
                     value={modelSearchModel}
@@ -1157,7 +1157,7 @@ export default function WheelStationsPage() {
                     onFocus={() => modelSearchModel.length >= 2 && setShowModelModelSuggestions(true)}
                     onBlur={() => setTimeout(() => setShowModelModelSuggestions(false), 200)}
                     placeholder="דגם - לדוגמה: Corolla"
-                    style={styles.vehicleInput}
+                    style={{...styles.vehicleInput, width: '100%', flex: 'none'}}
                   />
                   {showModelModelSuggestions && modelModelSuggestions.length > 0 && (
                     <div style={{
