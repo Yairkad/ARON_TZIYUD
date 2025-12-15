@@ -1222,26 +1222,40 @@ export default function WheelStationsPage() {
               </div>
             )}
 
-            {/* Error message with wheel-size.com link */}
+            {/* Error message with external links and add model button */}
             {vehicleError && vehicleSearchTab === 'model' && modelSearchMake && modelSearchModel && (
-              <div style={{...styles.vehicleError, flexDirection: 'column', gap: '12px', display: 'flex'}}>
-                <div>❌ {vehicleError}</div>
-                <a
-                  href={`https://www.wheel-size.com/size/${(modelSearchMake.includes('(') ? modelSearchMake.split(' (')[0] : modelSearchMake).toLowerCase().replace(/\s+/g, '-')}/${modelSearchModel.toLowerCase().replace(/\s+/g, '-')}/${modelSearchYear || ''}/`}
-                  target="_blank"
-                  rel="noopener noreferrer"
-                  style={{
-                    padding: '10px 16px',
-                    background: '#3b82f6',
-                    color: '#fff',
-                    borderRadius: '8px',
-                    textDecoration: 'none',
-                    fontSize: '0.9rem',
-                    fontWeight: 'bold'
-                  }}
+              <div style={styles.noFitmentCard}>
+                ⚠️ לא נמצאו מידות גלגל לדגם זה במאגר
+                <div style={styles.externalLinks}>
+                  <a
+                    href={`https://www.wheel-size.com/size/${(modelSearchMake.includes('(') ? modelSearchMake.split(' (')[0] : modelSearchMake).toLowerCase().replace(/\s+/g, '-')}/${modelSearchModel.toLowerCase().replace(/\s+/g, '-')}/${modelSearchYear || ''}/`}
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    style={styles.wheelSizeLink}
+                  >
+                    חפש ב-wheel-size.com ↗
+                  </a>
+                  <a
+                    href="http://wheelfitment.eu"
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    style={styles.wheelSizeLink}
+                  >
+                    חפש ב-wheelfitment.eu ↗
+                  </a>
+                </div>
+                <button
+                  onClick={() => handleOpenAddModel({
+                    make: (modelSearchMake.includes('(') ? modelSearchMake.split(' (')[0] : modelSearchMake).toLowerCase(),
+                    make_he: modelSearchMake.includes('(') ? modelSearchMake.split(' (')[1]?.replace(')', '') : modelSearchMake,
+                    model: modelSearchModel.toLowerCase(),
+                    year_from: modelSearchYear,
+                    tire_size_front: ''
+                  })}
+                  style={styles.addModelBtn}
                 >
-                  🌐 חפש ב-wheel-size.com
-                </a>
+                  ➕ הוסף דגם זה למאגר
+                </button>
               </div>
             )}
 
