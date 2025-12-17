@@ -23,7 +23,7 @@ export default function AccessibilityPage() {
         <div className="bg-white rounded-xl shadow-sm p-6 space-y-6">
           <section>
             <p className="text-gray-600 mb-4">
-              עדכון אחרון: דצמבר 2024
+              עדכון אחרון: דצמבר 2025
             </p>
           </section>
 
@@ -94,7 +94,7 @@ export default function AccessibilityPage() {
           <section>
             <h2 className="text-xl font-semibold text-gray-800 mb-3">תאריך עדכון הצהרת הנגישות</h2>
             <p className="text-gray-700">
-              הצהרת נגישות זו עודכנה לאחרונה בתאריך: דצמבר 2024.
+              הצהרת נגישות זו עודכנה לאחרונה בתאריך: דצמבר 2025.
               אנו מתעדכנים ומשפרים את נגישות המערכת באופן שוטף.
             </p>
           </section>

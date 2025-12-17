@@ -23,7 +23,7 @@ export default function PrivacyPage() {
         <div className="bg-white rounded-xl shadow-sm p-6 space-y-6">
           <section>
             <p className="text-gray-600 mb-4">
-              עדכון אחרון: דצמבר 2024
+              עדכון אחרון: דצמבר 2025
             </p>
             <p className="text-gray-700">
               מערכת &quot;ארון ציוד&quot; (להלן: &quot;המערכת&quot;) היא מערכת פרטית המיועדת לסייע למתנדבים.
