@@ -16,7 +16,7 @@ export const metadata: Metadata = {
   title: "ארון ציוד ידידים",
   description: "מערכת לניהול השאלות והחזרות ציוד",
   manifest: "/manifest.json",
-  themeColor: "#2563eb",
+  themeColor: "#0f172a",
   appleWebApp: {
     capable: true,
     statusBarStyle: "default",

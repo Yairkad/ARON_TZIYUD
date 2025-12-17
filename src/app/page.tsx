@@ -87,7 +87,7 @@ export default function HomePage() {
         <img
           src="/logo.png"
           alt="טוען..."
-          className="w-32 h-32 object-contain mb-4"
+          className="w-48 h-48 object-contain mb-4"
           style={{ animation: 'pulse 1.5s ease-in-out infinite' }}
         />
         <p className="text-white text-lg">טוען...</p>
@@ -284,7 +284,7 @@ export default function HomePage() {
               </Link>
             </p>
             <p className="text-gray-300 text-[10px] mt-2">
-              גירסה 2.4.9
+              גירסה 2.5.0
             </p>
           </div>
         </div>
