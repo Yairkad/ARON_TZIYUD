@@ -274,8 +274,17 @@ export default function HomePage() {
                 דווח על בעיה או הצע שיפור
               </Link>
             </p>
+            <p className="text-gray-400 text-xs mt-1">
+              <Link href="/privacy" className="text-gray-500 hover:text-gray-600 hover:underline">
+                מדיניות פרטיות
+              </Link>
+              {' • '}
+              <Link href="/accessibility" className="text-gray-500 hover:text-gray-600 hover:underline">
+                הצהרת נגישות
+              </Link>
+            </p>
             <p className="text-gray-300 text-[10px] mt-2">
-              גירסה 2.4.7
+              גירסה 2.4.8
             </p>
           </div>
         </div>
