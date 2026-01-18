@@ -284,7 +284,7 @@ export default function HomePage() {
               </Link>
             </p>
             <p className="text-gray-300 text-[10px] mt-2">
-              גירסה 2.5.0
+              גירסה 2.5.1
             </p>
           </div>
         </div>
@@ -294,7 +294,8 @@ export default function HomePage() {
     {/* Floating Admin Bar - Show when logged in as admin */}
     {adminUrl && (
       <div
-        className="fixed bottom-0 left-0 right-0 bg-gradient-to-r from-purple-600 to-pink-600 text-white p-3 shadow-lg flex items-center justify-between"
+        id="admin-floating-bar"
+        className="fixed bottom-0 left-0 right-0 bg-gradient-to-r from-purple-600 to-pink-600 text-white p-3 shadow-lg flex items-center justify-between safe-area-bottom"
         style={{ zIndex: 9999 }}
       >
         <div className="flex items-center gap-2">

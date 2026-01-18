@@ -103,7 +103,7 @@ export async function POST(request: Request) {
     // Check permissions
     const { data: userData } = await serviceClient
       .from('users')
-      .select('role, city_id, permissions')
+      .select('role, permissions')
       .eq('id', user.id)
       .single()
 
@@ -112,8 +112,17 @@ export async function POST(request: Request) {
     }
 
     // Verify user can manage this city
-    if (userData.role !== 'super_admin' && userData.city_id !== city_id) {
-      return NextResponse.json({ error: 'אין הרשאה לנהל עיר זו' }, { status: 403 })
+    if (userData.role !== 'super_admin') {
+      // Check if user is manager of this city
+      const { data: cityData } = await serviceClient
+        .from('cities')
+        .select('manager1_user_id, manager2_user_id')
+        .eq('id', city_id)
+        .single()
+
+      if (!cityData || (cityData.manager1_user_id !== user.id && cityData.manager2_user_id !== user.id)) {
+        return NextResponse.json({ error: 'אין הרשאה לנהל עיר זו' }, { status: 403 })
+      }
     }
 
     if (userData.role === 'city_manager' && userData.permissions !== 'full_access') {
@@ -215,7 +224,7 @@ export async function PUT(request: Request) {
     // Check permissions
     const { data: userData } = await serviceClient
       .from('users')
-      .select('role, city_id, permissions')
+      .select('role, permissions')
       .eq('id', user.id)
       .single()
 
@@ -224,8 +233,17 @@ export async function PUT(request: Request) {
     }
 
     // Verify user can manage this city
-    if (userData.role !== 'super_admin' && userData.city_id !== currentEquipment.city_id) {
-      return NextResponse.json({ error: 'אין הרשאה לנהל עיר זו' }, { status: 403 })
+    if (userData.role !== 'super_admin') {
+      // Check if user is manager of this city
+      const { data: cityData } = await serviceClient
+        .from('cities')
+        .select('manager1_user_id, manager2_user_id')
+        .eq('id', currentEquipment.city_id)
+        .single()
+
+      if (!cityData || (cityData.manager1_user_id !== user.id && cityData.manager2_user_id !== user.id)) {
+        return NextResponse.json({ error: 'אין הרשאה לנהל עיר זו' }, { status: 403 })
+      }
     }
 
     if (userData.role === 'city_manager' && userData.permissions !== 'full_access') {
@@ -307,7 +325,7 @@ export async function DELETE(request: Request) {
     // Check permissions
     const { data: userData } = await serviceClient
       .from('users')
-      .select('role, city_id, permissions')
+      .select('role, permissions')
       .eq('id', user.id)
       .single()
 
@@ -316,8 +334,17 @@ export async function DELETE(request: Request) {
     }
 
     // Verify user can manage this city
-    if (userData.role !== 'super_admin' && userData.city_id !== currentEquipment.city_id) {
-      return NextResponse.json({ error: 'אין הרשאה לנהל עיר זו' }, { status: 403 })
+    if (userData.role !== 'super_admin') {
+      // Check if user is manager of this city
+      const { data: cityData } = await serviceClient
+        .from('cities')
+        .select('manager1_user_id, manager2_user_id')
+        .eq('id', currentEquipment.city_id)
+        .single()
+
+      if (!cityData || (cityData.manager1_user_id !== user.id && cityData.manager2_user_id !== user.id)) {
+        return NextResponse.json({ error: 'אין הרשאה לנהל עיר זו' }, { status: 403 })
+      }
     }
 
     if (userData.role === 'city_manager' && userData.permissions !== 'full_access') {

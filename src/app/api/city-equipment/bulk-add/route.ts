@@ -50,10 +50,22 @@ export async function POST(request: Request) {
       return NextResponse.json({ error: 'לא מורשה' }, { status: 401 })
     }
 
+    // Use service client for permission checks and insert operations
+    const serviceClient = createClient(
+      process.env.NEXT_PUBLIC_SUPABASE_URL!,
+      process.env.SUPABASE_SERVICE_ROLE_KEY!,
+      {
+        auth: {
+          autoRefreshToken: false,
+          persistSession: false
+        }
+      }
+    )
+
     // Check permissions
-    const { data: userData, error: userError } = await supabase
+    const { data: userData, error: userError } = await serviceClient
       .from('users')
-      .select('role, city_id, permissions')
+      .select('role, permissions')
       .eq('id', user.id)
       .single()
 
@@ -65,9 +77,18 @@ export async function POST(request: Request) {
     }
 
     // Verify user can manage this city
-    if (userData.role !== 'super_admin' && userData.city_id !== city_id) {
-      console.log('❌ No permission for this city')
-      return NextResponse.json({ error: 'אין הרשאה לנהל עיר זו' }, { status: 403 })
+    if (userData.role !== 'super_admin') {
+      // Check if user is manager of this city
+      const { data: cityData } = await serviceClient
+        .from('cities')
+        .select('manager1_user_id, manager2_user_id')
+        .eq('id', city_id)
+        .single()
+
+      if (!cityData || (cityData.manager1_user_id !== user.id && cityData.manager2_user_id !== user.id)) {
+        console.log('❌ No permission for this city')
+        return NextResponse.json({ error: 'אין הרשאה לנהל עיר זו' }, { status: 403 })
+      }
     }
 
     if (userData.role === 'city_manager' && userData.permissions !== 'full_access') {
@@ -76,18 +97,6 @@ export async function POST(request: Request) {
     }
 
     console.log('✅ Authorization passed')
-
-    // Use service client for insert operations to bypass RLS
-    const serviceClient = createClient(
-      process.env.NEXT_PUBLIC_SUPABASE_URL!,
-      process.env.SUPABASE_SERVICE_ROLE_KEY!,
-      {
-        auth: {
-          autoRefreshToken: false,
-          persistSession: false
-        }
-      }
-    )
 
     // Verify all equipment items exist and are active
     const { data: globalEquipment, error: fetchError } = await serviceClient

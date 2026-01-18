@@ -178,3 +178,8 @@ html {
 .pr-safe {
   padding-right: env(safe-area-inset-right, 1rem);
 }
+
+/* Safe area for fixed bottom elements on iPhone */
+.safe-area-bottom {
+  padding-bottom: env(safe-area-inset-bottom, 0);
+}
