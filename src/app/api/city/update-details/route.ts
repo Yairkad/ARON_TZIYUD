@@ -16,10 +16,12 @@ export async function POST(request: NextRequest) {
       manager1_phone,
       manager2_name,
       manager2_phone,
-      contact1_name,
-      contact1_phone,
-      contact2_name,
-      contact2_phone,
+      show_manager1_contact,
+      override_manager1_name,
+      override_manager1_phone,
+      show_manager2_contact,
+      override_manager2_name,
+      override_manager2_phone,
       location_url,
       token_location_url,
       location_image,
@@ -107,18 +109,24 @@ export async function POST(request: NextRequest) {
     if (manager2_phone !== undefined) {
       updateData.manager2_phone = manager2_phone ? manager2_phone.trim() : null
     }
-    // Contact fields (shown to volunteers, fallback to manager if null)
-    if (contact1_name !== undefined) {
-      updateData.contact1_name = contact1_name ? contact1_name.trim() : null
+    // Contact visibility settings
+    if (show_manager1_contact !== undefined) {
+      updateData.show_manager1_contact = show_manager1_contact
     }
-    if (contact1_phone !== undefined) {
-      updateData.contact1_phone = contact1_phone ? contact1_phone.trim() : null
+    if (override_manager1_name !== undefined) {
+      updateData.override_manager1_name = override_manager1_name ? override_manager1_name.trim() : null
     }
-    if (contact2_name !== undefined) {
-      updateData.contact2_name = contact2_name ? contact2_name.trim() : null
+    if (override_manager1_phone !== undefined) {
+      updateData.override_manager1_phone = override_manager1_phone ? override_manager1_phone.trim() : null
     }
-    if (contact2_phone !== undefined) {
-      updateData.contact2_phone = contact2_phone ? contact2_phone.trim() : null
+    if (show_manager2_contact !== undefined) {
+      updateData.show_manager2_contact = show_manager2_contact
+    }
+    if (override_manager2_name !== undefined) {
+      updateData.override_manager2_name = override_manager2_name ? override_manager2_name.trim() : null
+    }
+    if (override_manager2_phone !== undefined) {
+      updateData.override_manager2_phone = override_manager2_phone ? override_manager2_phone.trim() : null
     }
     if (location_url !== undefined) {
       updateData.location_url = location_url ? location_url.trim() : null

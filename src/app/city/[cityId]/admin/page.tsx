@@ -129,10 +129,12 @@ export default function CityAdminPage() {
     manager1_phone: '',
     manager2_name: '',
     manager2_phone: '',
-    contact1_name: '',
-    contact1_phone: '',
-    contact2_name: '',
-    contact2_phone: '',
+    show_manager1_contact: true,
+    override_manager1_name: '',
+    override_manager1_phone: '',
+    show_manager2_contact: true,
+    override_manager2_name: '',
+    override_manager2_phone: '',
     location_url: '',
     token_location_url: '',
     location_image: null as string | null,
@@ -374,10 +376,12 @@ export default function CityAdminPage() {
           manager1_phone: data.manager1_phone || '',
           manager2_name: data.manager2_name || '',
           manager2_phone: data.manager2_phone || '',
-          contact1_name: data.contact1_name || '',
-          contact1_phone: data.contact1_phone || '',
-          contact2_name: data.contact2_name || '',
-          contact2_phone: data.contact2_phone || '',
+          show_manager1_contact: data.show_manager1_contact !== false,
+          override_manager1_name: data.override_manager1_name || '',
+          override_manager1_phone: data.override_manager1_phone || '',
+          show_manager2_contact: data.show_manager2_contact !== false,
+          override_manager2_name: data.override_manager2_name || '',
+          override_manager2_phone: data.override_manager2_phone || '',
           location_url: data.location_url || '',
           token_location_url: data.token_location_url || '',
           location_image: data.location_image || null,
@@ -1109,10 +1113,12 @@ export default function CityAdminPage() {
           manager1_phone: editCityForm.manager1_phone.trim(),
           manager2_name: editCityForm.manager2_name.trim() || null,
           manager2_phone: editCityForm.manager2_phone.trim() || null,
-          contact1_name: editCityForm.contact1_name.trim() || null,
-          contact1_phone: editCityForm.contact1_phone.trim() || null,
-          contact2_name: editCityForm.contact2_name.trim() || null,
-          contact2_phone: editCityForm.contact2_phone.trim() || null,
+          show_manager1_contact: editCityForm.show_manager1_contact,
+          override_manager1_name: editCityForm.override_manager1_name.trim() || null,
+          override_manager1_phone: editCityForm.override_manager1_phone.trim() || null,
+          show_manager2_contact: editCityForm.show_manager2_contact,
+          override_manager2_name: editCityForm.override_manager2_name.trim() || null,
+          override_manager2_phone: editCityForm.override_manager2_phone.trim() || null,
           location_url: editCityForm.location_url.trim() || null,
           token_location_url: editCityForm.token_location_url?.trim() || null,
           location_image: editCityForm.location_image,
@@ -2423,7 +2429,7 @@ export default function CityAdminPage() {
                               </div>
                             </div>
                             <div className="flex flex-col gap-2">
-                              {item.return_image_url && (
+                              {item.return_image_url ? (
                                 <Button
                                   onClick={() => openReturnImage(item.return_image_url!)}
                                   disabled={checkingImage}
@@ -2431,7 +2437,9 @@ export default function CityAdminPage() {
                                 >
                                   {checkingImage ? '⏳' : '📷'} צפה בתמונה
                                 </Button>
-                              )}
+                              ) : city?.require_return_photo !== false ? (
+                                <p className="text-sm text-gray-500 text-center py-2">📷 לא הועלתה תמונה</p>
+                              ) : null}
                               <div className="flex gap-2">
                                 <Button
                                   onClick={() => handleApproveReturn(item.id, true)}
@@ -2518,8 +2526,8 @@ export default function CityAdminPage() {
                                   <div className="flex items-center justify-between gap-2">
                                     <p className="font-semibold text-gray-800 flex-1">{item.equipment_name}</p>
                                     <div className="flex gap-1.5 items-center">
-                                      {/* View image button */}
-                                      {(item.status === 'returned' || item.status === 'pending_approval') && item.return_image_url && (
+                                      {/* View image button - show if image exists */}
+                                      {item.return_image_url && (
                                         <Button
                                           size="sm"
                                           onClick={(e) => {
@@ -2631,8 +2639,8 @@ export default function CityAdminPage() {
                                   }`}>
                                     <span className="font-medium text-gray-800">{item.equipment_name}</span>
                                     <div className="flex gap-2 items-center">
-                                      {/* View image button */}
-                                      {(item.status === 'returned' || item.status === 'pending_approval') && item.return_image_url && (
+                                      {/* View image button - show if image exists */}
+                                      {item.return_image_url && (
                                         <Button
                                           size="sm"
                                           onClick={() => openReturnImage(item.return_image_url!)}
@@ -3320,55 +3328,93 @@ export default function CityAdminPage() {
                           </div>
                         </div>
 
-                      {/* Contact Person Settings - Shown to volunteers */}
+                      {/* Contact Visibility Settings - Control what volunteers see */}
                       <div className="border-2 border-green-200 rounded-xl p-4 bg-green-50/50">
-                        <h3 className="text-lg font-bold text-gray-900 mb-4">👥 אנשי קשר למתנדבים</h3>
+                        <h3 className="text-lg font-bold text-gray-900 mb-4">👁️ הצגת אנשי קשר למתנדבים</h3>
                         <p className="text-sm text-gray-600 mb-4">
-                          אנשי קשר שיוצגו למתנדבים בדף הארון. אם לא מוגדר, יוצגו פרטי המנהלים.
+                          בחר האם להציג את פרטי כל מנהל למתנדבים. אם לא מוצג, ניתן להגדיר איש קשר חלופי.
                         </p>
-                        <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                          {/* Contact 1 */}
-                          <div className="space-y-2">
-                            <label className="block text-sm font-semibold text-gray-700">👤 שם איש קשר ראשון</label>
-                            <Input
-                              type="text"
-                              value={editCityForm.contact1_name}
-                              onChange={(e) => { setEditCityForm({ ...editCityForm, contact1_name: e.target.value }); setHasCityFormChanges(true) }}
-                              placeholder="השאר ריק להשתמש בפרטי מנהל"
-                              className="h-12 border-2 border-gray-200 rounded-xl focus:border-green-500 transition-colors"
-                            />
+
+                        {/* Manager 1 Contact Settings */}
+                        <div className="mb-6 p-4 bg-white rounded-lg border border-green-200">
+                          <div className="flex items-center justify-between mb-3">
+                            <span className="font-semibold text-gray-800">👤 מנהל ראשון: {editCityForm.manager1_name || 'לא מוגדר'}</span>
+                            <label className="relative inline-flex items-center cursor-pointer">
+                              <input
+                                type="checkbox"
+                                checked={editCityForm.show_manager1_contact}
+                                onChange={(e) => { setEditCityForm({ ...editCityForm, show_manager1_contact: e.target.checked }); setHasCityFormChanges(true) }}
+                                className="sr-only peer"
+                              />
+                              <div className="w-11 h-6 bg-gray-200 peer-focus:outline-none peer-focus:ring-4 peer-focus:ring-green-300 rounded-full peer peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:border-gray-300 after:border after:rounded-full after:h-5 after:w-5 after:transition-all peer-checked:bg-green-600"></div>
+                              <span className="mr-3 text-sm font-medium text-gray-700">הצג למתנדבים</span>
+                            </label>
                           </div>
-                          <div className="space-y-2">
-                            <label className="block text-sm font-semibold text-gray-700">📞 טלפון איש קשר ראשון</label>
-                            <Input
-                              type="tel"
-                              value={editCityForm.contact1_phone}
-                              onChange={(e) => { setEditCityForm({ ...editCityForm, contact1_phone: e.target.value }); setHasCityFormChanges(true) }}
-                              placeholder="השאר ריק להשתמש בפרטי מנהל"
-                              className="h-12 border-2 border-gray-200 rounded-xl focus:border-green-500 transition-colors"
-                            />
+                          {!editCityForm.show_manager1_contact && (
+                            <div className="grid grid-cols-1 md:grid-cols-2 gap-3 mt-3 pt-3 border-t border-green-200">
+                              <div className="space-y-1">
+                                <label className="block text-sm text-gray-600">שם איש קשר חלופי</label>
+                                <Input
+                                  type="text"
+                                  value={editCityForm.override_manager1_name}
+                                  onChange={(e) => { setEditCityForm({ ...editCityForm, override_manager1_name: e.target.value }); setHasCityFormChanges(true) }}
+                                  placeholder="השאר ריק להסתיר לגמרי"
+                                  className="h-10 border-2 border-gray-200 rounded-lg focus:border-green-500 transition-colors"
+                                />
+                              </div>
+                              <div className="space-y-1">
+                                <label className="block text-sm text-gray-600">טלפון איש קשר חלופי</label>
+                                <Input
+                                  type="tel"
+                                  value={editCityForm.override_manager1_phone}
+                                  onChange={(e) => { setEditCityForm({ ...editCityForm, override_manager1_phone: e.target.value }); setHasCityFormChanges(true) }}
+                                  placeholder="השאר ריק להסתיר לגמרי"
+                                  className="h-10 border-2 border-gray-200 rounded-lg focus:border-green-500 transition-colors"
+                                />
+                              </div>
+                            </div>
+                          )}
+                        </div>
+
+                        {/* Manager 2 Contact Settings */}
+                        <div className="p-4 bg-white rounded-lg border border-green-200">
+                          <div className="flex items-center justify-between mb-3">
+                            <span className="font-semibold text-gray-800">👤 מנהל שני: {editCityForm.manager2_name || 'לא מוגדר'}</span>
+                            <label className="relative inline-flex items-center cursor-pointer">
+                              <input
+                                type="checkbox"
+                                checked={editCityForm.show_manager2_contact}
+                                onChange={(e) => { setEditCityForm({ ...editCityForm, show_manager2_contact: e.target.checked }); setHasCityFormChanges(true) }}
+                                className="sr-only peer"
+                              />
+                              <div className="w-11 h-6 bg-gray-200 peer-focus:outline-none peer-focus:ring-4 peer-focus:ring-green-300 rounded-full peer peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:border-gray-300 after:border after:rounded-full after:h-5 after:w-5 after:transition-all peer-checked:bg-green-600"></div>
+                              <span className="mr-3 text-sm font-medium text-gray-700">הצג למתנדבים</span>
+                            </label>
                           </div>
-                          {/* Contact 2 */}
-                          <div className="space-y-2">
-                            <label className="block text-sm font-semibold text-gray-700">👤 שם איש קשר שני</label>
-                            <Input
-                              type="text"
-                              value={editCityForm.contact2_name}
-                              onChange={(e) => { setEditCityForm({ ...editCityForm, contact2_name: e.target.value }); setHasCityFormChanges(true) }}
-                              placeholder="השאר ריק להשתמש בפרטי מנהל"
-                              className="h-12 border-2 border-gray-200 rounded-xl focus:border-green-500 transition-colors"
-                            />
-                          </div>
-                          <div className="space-y-2">
-                            <label className="block text-sm font-semibold text-gray-700">📞 טלפון איש קשר שני</label>
-                            <Input
-                              type="tel"
-                              value={editCityForm.contact2_phone}
-                              onChange={(e) => { setEditCityForm({ ...editCityForm, contact2_phone: e.target.value }); setHasCityFormChanges(true) }}
-                              placeholder="השאר ריק להשתמש בפרטי מנהל"
-                              className="h-12 border-2 border-gray-200 rounded-xl focus:border-green-500 transition-colors"
-                            />
-                          </div>
+                          {!editCityForm.show_manager2_contact && (
+                            <div className="grid grid-cols-1 md:grid-cols-2 gap-3 mt-3 pt-3 border-t border-green-200">
+                              <div className="space-y-1">
+                                <label className="block text-sm text-gray-600">שם איש קשר חלופי</label>
+                                <Input
+                                  type="text"
+                                  value={editCityForm.override_manager2_name}
+                                  onChange={(e) => { setEditCityForm({ ...editCityForm, override_manager2_name: e.target.value }); setHasCityFormChanges(true) }}
+                                  placeholder="השאר ריק להסתיר לגמרי"
+                                  className="h-10 border-2 border-gray-200 rounded-lg focus:border-green-500 transition-colors"
+                                />
+                              </div>
+                              <div className="space-y-1">
+                                <label className="block text-sm text-gray-600">טלפון איש קשר חלופי</label>
+                                <Input
+                                  type="tel"
+                                  value={editCityForm.override_manager2_phone}
+                                  onChange={(e) => { setEditCityForm({ ...editCityForm, override_manager2_phone: e.target.value }); setHasCityFormChanges(true) }}
+                                  placeholder="השאר ריק להסתיר לגמרי"
+                                  className="h-10 border-2 border-gray-200 rounded-lg focus:border-green-500 transition-colors"
+                                />
+                              </div>
+                            </div>
+                          )}
                         </div>
                       </div>
 

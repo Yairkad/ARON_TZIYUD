@@ -620,12 +620,17 @@ export default function CityPage() {
           </div>
         </header>
 
-        {/* Contact Details - Use contact fields with fallback to manager fields */}
+        {/* Contact Details - Use show/override settings for each manager */}
         {(() => {
-          const contact1Name = city.contact1_name || city.manager1_name
-          const contact1Phone = city.contact1_phone || city.manager1_phone
-          const contact2Name = city.contact2_name || city.manager2_name
-          const contact2Phone = city.contact2_phone || city.manager2_phone
+          // Manager 1: show if toggle is true (default), or use override if toggle is false but override exists
+          const showManager1 = city.show_manager1_contact !== false
+          const contact1Name = showManager1 ? city.manager1_name : city.override_manager1_name
+          const contact1Phone = showManager1 ? city.manager1_phone : city.override_manager1_phone
+
+          // Manager 2: show if toggle is true (default), or use override if toggle is false but override exists
+          const showManager2 = city.show_manager2_contact !== false
+          const contact2Name = showManager2 ? city.manager2_name : city.override_manager2_name
+          const contact2Phone = showManager2 ? city.manager2_phone : city.override_manager2_phone
 
           if (!contact1Name && !contact2Name) return null
 
@@ -1756,12 +1761,17 @@ export default function CityPage() {
                 לבירורים ניתן לפנות למנהל הארון:
               </p>
 
-              {/* Contact Details - Use contact fields with fallback to manager fields */}
+              {/* Contact Details - Use show/override settings for each manager */}
               {(() => {
-                const contact1Name = city.contact1_name || city.manager1_name
-                const contact1Phone = city.contact1_phone || city.manager1_phone
-                const contact2Name = city.contact2_name || city.manager2_name
-                const contact2Phone = city.contact2_phone || city.manager2_phone
+                // Manager 1: show if toggle is true (default), or use override if toggle is false but override exists
+                const showManager1 = city.show_manager1_contact !== false
+                const contact1Name = showManager1 ? city.manager1_name : city.override_manager1_name
+                const contact1Phone = showManager1 ? city.manager1_phone : city.override_manager1_phone
+
+                // Manager 2: show if toggle is true (default), or use override if toggle is false but override exists
+                const showManager2 = city.show_manager2_contact !== false
+                const contact2Name = showManager2 ? city.manager2_name : city.override_manager2_name
+                const contact2Phone = showManager2 ? city.manager2_phone : city.override_manager2_phone
 
                 return (
                   <div className="space-y-3">

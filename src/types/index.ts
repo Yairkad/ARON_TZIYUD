@@ -6,11 +6,13 @@ export interface City {
   manager1_phone: string
   manager2_name?: string | null
   manager2_phone?: string | null
-  // Separate contact fields (shown to volunteers). Falls back to manager fields if null.
-  contact1_name?: string | null
-  contact1_phone?: string | null
-  contact2_name?: string | null
-  contact2_phone?: string | null
+  // Contact visibility settings - control what volunteers see
+  show_manager1_contact?: boolean  // Default true - show manager1 info to volunteers
+  override_manager1_name?: string | null  // Alternative name if show_manager1_contact is false
+  override_manager1_phone?: string | null  // Alternative phone if show_manager1_contact is false
+  show_manager2_contact?: boolean  // Default true - show manager2 info to volunteers
+  override_manager2_name?: string | null  // Alternative name if show_manager2_contact is false
+  override_manager2_phone?: string | null  // Alternative phone if show_manager2_contact is false
   location_url?: string | null
   token_location_url?: string | null
   location_image?: string | null  // Base64 encoded image

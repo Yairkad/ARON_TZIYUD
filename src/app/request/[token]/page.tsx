@@ -402,12 +402,17 @@ export default function RequestPage({ params }: { params: Promise<{ token: strin
         )}
 
 
-        {/* City Contact Info - Use contact fields with fallback to manager fields */}
+        {/* City Contact Info - Use show/override settings for each manager */}
         {request.city && (() => {
-          const contact1Name = request.city.contact1_name || request.city.manager1_name
-          const contact1Phone = request.city.contact1_phone || request.city.manager1_phone
-          const contact2Name = request.city.contact2_name || request.city.manager2_name
-          const contact2Phone = request.city.contact2_phone || request.city.manager2_phone
+          // Manager 1: show if toggle is true (default), or use override if toggle is false but override exists
+          const showManager1 = request.city.show_manager1_contact !== false
+          const contact1Name = showManager1 ? request.city.manager1_name : request.city.override_manager1_name
+          const contact1Phone = showManager1 ? request.city.manager1_phone : request.city.override_manager1_phone
+
+          // Manager 2: show if toggle is true (default), or use override if toggle is false but override exists
+          const showManager2 = request.city.show_manager2_contact !== false
+          const contact2Name = showManager2 ? request.city.manager2_name : request.city.override_manager2_name
+          const contact2Phone = showManager2 ? request.city.manager2_phone : request.city.override_manager2_phone
 
           if (!contact1Name && !contact2Name) return null
 
