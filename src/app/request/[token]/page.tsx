@@ -402,68 +402,79 @@ export default function RequestPage({ params }: { params: Promise<{ token: strin
         )}
 
 
-        {/* City Contact Info */}
-        {request.city && (
-          <div className="bg-white rounded-lg shadow-lg p-6">
-            <h2 className="text-lg font-bold text-gray-900 mb-4 text-center">📞 פרטי התקשרות</h2>
-            <div className="space-y-4">
-              <div className="bg-gray-50 rounded-lg p-4">
-                <p className="text-sm text-gray-600 mb-2">מנהל ראשי</p>
-                <div className="flex items-center justify-between mb-3">
-                  <div className="flex items-center gap-2">
-                    <span className="text-lg">👤</span>
-                    <span className="font-semibold text-gray-900">{request.city.manager1_name}</span>
-                  </div>
-                </div>
-                <div className="flex gap-2">
-                  <Button
-                    onClick={() => request.city && handleWhatsApp(request.city.manager1_phone)}
-                    className="flex-1 bg-green-500 hover:bg-green-600 text-white h-12 rounded-lg font-semibold text-base"
-                  >
-                    <MessageCircle className="h-5 w-5 ml-2 text-white" />
-                    WhatsApp
-                  </Button>
-                  <Button
-                    onClick={() => request.city && handleCall(request.city.manager1_phone)}
-                    className="flex-1 bg-blue-500 hover:bg-blue-600 text-white h-12 rounded-lg font-semibold text-base"
-                  >
-                    <Phone className="h-5 w-5 ml-2 text-white" />
-                    חייג
-                  </Button>
-                </div>
-                <p className="text-sm text-gray-600 mt-2 text-center" dir="ltr">{request.city.manager1_phone}</p>
-              </div>
-              {request.city.manager2_name && request.city.manager2_phone && (
-                <div className="bg-gray-50 rounded-lg p-4">
-                  <p className="text-sm text-gray-600 mb-2">מנהל משני</p>
-                  <div className="flex items-center justify-between mb-3">
-                    <div className="flex items-center gap-2">
-                      <span className="text-lg">👤</span>
-                      <span className="font-semibold text-gray-900">{request.city.manager2_name}</span>
+        {/* City Contact Info - Use contact fields with fallback to manager fields */}
+        {request.city && (() => {
+          const contact1Name = request.city.contact1_name || request.city.manager1_name
+          const contact1Phone = request.city.contact1_phone || request.city.manager1_phone
+          const contact2Name = request.city.contact2_name || request.city.manager2_name
+          const contact2Phone = request.city.contact2_phone || request.city.manager2_phone
+
+          if (!contact1Name && !contact2Name) return null
+
+          return (
+            <div className="bg-white rounded-lg shadow-lg p-6">
+              <h2 className="text-lg font-bold text-gray-900 mb-4 text-center">📞 פרטי התקשרות</h2>
+              <div className="space-y-4">
+                {contact1Name && contact1Phone && (
+                  <div className="bg-gray-50 rounded-lg p-4">
+                    <p className="text-sm text-gray-600 mb-2">איש קשר ראשי</p>
+                    <div className="flex items-center justify-between mb-3">
+                      <div className="flex items-center gap-2">
+                        <span className="text-lg">👤</span>
+                        <span className="font-semibold text-gray-900">{contact1Name}</span>
+                      </div>
                     </div>
+                    <div className="flex gap-2">
+                      <Button
+                        onClick={() => handleWhatsApp(contact1Phone)}
+                        className="flex-1 bg-green-500 hover:bg-green-600 text-white h-12 rounded-lg font-semibold text-base"
+                      >
+                        <MessageCircle className="h-5 w-5 ml-2 text-white" />
+                        WhatsApp
+                      </Button>
+                      <Button
+                        onClick={() => handleCall(contact1Phone)}
+                        className="flex-1 bg-blue-500 hover:bg-blue-600 text-white h-12 rounded-lg font-semibold text-base"
+                      >
+                        <Phone className="h-5 w-5 ml-2 text-white" />
+                        חייג
+                      </Button>
+                    </div>
+                    <p className="text-sm text-gray-600 mt-2 text-center" dir="ltr">{contact1Phone}</p>
                   </div>
-                  <div className="flex gap-2">
-                    <Button
-                      onClick={() => request.city?.manager2_phone && handleWhatsApp(request.city.manager2_phone)}
-                      className="flex-1 bg-green-500 hover:bg-green-600 text-white h-12 rounded-lg font-semibold text-base"
-                    >
-                      <MessageCircle className="h-5 w-5 ml-2 text-white" />
-                      WhatsApp
-                    </Button>
-                    <Button
-                      onClick={() => request.city?.manager2_phone && handleCall(request.city.manager2_phone)}
-                      className="flex-1 bg-blue-500 hover:bg-blue-600 text-white h-12 rounded-lg font-semibold text-base"
-                    >
-                      <Phone className="h-5 w-5 ml-2 text-white" />
-                      חייג
-                    </Button>
+                )}
+                {contact2Name && contact2Phone && (
+                  <div className="bg-gray-50 rounded-lg p-4">
+                    <p className="text-sm text-gray-600 mb-2">איש קשר משני</p>
+                    <div className="flex items-center justify-between mb-3">
+                      <div className="flex items-center gap-2">
+                        <span className="text-lg">👤</span>
+                        <span className="font-semibold text-gray-900">{contact2Name}</span>
+                      </div>
+                    </div>
+                    <div className="flex gap-2">
+                      <Button
+                        onClick={() => handleWhatsApp(contact2Phone)}
+                        className="flex-1 bg-green-500 hover:bg-green-600 text-white h-12 rounded-lg font-semibold text-base"
+                      >
+                        <MessageCircle className="h-5 w-5 ml-2 text-white" />
+                        WhatsApp
+                      </Button>
+                      <Button
+                        onClick={() => handleCall(contact2Phone)}
+                        className="flex-1 bg-blue-500 hover:bg-blue-600 text-white h-12 rounded-lg font-semibold text-base"
+                      >
+                        <Phone className="h-5 w-5 ml-2 text-white" />
+                        חייג
+                      </Button>
+                    </div>
+                    <p className="text-sm text-gray-600 mt-2 text-center" dir="ltr">{contact2Phone}</p>
                   </div>
-                  <p className="text-sm text-gray-600 mt-2 text-center" dir="ltr">{request.city.manager2_phone}</p>
-                </div>
-              )}
+                )}
+              </div>
             </div>
-          </div>
-        )}
+          )
+        })()}
       </div>
 
       {/* Confirmation Modal */}

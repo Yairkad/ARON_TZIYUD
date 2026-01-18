@@ -129,6 +129,10 @@ export default function CityAdminPage() {
     manager1_phone: '',
     manager2_name: '',
     manager2_phone: '',
+    contact1_name: '',
+    contact1_phone: '',
+    contact2_name: '',
+    contact2_phone: '',
     location_url: '',
     token_location_url: '',
     location_image: null as string | null,
@@ -370,6 +374,10 @@ export default function CityAdminPage() {
           manager1_phone: data.manager1_phone || '',
           manager2_name: data.manager2_name || '',
           manager2_phone: data.manager2_phone || '',
+          contact1_name: data.contact1_name || '',
+          contact1_phone: data.contact1_phone || '',
+          contact2_name: data.contact2_name || '',
+          contact2_phone: data.contact2_phone || '',
           location_url: data.location_url || '',
           token_location_url: data.token_location_url || '',
           location_image: data.location_image || null,
@@ -1101,6 +1109,10 @@ export default function CityAdminPage() {
           manager1_phone: editCityForm.manager1_phone.trim(),
           manager2_name: editCityForm.manager2_name.trim() || null,
           manager2_phone: editCityForm.manager2_phone.trim() || null,
+          contact1_name: editCityForm.contact1_name.trim() || null,
+          contact1_phone: editCityForm.contact1_phone.trim() || null,
+          contact2_name: editCityForm.contact2_name.trim() || null,
+          contact2_phone: editCityForm.contact2_phone.trim() || null,
           location_url: editCityForm.location_url.trim() || null,
           token_location_url: editCityForm.token_location_url?.trim() || null,
           location_image: editCityForm.location_image,
@@ -3307,6 +3319,58 @@ export default function CityAdminPage() {
                             />
                           </div>
                         </div>
+
+                      {/* Contact Person Settings - Shown to volunteers */}
+                      <div className="border-2 border-green-200 rounded-xl p-4 bg-green-50/50">
+                        <h3 className="text-lg font-bold text-gray-900 mb-4">👥 אנשי קשר למתנדבים</h3>
+                        <p className="text-sm text-gray-600 mb-4">
+                          אנשי קשר שיוצגו למתנדבים בדף הארון. אם לא מוגדר, יוצגו פרטי המנהלים.
+                        </p>
+                        <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                          {/* Contact 1 */}
+                          <div className="space-y-2">
+                            <label className="block text-sm font-semibold text-gray-700">👤 שם איש קשר ראשון</label>
+                            <Input
+                              type="text"
+                              value={editCityForm.contact1_name}
+                              onChange={(e) => { setEditCityForm({ ...editCityForm, contact1_name: e.target.value }); setHasCityFormChanges(true) }}
+                              placeholder="השאר ריק להשתמש בפרטי מנהל"
+                              className="h-12 border-2 border-gray-200 rounded-xl focus:border-green-500 transition-colors"
+                            />
+                          </div>
+                          <div className="space-y-2">
+                            <label className="block text-sm font-semibold text-gray-700">📞 טלפון איש קשר ראשון</label>
+                            <Input
+                              type="tel"
+                              value={editCityForm.contact1_phone}
+                              onChange={(e) => { setEditCityForm({ ...editCityForm, contact1_phone: e.target.value }); setHasCityFormChanges(true) }}
+                              placeholder="השאר ריק להשתמש בפרטי מנהל"
+                              className="h-12 border-2 border-gray-200 rounded-xl focus:border-green-500 transition-colors"
+                            />
+                          </div>
+                          {/* Contact 2 */}
+                          <div className="space-y-2">
+                            <label className="block text-sm font-semibold text-gray-700">👤 שם איש קשר שני</label>
+                            <Input
+                              type="text"
+                              value={editCityForm.contact2_name}
+                              onChange={(e) => { setEditCityForm({ ...editCityForm, contact2_name: e.target.value }); setHasCityFormChanges(true) }}
+                              placeholder="השאר ריק להשתמש בפרטי מנהל"
+                              className="h-12 border-2 border-gray-200 rounded-xl focus:border-green-500 transition-colors"
+                            />
+                          </div>
+                          <div className="space-y-2">
+                            <label className="block text-sm font-semibold text-gray-700">📞 טלפון איש קשר שני</label>
+                            <Input
+                              type="tel"
+                              value={editCityForm.contact2_phone}
+                              onChange={(e) => { setEditCityForm({ ...editCityForm, contact2_phone: e.target.value }); setHasCityFormChanges(true) }}
+                              placeholder="השאר ריק להשתמש בפרטי מנהל"
+                              className="h-12 border-2 border-gray-200 rounded-xl focus:border-green-500 transition-colors"
+                            />
+                          </div>
+                        </div>
+                      </div>
 
                       {/* Location Settings Section with Edit/Save Buttons */}
                       <div className="border-2 border-indigo-200 rounded-xl p-4 bg-indigo-50/50">

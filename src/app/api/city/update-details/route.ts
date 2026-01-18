@@ -16,6 +16,10 @@ export async function POST(request: NextRequest) {
       manager1_phone,
       manager2_name,
       manager2_phone,
+      contact1_name,
+      contact1_phone,
+      contact2_name,
+      contact2_phone,
       location_url,
       token_location_url,
       location_image,
@@ -102,6 +106,19 @@ export async function POST(request: NextRequest) {
     }
     if (manager2_phone !== undefined) {
       updateData.manager2_phone = manager2_phone ? manager2_phone.trim() : null
+    }
+    // Contact fields (shown to volunteers, fallback to manager if null)
+    if (contact1_name !== undefined) {
+      updateData.contact1_name = contact1_name ? contact1_name.trim() : null
+    }
+    if (contact1_phone !== undefined) {
+      updateData.contact1_phone = contact1_phone ? contact1_phone.trim() : null
+    }
+    if (contact2_name !== undefined) {
+      updateData.contact2_name = contact2_name ? contact2_name.trim() : null
+    }
+    if (contact2_phone !== undefined) {
+      updateData.contact2_phone = contact2_phone ? contact2_phone.trim() : null
     }
     if (location_url !== undefined) {
       updateData.location_url = location_url ? location_url.trim() : null

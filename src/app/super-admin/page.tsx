@@ -2037,6 +2037,24 @@ export default function SuperAdminPage() {
                                 </div>
                               </div>
                             )}
+                            {/* Contact persons - if different from managers */}
+                            {(city.contact1_name || city.contact2_name) && (
+                              <div className="mt-2 pt-2 border-t border-gray-100">
+                                <p className="text-xs text-gray-500 mb-1">אנשי קשר למתנדבים:</p>
+                                {city.contact1_name && city.contact1_phone && (
+                                  <div className="flex items-center gap-2 text-sm text-green-700">
+                                    <span>📞</span>
+                                    <span>{city.contact1_name} - {city.contact1_phone}</span>
+                                  </div>
+                                )}
+                                {city.contact2_name && city.contact2_phone && (
+                                  <div className="flex items-center gap-2 text-sm text-green-700">
+                                    <span>📞</span>
+                                    <span>{city.contact2_name} - {city.contact2_phone}</span>
+                                  </div>
+                                )}
+                              </div>
+                            )}
                             {/* Location Link */}
                             {city.location_url && (
                               <a

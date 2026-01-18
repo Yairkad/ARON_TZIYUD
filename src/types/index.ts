@@ -6,6 +6,11 @@ export interface City {
   manager1_phone: string
   manager2_name?: string | null
   manager2_phone?: string | null
+  // Separate contact fields (shown to volunteers). Falls back to manager fields if null.
+  contact1_name?: string | null
+  contact1_phone?: string | null
+  contact2_name?: string | null
+  contact2_phone?: string | null
   location_url?: string | null
   token_location_url?: string | null
   location_image?: string | null  // Base64 encoded image

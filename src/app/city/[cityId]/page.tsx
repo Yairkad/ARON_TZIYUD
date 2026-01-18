@@ -620,78 +620,87 @@ export default function CityPage() {
           </div>
         </header>
 
-        {/* Contact Details */}
-        {(city.manager1_name || city.manager2_name) && (
-          <Card className="mb-6 border-0 shadow-lg rounded-2xl overflow-hidden bg-gradient-to-br from-blue-50 to-indigo-50">
-            <CardContent className="p-4 sm:p-6">
-              <h3 className="text-lg font-semibold text-gray-800 mb-3 flex items-center gap-2">
-                <span className="text-xl">👥</span>
-                <span>צור קשר</span>
-              </h3>
-              <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
-                {/* Manager 1 */}
-                {city.manager1_name && city.manager1_phone && (
-                  <div className="flex items-center justify-between bg-white rounded-xl p-3 shadow-sm hover:shadow-md transition-shadow">
-                    <div className="flex items-center gap-2">
-                      <span className="text-2xl">👤</span>
-                      <span className="font-semibold text-gray-800">{city.manager1_name}</span>
-                    </div>
-                    <div className="flex gap-2">
-                      <Button
-                        onClick={() => handleWhatsApp(city.manager1_phone!)}
-                        variant="outline"
-                        size="sm"
-                        className="h-9 px-3 rounded-full hover:bg-green-50 text-green-600 border-green-200 transition-all duration-200 hover:scale-105"
-                        title="שלח הודעה בוואטסאפ"
-                      >
-                        <MessageCircle className="w-4 h-4" />
-                      </Button>
-                      <Button
-                        onClick={() => handleCall(city.manager1_phone!)}
-                        variant="outline"
-                        size="sm"
-                        className="h-9 px-3 rounded-full hover:bg-blue-50 text-blue-600 border-blue-200 transition-all duration-200 hover:scale-105"
-                        title="התקשר"
-                      >
-                        <Phone className="w-4 h-4" />
-                      </Button>
-                    </div>
-                  </div>
-                )}
+        {/* Contact Details - Use contact fields with fallback to manager fields */}
+        {(() => {
+          const contact1Name = city.contact1_name || city.manager1_name
+          const contact1Phone = city.contact1_phone || city.manager1_phone
+          const contact2Name = city.contact2_name || city.manager2_name
+          const contact2Phone = city.contact2_phone || city.manager2_phone
 
-                {/* Manager 2 */}
-                {city.manager2_name && city.manager2_phone && (
-                  <div className="flex items-center justify-between bg-white rounded-xl p-3 shadow-sm hover:shadow-md transition-shadow">
-                    <div className="flex items-center gap-2">
-                      <span className="text-2xl">👤</span>
-                      <span className="font-semibold text-gray-800">{city.manager2_name}</span>
+          if (!contact1Name && !contact2Name) return null
+
+          return (
+            <Card className="mb-6 border-0 shadow-lg rounded-2xl overflow-hidden bg-gradient-to-br from-blue-50 to-indigo-50">
+              <CardContent className="p-4 sm:p-6">
+                <h3 className="text-lg font-semibold text-gray-800 mb-3 flex items-center gap-2">
+                  <span className="text-xl">👥</span>
+                  <span>צור קשר</span>
+                </h3>
+                <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+                  {/* Contact 1 */}
+                  {contact1Name && contact1Phone && (
+                    <div className="flex items-center justify-between bg-white rounded-xl p-3 shadow-sm hover:shadow-md transition-shadow">
+                      <div className="flex items-center gap-2">
+                        <span className="text-2xl">👤</span>
+                        <span className="font-semibold text-gray-800">{contact1Name}</span>
+                      </div>
+                      <div className="flex gap-2">
+                        <Button
+                          onClick={() => handleWhatsApp(contact1Phone)}
+                          variant="outline"
+                          size="sm"
+                          className="h-9 px-3 rounded-full hover:bg-green-50 text-green-600 border-green-200 transition-all duration-200 hover:scale-105"
+                          title="שלח הודעה בוואטסאפ"
+                        >
+                          <MessageCircle className="w-4 h-4" />
+                        </Button>
+                        <Button
+                          onClick={() => handleCall(contact1Phone)}
+                          variant="outline"
+                          size="sm"
+                          className="h-9 px-3 rounded-full hover:bg-blue-50 text-blue-600 border-blue-200 transition-all duration-200 hover:scale-105"
+                          title="התקשר"
+                        >
+                          <Phone className="w-4 h-4" />
+                        </Button>
+                      </div>
                     </div>
-                    <div className="flex gap-2">
-                      <Button
-                        onClick={() => handleWhatsApp(city.manager2_phone!)}
-                        variant="outline"
-                        size="sm"
-                        className="h-9 px-3 rounded-full hover:bg-green-50 text-green-600 border-green-200 transition-all duration-200 hover:scale-105"
-                        title="שלח הודעה בוואטסאפ"
-                      >
-                        <MessageCircle className="w-4 h-4" />
-                      </Button>
-                      <Button
-                        onClick={() => handleCall(city.manager2_phone!)}
-                        variant="outline"
-                        size="sm"
-                        className="h-9 px-3 rounded-full hover:bg-blue-50 text-blue-600 border-blue-200 transition-all duration-200 hover:scale-105"
-                        title="התקשר"
-                      >
-                        <Phone className="w-4 h-4" />
-                      </Button>
+                  )}
+
+                  {/* Contact 2 */}
+                  {contact2Name && contact2Phone && (
+                    <div className="flex items-center justify-between bg-white rounded-xl p-3 shadow-sm hover:shadow-md transition-shadow">
+                      <div className="flex items-center gap-2">
+                        <span className="text-2xl">👤</span>
+                        <span className="font-semibold text-gray-800">{contact2Name}</span>
+                      </div>
+                      <div className="flex gap-2">
+                        <Button
+                          onClick={() => handleWhatsApp(contact2Phone)}
+                          variant="outline"
+                          size="sm"
+                          className="h-9 px-3 rounded-full hover:bg-green-50 text-green-600 border-green-200 transition-all duration-200 hover:scale-105"
+                          title="שלח הודעה בוואטסאפ"
+                        >
+                          <MessageCircle className="w-4 h-4" />
+                        </Button>
+                        <Button
+                          onClick={() => handleCall(contact2Phone)}
+                          variant="outline"
+                          size="sm"
+                          className="h-9 px-3 rounded-full hover:bg-blue-50 text-blue-600 border-blue-200 transition-all duration-200 hover:scale-105"
+                          title="התקשר"
+                        >
+                          <Phone className="w-4 h-4" />
+                        </Button>
+                      </div>
                     </div>
-                  </div>
-                )}
-              </div>
-            </CardContent>
-          </Card>
-        )}
+                  )}
+                </div>
+              </CardContent>
+            </Card>
+          )
+        })()}
 
         {/* Navigation Links - Separate Card */}
         {!city.hide_navigation && ((city.lat && city.lng) || city.location_url) && (
@@ -1747,52 +1756,61 @@ export default function CityPage() {
                 לבירורים ניתן לפנות למנהל הארון:
               </p>
 
-              {/* Manager Contacts */}
-              <div className="space-y-3">
-                {city.manager1_name && city.manager1_phone && (
-                  <div className="bg-blue-50 rounded-xl p-4 border-2 border-blue-200">
-                    <p className="font-bold text-gray-800 mb-3">{city.manager1_name}</p>
-                    <div className="flex gap-3 justify-center">
-                      <a
-                        href={`tel:${city.manager1_phone}`}
-                        className="flex items-center gap-2 bg-blue-500 hover:bg-blue-600 text-white font-semibold py-2 px-4 rounded-xl transition-colors"
-                      >
-                        <Phone className="w-4 h-4" />
-                        <span>התקשר</span>
-                      </a>
-                      <button
-                        onClick={() => handleWhatsApp(city.manager1_phone!)}
-                        className="flex items-center gap-2 bg-green-500 hover:bg-green-600 text-white font-semibold py-2 px-4 rounded-xl transition-colors"
-                      >
-                        <MessageCircle className="w-4 h-4" />
-                        <span>וואטסאפ</span>
-                      </button>
-                    </div>
-                  </div>
-                )}
+              {/* Contact Details - Use contact fields with fallback to manager fields */}
+              {(() => {
+                const contact1Name = city.contact1_name || city.manager1_name
+                const contact1Phone = city.contact1_phone || city.manager1_phone
+                const contact2Name = city.contact2_name || city.manager2_name
+                const contact2Phone = city.contact2_phone || city.manager2_phone
 
-                {city.manager2_name && city.manager2_phone && (
-                  <div className="bg-blue-50 rounded-xl p-4 border-2 border-blue-200">
-                    <p className="font-bold text-gray-800 mb-3">{city.manager2_name}</p>
-                    <div className="flex gap-3 justify-center">
-                      <a
-                        href={`tel:${city.manager2_phone}`}
-                        className="flex items-center gap-2 bg-blue-500 hover:bg-blue-600 text-white font-semibold py-2 px-4 rounded-xl transition-colors"
-                      >
-                        <Phone className="w-4 h-4" />
-                        <span>התקשר</span>
-                      </a>
-                      <button
-                        onClick={() => handleWhatsApp(city.manager2_phone!)}
-                        className="flex items-center gap-2 bg-green-500 hover:bg-green-600 text-white font-semibold py-2 px-4 rounded-xl transition-colors"
-                      >
-                        <MessageCircle className="w-4 h-4" />
-                        <span>וואטסאפ</span>
-                      </button>
-                    </div>
+                return (
+                  <div className="space-y-3">
+                    {contact1Name && contact1Phone && (
+                      <div className="bg-blue-50 rounded-xl p-4 border-2 border-blue-200">
+                        <p className="font-bold text-gray-800 mb-3">{contact1Name}</p>
+                        <div className="flex gap-3 justify-center">
+                          <a
+                            href={`tel:${contact1Phone}`}
+                            className="flex items-center gap-2 bg-blue-500 hover:bg-blue-600 text-white font-semibold py-2 px-4 rounded-xl transition-colors"
+                          >
+                            <Phone className="w-4 h-4" />
+                            <span>התקשר</span>
+                          </a>
+                          <button
+                            onClick={() => handleWhatsApp(contact1Phone)}
+                            className="flex items-center gap-2 bg-green-500 hover:bg-green-600 text-white font-semibold py-2 px-4 rounded-xl transition-colors"
+                          >
+                            <MessageCircle className="w-4 h-4" />
+                            <span>וואטסאפ</span>
+                          </button>
+                        </div>
+                      </div>
+                    )}
+
+                    {contact2Name && contact2Phone && (
+                      <div className="bg-blue-50 rounded-xl p-4 border-2 border-blue-200">
+                        <p className="font-bold text-gray-800 mb-3">{contact2Name}</p>
+                        <div className="flex gap-3 justify-center">
+                          <a
+                            href={`tel:${contact2Phone}`}
+                            className="flex items-center gap-2 bg-blue-500 hover:bg-blue-600 text-white font-semibold py-2 px-4 rounded-xl transition-colors"
+                          >
+                            <Phone className="w-4 h-4" />
+                            <span>התקשר</span>
+                          </a>
+                          <button
+                            onClick={() => handleWhatsApp(contact2Phone)}
+                            className="flex items-center gap-2 bg-green-500 hover:bg-green-600 text-white font-semibold py-2 px-4 rounded-xl transition-colors"
+                          >
+                            <MessageCircle className="w-4 h-4" />
+                            <span>וואטסאפ</span>
+                          </button>
+                        </div>
+                      </div>
+                    )}
                   </div>
-                )}
-              </div>
+                )
+              })()}
 
               {/* Back to Home Button */}
               <Link href="/" className="block mt-6">
