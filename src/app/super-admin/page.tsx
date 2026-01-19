@@ -2037,20 +2037,20 @@ export default function SuperAdminPage() {
                                 </div>
                               </div>
                             )}
-                            {/* Contact persons - if different from managers */}
-                            {(city.contact1_name || city.contact2_name) && (
+                            {/* Contact visibility info - show override contacts if managers are hidden */}
+                            {(city.show_manager1_contact === false || city.show_manager2_contact === false) && (
                               <div className="mt-2 pt-2 border-t border-gray-100">
-                                <p className="text-xs text-gray-500 mb-1">אנשי קשר למתנדבים:</p>
-                                {city.contact1_name && city.contact1_phone && (
-                                  <div className="flex items-center gap-2 text-sm text-green-700">
-                                    <span>📞</span>
-                                    <span>{city.contact1_name} - {city.contact1_phone}</span>
+                                <p className="text-xs text-gray-500 mb-1">הצגת אנשי קשר למתנדבים:</p>
+                                {city.show_manager1_contact === false && (
+                                  <div className="flex items-center gap-2 text-sm text-orange-700">
+                                    <span>👁️</span>
+                                    <span>מנהל 1 מוסתר{city.override_manager1_name ? ` (מוצג: ${city.override_manager1_name})` : ''}</span>
                                   </div>
                                 )}
-                                {city.contact2_name && city.contact2_phone && (
-                                  <div className="flex items-center gap-2 text-sm text-green-700">
-                                    <span>📞</span>
-                                    <span>{city.contact2_name} - {city.contact2_phone}</span>
+                                {city.show_manager2_contact === false && (
+                                  <div className="flex items-center gap-2 text-sm text-orange-700">
+                                    <span>👁️</span>
+                                    <span>מנהל 2 מוסתר{city.override_manager2_name ? ` (מוצג: ${city.override_manager2_name})` : ''}</span>
                                   </div>
                                 )}
                               </div>
