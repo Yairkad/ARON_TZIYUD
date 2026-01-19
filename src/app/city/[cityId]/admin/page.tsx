@@ -805,30 +805,29 @@ export default function CityAdminPage() {
   const handleUpdateHistoryStatus = async (id: string, status: 'borrowed' | 'returned') => {
     setLoading(true)
     try {
-      // Get the borrow record to find the equipment_id (now global_equipment_id)
-      const { data: borrowRecord, error: fetchError } = await supabase
-        .from('borrow_history')
-        .select('*, equipment_id, global_equipment_id')
-        .eq('id', id)
-        .single()
+      // Use API endpoint to update status (bypasses RLS)
+      const response = await fetch('/api/borrow-history/update-status', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          borrowId: id,
+          status,
+          isManagerAction: true
+        })
+      })
 
-      if (fetchError) throw fetchError
+      const result = await response.json()
 
-      const updateData: any = { status }
-      if (status === 'returned') {
-        updateData.return_date = new Date().toISOString()
+      if (!response.ok) {
+        throw new Error(result.error || 'שגיאה בעדכון הסטטוס')
       }
 
-      const { error } = await supabase
-        .from('borrow_history')
-        .update(updateData)
-        .eq('id', id)
-
-      if (error) throw error
-
       // Find the equipment in our local state - ID is global_equipment_id
-      const globalEquipmentId = borrowRecord.global_equipment_id || borrowRecord.equipment_id
+      const globalEquipmentId = result.globalEquipmentId
       const equipmentItem = equipment.find(eq => eq.id === globalEquipmentId || eq.global_equipment_id === globalEquipmentId)
+
+      // Get the previous status from the API response
+      const previousStatus = result.previousStatus
 
       // If status changed to 'returned', increment equipment quantity
       if (status === 'returned' && equipmentItem) {
@@ -846,7 +845,7 @@ export default function CityAdminPage() {
       }
 
       // If status changed to 'borrowed', decrement equipment quantity
-      if (status === 'borrowed' && equipmentItem && borrowRecord.status === 'returned') {
+      if (status === 'borrowed' && equipmentItem && previousStatus === 'returned') {
         if (equipmentItem.quantity > 0) {
           const response = await fetch('/api/city-equipment', {
             method: 'PUT',
@@ -876,36 +875,37 @@ export default function CityAdminPage() {
   const executeApproveReturn = async (id: string, approve: boolean) => {
     setLoading(true)
     try {
-      // Get the borrow record to find the equipment_id and status
-      const { data: borrowRecord, error: fetchError } = await supabase
-        .from('borrow_history')
-        .select('*, equipment_id, global_equipment_id')
-        .eq('id', id)
-        .single()
+      const newStatus = approve ? 'returned' : 'borrowed'
 
-      if (fetchError) throw fetchError
+      // Use API endpoint to update status (bypasses RLS)
+      const response = await fetch('/api/borrow-history/update-status', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          borrowId: id,
+          status: newStatus,
+          isManagerAction: true
+        })
+      })
 
-      if (borrowRecord.status !== 'pending_approval') {
-        toast.error('רשומה זו אינה ממתינה לאישור')
-        return
+      const result = await response.json()
+
+      if (!response.ok) {
+        if (result.error?.includes('אינה ממתינה')) {
+          toast.error('רשומה זו אינה ממתינה לאישור')
+          return
+        }
+        throw new Error(result.error || 'שגיאה בעדכון הסטטוס')
       }
 
       // Find the equipment in our local state
-      const globalEquipmentId = borrowRecord.global_equipment_id || borrowRecord.equipment_id
+      const globalEquipmentId = result.globalEquipmentId
       const equipmentItem = equipment.find(eq => eq.id === globalEquipmentId || eq.global_equipment_id === globalEquipmentId)
 
       if (approve) {
-        // Approve return - update status to 'returned' and restore quantity
-        const { error: updateError } = await supabase
-          .from('borrow_history')
-          .update({ status: 'returned' })
-          .eq('id', id)
-
-        if (updateError) throw updateError
-
         // Restore equipment quantity using city_equipment API
         if (equipmentItem) {
-          const response = await fetch('/api/city-equipment', {
+          const qtyResponse = await fetch('/api/city-equipment', {
             method: 'PUT',
             headers: { 'Content-Type': 'application/json' },
             body: JSON.stringify({
@@ -914,27 +914,13 @@ export default function CityAdminPage() {
             })
           })
 
-          if (!response.ok) {
+          if (!qtyResponse.ok) {
             console.error('Failed to update quantity')
           }
         }
 
         toast.success('ההחזרה אושרה והציוד חזר למלאי!')
       } else {
-        // Reject return - revert status back to 'borrowed'
-        const { error: updateError } = await supabase
-          .from('borrow_history')
-          .update({
-            status: 'borrowed',
-            return_date: null,
-            equipment_status: null,
-            return_image_url: null,
-            return_image_uploaded_at: null
-          })
-          .eq('id', id)
-
-        if (updateError) throw updateError
-
         toast.error('ההחזרה נדחתה. הציוד חזר למצב "מושאל".')
       }
 

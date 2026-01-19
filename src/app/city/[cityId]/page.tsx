@@ -301,13 +301,15 @@ export default function CityPage() {
 
     try {
       // Use API endpoint with service role to bypass RLS
-      const returnResponse = await fetch('/api/equipment/return', {
+      const returnResponse = await fetch('/api/borrow-history/update-status', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
           borrowId,
+          status: 'pending_approval',
           equipmentStatus,
-          faultyNotes: equipmentStatus === 'faulty' ? faultyNotes.trim() : undefined
+          faultyNotes: equipmentStatus === 'faulty' ? faultyNotes.trim() : undefined,
+          isManagerAction: false
         })
       })
 
