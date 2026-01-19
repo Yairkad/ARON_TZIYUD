@@ -88,8 +88,10 @@ export default function CityPage() {
       if (data.success && data.user) {
         if (data.user.role === 'super_admin') {
           setAdminUrl('/super-admin')
-        } else if (data.user.role === 'city_manager' && data.user.city_id) {
-          setAdminUrl(`/city/${data.user.city_id}/admin`)
+        } else if (data.user.role === 'city_manager') {
+          // Use current cityId from URL, not user's primary city_id
+          // This allows multi-city managers to return to the city they're viewing
+          setAdminUrl(`/city/${cityId}/admin`)
         } else {
           setAdminUrl(null)
         }
