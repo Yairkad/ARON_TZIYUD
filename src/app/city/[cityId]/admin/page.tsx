@@ -167,6 +167,7 @@ export default function CityAdminPage() {
   const [equipmentSearchQuery, setEquipmentSearchQuery] = useState('')
   const [currentUser, setCurrentUser] = useState<any>(null)
   const [managerRole, setManagerRole] = useState<'manager1' | 'manager2' | null>(null)
+  const [userManagedCities, setUserManagedCities] = useState<{id: string; name: string; role: string}[]>([])
   const [distanceSaveTimer, setDistanceSaveTimer] = useState<NodeJS.Timeout | null>(null)
   const [distanceSaveStatus, setDistanceSaveStatus] = useState<'idle' | 'saving' | 'saved' | 'error'>('idle')
   const [showAccountSettings, setShowAccountSettings] = useState(false)
@@ -579,6 +580,7 @@ export default function CityAdminPage() {
               setIsAuthenticated(true)
               setCurrentUser(user)
               setManagerRole(cityData.role) // Save manager1 or manager2
+              setUserManagedCities(managedCities) // Save all managed cities for switcher
             } else {
               console.log('❌ Access denied - user does not manage this city', { authenticated, userType, cityId, managedCities })
               setCurrentUser(null)
@@ -1451,6 +1453,29 @@ export default function CityAdminPage() {
                 <div className="mt-3 inline-block bg-white/20 px-4 py-1.5 rounded-full text-sm">
                   🏙️ {city?.name} • {managerRole === 'manager1' ? 'מנהל ראשי' : 'מנהל משני'}
                 </div>
+                {/* City Switcher - only show if managing multiple cities */}
+                {userManagedCities.length > 1 && (
+                  <div className="mt-4">
+                    <div className="text-xs opacity-75 mb-2">מעבר לעיר אחרת:</div>
+                    <div className="flex flex-wrap justify-center gap-2">
+                      {userManagedCities
+                        .filter(c => c.id !== cityId)
+                        .map(c => (
+                          <button
+                            key={c.id}
+                            onClick={() => {
+                              setShowProfileDropdown(false)
+                              router.push(`/city/${c.id}/admin`)
+                            }}
+                            className="bg-white/30 hover:bg-white/40 px-3 py-1.5 rounded-lg text-sm font-medium transition-all hover:scale-105"
+                          >
+                            🏙️ {c.name}
+                          </button>
+                        ))
+                      }
+                    </div>
+                  </div>
+                )}
               </div>
               {/* Profile Actions - Larger buttons for desktop */}
               <div className="p-3 sm:p-4">
