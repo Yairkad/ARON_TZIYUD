@@ -300,23 +300,21 @@ export default function CityPage() {
     setLoading(true)
 
     try {
-      const updateData: any = {
-        status: 'pending_approval',
-        return_date: new Date().toISOString(),
-        equipment_status: equipmentStatus
+      // Use API endpoint with service role to bypass RLS
+      const returnResponse = await fetch('/api/equipment/return', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          borrowId,
+          equipmentStatus,
+          faultyNotes: equipmentStatus === 'faulty' ? faultyNotes.trim() : undefined
+        })
+      })
+
+      if (!returnResponse.ok) {
+        const errorData = await returnResponse.json()
+        throw new Error(errorData.error || 'שגיאה בעדכון רשומת ההחזרה')
       }
-
-      // Add notes if equipment is faulty
-      if (equipmentStatus === 'faulty') {
-        updateData.faulty_notes = faultyNotes.trim()
-      }
-
-      const { error: updateError } = await supabase
-        .from('borrow_history')
-        .update(updateData)
-        .eq('id', borrowId)
-
-      if (updateError) throw updateError
 
       // Upload return image (only if provided)
       if (returnImage) {

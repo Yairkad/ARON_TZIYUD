@@ -29,23 +29,39 @@ async function createAuthClient() {
 // GET - Fetch all global equipment
 export async function GET(request: Request) {
   try {
-    const supabase = await createAuthClient()
+    const authClient = await createAuthClient()
     const { searchParams } = new URL(request.url)
     const status = searchParams.get('status') // 'active', 'pending_approval', 'archived'
     const includeCategories = searchParams.get('includeCategories') === 'true'
 
     // Check authentication
-    const { data: { user } } = await supabase.auth.getUser()
+    const { data: { user } } = await authClient.auth.getUser()
     if (!user) {
       return NextResponse.json({ error: 'לא מורשה' }, { status: 401 })
     }
 
     // Get user role
-    const { data: userData } = await supabase
+    const { data: userData } = await authClient
       .from('users')
       .select('role')
       .eq('id', user.id)
       .single()
+
+    const isSuperAdmin = userData?.role === 'super_admin'
+
+    // For pending_approval or archived, only super admin can view
+    if ((status === 'pending_approval' || status === 'archived') && !isSuperAdmin) {
+      return NextResponse.json({ error: 'אין הרשאה' }, { status: 403 })
+    }
+
+    // Use service role client for pending/archived queries to bypass RLS
+    // (we've already verified the user is super_admin above)
+    const supabase = (status === 'pending_approval' || status === 'archived')
+      ? createClient(
+          process.env.NEXT_PUBLIC_SUPABASE_URL!,
+          process.env.SUPABASE_SERVICE_ROLE_KEY!
+        )
+      : authClient
 
     // Build select query - include creator info for pending items
     let selectQuery = includeCategories
@@ -69,7 +85,7 @@ export async function GET(request: Request) {
       query = query.eq('status', status)
     } else {
       // Non-super admins can only see active equipment
-      if (userData?.role !== 'super_admin') {
+      if (!isSuperAdmin) {
         query = query.eq('status', 'active')
       }
     }
@@ -118,11 +134,18 @@ export async function POST(request: Request) {
     }
 
     // Check if equipment with same name already exists
-    const { data: existing } = await supabase
+    // Use service role to check ALL equipment (including pending/archived) to bypass RLS
+    const checkClient = createClient(
+      process.env.NEXT_PUBLIC_SUPABASE_URL!,
+      process.env.SUPABASE_SERVICE_ROLE_KEY!
+    )
+
+    const { data: existingItems } = await checkClient
       .from('global_equipment_pool')
       .select('id, name, status')
       .ilike('name', name.trim())
-      .single()
+
+    const existing = existingItems && existingItems.length > 0 ? existingItems[0] : null
 
     if (existing) {
       if (existing.status === 'archived') {
