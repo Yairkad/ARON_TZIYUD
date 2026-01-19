@@ -2468,7 +2468,7 @@ export default function CityAdminPage() {
                               <div className="flex gap-2">
                                 <Button
                                   onClick={() => handleApproveReturn(item.id, true)}
-                                  disabled={loading || !canEdit}
+                                  disabled={loading || !canApprove}
                                   className="flex-1 bg-green-500 hover:bg-green-600 text-white font-semibold"
                                   size="sm"
                                 >
@@ -2476,7 +2476,7 @@ export default function CityAdminPage() {
                                 </Button>
                                 <Button
                                   onClick={() => handleApproveReturn(item.id, false)}
-                                  disabled={loading || !canEdit}
+                                  disabled={loading || !canApprove}
                                   className="flex-1 bg-red-500 hover:bg-red-600 text-white font-semibold"
                                   size="sm"
                                 >
