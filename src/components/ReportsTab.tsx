@@ -21,8 +21,8 @@ const exportToExcel = (stats: StatisticsData, cityName: string) => {
 
   // Requests section
   csv += 'בקשות\n'
-  csv += 'סה"כ בקשות,אושרו,נדחו,ממתינות,אחוז אישור\n'
-  csv += `${stats.requests.total},${stats.requests.approved},${stats.requests.rejected},${stats.requests.active},${stats.requests.approvalRate}%\n\n`
+  csv += 'סה"כ בקשות,אושרו,נדחו,לא נאספו,ממתינות,אחוז אישור\n'
+  csv += `${stats.requests.total},${stats.requests.approved},${stats.requests.rejected},${stats.requests.notCollected || 0},${stats.requests.active},${stats.requests.approvalRate}%\n\n`
 
   // Inventory section
   csv += 'מלאי\n'
@@ -107,6 +107,7 @@ interface StatisticsData {
     approved: number
     rejected: number
     active: number
+    notCollected: number
     approvalRate: number
   }
   topBorrowedItems: { name: string; count: number }[]
@@ -364,7 +365,7 @@ export default function ReportsTab({ cityId, cityName }: ReportsTabProps) {
           </CardTitle>
         </CardHeader>
         <CardContent className="p-6">
-          <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
+          <div className="grid grid-cols-2 md:grid-cols-5 gap-4">
             <div className="text-center p-4 bg-gray-50 rounded-xl">
               <div className="text-2xl font-bold text-gray-700">{stats.requests.total}</div>
               <div className="text-xs text-gray-500">סה"כ בקשות</div>
@@ -376,6 +377,10 @@ export default function ReportsTab({ cityId, cityName }: ReportsTabProps) {
             <div className="text-center p-4 bg-red-50 rounded-xl">
               <div className="text-2xl font-bold text-red-600">{stats.requests.rejected}</div>
               <div className="text-xs text-red-600">נדחו</div>
+            </div>
+            <div className="text-center p-4 bg-orange-50 rounded-xl">
+              <div className="text-2xl font-bold text-orange-600">{stats.requests.notCollected || 0}</div>
+              <div className="text-xs text-orange-600">לא נאספו</div>
             </div>
             <div className="text-center p-4 bg-amber-50 rounded-xl">
               <div className="text-2xl font-bold text-amber-600">{stats.requests.active}</div>

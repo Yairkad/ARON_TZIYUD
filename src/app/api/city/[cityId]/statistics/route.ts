@@ -103,6 +103,7 @@ export async function GET(request: NextRequest, { params }: StatisticsParams) {
     const approvedRequests = requestsData?.filter(r => r.status === 'approved' || r.status === 'picked_up').length || 0
     const rejectedRequests = requestsData?.filter(r => r.status === 'rejected').length || 0
     const activeRequests = requestsData?.filter(r => r.status === 'pending').length || 0
+    const notCollectedRequests = requestsData?.filter(r => r.status === 'cancelled' || r.status === 'expired').length || 0
 
     // === EQUIPMENT STATUS ===
     // Low stock items (only consumables)
@@ -246,6 +247,7 @@ export async function GET(request: NextRequest, { params }: StatisticsParams) {
         approved: approvedRequests,
         rejected: rejectedRequests,
         active: activeRequests,
+        notCollected: notCollectedRequests,
         approvalRate: totalRequests > 0 ? Math.round((approvedRequests / totalRequests) * 100) : 0
       },
       topBorrowedItems,
