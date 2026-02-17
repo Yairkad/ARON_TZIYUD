@@ -35,13 +35,6 @@ export async function requireAuth(
     accessToken = request.cookies.get('sb-access-token')?.value || null
   }
 
-  console.log('🔐 Auth check:', {
-    hasAuthHeader: !!authHeader,
-    hasCookie: !!request.cookies.get('sb-access-token'),
-    hasToken: !!accessToken,
-    url: request.url
-  })
-
   if (!accessToken) {
     return {
       user: null,
