@@ -73,10 +73,10 @@ async function expandAndExtractCoords(url: string): Promise<{ lat: number; lng: 
     let urlToProcess = url
 
     if (isShortUrl) {
-      // Expand the short URL by following redirects
+      // Expand the short URL by following redirects (GET works more reliably than HEAD)
       try {
         const response = await fetch(url, {
-          method: 'HEAD',
+          method: 'GET',
           redirect: 'follow',
           headers: {
             'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36'

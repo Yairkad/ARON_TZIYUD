@@ -42,6 +42,8 @@ export default function SuperAdminPage() {
   const [cityFilter, setCityFilter] = useState<'all' | 'active' | 'inactive'>('all')
   const [citySearchQuery, setCitySearchQuery] = useState('')
   const [expandedCities, setExpandedCities] = useState<Set<string>>(new Set())
+  const [fillCoordsLoading, setFillCoordsLoading] = useState(false)
+  const [fillCoordsResult, setFillCoordsResult] = useState<{ updated: number; noData: number; details: { name: string; result: string }[] } | null>(null)
 
   // Refs for scrolling to forms
   const addCityFormRef = useRef<HTMLDivElement>(null)
@@ -579,6 +581,7 @@ export default function SuperAdminPage() {
           manager2_name: editingCity.manager2_name || null,
           manager2_phone: editingCity.manager2_phone || null,
           location_url: editingCity.location_url || null,
+          token_location_url: editingCity.token_location_url || null,
           is_active: editingCity.is_active
         }),
       })
@@ -598,6 +601,34 @@ export default function SuperAdminPage() {
       toast.error('אירעה שגיאה בעדכון העיר')
     } finally {
       setLoading(false)
+    }
+  }
+
+  const handleFillCoordinates = async () => {
+    if (!canEdit) {
+      toast.error('אין לך הרשאה לבצע פעולה זו')
+      return
+    }
+    setFillCoordsLoading(true)
+    setFillCoordsResult(null)
+    try {
+      const response = await fetch('/api/super-admin/fill-coordinates', { method: 'POST' })
+      const data = await response.json()
+      if (!response.ok) {
+        toast.error(data.error || 'שגיאה במילוי הקואורדינטות')
+        return
+      }
+      setFillCoordsResult(data)
+      if (data.updated > 0) {
+        toast.success(`עודכנו ${data.updated} ערים בהצלחה!`)
+        fetchCities()
+      } else {
+        toast('לא נמצאו ערים לעדכון')
+      }
+    } catch (error) {
+      toast.error('אירעה שגיאה')
+    } finally {
+      setFillCoordsLoading(false)
     }
   }
 
@@ -1917,6 +1948,33 @@ export default function SuperAdminPage() {
               </Button>
             </div>
 
+            {/* Batch fill coordinates */}
+            {canEdit && (
+              <div className="mb-4">
+                <Button
+                  onClick={handleFillCoordinates}
+                  disabled={fillCoordsLoading}
+                  className="w-full bg-gradient-to-r from-teal-500 to-cyan-600 hover:from-teal-600 hover:to-cyan-700 text-white h-10"
+                >
+                  {fillCoordsLoading ? '⏳ מעדכן קואורדינטות...' : '🌍 מלא קואורדינטות חסרות אוטומטית'}
+                </Button>
+                {fillCoordsResult && (
+                  <div className="mt-3 p-3 bg-gray-50 rounded-xl border border-gray-200 text-sm space-y-1">
+                    <div className="font-semibold text-gray-700">
+                      סה״כ {fillCoordsResult.updated + fillCoordsResult.noData} ערים ללא קואורדינטות —
+                      עודכנו: {fillCoordsResult.updated} | ללא נתונים: {fillCoordsResult.noData}
+                    </div>
+                    {fillCoordsResult.details.map((d, i) => (
+                      <div key={i} className="text-gray-600 flex gap-2">
+                        <span className="font-medium">{d.name}:</span>
+                        <span>{d.result}</span>
+                      </div>
+                    ))}
+                  </div>
+                )}
+              </div>
+            )}
+
             <div className="space-y-3">
               {filteredCities.map(city => (
                 <div key={city.id} className={`${expandedCities.has(city.id) ? 'p-4' : 'p-3'} rounded-xl border-2 transition-all ${city.is_active ? 'bg-gradient-to-r from-blue-50 to-indigo-50 border-blue-200' : 'bg-gray-100 border-gray-300'}`}>
@@ -1974,7 +2032,15 @@ export default function SuperAdminPage() {
                             type="url"
                             value={editingCity.location_url || ''}
                             onChange={(e) => setEditingCity({ ...editingCity, location_url: e.target.value })}
-                            placeholder="📍 קישור Google Maps (אופציונלי)"
+                            placeholder="📍 קישור מיקום ציבורי (אופציונלי)"
+                          />
+                        </div>
+                        <div className="md:col-span-2">
+                          <Input
+                            type="url"
+                            value={editingCity.token_location_url || ''}
+                            onChange={(e) => setEditingCity({ ...editingCity, token_location_url: e.target.value })}
+                            placeholder="🔒 קישור Google Maps מדויק — ימלא קואורדינטות אוטומטית"
                           />
                         </div>
                       </div>
