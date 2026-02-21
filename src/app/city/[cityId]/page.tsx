@@ -199,16 +199,21 @@ export default function CityPage() {
 
     try {
       // Process each selected item
+      let successCount = 0
+      let failCount = 0
+
       for (const itemId of Array.from(selectedItems)) {
         const selectedEquipment = equipment.find(eq => eq.id === itemId)
 
         if (!selectedEquipment || selectedEquipment.quantity <= 0) {
           console.error(`Equipment ${itemId} not available`)
+          failCount++
           continue
         }
 
         if (selectedEquipment.equipment_status === 'faulty') {
           console.error(`Equipment ${itemId} is faulty`)
+          failCount++
           continue
         }
 
@@ -233,6 +238,8 @@ export default function CityPage() {
 
         if (borrowError) {
           console.error('Error creating borrow record:', borrowError)
+          toast.error(`שגיאה בהשאלת ${selectedEquipment.name}`)
+          failCount++
           continue
         }
 
@@ -245,9 +252,18 @@ export default function CityPage() {
         if (updateError) {
           console.error('Error updating equipment quantity:', updateError)
         }
+
+        successCount++
       }
 
-      toast.success('הציוד הושאל בהצלחה!')
+      if (successCount > 0 && failCount === 0) {
+        toast.success('הציוד הושאל בהצלחה!')
+      } else if (successCount > 0 && failCount > 0) {
+        toast.error(`חלק מהפריטים לא הושאלו (${successCount} הצליחו, ${failCount} נכשלו)`)
+      } else {
+        toast.error('השאלה נכשלה — אנא נסה שוב')
+        return
+      }
       setBorrowForm({ name: '', phone: '', equipment_id: '' })
       setEquipmentSearch('')
       setSelectedItems(new Set())
