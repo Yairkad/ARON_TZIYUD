@@ -1,7 +1,7 @@
 'use client'
 
 import { useEffect, useState } from 'react'
-import { MapContainer, TileLayer, Circle, Popup, useMap } from 'react-leaflet'
+import { MapContainer, TileLayer, Circle, Marker, Popup, useMap } from 'react-leaflet'
 import 'leaflet/dist/leaflet.css'
 import L from 'leaflet'
 import { useRouter } from 'next/navigation'
@@ -295,34 +295,21 @@ export default function CabinetsMap({ onCabinetClick }: CabinetsMapProps) {
 
             {/* User location marker */}
             {userLocation && (
-              <>
-                <Circle
-                  center={userLocation}
-                  radius={80}
-                  pathOptions={{
-                    color: '#0ea5e9',
-                    fillColor: '#e0f2fe',
-                    fillOpacity: 0.3,
-                    weight: 0
-                  }}
-                />
-                <Circle
-                  center={userLocation}
-                  radius={20}
-                  pathOptions={{
-                    color: '#0284c7',
-                    fillColor: '#0ea5e9',
-                    fillOpacity: 1,
-                    weight: 3
-                  }}
-                >
-                  <Popup>
-                    <div className="text-center py-1">
-                      <div className="text-sm font-medium text-sky-600">📍 אתה נמצא כאן</div>
-                    </div>
-                  </Popup>
-                </Circle>
-              </>
+              <Marker
+                position={userLocation}
+                icon={L.divIcon({
+                  html: '<div style="font-size:32px;line-height:1;filter:drop-shadow(0 1px 2px rgba(0,0,0,0.4))">📍</div>',
+                  className: '',
+                  iconAnchor: [16, 32],
+                  popupAnchor: [0, -34],
+                })}
+              >
+                <Popup>
+                  <div className="text-center py-1">
+                    <div className="text-sm font-medium text-sky-600">📍 אתה נמצא כאן</div>
+                  </div>
+                </Popup>
+              </Marker>
             )}
 
             {/* Cabinet circles */}
