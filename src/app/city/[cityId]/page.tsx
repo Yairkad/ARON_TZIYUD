@@ -198,71 +198,56 @@ export default function CityPage() {
     setLoading(true)
 
     try {
-      // Process each selected item
-      let successCount = 0
-      let failCount = 0
+      // Build items list for API (validate client-side first)
+      const itemsToSend = Array.from(selectedItems).flatMap(itemId => {
+        const eq = equipment.find(e => e.id === itemId)
+        if (!eq || eq.quantity <= 0 || eq.equipment_status === 'faulty') return []
+        return [{
+          equipment_id: itemId,
+          city_equipment_id: eq.city_equipment_id,
+          equipment_name: eq.name,
+          quantity: eq.is_consumable ? (itemQuantities[itemId] || 1) : 1,
+          is_consumable: eq.is_consumable,
+        }]
+      })
 
-      for (const itemId of Array.from(selectedItems)) {
-        const selectedEquipment = equipment.find(eq => eq.id === itemId)
+      if (itemsToSend.length === 0) {
+        toast.error('לא נמצאו פריטים זמינים להשאלה')
+        return
+      }
 
-        if (!selectedEquipment || selectedEquipment.quantity <= 0) {
-          console.error(`Equipment ${itemId} not available`)
-          failCount++
-          continue
-        }
+      const response = await fetch('/api/direct-borrow', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          name: borrowForm.name,
+          phone: borrowForm.phone,
+          city_id: cityId,
+          items: itemsToSend,
+        }),
+      })
 
-        if (selectedEquipment.equipment_status === 'faulty') {
-          console.error(`Equipment ${itemId} is faulty`)
-          failCount++
-          continue
-        }
+      const data = await response.json()
 
-        const quantityToTake = selectedEquipment.is_consumable ? (itemQuantities[itemId] || 1) : 1
-        const isConsumable = selectedEquipment.is_consumable
-        const borrowStatus = isConsumable ? 'returned' : 'borrowed'
-        const returnDate = isConsumable ? new Date().toISOString() : null
+      if (!response.ok) {
+        toast.error(data.error || 'השאלה נכשלה — אנא נסה שוב')
+        return
+      }
 
-        // Create borrow history record
-        const { error: borrowError } = await supabase
-          .from('borrow_history')
-          .insert({
-            name: borrowForm.name,
-            phone: borrowForm.phone,
-            equipment_id: itemId,
-            equipment_name: selectedEquipment.name,
-            city_id: cityId,
-            status: borrowStatus,
-            return_date: returnDate,
-            quantity: quantityToTake
-          })
+      const { successCount, failCount, results } = data
 
-        if (borrowError) {
-          console.error('Error creating borrow record:', borrowError)
-          toast.error(`שגיאה בהשאלת ${selectedEquipment.name}`)
-          failCount++
-          continue
-        }
+      if (failCount > 0) {
+        const failedNames = results.filter((r: any) => !r.success).map((r: any) => r.name).join(', ')
+        toast.error(`חלק מהפריטים לא הושאלו: ${failedNames}`)
+      }
 
-        // Update equipment quantity in city_equipment table
-        const { error: updateError } = await supabase
-          .from('city_equipment')
-          .update({ quantity: selectedEquipment.quantity - quantityToTake })
-          .eq('id', selectedEquipment.city_equipment_id)
-
-        if (updateError) {
-          console.error('Error updating equipment quantity:', updateError)
-        }
-
-        successCount++
+      if (successCount === 0) {
+        toast.error('השאלה נכשלה — אנא נסה שוב')
+        return
       }
 
       if (successCount > 0 && failCount === 0) {
         toast.success('הציוד הושאל בהצלחה!')
-      } else if (successCount > 0 && failCount > 0) {
-        toast.error(`חלק מהפריטים לא הושאלו (${successCount} הצליחו, ${failCount} נכשלו)`)
-      } else {
-        toast.error('השאלה נכשלה — אנא נסה שוב')
-        return
       }
       setBorrowForm({ name: '', phone: '', equipment_id: '' })
       setEquipmentSearch('')
