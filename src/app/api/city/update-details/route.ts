@@ -2,6 +2,39 @@ import { NextRequest, NextResponse } from 'next/server'
 import { createServiceClient } from '@/lib/supabase-server'
 import { requireFullAccess } from '@/lib/auth-middleware'
 
+function extractCoordinatesFromUrl(url: string): { lat: number; lng: number } | null {
+  if (!url) return null
+  try {
+    const p1 = /@(-?\d+\.?\d*),(-?\d+\.?\d*),/.exec(url)
+    if (p1) return { lat: parseFloat(p1[1]), lng: parseFloat(p1[2]) }
+    const p2 = /[?&]q=(-?\d+\.?\d*),(-?\d+\.?\d*)/.exec(url)
+    if (p2) return { lat: parseFloat(p2[1]), lng: parseFloat(p2[2]) }
+    const p3 = /\/place\/[^/]+\/@(-?\d+\.?\d*),(-?\d+\.?\d*)/.exec(url)
+    if (p3) return { lat: parseFloat(p3[1]), lng: parseFloat(p3[2]) }
+    const p4 = /[?&]ll=(-?\d+\.?\d*),(-?\d+\.?\d*)/.exec(url)
+    if (p4) return { lat: parseFloat(p4[1]), lng: parseFloat(p4[2]) }
+    // Pattern 5: !3d{lat}!4d{lng} (Google Maps data format after redirect)
+    const p5 = /!3d(-?\d+\.?\d*).*?!4d(-?\d+\.?\d*)/.exec(url)
+    if (p5) return { lat: parseFloat(p5[1]), lng: parseFloat(p5[2]) }
+    return null
+  } catch { return null }
+}
+
+async function expandAndExtractCoords(url: string): Promise<{ lat: number; lng: number } | null> {
+  if (!url) return null
+  try {
+    const isShortUrl = url.includes('maps.app.goo.gl') || url.includes('goo.gl/maps') || url.includes('app.goo.gl')
+    let urlToProcess = url
+    if (isShortUrl) {
+      try {
+        const res = await fetch(url, { method: 'GET', redirect: 'follow', headers: { 'User-Agent': 'Mozilla/5.0' } })
+        urlToProcess = res.url
+      } catch { /* fall through */ }
+    }
+    return extractCoordinatesFromUrl(urlToProcess)
+  } catch { return null }
+}
+
 export async function POST(request: NextRequest) {
   const supabase = createServiceClient()
   try {
@@ -135,6 +168,17 @@ export async function POST(request: NextRequest) {
     // הוספת שדות אופציונליים רק אם הם סופקו
     if (token_location_url !== undefined) {
       updateData.token_location_url = token_location_url && typeof token_location_url === 'string' ? token_location_url.trim() : null
+
+      // אם לא סופקו קואורדינטות ידנית — שלוף אוטומטית מה-URL
+      if (token_location_url && token_lat === undefined && token_lng === undefined) {
+        const coords = await expandAndExtractCoords(token_location_url)
+        if (coords) {
+          updateData.token_lat = coords.lat
+          updateData.token_lng = coords.lng
+          updateData.public_lat = coords.lat
+          updateData.public_lng = coords.lng
+        }
+      }
     }
     if (location_image !== undefined) {
       updateData.location_image = location_image && typeof location_image === 'string' ? location_image : null

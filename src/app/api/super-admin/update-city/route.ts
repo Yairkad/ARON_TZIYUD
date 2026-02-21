@@ -36,6 +36,13 @@ function extractCoordinatesFromUrl(url: string): { lat: number; lng: number } | 
       return { lat: parseFloat(match4[1]), lng: parseFloat(match4[2]) }
     }
 
+    // Pattern 5: !3d{lat}!4d{lng} (Google Maps data format after redirect)
+    const pattern5 = /!3d(-?\d+\.?\d*).*?!4d(-?\d+\.?\d*)/
+    const match5 = url.match(pattern5)
+    if (match5) {
+      return { lat: parseFloat(match5[1]), lng: parseFloat(match5[2]) }
+    }
+
     return null
   } catch (error) {
     console.error('Error extracting coordinates:', error)
