@@ -66,7 +66,7 @@ export async function POST(request: NextRequest) {
     // Get all active cities missing public coords
     const { data: cities, error } = await supabaseServer
       .from('cities')
-      .select('id, name, token_lat, token_lng, token_location_url, public_lat, public_lng')
+      .select('id, name, token_lat, token_lng, token_location_url, location_url, public_lat, public_lng')
       .eq('is_active', true)
       .or('public_lat.is.null,public_lng.is.null')
 
@@ -95,9 +95,10 @@ export async function POST(request: NextRequest) {
         continue
       }
 
-      // Case 2: no token coords but has token_location_url → try to extract
-      if (city.token_location_url) {
-        const coords = await expandAndExtractCoords(city.token_location_url)
+      // Case 2: no token coords but has token_location_url or location_url → try to extract
+      const urlToTry = city.token_location_url || city.location_url
+      if (urlToTry) {
+        const coords = await expandAndExtractCoords(urlToTry)
         if (coords) {
           const { error: updateError } = await supabaseServer
             .from('cities')

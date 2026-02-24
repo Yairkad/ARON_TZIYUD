@@ -120,11 +120,12 @@ export async function POST(request: NextRequest) {
       )
     }
 
-    // Try to extract coordinates from token_location_url
+    // Try to extract coordinates from token_location_url, fallback to location_url
     let coordsUpdate: { token_lat?: number; token_lng?: number; public_lat?: number; public_lng?: number } = {}
 
-    if (token_location_url) {
-      const coords = await expandAndExtractCoords(token_location_url)
+    const urlToExtract = token_location_url || location_url
+    if (urlToExtract) {
+      const coords = await expandAndExtractCoords(urlToExtract)
       if (coords) {
         coordsUpdate = {
           token_lat: coords.lat,
@@ -132,7 +133,7 @@ export async function POST(request: NextRequest) {
           public_lat: coords.lat,
           public_lng: coords.lng,
         }
-        console.log(`Extracted coordinates from token_location_url: ${coords.lat}, ${coords.lng}`)
+        console.log(`Extracted coordinates from URL: ${coords.lat}, ${coords.lng}`)
       }
     }
 

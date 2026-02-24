@@ -158,21 +158,21 @@ export async function POST(request: NextRequest) {
       )
     }
 
-    // Try to extract coordinates from token_location_url for map display
+    // Try to extract coordinates from token_location_url, fallback to location_url
     let token_lat: number | null = null
     let token_lng: number | null = null
     let public_lat: number | null = null
     let public_lng: number | null = null
 
-    if (token_location_url) {
-      const coords = await expandAndExtractCoords(token_location_url)
+    const urlToExtract = token_location_url || location_url
+    if (urlToExtract) {
+      const coords = await expandAndExtractCoords(urlToExtract)
       if (coords) {
         token_lat = coords.lat
         token_lng = coords.lng
-        // Also set public coordinates for map display
         public_lat = coords.lat
         public_lng = coords.lng
-        console.log(`Extracted coordinates from token_location_url: ${token_lat}, ${token_lng}`)
+        console.log(`Extracted coordinates from URL: ${token_lat}, ${token_lng}`)
       }
     }
 
