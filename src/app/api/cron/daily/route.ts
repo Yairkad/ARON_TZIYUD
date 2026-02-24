@@ -127,15 +127,16 @@ interface AlertSummary {
 async function processDailyAlerts(now: Date): Promise<AlertSummary> {
   const alertDetails: any[] = []
 
-  // Get all active cities with their managers
+  // Get all active cities with their managers (email via users join)
   const { data: cities, error: citiesError } = await supabase
     .from('cities')
     .select(`
       id,
       name,
       manager1_name,
-      manager_email,
-      manager1_phone
+      manager1_user_id,
+      manager1_phone,
+      manager:users!manager1_user_id(email)
     `)
     .eq('is_active', true)
 
@@ -150,7 +151,8 @@ async function processDailyAlerts(now: Date): Promise<AlertSummary> {
   }
 
   for (const city of cities) {
-    if (!city.manager_email) {
+    const managerEmail = (city.manager as any)?.email
+    if (!managerEmail) {
       alertDetails.push({
         city: city.name,
         status: 'skipped',
@@ -159,11 +161,13 @@ async function processDailyAlerts(now: Date): Promise<AlertSummary> {
       continue
     }
 
+    const cityWithEmail = { ...city, manager_email: managerEmail }
+
     // Process low stock alerts
-    await processLowStockAlerts(city, alertDetails, now)
+    await processLowStockAlerts(cityWithEmail, alertDetails, now)
 
     // Process faulty equipment alerts
-    await processFaultyEquipmentAlerts(city, alertDetails, now)
+    await processFaultyEquipmentAlerts(cityWithEmail, alertDetails, now)
   }
 
   return {
@@ -260,7 +264,8 @@ async function processLowStockAlerts(city: any, results: any[], now: Date) {
               city_id: city.id,
               alert_type: 'low_stock',
               reference_id: item.global_equipment_id,
-              reference_name: (item.global_equipment as any)?.name
+              reference_name: (item.global_equipment as any)?.name,
+              last_alert_at: now.toISOString()
             })
         }
 
@@ -348,21 +353,17 @@ async function processLowStockAlerts(city: any, results: any[], now: Date) {
 
 async function processFaultyEquipmentAlerts(city: any, results: any[], now: Date) {
   try {
-    const threeWeeksAgo = new Date(now)
-    threeWeeksAgo.setDate(threeWeeksAgo.getDate() - FAULTY_DAYS_THRESHOLD)
-
+    // Get ALL currently faulty equipment (no updated_at filter — updated_at resets on any row update)
     const { data: faultyItems, error: faultyError } = await supabase
       .from('city_equipment')
       .select(`
         id,
         global_equipment_id,
         equipment_status,
-        updated_at,
         global_equipment:global_equipment_pool(id, name)
       `)
       .eq('city_id', city.id)
       .eq('equipment_status', 'faulty')
-      .lte('updated_at', threeWeeksAgo.toISOString())
 
     if (faultyError || !faultyItems || faultyItems.length === 0) {
       if (!faultyError) {
@@ -385,29 +386,54 @@ async function processFaultyEquipmentAlerts(city: any, results: any[], now: Date
 
     const alertMap = new Map(existingAlerts?.map(a => [a.reference_id, a]) || [])
 
-    const newAlertItems: any[] = []
+    const newlyDetectedItems: any[] = []  // first time seen — just register, no email
+    const initialAlertItems: any[] = []   // registered >= 21 days ago, no email sent yet
     const followUpItems: any[] = []
 
     for (const item of faultyItems) {
       const equipmentId = item.global_equipment_id
       const existingAlert = alertMap.get(equipmentId)
 
-      const faultyDate = new Date(item.updated_at)
-      const faultyDays = Math.floor((now.getTime() - faultyDate.getTime()) / (1000 * 60 * 60 * 24))
-
       if (!existingAlert) {
-        newAlertItems.push({ ...item, faultyDays })
+        // First time we see this as faulty — register it, don't email yet
+        newlyDetectedItems.push(item)
       } else {
-        const lastAlertDate = new Date(existingAlert.last_alert_at)
-        const daysSinceAlert = Math.floor((now.getTime() - lastAlertDate.getTime()) / (1000 * 60 * 60 * 24))
+        const faultyDays = Math.floor(
+          (now.getTime() - new Date(existingAlert.created_at).getTime()) / (1000 * 60 * 60 * 24)
+        )
 
-        if (daysSinceAlert >= FOLLOW_UP_DAYS) {
-          followUpItems.push({ ...item, alertId: existingAlert.id, faultyDays })
+        if (!existingAlert.last_alert_at) {
+          // Registered but no email sent yet — send initial alert if >= threshold days
+          if (faultyDays >= FAULTY_DAYS_THRESHOLD) {
+            initialAlertItems.push({ ...item, alertId: existingAlert.id, faultyDays })
+          }
+        } else {
+          // Already alerted — check if follow-up is due
+          const daysSinceLastAlert = Math.floor(
+            (now.getTime() - new Date(existingAlert.last_alert_at).getTime()) / (1000 * 60 * 60 * 24)
+          )
+          if (daysSinceLastAlert >= FOLLOW_UP_DAYS) {
+            followUpItems.push({ ...item, alertId: existingAlert.id, faultyDays })
+          }
         }
       }
 
       alertMap.delete(equipmentId)
     }
+
+    // Register newly detected faulty items (start the clock, no email)
+    for (const item of newlyDetectedItems) {
+      await supabase
+        .from('alert_tracking')
+        .insert({
+          city_id: city.id,
+          alert_type: 'faulty_equipment',
+          reference_id: item.global_equipment_id,
+          reference_name: (item.global_equipment as any)?.name
+        })
+    }
+
+    const newAlertItems = initialAlertItems  // renamed for clarity below
 
     for (const [, alert] of alertMap) {
       await supabase
@@ -433,14 +459,11 @@ async function processFaultyEquipmentAlerts(city: any, results: any[], now: Date
 
       if (emailResult.success) {
         for (const item of newAlertItems) {
+          // Update the existing alert_tracking record — set last_alert_at to mark email was sent
           await supabase
             .from('alert_tracking')
-            .insert({
-              city_id: city.id,
-              alert_type: 'faulty_equipment',
-              reference_id: item.global_equipment_id,
-              reference_name: (item.global_equipment as any)?.name
-            })
+            .update({ last_alert_at: now.toISOString() })
+            .eq('id', item.alertId)
         }
 
         await logEmail({
@@ -553,7 +576,8 @@ async function processMonthlyReports(now: Date): Promise<ReportSummary> {
       id,
       name,
       manager1_name,
-      manager_email
+      manager1_user_id,
+      manager:users!manager1_user_id(email)
     `)
     .eq('is_active', true)
 
@@ -568,7 +592,8 @@ async function processMonthlyReports(now: Date): Promise<ReportSummary> {
   }
 
   for (const city of cities) {
-    if (!city.manager_email) {
+    const managerEmail = (city.manager as any)?.email
+    if (!managerEmail) {
       reportDetails.push({
         city: city.name,
         status: 'skipped',
@@ -581,7 +606,7 @@ async function processMonthlyReports(now: Date): Promise<ReportSummary> {
       const reportData = await collectCityStats(city.id, city.name, lastMonth, lastMonthEnd, now)
 
       const emailResult = await sendMonthlyReportEmail(
-        city.manager_email,
+        managerEmail,
         city.manager1_name || 'מנהל',
         {
           ...reportData,
@@ -592,7 +617,7 @@ async function processMonthlyReports(now: Date): Promise<ReportSummary> {
 
       if (emailResult.success) {
         await logEmail({
-          recipientEmail: city.manager_email,
+          recipientEmail: managerEmail,
           recipientName: city.manager1_name,
           emailType: 'other',
           subject: `📊 דוח חודשי - ${city.name}`,
