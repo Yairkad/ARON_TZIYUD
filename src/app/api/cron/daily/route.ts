@@ -181,16 +181,21 @@ async function processDailyAlerts(now: Date): Promise<AlertSummary> {
 
 async function processLowStockAlerts(city: any, results: any[], now: Date) {
   try {
-    const { data: lowStockItems, error: stockError } = await supabase
+    const { data: rawStockItems, error: stockError } = await supabase
       .from('city_equipment')
       .select(`
         id,
         quantity,
         global_equipment_id,
-        global_equipment:global_equipment_pool(id, name)
+        global_equipment:global_equipment_pool(id, name, is_consumable)
       `)
       .eq('city_id', city.id)
       .lte('quantity', LOW_STOCK_THRESHOLD)
+
+    // Only alert on consumable items
+    const lowStockItems = rawStockItems?.filter(
+      item => (item.global_equipment as any)?.is_consumable === true
+    )
 
     if (stockError || !lowStockItems || lowStockItems.length === 0) {
       if (!stockError) {
