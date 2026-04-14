@@ -159,6 +159,10 @@ export default function GlobalEquipmentPage() {
       ])
 
       setEquipment(activeData.equipment || [])
+      if (!pendingResponse.ok || pendingData.error) {
+        console.error('Error fetching pending equipment:', pendingData.error)
+        toast.error('שגיאה בטעינת ציוד ממתין לאישור: ' + (pendingData.error || pendingResponse.status))
+      }
       setPendingEquipment(pendingData.equipment || [])
     } catch (error) {
       console.error('Error fetching equipment:', error)

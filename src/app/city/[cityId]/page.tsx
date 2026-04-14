@@ -132,38 +132,29 @@ export default function CityPage() {
   }, [])
 
   const fetchEquipment = async () => {
-    const { data, error } = await supabase
-      .from('city_equipment')
-      .select(`
-        *,
-        global_equipment:global_equipment_pool!inner(
-          *,
-          category:equipment_categories(*)
-        )
-      `)
-      .eq('city_id', cityId)
-      .order('display_order')
-
-    if (error) {
-      console.error('Error fetching equipment:', error)
-    } else {
-      // Flatten the structure for compatibility with existing code
-      const flattenedData = (data || []).map((item: any) => ({
-        // Use global equipment ID as primary ID (for selection and history)
-        id: item.global_equipment.id,
-        // Keep city equipment ID for quantity updates
-        city_equipment_id: item.id,
-        // Override with city-specific data
-        quantity: item.quantity,
-        display_order: item.display_order,
-        equipment_status: item.equipment_status || 'working',
-        // Spread all global equipment data
-        ...item.global_equipment,
-        // Preserve category
-        category: item.global_equipment.category
-      }))
-      setEquipment(flattenedData)
+    // Use API endpoint (service role) to bypass RLS for public access
+    const response = await fetch(`/api/city-equipment?cityId=${cityId}`)
+    if (!response.ok) {
+      console.error('Error fetching equipment:', response.statusText)
+      return
     }
+    const { equipment: data } = await response.json()
+    // Flatten the structure for compatibility with existing code
+    const flattenedData = (data || []).map((item: any) => ({
+      // Use global equipment ID as primary ID (for selection and history)
+      id: item.global_equipment.id,
+      // Keep city equipment ID for quantity updates
+      city_equipment_id: item.id,
+      // Override with city-specific data
+      quantity: item.quantity,
+      display_order: item.display_order,
+      equipment_status: item.equipment_status || 'working',
+      // Spread all global equipment data
+      ...item.global_equipment,
+      // Preserve category
+      category: item.global_equipment.category
+    }))
+    setEquipment(flattenedData)
   }
 
   // === DIRECT MODE FUNCTIONS ===
