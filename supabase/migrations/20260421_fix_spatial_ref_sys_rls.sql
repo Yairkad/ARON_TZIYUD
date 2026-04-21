@@ -1,16 +1,12 @@
 -- ============================================================================
--- Fix: Enable RLS on spatial_ref_sys (PostGIS system table)
+-- Fix: Restrict access to spatial_ref_sys (PostGIS system table)
 -- Created: 2026-04-21
 -- Description:
---   spatial_ref_sys is a PostGIS reference table exposed in the public schema
---   without RLS, triggering a Supabase security linter ERROR.
---   It contains only public coordinate system data (EPSG codes) — no sensitive
---   info. We enable RLS with a permissive SELECT so behaviour is unchanged.
+--   spatial_ref_sys is owned by the PostGIS extension — we cannot ALTER TABLE
+--   or enable RLS on it. Instead, revoke direct SELECT from anon/authenticated
+--   roles so it is not exposed via the PostgREST API.
+--   The app only accesses PostGIS functionality server-side via service_role,
+--   so this has no effect on functionality.
 -- ============================================================================
 
-ALTER TABLE public.spatial_ref_sys ENABLE ROW LEVEL SECURITY;
-
-CREATE POLICY "public_read_spatial_ref_sys"
-  ON public.spatial_ref_sys
-  FOR SELECT
-  USING (true);
+REVOKE SELECT ON public.spatial_ref_sys FROM anon, authenticated;
