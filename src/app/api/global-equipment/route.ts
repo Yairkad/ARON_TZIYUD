@@ -40,8 +40,12 @@ export async function GET(request: Request) {
       return NextResponse.json({ error: 'לא מורשה' }, { status: 401 })
     }
 
-    // Get user role
-    const { data: userData } = await authClient
+    // Get user role using service client to bypass RLS on users table
+    const serviceClient = createClient(
+      process.env.NEXT_PUBLIC_SUPABASE_URL!,
+      process.env.SUPABASE_SERVICE_ROLE_KEY!
+    )
+    const { data: userData } = await serviceClient
       .from('users')
       .select('role')
       .eq('id', user.id)
@@ -54,14 +58,12 @@ export async function GET(request: Request) {
       return NextResponse.json({ error: 'אין הרשאה' }, { status: 403 })
     }
 
-    // Use service role client for pending/archived queries to bypass RLS
-    // (we've already verified the user is super_admin above)
-    const supabase = (status === 'pending_approval' || status === 'archived')
-      ? createClient(
-          process.env.NEXT_PUBLIC_SUPABASE_URL!,
-          process.env.SUPABASE_SERVICE_ROLE_KEY!
-        )
-      : authClient
+    // Use service role client for all queries to bypass RLS on global_equipment_pool
+    // (auth and permissions are already verified above)
+    const supabase = createClient(
+      process.env.NEXT_PUBLIC_SUPABASE_URL!,
+      process.env.SUPABASE_SERVICE_ROLE_KEY!
+    )
 
     // Build select query - include creator info for pending items
     let selectQuery = includeCategories
@@ -239,7 +241,11 @@ export async function PUT(request: Request) {
       return NextResponse.json({ error: 'לא מורשה' }, { status: 401 })
     }
 
-    const { data: userData } = await supabase
+    const putServiceClient = createClient(
+      process.env.NEXT_PUBLIC_SUPABASE_URL!,
+      process.env.SUPABASE_SERVICE_ROLE_KEY!
+    )
+    const { data: userData } = await putServiceClient
       .from('users')
       .select('role, city_id, permissions')
       .eq('id', user.id)
@@ -346,7 +352,11 @@ export async function DELETE(request: Request) {
       return NextResponse.json({ error: 'לא מורשה' }, { status: 401 })
     }
 
-    const { data: userData } = await authClient
+    const deleteServiceClient = createClient(
+      process.env.NEXT_PUBLIC_SUPABASE_URL!,
+      process.env.SUPABASE_SERVICE_ROLE_KEY!
+    )
+    const { data: userData } = await deleteServiceClient
       .from('users')
       .select('role')
       .eq('id', user.id)
