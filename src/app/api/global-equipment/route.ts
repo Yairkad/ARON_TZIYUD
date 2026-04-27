@@ -65,17 +65,10 @@ export async function GET(request: Request) {
       process.env.SUPABASE_SERVICE_ROLE_KEY!
     )
 
-    // Build select query - include creator info for pending items
-    let selectQuery = includeCategories
+    // Build select query
+    const selectQuery = includeCategories
       ? '*, category:equipment_categories(*)'
       : '*'
-
-    // For pending items, also include creator's city info
-    if (status === 'pending_approval') {
-      selectQuery = includeCategories
-        ? '*, category:equipment_categories(*), creator:users!created_by(id, full_name, city_id, city:cities!city_id(id, name))'
-        : '*, creator:users!created_by(id, full_name, city_id, city:cities!city_id(id, name))'
-    }
 
     let query = supabase
       .from('global_equipment_pool')
@@ -86,7 +79,6 @@ export async function GET(request: Request) {
     if (status) {
       query = query.eq('status', status)
     } else {
-      // Non-super admins can only see active equipment
       if (!isSuperAdmin) {
         query = query.eq('status', 'active')
       }
@@ -97,6 +89,26 @@ export async function GET(request: Request) {
     if (error) {
       console.error('Error fetching global equipment:', error)
       return NextResponse.json({ error: error.message }, { status: 500 })
+    }
+
+    // For pending items, enrich with creator info via separate query
+    // (no FK defined between global_equipment_pool.created_by and public.users)
+    if (status === 'pending_approval' && equipment && equipment.length > 0) {
+      const creatorIds = [...new Set(equipment.map((e: any) => e.created_by).filter(Boolean))]
+
+      if (creatorIds.length > 0) {
+        const { data: creators } = await supabase
+          .from('users')
+          .select('id, full_name, city_id, city:cities!city_id(id, name)')
+          .in('id', creatorIds)
+
+        const creatorMap = Object.fromEntries((creators || []).map((c: any) => [c.id, c]))
+        const enriched = equipment.map((e: any) => ({
+          ...e,
+          creator: creatorMap[e.created_by] || null
+        }))
+        return NextResponse.json({ equipment: enriched })
+      }
     }
 
     return NextResponse.json({ equipment })
