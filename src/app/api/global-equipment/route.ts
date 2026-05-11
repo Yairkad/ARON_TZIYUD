@@ -91,6 +91,8 @@ export async function GET(request: Request) {
       return NextResponse.json({ error: error.message }, { status: 500 })
     }
 
+    console.log(`[global-equipment GET] status=${status} found=${equipment?.length ?? 0} isSuperAdmin=${isSuperAdmin}`)
+
     // For pending items, enrich with creator info via separate query
     // (no FK defined between global_equipment_pool.created_by and public.users)
     if (status === 'pending_approval' && equipment && equipment.length > 0) {
