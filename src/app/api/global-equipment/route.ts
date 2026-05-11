@@ -136,8 +136,12 @@ export async function POST(request: Request) {
       return NextResponse.json({ error: 'לא מורשה' }, { status: 401 })
     }
 
-    // Get user role and permissions
-    const { data: userData } = await supabase
+    // Get user role and permissions using service client to bypass RLS
+    const postServiceClient = createClient(
+      process.env.NEXT_PUBLIC_SUPABASE_URL!,
+      process.env.SUPABASE_SERVICE_ROLE_KEY!
+    )
+    const { data: userData } = await postServiceClient
       .from('users')
       .select('role, permissions')
       .eq('id', user.id)
@@ -280,14 +284,24 @@ export async function PUT(request: Request) {
       return NextResponse.json({ error: 'מנהל עיר יכול לעדכן רק תמונה של ציוד' }, { status: 403 })
     }
 
-    // For city managers, verify they have this equipment in their city
+    // For city managers, verify they manage a city that has this equipment
     if (!isSuperAdmin) {
-      const { data: cityEquipment } = await supabase
+      const { data: managedCities } = await putServiceClient
+        .from('cities')
+        .select('id')
+        .or(`manager1_user_id.eq.${user.id},manager2_user_id.eq.${user.id}`)
+
+      const cityIds = (managedCities || []).map((c: any) => c.id)
+      if (cityIds.length === 0) {
+        return NextResponse.json({ error: 'אין לך הרשאה לעדכן ציוד זה' }, { status: 403 })
+      }
+
+      const { data: cityEquipment } = await putServiceClient
         .from('city_equipment')
         .select('id')
-        .eq('city_id', userData.city_id)
+        .in('city_id', cityIds)
         .eq('global_equipment_id', id)
-        .single()
+        .maybeSingle()
 
       if (!cityEquipment) {
         return NextResponse.json({ error: 'אין לך הרשאה לעדכן ציוד זה - הוא לא קיים בעיר שלך' }, { status: 403 })
@@ -313,8 +327,8 @@ export async function PUT(request: Request) {
     // Update equipment
     const updateData: any = { updated_at: new Date().toISOString() }
     if (name !== undefined && isSuperAdmin) updateData.name = name.trim()
-    if (image_url !== undefined) updateData.image_url = image_url
-    if (category_id !== undefined && isSuperAdmin) updateData.category_id = category_id
+    if (image_url !== undefined) updateData.image_url = image_url || null
+    if (category_id !== undefined && isSuperAdmin) updateData.category_id = category_id || null
 
     // Use service client for database operations
     const updateClient = createClient(
