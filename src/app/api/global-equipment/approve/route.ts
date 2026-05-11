@@ -66,7 +66,7 @@ export async function POST(request: Request) {
       return NextResponse.json({ error: 'לא מורשה' }, { status: 401 })
     }
 
-    const { data: userData } = await supabase
+    const { data: userData } = await serviceClient
       .from('users')
       .select('role')
       .eq('id', user.id)
