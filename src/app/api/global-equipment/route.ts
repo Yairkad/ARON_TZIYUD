@@ -213,7 +213,8 @@ export async function POST(request: Request) {
     // Send push notification to super admins if pending approval
     if (status === 'pending_approval') {
       try {
-        await fetch(`${process.env.NEXT_PUBLIC_APP_URL || 'http://localhost:3000'}/api/push/send-to-super-admins`, {
+        const origin = new URL(request.url).origin
+        await fetch(`${origin}/api/push/send-to-super-admins`, {
           method: 'POST',
           headers: { 'Content-Type': 'application/json' },
           body: JSON.stringify({
