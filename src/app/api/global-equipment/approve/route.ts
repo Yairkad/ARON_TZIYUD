@@ -76,16 +76,28 @@ export async function POST(request: Request) {
       return NextResponse.json({ error: 'רק מנהל ראשי יכול לאשר/לדחות פריטים' }, { status: 403 })
     }
 
-    // Get equipment details with creator info
+    // Get equipment details
     const { data: equipment } = await serviceClient
       .from('global_equipment_pool')
-      .select('*, creator:users!created_by(id, full_name, email, city_id, city:cities!city_id(id, name, manager1_user_id, manager2_user_id))')
+      .select('*')
       .eq('id', equipmentId)
       .single()
 
     if (!equipment) {
       return NextResponse.json({ error: 'פריט לא נמצא' }, { status: 404 })
     }
+
+    // Fetch creator info separately (no FK to public.users defined in PostgREST)
+    let creator: any = null
+    if (equipment.created_by) {
+      const { data: creatorData } = await serviceClient
+        .from('users')
+        .select('id, full_name, email, city_id, city:cities!city_id(id, name, manager1_user_id, manager2_user_id)')
+        .eq('id', equipment.created_by)
+        .single()
+      creator = creatorData
+    }
+    const equipmentWithCreator = { ...equipment, creator }
 
     if (equipment.status !== 'pending_approval') {
       return NextResponse.json({ error: 'פריט זה לא ממתין לאישור' }, { status: 400 })
@@ -107,9 +119,9 @@ export async function POST(request: Request) {
       }
 
       // Notify the city manager who requested it
-      if (equipment.creator?.city_id) {
+      if (equipmentWithCreator.creator?.city_id) {
         await serviceClient.from('admin_notifications').insert({
-          city_id: equipment.creator.city_id,
+          city_id: equipmentWithCreator.creator.city_id,
           message: `✅ הבקשה להוספת "${equipment.name}" למאגר אושרה! הפריט זמין כעת במאגר הגלובלי.`,
           is_read: false
         })
@@ -133,7 +145,7 @@ export async function POST(request: Request) {
       }
 
       // Check if the city already has the target equipment
-      const cityId = equipment.creator?.city_id
+      const cityId = equipmentWithCreator.creator?.city_id
       if (cityId) {
         const { data: existingCityEquipment } = await serviceClient
           .from('city_equipment')
@@ -175,10 +187,10 @@ export async function POST(request: Request) {
       // Reject - delete from pool and notify
 
       // Notify the city manager who requested it
-      if (equipment.creator?.city_id) {
+      if (equipmentWithCreator.creator?.city_id) {
         const reasonText = rejectReason ? `\nסיבה: ${rejectReason}` : ''
         await serviceClient.from('admin_notifications').insert({
-          city_id: equipment.creator.city_id,
+          city_id: equipmentWithCreator.creator.city_id,
           message: `❌ הבקשה להוספת "${equipment.name}" למאגר נדחתה.${reasonText}`,
           is_read: false
         })
