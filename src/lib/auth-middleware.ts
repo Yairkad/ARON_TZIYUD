@@ -35,7 +35,9 @@ export async function requireAuth(
     accessToken = request.cookies.get('sb-access-token')?.value || null
   }
 
-  if (!accessToken) {
+  const refreshToken = request.cookies.get('sb-refresh-token')?.value || null
+
+  if (!accessToken && !refreshToken) {
     return {
       user: null,
       error: NextResponse.json(
@@ -45,7 +47,24 @@ export async function requireAuth(
     }
   }
 
-  const profile = await getCurrentUserProfile(accessToken)
+  let profile = accessToken ? await getCurrentUserProfile(accessToken) : null
+
+  // If access token is expired/invalid and we have a refresh token, try refreshing
+  if (!profile && refreshToken) {
+    try {
+      const { createServiceClient } = await import('./supabase-server')
+      const supabase = createServiceClient()
+      const { data: refreshData, error: refreshError } = await supabase.auth.refreshSession({
+        refresh_token: refreshToken
+      })
+
+      if (!refreshError && refreshData.session) {
+        profile = await getCurrentUserProfile(refreshData.session.access_token)
+      }
+    } catch (err) {
+      console.error('Token refresh failed in requireAuth:', err)
+    }
+  }
 
   if (!profile) {
     return {

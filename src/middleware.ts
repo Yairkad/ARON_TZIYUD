@@ -113,5 +113,6 @@ export const config = {
     '/api/city/:path*',
     '/api/super-admin/:path*',
     '/api/admin/:path*',
+    '/api/requests/:path*',
   ],
 }

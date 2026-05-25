@@ -41,33 +41,27 @@ export const supabaseServer = createServiceClient()
 
 // Helper to get current user profile
 export async function getCurrentUserProfile(accessToken?: string) {
-  let supabase
+  const serviceClient = createServiceClient()
+
+  let userId: string | null = null
 
   if (accessToken) {
-    // Use access token for authentication (middleware pattern)
-    supabase = createClient(
-      process.env.NEXT_PUBLIC_SUPABASE_URL!,
-      process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!,
-      {
-        global: {
-          headers: {
-            Authorization: `Bearer ${accessToken}`
-          }
-        }
-      }
-    )
+    // Validate the JWT explicitly using the service client
+    const { data: { user }, error } = await serviceClient.auth.getUser(accessToken)
+    if (error || !user) return null
+    userId = user.id
   } else {
-    // Use cookies for authentication (route handler pattern)
-    supabase = await createServerClient()
+    // Fall back to cookies
+    const supabase = await createServerClient()
+    const { data: { user } } = await supabase.auth.getUser()
+    if (!user) return null
+    userId = user.id
   }
 
-  const { data: { user } } = await supabase.auth.getUser()
-  if (!user) return null
-
-  const { data: userData } = await supabase
+  const { data: userData } = await serviceClient
     .from('users')
     .select('*')
-    .eq('id', user.id)
+    .eq('id', userId)
     .single()
 
   return userData
