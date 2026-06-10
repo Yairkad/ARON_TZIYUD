@@ -147,22 +147,19 @@ export async function requireCityManager(
   }
 
   // City managers can access cities they manage
-  // Check if user is manager of this specific city
   if (user?.role === 'city_manager') {
     const { createServiceClient } = await import('./supabase-server')
     const supabase = createServiceClient()
 
-    const { data: city, error: cityError } = await supabase
-      .from('cities')
-      .select('manager1_user_id, manager2_user_id')
-      .eq('id', cityId)
-      .single()
+    const { data: assignment } = await supabase
+      .from('city_manager_assignments')
+      .select('id')
+      .eq('city_id', cityId)
+      .eq('user_id', user.id)
+      .maybeSingle()
 
-    if (!cityError && city) {
-      // Check if user is manager1 or manager2 of this city
-      if (city.manager1_user_id === user.id || city.manager2_user_id === user.id) {
-        return { user, error: null }
-      }
+    if (assignment) {
+      return { user, error: null }
     }
   }
 
@@ -232,13 +229,14 @@ export async function requireFullAccess(
     const { createServiceClient } = await import('./supabase-server')
     const supabase = createServiceClient()
 
-    const { data: city, error: cityError } = await supabase
-      .from('cities')
-      .select('manager1_user_id, manager2_user_id')
-      .eq('id', cityId)
-      .single()
+    const { data: assignment, error: assignError } = await supabase
+      .from('city_manager_assignments')
+      .select('id')
+      .eq('city_id', cityId)
+      .eq('user_id', user.id)
+      .maybeSingle()
 
-    if (cityError || !city) {
+    if (assignError) {
       return {
         user: null,
         error: NextResponse.json(
@@ -248,8 +246,7 @@ export async function requireFullAccess(
       }
     }
 
-    // Check if user is manager1 or manager2 of this city
-    if (city.manager1_user_id !== user.id && city.manager2_user_id !== user.id) {
+    if (!assignment) {
       return {
         user: null,
         error: NextResponse.json(
@@ -298,13 +295,14 @@ export async function requireApprovePermission(
     const { createServiceClient } = await import('./supabase-server')
     const supabase = createServiceClient()
 
-    const { data: city, error: cityError } = await supabase
-      .from('cities')
-      .select('manager1_user_id, manager2_user_id')
-      .eq('id', cityId)
-      .single()
+    const { data: assignment, error: assignError } = await supabase
+      .from('city_manager_assignments')
+      .select('id')
+      .eq('city_id', cityId)
+      .eq('user_id', user.id)
+      .maybeSingle()
 
-    if (cityError || !city) {
+    if (assignError) {
       return {
         user: null,
         error: NextResponse.json(
@@ -314,8 +312,7 @@ export async function requireApprovePermission(
       }
     }
 
-    // Check if user is manager1 or manager2 of this city
-    if (city.manager1_user_id !== user.id && city.manager2_user_id !== user.id) {
+    if (!assignment) {
       return {
         user: null,
         error: NextResponse.json(

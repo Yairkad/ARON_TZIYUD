@@ -11,9 +11,13 @@ import { createServiceClient } from '@/lib/supabase-server'
 
 interface ManageCitiesBody {
   user_id: string
-  action: 'add' | 'remove'
+  action: 'add' | 'remove' | 'update_visibility'
   city_id: string
   manager_role?: 'manager1' | 'manager2'
+  // update_visibility fields
+  is_contact_visible?: boolean
+  override_name?: string | null
+  override_phone?: string | null
 }
 
 export async function POST(request: NextRequest) {
@@ -75,31 +79,17 @@ export async function POST(request: NextRequest) {
     }
 
     if (body.action === 'add') {
-      // Validate manager_role is provided for add action
-      if (!body.manager_role) {
-        return NextResponse.json(
-          { success: false, error: 'נדרש תפקיד מנהל' },
-          { status: 400 }
-        )
-      }
-
-      // Add user to city
-      const cityUpdateData: any = {}
-
-      if (body.manager_role === 'manager1') {
-        cityUpdateData.manager1_user_id = body.user_id
-        cityUpdateData.manager1_name = user.full_name
-        cityUpdateData.manager1_phone = user.phone || null
-      } else if (body.manager_role === 'manager2') {
-        cityUpdateData.manager2_user_id = body.user_id
-        cityUpdateData.manager2_name = user.full_name
-        cityUpdateData.manager2_phone = user.phone || null
-      }
-
+      // Insert into junction table (no slot limit)
       const { error: addError } = await supabase
-        .from('cities')
-        .update(cityUpdateData)
-        .eq('id', body.city_id)
+        .from('city_manager_assignments')
+        .upsert(
+          {
+            city_id: body.city_id,
+            user_id: body.user_id,
+            display_role: body.manager_role || 'manager1',
+          },
+          { onConflict: 'city_id,user_id' }
+        )
 
       if (addError) {
         console.error('Error adding user to city:', addError)
@@ -109,52 +99,28 @@ export async function POST(request: NextRequest) {
         )
       }
 
+      // Keep display columns in sync for manager1/manager2 slots
+      if (body.manager_role === 'manager1' || body.manager_role === 'manager2') {
+        const displayUpdate: any =
+          body.manager_role === 'manager1'
+            ? { manager1_user_id: body.user_id, manager1_name: user.full_name, manager1_phone: user.phone || null }
+            : { manager2_user_id: body.user_id, manager2_name: user.full_name, manager2_phone: user.phone || null }
+
+        await supabase.from('cities').update(displayUpdate).eq('id', body.city_id)
+      }
+
       return NextResponse.json({
         success: true,
         message: 'המשתמש נוסף לעיר בהצלחה',
       })
 
     } else if (body.action === 'remove') {
-      // Check which role the user has in this city
-      const { data: city, error: cityError } = await supabase
-        .from('cities')
-        .select('manager1_user_id, manager2_user_id')
-        .eq('id', body.city_id)
-        .single()
-
-      if (cityError || !city) {
-        return NextResponse.json(
-          { success: false, error: 'עיר לא נמצאה' },
-          { status: 404 }
-        )
-      }
-
-      // Remove user from city
-      const cityUpdateData: any = {}
-
-      if (city.manager1_user_id === body.user_id) {
-        cityUpdateData.manager1_user_id = null
-        cityUpdateData.manager1_name = null
-        cityUpdateData.manager1_phone = null
-      }
-
-      if (city.manager2_user_id === body.user_id) {
-        cityUpdateData.manager2_user_id = null
-        cityUpdateData.manager2_name = null
-        cityUpdateData.manager2_phone = null
-      }
-
-      if (Object.keys(cityUpdateData).length === 0) {
-        return NextResponse.json(
-          { success: false, error: 'המשתמש לא מנהל עיר זו' },
-          { status: 400 }
-        )
-      }
-
-      const { error: removeError } = await supabase
-        .from('cities')
-        .update(cityUpdateData)
-        .eq('id', body.city_id)
+      // Remove from junction table
+      const { error: removeError, count } = await supabase
+        .from('city_manager_assignments')
+        .delete({ count: 'exact' })
+        .eq('city_id', body.city_id)
+        .eq('user_id', body.user_id)
 
       if (removeError) {
         console.error('Error removing user from city:', removeError)
@@ -164,10 +130,65 @@ export async function POST(request: NextRequest) {
         )
       }
 
+      if (count === 0) {
+        return NextResponse.json(
+          { success: false, error: 'המשתמש לא מנהל עיר זו' },
+          { status: 400 }
+        )
+      }
+
+      // Clear display columns if this user was in a named slot
+      const { data: city } = await supabase
+        .from('cities')
+        .select('manager1_user_id, manager2_user_id')
+        .eq('id', body.city_id)
+        .single()
+
+      if (city) {
+        const displayClear: any = {}
+        if (city.manager1_user_id === body.user_id) {
+          displayClear.manager1_user_id = null
+          displayClear.manager1_name = null
+          displayClear.manager1_phone = null
+        }
+        if (city.manager2_user_id === body.user_id) {
+          displayClear.manager2_user_id = null
+          displayClear.manager2_name = null
+          displayClear.manager2_phone = null
+        }
+        if (Object.keys(displayClear).length > 0) {
+          await supabase.from('cities').update(displayClear).eq('id', body.city_id)
+        }
+      }
+
       return NextResponse.json({
         success: true,
         message: 'המשתמש הוסר מהעיר בהצלחה',
       })
+    }
+
+    if (body.action === 'update_visibility') {
+      const updateData: any = {}
+      if (body.is_contact_visible !== undefined) updateData.is_contact_visible = body.is_contact_visible
+      if (body.override_name !== undefined) updateData.override_name = body.override_name || null
+      if (body.override_phone !== undefined) updateData.override_phone = body.override_phone || null
+
+      if (Object.keys(updateData).length === 0) {
+        return NextResponse.json({ success: false, error: 'אין שדות לעדכון' }, { status: 400 })
+      }
+
+      const { error: visError } = await supabase
+        .from('city_manager_assignments')
+        .update(updateData)
+        .eq('city_id', body.city_id)
+        .eq('user_id', body.user_id)
+
+      if (visError) {
+        console.error('Error updating visibility:', visError)
+        return NextResponse.json({ success: false, error: 'שגיאה בעדכון הגדרות תצוגה' }, { status: 500 })
+      }
+
+      return NextResponse.json({ success: true, message: 'הגדרות תצוגה עודכנו בהצלחה' })
     }
 
     return NextResponse.json(

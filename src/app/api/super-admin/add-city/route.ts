@@ -543,6 +543,27 @@ export async function POST(request: NextRequest) {
       }
     }
 
+    // Sync junction table from the city's manager1/manager2 columns
+    if (newCity) {
+      const sc = createServiceClient()
+      const { data: cityRow } = await sc
+        .from('cities')
+        .select('manager1_user_id, manager2_user_id')
+        .eq('id', newCity.id)
+        .single()
+
+      const assignRows = [
+        cityRow?.manager1_user_id && { city_id: newCity.id, user_id: cityRow.manager1_user_id, display_role: 'manager1' },
+        cityRow?.manager2_user_id && { city_id: newCity.id, user_id: cityRow.manager2_user_id, display_role: 'manager2' },
+      ].filter(Boolean)
+
+      if (assignRows.length > 0) {
+        await sc
+          .from('city_manager_assignments')
+          .upsert(assignRows as any[], { onConflict: 'city_id,user_id' })
+      }
+    }
+
     let message = 'העיר נוספה בהצלחה'
     if (createdUsers.length > 0) {
       const emailsSent = createdUsers.filter((u: any) => u.emailSent).length

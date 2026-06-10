@@ -123,20 +123,20 @@ export async function GET(request: NextRequest) {
         manager = managerByEmail
       }
 
-      // Get all cities managed by this user
-      const { data: cities } = await supabase
-        .from('cities')
-        .select('id, name, is_active, manager1_user_id, manager2_user_id')
-        .or(`manager1_user_id.eq.${user.id},manager2_user_id.eq.${user.id}`)
-        .eq('is_active', true)
-        .order('name')
+      // Get all cities managed by this user via junction table
+      const { data: assignments } = await supabase
+        .from('city_manager_assignments')
+        .select('city_id, display_role, cities!inner(id, name, is_active)')
+        .eq('user_id', user.id)
+        .eq('cities.is_active', true)
 
-      if (cities) {
-        managedCities = cities.map(city => ({
-          id: city.id,
-          name: city.name,
-          role: city.manager1_user_id === user.id ? 'manager1' : 'manager2'
+      if (assignments) {
+        managedCities = assignments.map((a: any) => ({
+          id: a.cities.id,
+          name: a.cities.name,
+          role: a.display_role || 'manager1'
         }))
+        managedCities.sort((a: any, b: any) => a.name.localeCompare(b.name, 'he'))
       }
     }
 

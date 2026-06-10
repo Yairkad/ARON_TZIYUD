@@ -244,40 +244,48 @@ async function handleUpdate(request: NextRequest) {
       console.log('✅ Password updated in Supabase Auth')
     }
 
-    // If adding a new city_id, link the user to the city
+    // If adding a new city_id, insert into junction table
     if (body.city_id && body.manager_role) {
-      const cityUpdateData: any = {}
+      const { error: assignError } = await supabase
+        .from('city_manager_assignments')
+        .upsert(
+          {
+            city_id: body.city_id,
+            user_id: body.user_id,
+            display_role: body.manager_role,
+          },
+          { onConflict: 'city_id,user_id' }
+        )
 
-      if (body.manager_role === 'manager1') {
-        cityUpdateData.manager1_user_id = body.user_id
-        cityUpdateData.manager1_name = body.full_name || updatedUser.full_name
-        cityUpdateData.manager1_phone = body.phone || updatedUser.phone || null
-      } else if (body.manager_role === 'manager2') {
-        cityUpdateData.manager2_user_id = body.user_id
-        cityUpdateData.manager2_name = body.full_name || updatedUser.full_name
-        cityUpdateData.manager2_phone = body.phone || updatedUser.phone || null
+      if (assignError) {
+        console.error('❌ Error inserting city_manager_assignment:', assignError)
+      } else {
+        console.log('✅ User linked to city as', body.manager_role)
       }
 
-      if (Object.keys(cityUpdateData).length > 0) {
+      // Keep display columns in sync for named slots
+      if (body.manager_role === 'manager1' || body.manager_role === 'manager2') {
+        const displayUpdate: any =
+          body.manager_role === 'manager1'
+            ? { manager1_user_id: body.user_id, manager1_name: body.full_name || updatedUser.full_name, manager1_phone: body.phone || updatedUser.phone || null }
+            : { manager2_user_id: body.user_id, manager2_name: body.full_name || updatedUser.full_name, manager2_phone: body.phone || updatedUser.phone || null }
+
         const { error: cityLinkError } = await supabase
           .from('cities')
-          .update(cityUpdateData)
+          .update(displayUpdate)
           .eq('id', body.city_id)
 
         if (cityLinkError) {
-          console.error('❌ Error linking user to city:', cityLinkError)
-        } else {
-          console.log('✅ User linked to city as', body.manager_role)
+          console.error('❌ Error updating city display columns:', cityLinkError)
         }
       }
     }
 
-    // Update manager name/phone in ALL cities this user manages
+    // Update manager name/phone in all cities this user manages (display columns)
     if ((updatedUser.role === 'city_manager' || body.role === 'city_manager') && (body.full_name !== undefined || body.phone !== undefined)) {
       const finalFullName = body.full_name !== undefined ? body.full_name : updatedUser.full_name
       const finalPhone = body.phone !== undefined ? body.phone : updatedUser.phone
 
-      // Get all cities managed by this user
       const { data: managedCities } = await supabase
         .from('cities')
         .select('id, manager1_user_id, manager2_user_id')
@@ -286,7 +294,6 @@ async function handleUpdate(request: NextRequest) {
       if (managedCities && managedCities.length > 0) {
         console.log(`🏙️ Updating manager details in ${managedCities.length} cities`)
 
-        // Update each city
         for (const city of managedCities) {
           const cityUpdateData: any = {}
 
@@ -300,10 +307,7 @@ async function handleUpdate(request: NextRequest) {
           }
 
           if (Object.keys(cityUpdateData).length > 0) {
-            await supabase
-              .from('cities')
-              .update(cityUpdateData)
-              .eq('id', city.id)
+            await supabase.from('cities').update(cityUpdateData).eq('id', city.id)
           }
         }
 

@@ -65,13 +65,12 @@ export async function GET(request: NextRequest) {
       )
     }
 
-    // Get all cities managed by this user
-    const { data: cities, error: citiesError } = await supabase
-      .from('cities')
-      .select('id, name, is_active, manager1_user_id, manager2_user_id')
-      .or(`manager1_user_id.eq.${user.id},manager2_user_id.eq.${user.id}`)
-      .eq('is_active', true)
-      .order('name')
+    // Get all cities managed by this user via junction table
+    const { data: assignments, error: citiesError } = await supabase
+      .from('city_manager_assignments')
+      .select('city_id, display_role, cities!inner(id, name, is_active)')
+      .eq('user_id', user.id)
+      .eq('cities.is_active', true)
 
     if (citiesError) {
       console.error('Error fetching cities:', citiesError)
@@ -81,12 +80,13 @@ export async function GET(request: NextRequest) {
       )
     }
 
-    // Transform cities data
-    const transformedCities = cities.map(city => ({
-      id: city.id,
-      name: city.name,
-      role: city.manager1_user_id === user.id ? 'manager1' : 'manager2'
-    }))
+    const transformedCities = (assignments || [])
+      .map((a: any) => ({
+        id: a.cities.id,
+        name: a.cities.name,
+        role: a.display_role || 'manager1'
+      }))
+      .sort((a: any, b: any) => a.name.localeCompare(b.name, 'he'))
 
     const response = NextResponse.json({
       success: true,

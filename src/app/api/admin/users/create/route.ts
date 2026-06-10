@@ -133,24 +133,7 @@ export async function POST(request: NextRequest) {
       )
     }
 
-    // Validate manager_role for city_manager
-    if (body.role === 'city_manager' && body.manager_role) {
-      // Check if this manager_role already exists for this city
-      const { data: existingManager } = await supabase
-        .from('users')
-        .select('id')
-        .eq('city_id', body.city_id)
-        .eq('manager_role', body.manager_role)
-        .eq('role', 'city_manager')
-        .single()
-
-      if (existingManager) {
-        return NextResponse.json(
-          { success: false, error: `כבר קיים ${body.manager_role === 'manager1' ? 'מנהל ראשון' : 'מנהל שני'} עבור עיר זו` },
-          { status: 409 }
-        )
-      }
-    }
+    // No slot limit — any number of managers can be assigned to a city
 
     // Create user in Supabase Auth
     console.log('Creating user with data:', {
@@ -242,29 +225,38 @@ export async function POST(request: NextRequest) {
       newUserProfile = profileData
     }
 
-    // Update city manager details if this is a city manager with manager_role
-    // This links the user to the city in the cities table
-    if (body.role === 'city_manager' && body.manager_role && body.city_id) {
-      const updateData: any = {}
+    // Register assignment in junction table + update display columns on cities
+    if (body.role === 'city_manager' && body.city_id) {
+      const { error: assignError } = await supabase
+        .from('city_manager_assignments')
+        .upsert(
+          {
+            city_id: body.city_id,
+            user_id: authData.user.id,
+            display_role: body.manager_role || 'manager1',
+          },
+          { onConflict: 'city_id,user_id' }
+        )
 
-      if (body.manager_role === 'manager1') {
-        updateData.manager1_user_id = authData.user.id
-        updateData.manager1_name = body.full_name
-        updateData.manager1_phone = body.phone || null
-      } else if (body.manager_role === 'manager2') {
-        updateData.manager2_user_id = authData.user.id
-        updateData.manager2_name = body.full_name
-        updateData.manager2_phone = body.phone || null
+      if (assignError) {
+        console.error('Error inserting city_manager_assignment:', assignError)
       }
 
-      const { error: cityUpdateError } = await supabase
-        .from('cities')
-        .update(updateData)
-        .eq('id', body.city_id)
+      // Keep display columns in sync for existing manager1/manager2 slots
+      if (body.manager_role === 'manager1' || body.manager_role === 'manager2') {
+        const displayUpdate: any =
+          body.manager_role === 'manager1'
+            ? { manager1_user_id: authData.user.id, manager1_name: body.full_name, manager1_phone: body.phone || null }
+            : { manager2_user_id: authData.user.id, manager2_name: body.full_name, manager2_phone: body.phone || null }
 
-      if (cityUpdateError) {
-        console.error('Error updating city manager details:', cityUpdateError)
-        // Don't fail the user creation, just log the error
+        const { error: cityUpdateError } = await supabase
+          .from('cities')
+          .update(displayUpdate)
+          .eq('id', body.city_id)
+
+        if (cityUpdateError) {
+          console.error('Error updating city display columns:', cityUpdateError)
+        }
       }
     }
 

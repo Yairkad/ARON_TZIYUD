@@ -168,6 +168,7 @@ export default function CityAdminPage() {
   const [currentUser, setCurrentUser] = useState<any>(null)
   const [managerRole, setManagerRole] = useState<'manager1' | 'manager2' | null>(null)
   const [userManagedCities, setUserManagedCities] = useState<{id: string; name: string; role: string}[]>([])
+  const [cityManagers, setCityManagers] = useState<any[]>([])
   const [distanceSaveTimer, setDistanceSaveTimer] = useState<NodeJS.Timeout | null>(null)
   const [distanceSaveStatus, setDistanceSaveStatus] = useState<'idle' | 'saving' | 'saved' | 'error'>('idle')
   const [showAccountSettings, setShowAccountSettings] = useState(false)
@@ -352,6 +353,14 @@ export default function CityAdminPage() {
     checkPushStatus()
   }, [isAuthenticated])
 
+  const fetchCityManagers = async () => {
+    try {
+      const res = await fetch(`/api/city/managers?city_id=${cityId}`)
+      const data = await res.json()
+      if (data.success) setCityManagers(data.managers || [])
+    } catch { /* non-critical */ }
+  }
+
   const fetchCity = async () => {
     try {
       // Fetch city without is_active filter - we'll check permissions after
@@ -371,6 +380,7 @@ export default function CityAdminPage() {
           return
         }
         setCity(data)
+        fetchCityManagers()
         // Initialize edit form with current city data
         setEditCityForm({
           manager1_name: data.manager1_name || '',
@@ -3434,6 +3444,65 @@ export default function CityAdminPage() {
                           )}
                         </div>
                       </div>
+
+                      {/* Additional managers visibility (managers 3+) */}
+                      {cityManagers.filter(m => m.display_role !== 'manager1' && m.display_role !== 'manager2').length > 0 && (
+                        <div className="border-2 border-purple-200 rounded-xl p-4 bg-purple-50/50">
+                          <h3 className="text-lg font-bold text-gray-900 mb-3">👥 מנהלים נוספים</h3>
+                          <div className="space-y-3">
+                            {cityManagers
+                              .filter(m => m.display_role !== 'manager1' && m.display_role !== 'manager2')
+                              .map((mgr: any) => (
+                                <div key={mgr.user_id} className="p-3 bg-white rounded-lg border border-purple-200 space-y-2">
+                                  <div className="font-semibold text-gray-800">👤 {mgr.full_name || mgr.email}</div>
+                                  <label className="flex items-center gap-2 cursor-pointer">
+                                    <input
+                                      type="checkbox"
+                                      checked={mgr.is_contact_visible !== false}
+                                      onChange={async (e) => {
+                                        const res = await fetch('/api/city/managers', {
+                                          method: 'PATCH',
+                                          headers: { 'Content-Type': 'application/json' },
+                                          body: JSON.stringify({ city_id: cityId, user_id: mgr.user_id, is_contact_visible: e.target.checked })
+                                        })
+                                        const d = await res.json()
+                                        if (d.success) {
+                                          setCityManagers(prev => prev.map(m => m.user_id === mgr.user_id ? { ...m, is_contact_visible: e.target.checked } : m))
+                                        }
+                                      }}
+                                      className="w-4 h-4 accent-purple-600"
+                                    />
+                                    <span className="text-sm text-gray-700">גלוי למתנדבים כאיש קשר</span>
+                                  </label>
+                                  {mgr.is_contact_visible === false && (
+                                    <div className="grid grid-cols-2 gap-2">
+                                      <input
+                                        type="text"
+                                        placeholder="שם חלופי (ריק = הסתר)"
+                                        defaultValue={mgr.override_name || ''}
+                                        onBlur={async (e) => {
+                                          await fetch('/api/city/managers', { method: 'PATCH', headers: { 'Content-Type': 'application/json' },
+                                            body: JSON.stringify({ city_id: cityId, user_id: mgr.user_id, override_name: e.target.value }) })
+                                        }}
+                                        className="h-9 text-sm border border-gray-300 rounded-lg px-2"
+                                      />
+                                      <input
+                                        type="tel"
+                                        placeholder="טלפון חלופי (ריק = הסתר)"
+                                        defaultValue={mgr.override_phone || ''}
+                                        onBlur={async (e) => {
+                                          await fetch('/api/city/managers', { method: 'PATCH', headers: { 'Content-Type': 'application/json' },
+                                            body: JSON.stringify({ city_id: cityId, user_id: mgr.user_id, override_phone: e.target.value }) })
+                                        }}
+                                        className="h-9 text-sm border border-gray-300 rounded-lg px-2"
+                                      />
+                                    </div>
+                                  )}
+                                </div>
+                              ))}
+                          </div>
+                        </div>
+                      )}
 
                       {/* Location Settings Section with Edit/Save Buttons */}
                       <div className="border-2 border-indigo-200 rounded-xl p-4 bg-indigo-50/50">

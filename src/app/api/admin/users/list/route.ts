@@ -110,23 +110,36 @@ export async function GET(request: NextRequest) {
       )
     }
 
-    // Get all cities to find which cities each user manages
-    const { data: cities, error: citiesError } = await supabase
-      .from('cities')
-      .select('id, name, is_active, manager1_user_id, manager2_user_id')
+    // Get all assignments to find which cities each user manages
+    const { data: assignments, error: assignError } = await supabase
+      .from('city_manager_assignments')
+      .select('id, user_id, city_id, display_role, is_contact_visible, override_name, override_phone, cities(id, name, is_active)')
 
-    if (citiesError) {
-      console.error('Error fetching cities:', citiesError)
+    if (assignError) {
+      console.error('Error fetching city assignments:', assignError)
+    }
+
+    // Build a map: user_id -> [{ id, name, is_active, role, ... }]
+    const assignmentsByUser: Record<string, any[]> = {}
+    for (const a of assignments || []) {
+      if (!assignmentsByUser[a.user_id]) assignmentsByUser[a.user_id] = []
+      if (a.cities) {
+        assignmentsByUser[a.user_id].push({
+          assignment_id: a.id,
+          id: (a.cities as any).id,
+          name: (a.cities as any).name,
+          is_active: (a.cities as any).is_active,
+          role: a.display_role || 'manager1',
+          is_contact_visible: a.is_contact_visible,
+          override_name: a.override_name,
+          override_phone: a.override_phone,
+        })
+      }
     }
 
     // Transform data for frontend
     const transformedUsers = users.map(user => {
-      // Find all cities managed by this user
-      const managedCities = cities?.filter(city =>
-        city.manager1_user_id === user.id || city.manager2_user_id === user.id
-      ) || []
-
-      // Use the first managed city as the primary city for backwards compatibility
+      const managedCities = assignmentsByUser[user.id] || []
       const primaryCity = managedCities[0] || null
 
       return {
@@ -142,10 +155,10 @@ export async function GET(request: NextRequest) {
           name: primaryCity.name,
           is_active: primaryCity.is_active,
         } : null,
-        managed_cities: managedCities.map(c => ({
+        managed_cities: managedCities.map((c: any) => ({
           id: c.id,
           name: c.name,
-          role: c.manager1_user_id === user.id ? 'manager1' : 'manager2'
+          role: c.role,
         })),
         last_login_at: user.last_login_at,
         created_at: user.created_at,

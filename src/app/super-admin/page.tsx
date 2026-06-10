@@ -2689,73 +2689,142 @@ export default function SuperAdminPage() {
 
                               {/* List of managed cities */}
                               {editingUser.managed_cities && editingUser.managed_cities.length > 0 ? (
-                                <div className="space-y-2">
+                                <div className="space-y-3">
                                   {editingUser.managed_cities.map((city: any) => (
-                                    <div key={city.id} className="flex items-center justify-between p-3 bg-blue-50 border-2 border-blue-200 rounded-xl">
-                                      <div className="flex items-center gap-2">
-                                        <span className="text-lg">🏙️</span>
-                                        <div>
-                                          <span className="font-semibold text-gray-800">{city.name}</span>
-                                          <span className="text-xs text-gray-600 mr-2">
-                                            ({city.role === 'manager1' ? 'מנהל ראשון' : 'מנהל שני'})
-                                          </span>
+                                    <div key={city.id} className="p-3 bg-blue-50 border-2 border-blue-200 rounded-xl space-y-2">
+                                      {/* City header row */}
+                                      <div className="flex items-center justify-between">
+                                        <div className="flex items-center gap-2">
+                                          <span className="text-lg">🏙️</span>
+                                          <div>
+                                            <span className="font-semibold text-gray-800">{city.name}</span>
+                                            <span className="text-xs text-gray-600 mr-2">
+                                              ({city.role === 'manager1' ? 'מנהל ראשון' : 'מנהל שני'})
+                                            </span>
+                                          </div>
                                         </div>
-                                      </div>
-                                      <button
-                                        type="button"
-                                        onClick={() => {
-                                          const cityName = city.name
-                                          const userName = editingUser.full_name
-                                          const cityId = city.id
-                                          const userId = editingUser.id
+                                        <button
+                                          type="button"
+                                          onClick={() => {
+                                            const cityName = city.name
+                                            const userName = editingUser.full_name
+                                            const cityId = city.id
+                                            const userId = editingUser.id
 
-                                          showConfirmModal({
-                                            title: 'הסרת עיר ממשתמש',
-                                            message: `האם אתה בטוח שברצונך להסיר את ${userName} מהעיר ${cityName}?`,
-                                            icon: '🏙️',
-                                            confirmText: 'הסר',
-                                            confirmColor: 'red',
-                                            onConfirm: async () => {
-                                              setConfirmModal(prev => prev ? { ...prev, loading: true } : null)
+                                            showConfirmModal({
+                                              title: 'הסרת עיר ממשתמש',
+                                              message: `האם אתה בטוח שברצונך להסיר את ${userName} מהעיר ${cityName}?`,
+                                              icon: '🏙️',
+                                              confirmText: 'הסר',
+                                              confirmColor: 'red',
+                                              onConfirm: async () => {
+                                                setConfirmModal(prev => prev ? { ...prev, loading: true } : null)
+                                                try {
+                                                  const res = await fetch('/api/admin/users/manage-cities', {
+                                                    method: 'POST',
+                                                    headers: { 'Content-Type': 'application/json' },
+                                                    body: JSON.stringify({ user_id: userId, city_id: cityId, action: 'remove' })
+                                                  })
+                                                  const data = await res.json()
+                                                  if (data.success) {
+                                                    toast.success('העיר הוסרה בהצלחה')
+                                                    await fetchUsers()
+                                                    const res2 = await fetch('/api/admin/users/list')
+                                                    const data2 = await res2.json()
+                                                    if (data2.success) {
+                                                      const updatedUser = data2.users.find((u: any) => u.id === userId)
+                                                      if (updatedUser) setEditingUser(updatedUser)
+                                                    }
+                                                  } else {
+                                                    toast.error(data.error || 'שגיאה בהסרת עיר')
+                                                  }
+                                                } catch (err) {
+                                                  toast.error('שגיאה בהסרת עיר')
+                                                } finally {
+                                                  closeConfirmModal()
+                                                }
+                                              }
+                                            })
+                                          }}
+                                          className="px-3 py-1 bg-red-500 hover:bg-red-600 text-white rounded-lg text-sm font-medium transition-colors"
+                                        >
+                                          ❌ הסר
+                                        </button>
+                                      </div>
+
+                                      {/* Visibility controls */}
+                                      <div className="pt-2 border-t border-blue-200 space-y-2">
+                                        <label className="flex items-center gap-2 cursor-pointer">
+                                          <input
+                                            type="checkbox"
+                                            checked={city.is_contact_visible !== false}
+                                            onChange={async (e) => {
                                               try {
                                                 const res = await fetch('/api/admin/users/manage-cities', {
                                                   method: 'POST',
                                                   headers: { 'Content-Type': 'application/json' },
                                                   body: JSON.stringify({
-                                                    user_id: userId,
-                                                    city_id: cityId,
-                                                    action: 'remove'
+                                                    user_id: editingUser.id,
+                                                    city_id: city.id,
+                                                    action: 'update_visibility',
+                                                    is_contact_visible: e.target.checked,
                                                   })
                                                 })
-
                                                 const data = await res.json()
                                                 if (data.success) {
-                                                  toast.success('העיר הוסרה בהצלחה')
-                                                  await fetchUsers()
-                                                  // Refresh the editing user to show updated cities
-                                                  const res2 = await fetch('/api/admin/users/list')
-                                                  const data2 = await res2.json()
-                                                  if (data2.success) {
-                                                    const updatedUser = data2.users.find((u: any) => u.id === userId)
-                                                    if (updatedUser) {
-                                                      setEditingUser(updatedUser)
-                                                    }
-                                                  }
+                                                  // Update local state
+                                                  setEditingUser((prev: any) => ({
+                                                    ...prev,
+                                                    managed_cities: prev.managed_cities.map((c: any) =>
+                                                      c.id === city.id ? { ...c, is_contact_visible: e.target.checked } : c
+                                                    )
+                                                  }))
+                                                  toast.success('עודכן בהצלחה')
                                                 } else {
-                                                  toast.error(data.error || 'שגיאה בהסרת עיר')
+                                                  toast.error(data.error || 'שגיאה בעדכון')
                                                 }
-                                              } catch (err) {
-                                                toast.error('שגיאה בהסרת עיר')
-                                              } finally {
-                                                closeConfirmModal()
-                                              }
-                                            }
-                                          })
-                                        }}
-                                        className="px-3 py-1 bg-red-500 hover:bg-red-600 text-white rounded-lg text-sm font-medium transition-colors"
-                                      >
-                                        ❌ הסר
-                                      </button>
+                                              } catch { toast.error('שגיאה בעדכון') }
+                                            }}
+                                            className="w-4 h-4 accent-green-600"
+                                          />
+                                          <span className="text-sm text-gray-700">גלוי למתנדבים כאיש קשר</span>
+                                        </label>
+
+                                        {city.is_contact_visible === false && (
+                                          <div className="grid grid-cols-2 gap-2 pr-6">
+                                            <input
+                                              type="text"
+                                              placeholder="שם חלופי (ריק = הסתר)"
+                                              defaultValue={city.override_name || ''}
+                                              onBlur={async (e) => {
+                                                const res = await fetch('/api/admin/users/manage-cities', {
+                                                  method: 'POST',
+                                                  headers: { 'Content-Type': 'application/json' },
+                                                  body: JSON.stringify({ user_id: editingUser.id, city_id: city.id, action: 'update_visibility', override_name: e.target.value })
+                                                })
+                                                const d = await res.json()
+                                                if (!d.success) toast.error(d.error || 'שגיאה')
+                                              }}
+                                              className="h-9 text-sm border border-gray-300 rounded-lg px-2"
+                                            />
+                                            <input
+                                              type="tel"
+                                              placeholder="טלפון חלופי (ריק = הסתר)"
+                                              defaultValue={city.override_phone || ''}
+                                              onBlur={async (e) => {
+                                                const res = await fetch('/api/admin/users/manage-cities', {
+                                                  method: 'POST',
+                                                  headers: { 'Content-Type': 'application/json' },
+                                                  body: JSON.stringify({ user_id: editingUser.id, city_id: city.id, action: 'update_visibility', override_phone: e.target.value })
+                                                })
+                                                const d = await res.json()
+                                                if (!d.success) toast.error(d.error || 'שגיאה')
+                                              }}
+                                              className="h-9 text-sm border border-gray-300 rounded-lg px-2"
+                                            />
+                                          </div>
+                                        )}
+                                      </div>
                                     </div>
                                   ))}
                                 </div>

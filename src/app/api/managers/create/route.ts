@@ -78,30 +78,6 @@ export async function POST(request: NextRequest) {
       )
     }
 
-    // Check if manager role already exists for this city
-    const { data: existingManager, error: checkError } = await supabase
-      .from('users')
-      .select('id')
-      .eq('city_id', city_id)
-      .eq('manager_role', manager_role)
-      .eq('role', 'city_manager')
-      .maybeSingle()
-
-    if (checkError) {
-      console.error('Error checking existing manager:', checkError)
-      return NextResponse.json(
-        { success: false, error: 'שגיאה בבדיקת מנהלים קיימים' },
-        { status: 500 }
-      )
-    }
-
-    if (existingManager) {
-      return NextResponse.json(
-        { success: false, error: `כבר קיים ${manager_role === 'manager1' ? 'מנהל ראשון' : 'מנהל שני'} עבור עיר זו` },
-        { status: 400 }
-      )
-    }
-
     // Generate temporary password
     const tempPassword = crypto.randomBytes(8).toString('hex')
 
@@ -162,6 +138,18 @@ export async function POST(request: NextRequest) {
           { status: 500 }
         )
       }
+    }
+
+    // Register assignment in junction table
+    const { error: assignError } = await supabase
+      .from('city_manager_assignments')
+      .upsert(
+        { city_id, user_id: newAuthUser.user.id, display_role: manager_role },
+        { onConflict: 'city_id,user_id' }
+      )
+
+    if (assignError) {
+      console.error('Error inserting city_manager_assignment:', assignError)
     }
 
     // Send welcome email with temporary password
