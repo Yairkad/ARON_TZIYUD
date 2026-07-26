@@ -127,16 +127,16 @@ interface AlertSummary {
 async function processDailyAlerts(now: Date): Promise<AlertSummary> {
   const alertDetails: any[] = []
 
-  // Get all active cities with their managers (email via users join)
+  // Get all active cities with their managers via the city_manager_assignments junction table.
+  // cities.manager1_user_id has no FK to users, so PostgREST can't embed users through it directly.
   const { data: cities, error: citiesError } = await supabase
     .from('cities')
     .select(`
       id,
       name,
       manager1_name,
-      manager1_user_id,
       manager1_phone,
-      manager:users!manager1_user_id(email)
+      city_manager_assignments(user_id, display_role, users(email))
     `)
     .eq('is_active', true)
 
@@ -151,7 +151,9 @@ async function processDailyAlerts(now: Date): Promise<AlertSummary> {
   }
 
   for (const city of cities) {
-    const managerEmail = (city.manager as any)?.email
+    const assignments = (city as any).city_manager_assignments || []
+    const primaryManager = assignments.find((a: any) => a.display_role === 'manager1') || assignments[0]
+    const managerEmail = primaryManager?.users?.email
     if (!managerEmail) {
       alertDetails.push({
         city: city.name,
@@ -581,8 +583,7 @@ async function processMonthlyReports(now: Date): Promise<ReportSummary> {
       id,
       name,
       manager1_name,
-      manager1_user_id,
-      manager:users!manager1_user_id(email)
+      city_manager_assignments(user_id, display_role, users(email))
     `)
     .eq('is_active', true)
 
@@ -597,7 +598,9 @@ async function processMonthlyReports(now: Date): Promise<ReportSummary> {
   }
 
   for (const city of cities) {
-    const managerEmail = (city.manager as any)?.email
+    const assignments = (city as any).city_manager_assignments || []
+    const primaryManager = assignments.find((a: any) => a.display_role === 'manager1') || assignments[0]
+    const managerEmail = primaryManager?.users?.email
     if (!managerEmail) {
       reportDetails.push({
         city: city.name,
